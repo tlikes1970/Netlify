@@ -127,7 +127,7 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
   const saveDisplayName = async () => {
     if (showWarning) {
       const confirmed = window.confirm(
-        "Are you sure you want to change your username? This will update your profile."
+        `${translations.areYouSureChangeDisplayName} ${translations.thisWillUpdateYourProfile}`
       );
       if (confirmed) {
         try {
@@ -135,7 +135,7 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
           setShowWarning(false);
         } catch (error) {
           console.error("Failed to update username:", error);
-          alert("Failed to update username. Please try again.");
+          alert(translations.usernameUpdateFailed);
         }
       }
     }
@@ -144,7 +144,7 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold" style={{ color: "var(--text)" }}>
-        Account & Profile
+        {translations.accountAndProfile}
       </h3>
 
       {/* Language Selection */}
@@ -226,7 +226,7 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
           className="text-lg font-medium mb-3"
           style={{ color: "var(--text)" }}
         >
-          Your Statistics
+          {translations.myStatistics}
         </h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div
@@ -237,16 +237,24 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
               className="text-sm font-medium mb-2"
               style={{ color: "var(--text)" }}
             >
-              TV Shows
+              {translations.tvShows}
             </h5>
             <div
               className="space-y-1 text-sm"
               style={{ color: "var(--muted)" }}
             >
-              <div>Currently Watching: {tvStats.watching}</div>
-              <div>Want to Watch: {tvStats.wishlist}</div>
-              <div>Watched: {tvStats.watched}</div>
-              <div>Not Interested: {tvStats.not}</div>
+              <div>
+                {translations.currentlyWatching}: {tvStats.watching}
+              </div>
+              <div>
+                {translations.wantToWatch}: {tvStats.wishlist}
+              </div>
+              <div>
+                {translations.watched}: {tvStats.watched}
+              </div>
+              <div>
+                {translations.notInterested}: {tvStats.not}
+              </div>
             </div>
           </div>
           <div
@@ -257,16 +265,24 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
               className="text-sm font-medium mb-2"
               style={{ color: "var(--text)" }}
             >
-              Movies
+              {translations.movies}
             </h5>
             <div
               className="space-y-1 text-sm"
               style={{ color: "var(--muted)" }}
             >
-              <div>Currently Watching: {movieStats.watching}</div>
-              <div>Want to Watch: {movieStats.wishlist}</div>
-              <div>Watched: {movieStats.watched}</div>
-              <div>Not Interested: {movieStats.not}</div>
+              <div>
+                {translations.currentlyWatching}: {movieStats.watching}
+              </div>
+              <div>
+                {translations.wantToWatch}: {movieStats.wishlist}
+              </div>
+              <div>
+                {translations.watched}: {movieStats.watched}
+              </div>
+              <div>
+                {translations.notInterested}: {movieStats.not}
+              </div>
             </div>
           </div>
         </div>
@@ -278,14 +294,14 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
           className="text-lg font-medium mb-3"
           style={{ color: "var(--text)" }}
         >
-          Not Interested Management
+          {translations.notInterestedManagement}
         </h4>
         <button
           className="px-4 py-2 rounded-lg transition-colors"
           style={{ backgroundColor: "var(--btn)", color: "var(--text)" }}
           onClick={onShowNotInterestedModal}
         >
-          Manage Not Interested List
+          {translations.manageNotInterestedList}
         </button>
       </div>
 
@@ -356,17 +372,13 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
       <div>
         <button
           onClick={() => {
-            if (
-              window.confirm(
-                "Are you sure you want to reset all settings to defaults?"
-              )
-            ) {
+            if (window.confirm(translations.confirmResetSettings)) {
               settingsManager.resetToDefaults();
             }
           }}
           className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
         >
-          Reset System to Defaults
+          {translations.resetSettingsToDefaults}
         </button>
       </div>
     </div>
@@ -381,6 +393,7 @@ function NotificationsSection({
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const proStatus = useProStatus();
   const isProUser = proStatus.isPro;
+  const translations = useTranslations();
 
   const handleOpenSettings = () => {
     if (onShowNotificationSettings) {
@@ -402,7 +415,7 @@ function NotificationsSection({
     <>
       <div className="space-y-6">
         <h3 className="text-xl font-semibold" style={{ color: "var(--text)" }}>
-          Notifications
+          {translations.notifications}
         </h3>
 
         {/* Quick Actions */}
@@ -419,9 +432,9 @@ function NotificationsSection({
             <div className="flex items-center space-x-3">
               <div className="text-2xl">⚙️</div>
               <div className="text-left">
-                <div className="font-medium">Notification Settings</div>
+                <div className="font-medium">{translations.notificationSettings}</div>
                 <div className="text-sm" style={{ color: "var(--muted)" }}>
-                  Configure timing and methods
+                  {translations.notificationSettingsDescription}
                 </div>
               </div>
             </div>
@@ -439,9 +452,9 @@ function NotificationsSection({
             <div className="flex items-center space-x-3">
               <div className="text-2xl">📋</div>
               <div className="text-left">
-                <div className="font-medium">Notification Center</div>
+                <div className="font-medium">{translations.notificationCenter}</div>
                 <div className="text-sm" style={{ color: "var(--muted)" }}>
-                  View notification history
+                  {translations.notificationCenterDescription}
                 </div>
               </div>
             </div>
@@ -462,23 +475,33 @@ function NotificationsSection({
             className="text-lg font-medium mb-3"
             style={{ color: "var(--text)" }}
           >
-            Current Settings
+            {translations.currentSettings}
           </h4>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span style={{ color: "var(--muted)" }}>Episode Reminders:</span>
-              <span style={{ color: "var(--text)" }}>Enabled</span>
+              <span style={{ color: "var(--muted)" }}>
+                {translations.episodeReminders}:
+              </span>
+              <span style={{ color: "var(--text)" }}>{translations.enabled}</span>
             </div>
             <div className="flex justify-between">
-              <span style={{ color: "var(--muted)" }}>Timing:</span>
+              <span style={{ color: "var(--muted)" }}>
+                {translations.notificationTiming}:
+              </span>
               <span style={{ color: "var(--text)" }}>
-                {isProUser ? "Custom (Pro)" : "24 hours before"}
+                {isProUser
+                  ? translations.timingCustomPro
+                  : translations.timing24HoursBefore}
               </span>
             </div>
             <div className="flex justify-between">
-              <span style={{ color: "var(--muted)" }}>Methods:</span>
+              <span style={{ color: "var(--muted)" }}>
+                {translations.notificationMethods}:
+              </span>
               <span style={{ color: "var(--text)" }}>
-                In-app, Push{isProUser ? ", Email" : ""}
+                {isProUser
+                  ? translations.methodsInAppPushEmail
+                  : translations.methodsInAppPush}
               </span>
             </div>
           </div>
@@ -679,7 +702,7 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
     try {
       customListManager.createList(name.trim());
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to create list");
+      alert(error instanceof Error ? error.message : translations.failedToCreateList);
     }
   };
 
@@ -704,7 +727,7 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
       setEditName("");
       setEditDescription("");
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to update list");
+      alert(error instanceof Error ? error.message : translations.failedToUpdateList);
     }
   };
 
@@ -718,7 +741,7 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
     try {
       const list = customListManager.getListById(listId);
       if (!list) {
-        alert("List not found");
+        alert(translations.listNotFound);
         return;
       }
 
@@ -729,8 +752,8 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
       if (confirmed) {
         customListManager.deleteList(listId);
       }
-    } catch (error) {
-      alert(error instanceof Error ? error.message : "Failed to delete list");
+      } catch (error) {
+      alert(error instanceof Error ? error.message : translations.failedToDeleteList);
     }
   };
 
@@ -739,7 +762,7 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
       customListManager.setSelectedList(listId);
     } catch (error) {
       alert(
-        error instanceof Error ? error.message : "Failed to set default list"
+        error instanceof Error ? error.message : translations.failedToSetDefaultList
       );
     }
   };
@@ -747,7 +770,7 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold" style={{ color: "var(--text)" }}>
-        Display & Layout
+        {translations.displayAndLayout}
       </h3>
 
       {/* Theme Preference */}
@@ -802,11 +825,11 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
           className="block text-sm font-medium mb-2"
           style={{ color: "var(--text)" }}
         >
-          Discovery Recommendations
+          {translations.discoveryRecommendations}
         </label>
         <div className="space-y-2">
           <p className="text-sm" style={{ color: "var(--muted)" }}>
-            Number of recommendations to show in Discovery
+            {translations.discoveryRecommendationsDescription}
           </p>
           <div className="flex gap-2 flex-wrap">
             {[25, 50, 75, 100].map((limit) => (
@@ -852,16 +875,16 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h4 className="text-lg font-medium" style={{ color: "var(--text)" }}>
-            {translations.myLists || "My Lists"}
+            {translations.myLists}
           </h4>
           {userLists.customLists.length < userLists.maxLists && (
-            <button
-              onClick={handleCreateList}
-              className="px-3 py-1.5 rounded-lg text-sm transition-colors"
-              style={{ backgroundColor: "var(--accent)", color: "white" }}
-            >
-              {translations.createNewList || "Create New List"}
-            </button>
+              <button
+                onClick={handleCreateList}
+                className="px-3 py-1.5 rounded-lg text-sm transition-colors"
+                style={{ backgroundColor: "var(--accent)", color: "white" }}
+              >
+                {translations.createNewList}
+              </button>
           )}
         </div>
 
@@ -889,7 +912,7 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
                       color: "var(--text)",
                       border: "1px solid",
                     }}
-                    placeholder={translations.listName || "List name"}
+                    placeholder={translations.listName}
                   />
                   <input
                     type="text"
@@ -902,10 +925,7 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
                       color: "var(--text)",
                       border: "1px solid",
                     }}
-                    placeholder={
-                      translations.listDescription ||
-                      "List description (optional)"
-                    }
+                    placeholder={translations.listDescriptionOptional}
                   />
                   <div className="flex gap-2">
                     <button
@@ -966,7 +986,7 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
                       className="text-xs mt-1"
                       style={{ color: "var(--muted)" }}
                     >
-                      {list.itemCount} {translations.items || "items"}
+                      {list.itemCount} {translations.items}
                     </p>
                   </div>
                   <div className="flex gap-1">
@@ -1014,21 +1034,21 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
           {userLists.customLists.length === 0 && (
             <div className="text-center py-8">
               <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
-                {translations.noListsCreated || "No lists created yet"}
+                {translations.noListsCreated}
               </p>
               <button
                 onClick={handleCreateList}
                 className="px-4 py-2 rounded-lg transition-colors"
                 style={{ backgroundColor: "var(--accent)", color: "white" }}
               >
-                {translations.createYourFirstList || "Create Your First List"}
+                {translations.createYourFirstList}
               </button>
             </div>
           )}
         </div>
 
         <div className="mt-3 text-xs" style={{ color: "var(--muted)" }}>
-          {translations.listsUsed || "Lists used"}:{" "}
+          {translations.listsUsed}:{" "}
           {userLists.customLists.length}/{userLists.maxLists}
         </div>
       </div>
@@ -1039,7 +1059,7 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
           className="text-lg font-medium mb-3"
           style={{ color: "var(--text)" }}
         >
-          {translations.basicCustomization}
+          {translations.otherLayoutSettings}
         </h4>
         <div className="space-y-3">
           <div className="space-y-1">
@@ -1062,8 +1082,7 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
               </span>
             </label>
             <p className="text-xs ml-7" style={{ color: "var(--muted)" }}>
-              Show more items per screen with smaller cards and shorter button
-              labels. Hides episode tracking and detailed features.
+              {translations.condensedViewDescription}
             </p>
           </div>
 
@@ -1084,13 +1103,13 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
             </label>
             {settings.layout.condensedView && !isPro && (
               <p className="text-xs ml-7" style={{ color: "var(--muted)" }}>
-                Episode tracking is disabled in condensed view.{" "}
-                <UpgradeToProCTA variant="inline" /> to enable it.
+                {translations.episodeTrackingCondensedProRequired}{" "}
+                <UpgradeToProCTA variant="inline" />
               </p>
             )}
             {settings.layout.condensedView && isPro && (
               <p className="text-xs ml-7" style={{ color: "var(--muted)" }}>
-                Pro users can enable episode tracking even in condensed view
+                {translations.episodeTrackingCondensedProAllowed}
               </p>
             )}
           </div>
@@ -1103,12 +1122,10 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
           className="text-lg font-medium mb-3"
           style={{ color: "var(--text)" }}
         >
-          For You Section Configuration
+          {translations.forYouSectionConfiguration}
         </h4>
         <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
-          Customize the three "For You" rows on your home page. Each row
-          combines a main genre with a subgenre for personalized
-          recommendations.
+          {translations.forYouSectionDescription}
         </p>
 
         <ForYouGenreConfig />
@@ -1331,6 +1348,13 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
 }
 
 function DataSection({ onShowSharingModal }: SettingsSectionProps) {
+  /**
+   * Process: User Data Backup & Restore
+   * Purpose: Manual, local-only backup/restore plus share-entry surface in Settings
+   * Data Source: localStorage keys prefixed with flicklet.*
+   * Update Path: DataSection in settingsSections.tsx
+   * Dependencies: Library storage helpers, Sharing modal flow
+   */
   const [showSharingModal, setShowSharingModal] = useState(false);
 
   const handleBackup = async () => {
@@ -1388,12 +1412,20 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
             item.mediaType === "movie" &&
             watchlists.movies[item.list as keyof typeof watchlists.movies]
           ) {
-            (watchlists.movies[item.list as keyof typeof watchlists.movies] as any[]).push(mediaItem);
+            (
+              watchlists.movies[
+                item.list as keyof typeof watchlists.movies
+              ] as any[]
+            ).push(mediaItem);
           } else if (
             item.mediaType === "tv" &&
             watchlists.tv[item.list as keyof typeof watchlists.tv]
           ) {
-            (watchlists.tv[item.list as keyof typeof watchlists.tv] as any[]).push(mediaItem);
+            (
+              watchlists.tv[
+                item.list as keyof typeof watchlists.tv
+              ] as any[]
+            ).push(mediaItem);
           }
         }
       });
@@ -1427,7 +1459,9 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
 
       const link = document.createElement("a");
       link.href = url;
-      link.download = `flicklet-backup-${new Date().toISOString().split("T")[0]}.json`;
+      link.download = `flicklet-backup-${new Date()
+        .toISOString()
+        .split("T")[0]}.json`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -1448,23 +1482,60 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
 
+      let userData: any;
       try {
         const text = await file.text();
-        const userData = JSON.parse(text);
-
-        if (!userData.watchlists) {
-          throw new Error("Invalid backup file format: missing watchlists");
-        }
-
-        const backupDate = userData.timestamp
-          ? new Date(userData.timestamp).toLocaleDateString()
-          : "unknown date";
-        const confirmed = confirm(
-          `⚠️ This will replace ALL your current data with the backup from ${backupDate}.\n\nThis action cannot be undone. Continue?`
+        userData = JSON.parse(text);
+      } catch (error) {
+        console.error("Restore failed to parse file:", error);
+        alert(
+          "❌ Restore failed: Unable to read the backup file. Please select a Flicklet backup."
         );
+        return;
+      }
 
-        if (!confirmed) return;
+      if (
+        !userData?.watchlists ||
+        typeof userData.watchlists !== "object" ||
+        !(
+          userData.watchlists.movies ||
+          userData.watchlists.tv ||
+          userData.watchlists.customLists
+        )
+      ) {
+        alert(
+          "❌ Restore failed: The backup file is missing watchlist data. Please choose a valid Flicklet backup."
+        );
+        return;
+      }
 
+      const backupDate = userData.timestamp
+        ? new Date(userData.timestamp)
+        : null;
+      const formattedDate = backupDate
+        ? backupDate.toLocaleString(undefined, {
+            dateStyle: "medium",
+            timeStyle: "short",
+          })
+        : "unknown date";
+      const backupVersion = userData.version || "unknown version";
+      const confirmed = window.confirm(
+        `⚠️ This will overwrite ALL local data on this device with the backup from ${formattedDate} (version ${backupVersion}). This action cannot be undone. Continue?`
+      );
+
+      if (!confirmed) return;
+
+      const safeSetItem = (key: string, value: string) => {
+        try {
+          localStorage.setItem(key, value);
+          return true;
+        } catch (error) {
+          console.error(`Failed to write ${key}:`, error);
+          return false;
+        }
+      };
+
+      try {
         localStorage.removeItem("flicklet.library.v2");
 
         let restoredCount = 0;
@@ -1473,9 +1544,18 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
         // Process movies
         if (userData.watchlists.movies) {
           const lists: Array<{ list: ListName; items: any[] }> = [
-            { list: "watching", items: userData.watchlists.movies.watching || [] },
-            { list: "wishlist", items: userData.watchlists.movies.wishlist || [] },
-            { list: "watched", items: userData.watchlists.movies.watched || [] },
+            {
+              list: "watching",
+              items: userData.watchlists.movies.watching || [],
+            },
+            {
+              list: "wishlist",
+              items: userData.watchlists.movies.wishlist || [],
+            },
+            {
+              list: "watched",
+              items: userData.watchlists.movies.watched || [],
+            },
           ];
 
           lists.forEach(({ list, items }) => {
@@ -1505,9 +1585,18 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
         // Process TV shows
         if (userData.watchlists.tv) {
           const lists: Array<{ list: ListName; items: any[] }> = [
-            { list: "watching", items: userData.watchlists.tv.watching || [] },
-            { list: "wishlist", items: userData.watchlists.tv.wishlist || [] },
-            { list: "watched", items: userData.watchlists.tv.watched || [] },
+            {
+              list: "watching",
+              items: userData.watchlists.tv.watching || [],
+            },
+            {
+              list: "wishlist",
+              items: userData.watchlists.tv.wishlist || [],
+            },
+            {
+              list: "watched",
+              items: userData.watchlists.tv.watched || [],
+            },
           ];
 
           lists.forEach(({ list, items }) => {
@@ -1546,10 +1635,14 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
             selectedListId: userData.watchlists.selectedListId || null,
             maxLists: userData.watchlists.maxLists || 10,
           };
-          localStorage.setItem(
-            "flicklet.customLists.v2",
-            JSON.stringify(customListsData)
-          );
+          if (
+            !safeSetItem(
+              "flicklet.customLists.v2",
+              JSON.stringify(customListsData)
+            )
+          ) {
+            throw new Error("Unable to restore custom lists.");
+          }
         }
 
         if (
@@ -1583,18 +1676,26 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
         }
 
         if (userData.settings) {
-          localStorage.setItem(
-            "flicklet-settings",
-            JSON.stringify(userData.settings)
-          );
+          if (
+            !safeSetItem(
+              "flicklet-settings",
+              JSON.stringify(userData.settings)
+            )
+          ) {
+            throw new Error("Unable to restore settings.");
+          }
         }
 
         if (userData.user) {
-          localStorage.setItem("flicklet-user", JSON.stringify(userData.user));
+          if (
+            !safeSetItem("flicklet-user", JSON.stringify(userData.user))
+          ) {
+            throw new Error("Unable to restore user data.");
+          }
         }
 
         alert(
-          `✅ Data restored successfully! ${restoredCount} items restored. Please refresh the page to see changes.`
+          `✅ Data restored from ${formattedDate} (version ${backupVersion}). A reload will ensure the restored data appears. ${restoredCount} items restored.`
         );
 
         setTimeout(() => {
@@ -1603,7 +1704,9 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
       } catch (error) {
         console.error("Restore failed:", error);
         alert(
-          `❌ Restore failed: ${error instanceof Error ? error.message : "Unknown error"}. Please check the backup file and try again.`
+          `❌ Restore failed: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }. Please check the backup file and try again.`
         );
       }
     };
@@ -1685,7 +1788,7 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
         {/* Share with Friends */}
         <div>
           <h4 className="text-lg font-medium mb-3" style={{ color: "var(--text)" }}>
-            📤 Share with Friends
+            📤 Share Your Lists
           </h4>
           <div className="space-y-3">
             <div
@@ -1697,18 +1800,21 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
               }}
             >
               <h5 className="font-medium mb-2" style={{ color: "var(--text)" }}>
-                Create Shareable List
+                Share your lists
               </h5>
               <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
-                Create a shareable list of your shows and movies to send to
-                friends
+                Generate a text snapshot of your lists that you can paste into messages or social posts.
               </p>
               <button
                 onClick={handleShowSharing}
-                className="px-3 py-2 rounded-lg text-sm transition-colors"
-                style={{ backgroundColor: "var(--accent)", color: "white" }}
+                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:opacity-90"
+                style={{
+                  backgroundColor: "var(--accent)",
+                  color: "white",
+                  border: "none",
+                }}
               >
-                📤 Share with Friends
+                📤 Share your lists
               </button>
             </div>
           </div>
@@ -1733,7 +1839,7 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
                 💾 Backup Data
               </h5>
               <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
-                Download a complete backup of all your watchlists and settings
+                Download a local JSON file that includes your watchlists, custom lists, and settings. The file is saved to your device only and never uploaded to the cloud.
               </p>
               <button
                 onClick={handleBackup}
@@ -1757,7 +1863,7 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
                 📥 Restore Data
               </h5>
               <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
-                Upload a backup file to restore your watchlists and settings
+                Upload a Flicklet backup file to overwrite data on this device only. This restores the library, lists, and settings from the chosen snapshot.
               </p>
               <button
                 onClick={handleRestore}
@@ -1805,9 +1911,31 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
         </div>
       </div>
 
-      {/* Sharing Modal - will be handled by parent */}
-      {showSharingModal && onShowSharingModal && (
-        <div>Sharing modal should be rendered by parent</div>
+      {/* Sharing fallback for contexts without a global SharingModal */}
+      {showSharingModal && !onShowSharingModal && (
+        <div
+          className="p-4 rounded-lg mt-4"
+          style={{
+            backgroundColor: "var(--card)",
+            borderColor: "var(--line)",
+            border: "1px solid",
+          }}
+        >
+          <p className="text-sm" style={{ color: "var(--text)" }}>
+            The sharing experience is managed by the parent view in this layout.
+            Please open Settings from the main app to share your lists.
+          </p>
+          <button
+            onClick={() => setShowSharingModal(false)}
+            className="mt-3 px-3 py-1 text-xs font-medium rounded-lg transition-colors"
+            style={{
+              backgroundColor: "var(--btn)",
+              color: "var(--text)",
+            }}
+          >
+            Close
+          </button>
+        </div>
       )}
     </>
   );

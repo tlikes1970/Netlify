@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import GenreRowConfig, { ForYouRow } from './GenreRowConfig';
+import { useTranslations } from '../lib/language';
 
 // For You Genre Configuration Component
 export default function ForYouGenreConfig() {
+  const translations = useTranslations();
   const [forYouRows, setForYouRows] = useState<ForYouRow[]>(() => {
     // Load from localStorage or use defaults
     try {
@@ -66,24 +68,24 @@ export default function ForYouGenreConfig() {
       ))}
       
       {forYouRows.length < 3 && (
-        <button
-          onClick={handleAddRow}
-          className="w-full p-4 rounded-lg border-2 border-dashed transition-colors"
-          style={{ 
-            borderColor: 'var(--line)',
-            color: 'var(--muted)',
-            backgroundColor: 'transparent'
-          }}
-        >
-          + Add Another Row ({forYouRows.length}/3)
-        </button>
+      <button
+        onClick={handleAddRow}
+        className="w-full p-4 rounded-lg border-2 border-dashed transition-colors"
+        style={{ 
+          borderColor: 'var(--line)',
+          color: 'var(--muted)',
+          backgroundColor: 'transparent'
+        }}
+      >
+        {translations.forYouAddAnotherRow} ({forYouRows.length}/3)
+      </button>
       )}
       
       <div className="p-3 rounded-lg text-sm" style={{ 
         backgroundColor: 'var(--btn)',
         color: 'var(--muted)'
       }}>
-        <strong>💡 Tip:</strong> Your For You section will show personalized recommendations based on these genre combinations. The titles will automatically update as you make selections.
+        {translations.forYouTipText}
       </div>
     </div>
   );

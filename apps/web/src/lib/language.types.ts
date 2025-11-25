@@ -25,6 +25,22 @@ export interface LanguageStrings {
   settings: string;
   general: string;
   notifications: string;
+  accountAndProfile: string;
+  displayAndLayout: string;
+  notificationSettings: string;
+  notificationSettingsDescription: string;
+  notificationCenter: string;
+  notificationCenterDescription: string;
+  currentSettings: string;
+  notificationTiming: string;
+  notificationMethods: string;
+  episodeReminders: string;
+  enabled: string;
+  disabled: string;
+  timing24HoursBefore: string;
+  timingCustomPro: string;
+  methodsInAppPush: string;
+  methodsInAppPushEmail: string;
   layout: string;
   data: string;
   pro: string;
@@ -35,6 +51,7 @@ export interface LanguageStrings {
   myStatistics: string;
   tvShows: string;
   movies: string;
+  notInterested: string;
   notInterestedManagement: string;
   manageNotInterestedList: string;
   personalityLevel: string;
@@ -46,6 +63,9 @@ export interface LanguageStrings {
   maximumSass: string;
   preview: string;
   resetSystemToDefaults: string;
+  resetSettingsToDefaults: string;
+  confirmResetSettings: string;
+  resetSettingsSuccess: string;
   
   // Layout Settings
   themePreference: string;
@@ -53,9 +73,14 @@ export interface LanguageStrings {
   light: string;
   darkBackgroundWithLightText: string;
   lightBackgroundWithDarkText: string;
-  basicCustomization: string;
   condensedView: string;
   enableEpisodeTracking: string;
+  discoveryRecommendations: string;
+  discoveryRecommendationsDescription: string;
+  otherLayoutSettings: string;
+  condensedViewDescription: string;
+  episodeTrackingCondensedProRequired: string;
+  episodeTrackingCondensedProAllowed: string;
   proFeatures: string;
   themePacksComingSoon: string;
   
@@ -70,6 +95,7 @@ export interface LanguageStrings {
   createNewList: string;
   listName: string;
   listDescription: string;
+  listDescriptionOptional: string;
   default: string;
   edit: string;
   setAsDefault: string;
@@ -97,6 +123,15 @@ export interface LanguageStrings {
   alreadyInList: string;
   confirmMoveToList: string;
   moveToList: string;
+  listNotFound: string;
+  failedToCreateList: string;
+  failedToUpdateList: string;
+  failedToDeleteList: string;
+  failedToSetDefaultList: string;
+  forYouSectionConfiguration: string;
+  forYouSectionDescription: string;
+  forYouAddAnotherRow: string;
+  forYouTipText: string;
   
   // Notifications
   notificationTypes: string;
@@ -222,6 +257,7 @@ export interface LanguageStrings {
   areYouSureChangeDisplayName: string;
   thisWillUpdateYourProfile: string;
   areYouSureResetSettings: string;
+  usernameUpdateFailed: string;
   
   // Language Labels
   language: string;
