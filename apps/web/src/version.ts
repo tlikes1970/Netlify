@@ -1,5 +1,10 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.179: Added Delete button to Channel Management
+// - Added deleteChannel() function with confirmation dialog
+// - Deletes channel from Firestore array (affects all users)
+// - Red delete button per channel in Admin > Channels tab
+// - Rollback: Revert this commit to remove delete functionality
 // ⚠️ VERSION 0.1.178: Low Priority Items + Firestore Channel Config
 // - Centralized error messages (errorMessages.ts) - consistent, warm, neutral tone
 // - Onboarding/Pro voice updates - benefit-focused, reduced emoji/exclamation spam
@@ -300,4 +305,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.178";
+export const APP_VERSION = "0.1.179";

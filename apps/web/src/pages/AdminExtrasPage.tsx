@@ -3343,6 +3343,42 @@ function ChannelManagement() {
     setTimeout(() => setSaveStatus(null), 3000);
   };
 
+  const deleteChannel = async (channelId: string, channelTitle: string) => {
+    // Runtime admin check
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      setSaveStatus("Error: Not authenticated");
+      setTimeout(() => setSaveStatus(null), 3000);
+      return;
+    }
+
+    if (!confirm(`Delete "${channelTitle || channelId}"? This affects all users.`)) {
+      return;
+    }
+
+    setSaving(true);
+
+    // Remove the channel from the array
+    const updatedChannels = channels.filter((ch) => ch.id !== channelId);
+
+    // Save to Firestore
+    const success = await saveCommunityChannelsConfig(
+      updatedChannels,
+      currentUser.email || currentUser.uid
+    );
+
+    setSaving(false);
+
+    if (success) {
+      setChannels(updatedChannels);
+      setSaveStatus(`Deleted ${channelTitle || channelId}`);
+    } else {
+      setSaveStatus("Error: Failed to delete channel");
+    }
+
+    setTimeout(() => setSaveStatus(null), 3000);
+  };
+
   const resetAllToDefaults = async () => {
     // Runtime admin check
     const currentUser = auth.currentUser;
@@ -3671,6 +3707,18 @@ function ChannelManagement() {
                   >
                     Open ↗
                   </a>
+                  <button
+                    onClick={() => deleteChannel(channel.id, channel.title)}
+                    disabled={saving}
+                    className="px-3 py-1.5 text-xs rounded"
+                    style={{
+                      backgroundColor: "#fee2e2",
+                      color: "#b91c1c",
+                      opacity: saving ? 0.5 : 1,
+                    }}
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             )}

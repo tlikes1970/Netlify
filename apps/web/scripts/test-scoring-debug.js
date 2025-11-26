@@ -45,3 +45,4 @@ console.log('\nTEST 2: CRANE vs TRACE (should be all present)');
 scoreGuess('CRANE', 'TRACE');
 
 
+
