@@ -151,11 +151,11 @@ export async function searchMulti(
 
   let filtered = results;
   if (searchType === 'movies-tv') {
+    // Filter multi-search results to only movies and TV shows
     filtered = results.filter((r: any) => r?.media_type === 'movie' || r?.media_type === 'tv');
   }
-  if (searchType === 'people') {
-    filtered = results.filter((r: any) => r?.media_type === 'person');
-  }
+  // Note: No filtering needed for 'people' - search/person endpoint already returns only people
+  // (and those results don't have media_type field, so filtering would return empty)
 
   const mapped = filtered.map(mapTMDBToMediaItem).filter(Boolean) as SearchResult[];
 

@@ -1,5 +1,11 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.184: Fixed People search filter returning empty results
+// - TMDB's search/person endpoint returns results WITHOUT media_type field
+// - Previous code filtered for media_type === 'person' which excluded ALL results
+// - Removed unnecessary filter since search/person already returns only people
+// - "Matt Damon" with People filter now correctly returns person results
+// - Rollback: Revert this commit to restore previous (broken) filter behavior
 // ⚠️ VERSION 0.1.183: Fixed Anime/Sports using TMDB keywords
 // - TMDB has no Sports genre, so sports anime was returning generic drama content
 // - Now uses TMDB keyword ID 6075 ("sport") for sports anime filtering
@@ -332,4 +338,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.183";
+export const APP_VERSION = "0.1.184";
