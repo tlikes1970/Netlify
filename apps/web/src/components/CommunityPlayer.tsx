@@ -145,6 +145,21 @@ export default function CommunityPlayer(_props: CommunityPlayerProps) {
     }
   }, [currentChannel]);
 
+  // Fallback: Clear loading state after 3 seconds if onLoad doesn't fire
+  // This handles cross-origin iframes that don't reliably fire load events
+  useEffect(() => {
+    if (!isLoading) return;
+
+    const timeout = setTimeout(() => {
+      if (isLoading) {
+        console.log("🎬 Fallback: Clearing loading state after timeout");
+        setIsLoading(false);
+      }
+    }, 3000);
+
+    return () => clearTimeout(timeout);
+  }, [isLoading, currentChannel?.id]);
+
   // Navigate to next channel
   const goToNextChannel = useCallback(() => {
     if (!channelQueue) return;
@@ -414,13 +429,13 @@ export default function CommunityPlayer(_props: CommunityPlayerProps) {
           </div>
         )}
 
-        {/* Thumbnail overlay when loading */}
+        {/* Thumbnail overlay when loading - fades out after iframe loads */}
         {isLoading && getThumbnail() && (
           <img
             src={getThumbnail()!}
             alt={currentChannel?.title || "Channel thumbnail"}
-            className="absolute inset-3 object-cover rounded-xl"
-            style={{ zIndex: 5 }}
+            className="absolute inset-3 object-cover rounded-xl pointer-events-none"
+            style={{ zIndex: 5, opacity: 0.8 }}
           />
         )}
 
@@ -473,6 +488,8 @@ export default function CommunityPlayer(_props: CommunityPlayerProps) {
             </video>
           ) : (
             // iframe for embeds (YouTube, Archive.org)
+            // Always display iframe - don't hide it while loading
+            // The onLoad event may not fire reliably for cross-origin iframes
             <iframe
               id="ia-player"
               src={getEmbedUrl()}
@@ -484,7 +501,6 @@ export default function CommunityPlayer(_props: CommunityPlayerProps) {
               loading="lazy"
               title={currentChannel?.title || "Community content"}
               style={{
-                display: isLoading ? "none" : "block",
                 border: "none",
               }}
               onLoad={() => {
