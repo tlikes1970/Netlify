@@ -245,6 +245,23 @@ export default function App() {
     };
   }, [addToast]);
 
+  // Handle "Search Works" button click from person search results
+  useEffect(() => {
+    const handlePersonWorksSearch = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.personName) {
+        console.log("🎬 Searching for person's works:", detail.personName);
+        // Search for the person's name with movies-tv filter to show their filmography
+        handleSearch(detail.personName, null, "movies-tv", null);
+      }
+    };
+
+    document.addEventListener("search:person-works", handlePersonWorksSearch);
+    return () => {
+      document.removeEventListener("search:person-works", handlePersonWorksSearch);
+    };
+  }, [handleSearch]);
+
   // Auth state
   const {
     loading: authLoading,

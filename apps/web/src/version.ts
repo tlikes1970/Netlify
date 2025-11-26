@@ -1,5 +1,10 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.185: Fixed "Search Works" button on person search results
+// - Button was dispatching event but nothing was listening
+// - Added event handler in App.tsx for search:person-works event
+// - Clicking "Search Works" now searches for person's filmography with movies-tv filter
+// - Rollback: Revert this commit to restore non-functional button
 // ⚠️ VERSION 0.1.184: Fixed People search filter returning empty results
 // - TMDB's search/person endpoint returns results WITHOUT media_type field
 // - Previous code filtered for media_type === 'person' which excluded ALL results
@@ -338,4 +343,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.184";
+export const APP_VERSION = "0.1.185";
