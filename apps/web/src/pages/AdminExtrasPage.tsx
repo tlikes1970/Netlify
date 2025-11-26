@@ -3201,6 +3201,8 @@ function ChannelManagement() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editUrl, setEditUrl] = useState("");
   const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editSource, setEditSource] = useState("");
   const [testStatus, setTestStatus] = useState<Record<string, "loading" | "success" | "error">>({});
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
@@ -3210,20 +3212,22 @@ function ChannelManagement() {
   }, []);
 
   const loadChannels = () => {
-    // Check localStorage for custom overrides (URLs and titles)
-    const customChannelsJson = localStorage.getItem("flicklet.admin.customChannels");
+    // Check localStorage for custom overrides
+    const customUrlsJson = localStorage.getItem("flicklet.admin.customChannels");
     const customTitlesJson = localStorage.getItem("flicklet.admin.customTitles");
+    const customDescriptionsJson = localStorage.getItem("flicklet.admin.customDescriptions");
+    const customSourcesJson = localStorage.getItem("flicklet.admin.customSources");
     
     let customUrls: Record<string, string> = {};
     let customTitles: Record<string, string> = {};
+    let customDescriptions: Record<string, string> = {};
+    let customSources: Record<string, string> = {};
     
     try {
-      if (customChannelsJson) {
-        customUrls = JSON.parse(customChannelsJson);
-      }
-      if (customTitlesJson) {
-        customTitles = JSON.parse(customTitlesJson);
-      }
+      if (customUrlsJson) customUrls = JSON.parse(customUrlsJson);
+      if (customTitlesJson) customTitles = JSON.parse(customTitlesJson);
+      if (customDescriptionsJson) customDescriptions = JSON.parse(customDescriptionsJson);
+      if (customSourcesJson) customSources = JSON.parse(customSourcesJson);
     } catch {
       // Ignore parse errors
     }
@@ -3233,6 +3237,8 @@ function ChannelManagement() {
       ...ch,
       url: customUrls[ch.id] || ch.url,
       title: customTitles[ch.id] || ch.title,
+      description: customDescriptions[ch.id] || ch.description,
+      source: customSources[ch.id] || ch.source,
     }));
     setChannels(merged);
   };
@@ -3241,37 +3247,51 @@ function ChannelManagement() {
     setEditingId(channel.id);
     setEditUrl(channel.url);
     setEditTitle(channel.title);
+    setEditDescription(channel.description || "");
+    setEditSource(channel.source || "");
   };
 
   const cancelEditing = () => {
     setEditingId(null);
     setEditUrl("");
     setEditTitle("");
+    setEditDescription("");
+    setEditSource("");
   };
 
   const saveChannel = (channelId: string) => {
-    // Get existing custom channels and titles
-    const customChannelsJson = localStorage.getItem("flicklet.admin.customChannels");
+    // Get existing custom values
+    const customUrlsJson = localStorage.getItem("flicklet.admin.customChannels");
     const customTitlesJson = localStorage.getItem("flicklet.admin.customTitles");
+    const customDescriptionsJson = localStorage.getItem("flicklet.admin.customDescriptions");
+    const customSourcesJson = localStorage.getItem("flicklet.admin.customSources");
     
-    const customChannels: Record<string, string> = customChannelsJson
-      ? JSON.parse(customChannelsJson)
-      : {};
-    const customTitles: Record<string, string> = customTitlesJson
-      ? JSON.parse(customTitlesJson)
-      : {};
+    const customUrls: Record<string, string> = customUrlsJson ? JSON.parse(customUrlsJson) : {};
+    const customTitles: Record<string, string> = customTitlesJson ? JSON.parse(customTitlesJson) : {};
+    const customDescriptions: Record<string, string> = customDescriptionsJson ? JSON.parse(customDescriptionsJson) : {};
+    const customSources: Record<string, string> = customSourcesJson ? JSON.parse(customSourcesJson) : {};
 
-    // Update URL and title
-    customChannels[channelId] = editUrl;
+    // Update all fields
+    customUrls[channelId] = editUrl;
     customTitles[channelId] = editTitle;
+    customDescriptions[channelId] = editDescription;
+    customSources[channelId] = editSource;
 
     // Save to localStorage
-    localStorage.setItem("flicklet.admin.customChannels", JSON.stringify(customChannels));
+    localStorage.setItem("flicklet.admin.customChannels", JSON.stringify(customUrls));
     localStorage.setItem("flicklet.admin.customTitles", JSON.stringify(customTitles));
+    localStorage.setItem("flicklet.admin.customDescriptions", JSON.stringify(customDescriptions));
+    localStorage.setItem("flicklet.admin.customSources", JSON.stringify(customSources));
 
     // Update state
     setChannels((prev) =>
-      prev.map((ch) => (ch.id === channelId ? { ...ch, url: editUrl, title: editTitle } : ch))
+      prev.map((ch) => (ch.id === channelId ? { 
+        ...ch, 
+        url: editUrl, 
+        title: editTitle,
+        description: editDescription,
+        source: editSource,
+      } : ch))
     );
 
     setSaveStatus(`Saved ${channelId}`);
@@ -3280,38 +3300,37 @@ function ChannelManagement() {
     setEditingId(null);
     setEditUrl("");
     setEditTitle("");
+    setEditDescription("");
+    setEditSource("");
   };
 
   const resetToDefault = (channelId: string) => {
-    // Get existing custom channels and titles
-    const customChannelsJson = localStorage.getItem("flicklet.admin.customChannels");
-    const customTitlesJson = localStorage.getItem("flicklet.admin.customTitles");
+    // Clear all custom values for this channel
+    const keys = [
+      "flicklet.admin.customChannels",
+      "flicklet.admin.customTitles", 
+      "flicklet.admin.customDescriptions",
+      "flicklet.admin.customSources",
+    ];
     
-    if (customChannelsJson) {
-      const customChannels: Record<string, string> = JSON.parse(customChannelsJson);
-      delete customChannels[channelId];
-      if (Object.keys(customChannels).length === 0) {
-        localStorage.removeItem("flicklet.admin.customChannels");
-      } else {
-        localStorage.setItem("flicklet.admin.customChannels", JSON.stringify(customChannels));
+    keys.forEach((key) => {
+      const json = localStorage.getItem(key);
+      if (json) {
+        const data: Record<string, string> = JSON.parse(json);
+        delete data[channelId];
+        if (Object.keys(data).length === 0) {
+          localStorage.removeItem(key);
+        } else {
+          localStorage.setItem(key, JSON.stringify(data));
+        }
       }
-    }
-    
-    if (customTitlesJson) {
-      const customTitles: Record<string, string> = JSON.parse(customTitlesJson);
-      delete customTitles[channelId];
-      if (Object.keys(customTitles).length === 0) {
-        localStorage.removeItem("flicklet.admin.customTitles");
-      } else {
-        localStorage.setItem("flicklet.admin.customTitles", JSON.stringify(customTitles));
-      }
-    }
+    });
 
     // Find default values
     const defaultChannel = COMMUNITY_CHANNELS.find((ch) => ch.id === channelId);
     if (defaultChannel) {
       setChannels((prev) =>
-        prev.map((ch) => (ch.id === channelId ? { ...ch, url: defaultChannel.url, title: defaultChannel.title } : ch))
+        prev.map((ch) => (ch.id === channelId ? { ...defaultChannel } : ch))
       );
     }
 
@@ -3449,6 +3468,36 @@ function ChannelManagement() {
                       color: "var(--text)",
                     }}
                     placeholder="Enter title..."
+                  />
+                </div>
+                <div>
+                  <label className="text-xs block mb-1" style={{ color: "var(--muted)" }}>Description</label>
+                  <input
+                    type="text"
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    className="w-full px-3 py-2 rounded text-sm"
+                    style={{
+                      backgroundColor: "var(--bg)",
+                      border: "1px solid var(--line)",
+                      color: "var(--text)",
+                    }}
+                    placeholder="Short description..."
+                  />
+                </div>
+                <div>
+                  <label className="text-xs block mb-1" style={{ color: "var(--muted)" }}>Source Attribution</label>
+                  <input
+                    type="text"
+                    value={editSource}
+                    onChange={(e) => setEditSource(e.target.value)}
+                    className="w-full px-3 py-2 rounded text-sm"
+                    style={{
+                      backgroundColor: "var(--bg)",
+                      border: "1px solid var(--line)",
+                      color: "var(--text)",
+                    }}
+                    placeholder="e.g., Internet Archive"
                   />
                 </div>
                 <div>

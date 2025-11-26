@@ -84,29 +84,41 @@ export default function CommunityPlayer(_props: CommunityPlayerProps) {
           });
         }
 
-        // Check localStorage for admin-customized channel URLs and titles
+        // Check localStorage for admin-customized channel values
         let customUrls: Record<string, string> = {};
         let customTitles: Record<string, string> = {};
+        let customDescriptions: Record<string, string> = {};
+        let customSources: Record<string, string> = {};
         try {
-          const customChannelsJson = localStorage.getItem("flicklet.admin.customChannels");
+          const customUrlsJson = localStorage.getItem("flicklet.admin.customChannels");
           const customTitlesJson = localStorage.getItem("flicklet.admin.customTitles");
-          if (customChannelsJson) {
-            customUrls = JSON.parse(customChannelsJson);
+          const customDescriptionsJson = localStorage.getItem("flicklet.admin.customDescriptions");
+          const customSourcesJson = localStorage.getItem("flicklet.admin.customSources");
+          
+          if (customUrlsJson) {
+            customUrls = JSON.parse(customUrlsJson);
             console.log("🎬 Loaded custom channel URLs:", Object.keys(customUrls).length);
           }
           if (customTitlesJson) {
             customTitles = JSON.parse(customTitlesJson);
-            console.log("🎬 Loaded custom channel titles:", Object.keys(customTitles).length);
+          }
+          if (customDescriptionsJson) {
+            customDescriptions = JSON.parse(customDescriptionsJson);
+          }
+          if (customSourcesJson) {
+            customSources = JSON.parse(customSourcesJson);
           }
         } catch {
           // Ignore localStorage errors
         }
 
-        // Merge custom URLs and titles with default channels
+        // Merge custom values with default channels
         const mergedChannels = COMMUNITY_CHANNELS.map((ch) => ({
           ...ch,
           url: customUrls[ch.id] || ch.url,
           title: customTitles[ch.id] || ch.title,
+          description: customDescriptions[ch.id] || ch.description,
+          source: customSources[ch.id] || ch.source,
         }));
 
         // Build channel list: legacy film first (if exists), then merged channels
