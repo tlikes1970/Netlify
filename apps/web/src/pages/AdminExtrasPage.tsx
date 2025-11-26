@@ -3200,6 +3200,7 @@ function ChannelManagement() {
   const [channels, setChannels] = useState<CommunityChannel[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editUrl, setEditUrl] = useState("");
+  const [editTitle, setEditTitle] = useState("");
   const [testStatus, setTestStatus] = useState<Record<string, "loading" | "success" | "error">>({});
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
@@ -3209,51 +3210,68 @@ function ChannelManagement() {
   }, []);
 
   const loadChannels = () => {
-    // Check localStorage for custom overrides
+    // Check localStorage for custom overrides (URLs and titles)
     const customChannelsJson = localStorage.getItem("flicklet.admin.customChannels");
-    if (customChannelsJson) {
-      try {
-        const customChannels = JSON.parse(customChannelsJson) as Record<string, string>;
-        // Merge with defaults
-        const merged = COMMUNITY_CHANNELS.map((ch) => ({
-          ...ch,
-          url: customChannels[ch.id] || ch.url,
-        }));
-        setChannels(merged);
-      } catch {
-        setChannels([...COMMUNITY_CHANNELS]);
+    const customTitlesJson = localStorage.getItem("flicklet.admin.customTitles");
+    
+    let customUrls: Record<string, string> = {};
+    let customTitles: Record<string, string> = {};
+    
+    try {
+      if (customChannelsJson) {
+        customUrls = JSON.parse(customChannelsJson);
       }
-    } else {
-      setChannels([...COMMUNITY_CHANNELS]);
+      if (customTitlesJson) {
+        customTitles = JSON.parse(customTitlesJson);
+      }
+    } catch {
+      // Ignore parse errors
     }
+    
+    // Merge with defaults
+    const merged = COMMUNITY_CHANNELS.map((ch) => ({
+      ...ch,
+      url: customUrls[ch.id] || ch.url,
+      title: customTitles[ch.id] || ch.title,
+    }));
+    setChannels(merged);
   };
 
   const startEditing = (channel: CommunityChannel) => {
     setEditingId(channel.id);
     setEditUrl(channel.url);
+    setEditTitle(channel.title);
   };
 
   const cancelEditing = () => {
     setEditingId(null);
     setEditUrl("");
+    setEditTitle("");
   };
 
-  const saveUrl = (channelId: string) => {
-    // Get existing custom channels
+  const saveChannel = (channelId: string) => {
+    // Get existing custom channels and titles
     const customChannelsJson = localStorage.getItem("flicklet.admin.customChannels");
+    const customTitlesJson = localStorage.getItem("flicklet.admin.customTitles");
+    
     const customChannels: Record<string, string> = customChannelsJson
       ? JSON.parse(customChannelsJson)
       : {};
+    const customTitles: Record<string, string> = customTitlesJson
+      ? JSON.parse(customTitlesJson)
+      : {};
 
-    // Update the URL
+    // Update URL and title
     customChannels[channelId] = editUrl;
+    customTitles[channelId] = editTitle;
 
     // Save to localStorage
     localStorage.setItem("flicklet.admin.customChannels", JSON.stringify(customChannels));
+    localStorage.setItem("flicklet.admin.customTitles", JSON.stringify(customTitles));
 
     // Update state
     setChannels((prev) =>
-      prev.map((ch) => (ch.id === channelId ? { ...ch, url: editUrl } : ch))
+      prev.map((ch) => (ch.id === channelId ? { ...ch, url: editUrl, title: editTitle } : ch))
     );
 
     setSaveStatus(`Saved ${channelId}`);
@@ -3261,27 +3279,39 @@ function ChannelManagement() {
 
     setEditingId(null);
     setEditUrl("");
+    setEditTitle("");
   };
 
   const resetToDefault = (channelId: string) => {
-    // Get existing custom channels
+    // Get existing custom channels and titles
     const customChannelsJson = localStorage.getItem("flicklet.admin.customChannels");
-    if (!customChannelsJson) return;
-
-    const customChannels: Record<string, string> = JSON.parse(customChannelsJson);
-    delete customChannels[channelId];
-
-    if (Object.keys(customChannels).length === 0) {
-      localStorage.removeItem("flicklet.admin.customChannels");
-    } else {
-      localStorage.setItem("flicklet.admin.customChannels", JSON.stringify(customChannels));
+    const customTitlesJson = localStorage.getItem("flicklet.admin.customTitles");
+    
+    if (customChannelsJson) {
+      const customChannels: Record<string, string> = JSON.parse(customChannelsJson);
+      delete customChannels[channelId];
+      if (Object.keys(customChannels).length === 0) {
+        localStorage.removeItem("flicklet.admin.customChannels");
+      } else {
+        localStorage.setItem("flicklet.admin.customChannels", JSON.stringify(customChannels));
+      }
+    }
+    
+    if (customTitlesJson) {
+      const customTitles: Record<string, string> = JSON.parse(customTitlesJson);
+      delete customTitles[channelId];
+      if (Object.keys(customTitles).length === 0) {
+        localStorage.removeItem("flicklet.admin.customTitles");
+      } else {
+        localStorage.setItem("flicklet.admin.customTitles", JSON.stringify(customTitles));
+      }
     }
 
-    // Find default URL
+    // Find default values
     const defaultChannel = COMMUNITY_CHANNELS.find((ch) => ch.id === channelId);
     if (defaultChannel) {
       setChannels((prev) =>
-        prev.map((ch) => (ch.id === channelId ? { ...ch, url: defaultChannel.url } : ch))
+        prev.map((ch) => (ch.id === channelId ? { ...ch, url: defaultChannel.url, title: defaultChannel.title } : ch))
       );
     }
 
@@ -3328,9 +3358,21 @@ function ChannelManagement() {
 
   const isCustomized = (channelId: string): boolean => {
     const customChannelsJson = localStorage.getItem("flicklet.admin.customChannels");
-    if (!customChannelsJson) return false;
-    const customChannels: Record<string, string> = JSON.parse(customChannelsJson);
-    return channelId in customChannels;
+    const customTitlesJson = localStorage.getItem("flicklet.admin.customTitles");
+    
+    let hasCustomUrl = false;
+    let hasCustomTitle = false;
+    
+    if (customChannelsJson) {
+      const customChannels: Record<string, string> = JSON.parse(customChannelsJson);
+      hasCustomUrl = channelId in customChannels;
+    }
+    if (customTitlesJson) {
+      const customTitles: Record<string, string> = JSON.parse(customTitlesJson);
+      hasCustomTitle = channelId in customTitles;
+    }
+    
+    return hasCustomUrl || hasCustomTitle;
   };
 
   return (
@@ -3394,21 +3436,39 @@ function ChannelManagement() {
 
             {editingId === channel.id ? (
               <div className="space-y-2">
-                <input
-                  type="text"
-                  value={editUrl}
-                  onChange={(e) => setEditUrl(e.target.value)}
-                  className="w-full px-3 py-2 rounded text-sm"
-                  style={{
-                    backgroundColor: "var(--bg)",
-                    border: "1px solid var(--line)",
-                    color: "var(--text)",
-                  }}
-                  placeholder="Enter URL..."
-                />
+                <div>
+                  <label className="text-xs block mb-1" style={{ color: "var(--muted)" }}>Title</label>
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full px-3 py-2 rounded text-sm"
+                    style={{
+                      backgroundColor: "var(--bg)",
+                      border: "1px solid var(--line)",
+                      color: "var(--text)",
+                    }}
+                    placeholder="Enter title..."
+                  />
+                </div>
+                <div>
+                  <label className="text-xs block mb-1" style={{ color: "var(--muted)" }}>URL</label>
+                  <input
+                    type="text"
+                    value={editUrl}
+                    onChange={(e) => setEditUrl(e.target.value)}
+                    className="w-full px-3 py-2 rounded text-sm"
+                    style={{
+                      backgroundColor: "var(--bg)",
+                      border: "1px solid var(--line)",
+                      color: "var(--text)",
+                    }}
+                    placeholder="Enter URL..."
+                  />
+                </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => saveUrl(channel.id)}
+                    onClick={() => saveChannel(channel.id)}
                     className="px-3 py-1.5 text-sm rounded"
                     style={{ backgroundColor: "var(--accent)", color: "white" }}
                   >

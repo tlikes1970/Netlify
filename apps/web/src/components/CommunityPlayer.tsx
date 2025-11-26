@@ -84,22 +84,29 @@ export default function CommunityPlayer(_props: CommunityPlayerProps) {
           });
         }
 
-        // Check localStorage for admin-customized channel URLs
-        let customChannels: Record<string, string> = {};
+        // Check localStorage for admin-customized channel URLs and titles
+        let customUrls: Record<string, string> = {};
+        let customTitles: Record<string, string> = {};
         try {
           const customChannelsJson = localStorage.getItem("flicklet.admin.customChannels");
+          const customTitlesJson = localStorage.getItem("flicklet.admin.customTitles");
           if (customChannelsJson) {
-            customChannels = JSON.parse(customChannelsJson);
-            console.log("🎬 Loaded custom channel URLs:", Object.keys(customChannels).length);
+            customUrls = JSON.parse(customChannelsJson);
+            console.log("🎬 Loaded custom channel URLs:", Object.keys(customUrls).length);
+          }
+          if (customTitlesJson) {
+            customTitles = JSON.parse(customTitlesJson);
+            console.log("🎬 Loaded custom channel titles:", Object.keys(customTitles).length);
           }
         } catch {
           // Ignore localStorage errors
         }
 
-        // Merge custom URLs with default channels
+        // Merge custom URLs and titles with default channels
         const mergedChannels = COMMUNITY_CHANNELS.map((ch) => ({
           ...ch,
-          url: customChannels[ch.id] || ch.url,
+          url: customUrls[ch.id] || ch.url,
+          title: customTitles[ch.id] || ch.title,
         }));
 
         // Build channel list: legacy film first (if exists), then merged channels
