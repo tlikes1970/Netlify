@@ -1,5 +1,11 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.183: Fixed Anime/Sports using TMDB keywords
+// - TMDB has no Sports genre, so sports anime was returning generic drama content
+// - Now uses TMDB keyword ID 6075 ("sport") for sports anime filtering
+// - Added KEYWORD_SUBGENRES mapping for subgenres that need keyword-based filtering
+// - Sports anime now correctly returns Haikyuu, Kuroko's Basketball, etc.
+// - Rollback: Revert this commit to restore genre-based sports filtering
 // ⚠️ VERSION 0.1.182: Separated Anime from Animation
 // - Anime now filters by origin_country=JP (Japan) for actual anime content
 // - Animation now excludes Japan for Western animation (Simpsons, Family Guy, etc.)
@@ -326,4 +332,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.182";
+export const APP_VERSION = "0.1.183";

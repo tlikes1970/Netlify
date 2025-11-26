@@ -234,7 +234,7 @@ const SUBGENRE_MAPPING: Record<string, number[]> = {
   shonen: [28, 12], // Action + Adventure (target: young males)
   shojo: [10749, 18], // Romance + Drama (target: young females)
   mecha: [878, 28], // Sci-Fi + Action (giant robots)
-  sports: [18], // Drama (sports anime are drama-coded in TMDB)
+  sports: [], // Uses keyword filter instead (see KEYWORD_SUBGENRES)
   popular: [], // No specific filter - just popularity sort
   horror: [27], // Horror
   slasher: [27], // Horror
@@ -284,6 +284,12 @@ const SUBGENRE_MAPPING: Record<string, number[]> = {
   "true-crime": [99], // Documentary
 };
 
+// Keyword-based subgenres (TMDB doesn't have genre IDs for these)
+// Use with_keywords parameter instead of with_genres
+const KEYWORD_SUBGENRES: Record<string, string> = {
+  sports: "6075", // TMDB keyword ID for "sport"
+};
+
 export async function fetchGenreContent(mainGenre: string, subGenre: string) {
   if (!mainGenre || !subGenre) return [];
 
@@ -314,8 +320,14 @@ export async function fetchGenreContent(mainGenre: string, subGenre: string) {
         page: "1",
       };
       
-      // Add subgenre filter if specified
-      if (subGenreIds.length > 0) {
+      // Check if subgenre uses keyword-based filtering (e.g., sports)
+      const keywordId = KEYWORD_SUBGENRES[subGenre];
+      if (keywordId) {
+        // Use keyword filter instead of genre
+        animeParams.with_keywords = keywordId;
+        console.log(`🏷️ Using keyword filter: ${subGenre} = ${keywordId}`);
+      } else if (subGenreIds.length > 0) {
+        // Use genre-based filter
         animeParams.with_genres = ["16", ...subGenreIds].join(",");
       }
 
@@ -337,7 +349,10 @@ export async function fetchGenreContent(mainGenre: string, subGenre: string) {
           page: "1",
         };
         
-        if (subGenreIds.length > 0) {
+        // Apply same keyword/genre logic for movies
+        if (keywordId) {
+          animeMovieParams.with_keywords = keywordId;
+        } else if (subGenreIds.length > 0) {
           animeMovieParams.with_genres = ["16", ...subGenreIds].join(",");
         }
 
