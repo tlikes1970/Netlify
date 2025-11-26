@@ -3567,14 +3567,24 @@ function ChannelManagement() {
                   <input
                     type="text"
                     value={editUrl}
-                    onChange={(e) => setEditUrl(e.target.value)}
+                    onChange={(e) => {
+                      let value = e.target.value;
+                      // Auto-extract URL if user pastes iframe embed code
+                      if (value.includes('<iframe') && value.includes('src="')) {
+                        const match = value.match(/src="([^"]+)"/);
+                        if (match && match[1]) {
+                          value = match[1];
+                        }
+                      }
+                      setEditUrl(value);
+                    }}
                     className="w-full px-3 py-2 rounded text-sm"
                     style={{
                       backgroundColor: "var(--bg)",
                       border: "1px solid var(--line)",
                       color: "var(--text)",
                     }}
-                    placeholder="Enter URL..."
+                    placeholder="https://archive.org/embed/... (paste iframe code or URL)"
                   />
                 </div>
                 <div className="flex gap-2">
