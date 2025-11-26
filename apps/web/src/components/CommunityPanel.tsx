@@ -38,6 +38,7 @@ import {
 import ProBadge from "./ProBadge";
 import { UpgradeToProCTA } from "./UpgradeToProCTA";
 import { reportPostOrComment } from "../lib/communityReports";
+import { ERROR_MESSAGES, logErrorDetails } from "../lib/errorMessages";
 // ⚠️ REMOVED: flickerDiagnostics import disabled
 
 // Lazy load game modals
@@ -283,11 +284,8 @@ const CommunityPanel = memo(function CommunityPanel() {
 
         hasFetchedRef.current = true;
       } catch (error) {
-        console.error("[CommunityPanel] Error fetching posts:", error);
-        const errorMsg =
-          error instanceof Error ? error.message : "Failed to load posts";
-
-        setPostsError(errorMsg);
+        logErrorDetails('CommunityPanel', error, { context: 'fetchPosts' });
+        setPostsError(ERROR_MESSAGES.community.loadPosts);
         if (reset) {
           setPosts([]);
         }
@@ -581,7 +579,7 @@ const CommunityPanel = memo(function CommunityPanel() {
               className="text-sm font-semibold"
               style={{ color: "var(--text)" }}
             >
-              {"Community Feed"}
+              What's everyone watching?
             </h3>
             <button
               onClick={() => setNewPostModalOpen(true)}
@@ -626,7 +624,7 @@ const CommunityPanel = memo(function CommunityPanel() {
               </select>
               {showSortUpgradeCTA && (
                 <div className="mt-2">
-                  <UpgradeToProCTA variant="inline" message="Advanced sorting is a Pro feature" />
+                  <UpgradeToProCTA variant="inline" message="Pro unlocks advanced sorting" />
                 </div>
               )}
             </div>
@@ -696,7 +694,7 @@ const CommunityPanel = memo(function CommunityPanel() {
           {postsLoading ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-xs" style={{ color: "var(--muted)" }}>
-                Loading posts...
+                Catching up on the latest...
               </div>
             </div>
           ) : postsError ? (
@@ -708,7 +706,7 @@ const CommunityPanel = memo(function CommunityPanel() {
           ) : posts.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-xs" style={{ color: "var(--muted)" }}>
-                No posts yet
+                Be the first to post!
               </div>
             </div>
           ) : (
@@ -864,14 +862,14 @@ const CommunityPanel = memo(function CommunityPanel() {
               {loadingMore && (
                 <div className="flex items-center justify-center py-4">
                   <div className="text-xs" style={{ color: "var(--muted)" }}>
-                    Loading more...
+                    Getting more...
                   </div>
                 </div>
               )}
               {!hasMore && posts.length > 0 && (
                 <div className="flex items-center justify-center py-4">
                   <div className="text-xs" style={{ color: "var(--muted)" }}>
-                    No more posts
+                    You're all caught up
                   </div>
                 </div>
               )}

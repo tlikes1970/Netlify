@@ -1,4 +1,22 @@
-import { useState, useEffect } from "react";
+/**
+ * Process: Community Player Multi-Channel
+ * Purpose: Displays community content from multiple channel types (live, loop, short, audio)
+ * Data Source: communityChannels.ts (primary), weekly-film.json (backward compat)
+ * Update Path: Modify communityChannels.ts to add/change channels
+ * Dependencies: Archive.org embed API, YouTube embeds, communityChannels.ts
+ */
+
+import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  type CommunityChannel,
+  type ChannelQueue,
+  COMMUNITY_CHANNELS,
+  convertLegacyFilm,
+  getThumbnailIndex,
+  createChannelQueue,
+  getValidShorts,
+} from "../data/communityChannels";
+import { ERROR_MESSAGES, logErrorDetails } from "../lib/errorMessages";
 
 interface WeeklyFilmData {
   weekOf: string;
@@ -10,86 +28,173 @@ interface CommunityPlayerProps {
   // Keep interface for future extensibility
 }
 
-/**
- * Process: Archive.org Weekly Film Player
- * Purpose: Displays a public-domain feature film from Archive.org that rotates weekly
- * Data Source: weekly-film.json in /public (updated weekly via automation)
- * Update Path: Update weekly-film.json every Monday with next film ID
- * Dependencies: Archive.org embed API, weekly-film.json
- */
-
 export default function CommunityPlayer(_props: CommunityPlayerProps) {
-  const [filmData, setFilmData] = useState<WeeklyFilmData | null>(null);
+  // Channel queue state
+  const [channelQueue, setChannelQueue] = useState<ChannelQueue | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [daysUntilNext, setDaysUntilNext] = useState<number | null>(null);
 
-  // Pre-vetted playlist of public domain films (Archive.org item identifiers)
-  // Format: Use exact item identifier from archive.org/details/{ITEM_ID}
-  // These identifiers come from the URL when viewing the item on Archive.org
-  const filmPlaylist = [
-    "House_On_Haunted_Hill.avi", // House on Haunted Hill (1959) - Vincent Price
-    "Night_of_the_Living_Dead", // Night of the Living Dead (1968)
-    "TheGeneral", // The General (1926) - Buster Keaton
-    "HisGirlFriday1940", // His Girl Friday (1940)
-    "CarnivalOfSouls", // Carnival of Souls (1962)
-    "TheKid1921", // The Kid (1921) - Charlie Chaplin
-    "Detour", // Detour (1945)
-    "The_Last_Man_on_Earth_1964", // The Last Man on Earth (1964)
-  ];
+  // Player controls state
+  const [isMuted, setIsMuted] = useState(true);
+  const [showCaptions, setShowCaptions] = useState(true);
 
-  // Load weekly film data
+  // Pre-buffer ref for shorts
+  const preBufferRef = useRef<HTMLVideoElement | null>(null);
+
+  // Touch/swipe tracking for shorts
+  const touchStartX = useRef<number | null>(null);
+
+  // Get current channel
+  const currentChannel = channelQueue?.channels[channelQueue.currentIndex];
+
+  // Load channels with backward compatibility for weekly-film.json
   useEffect(() => {
-    const loadFilmData = async () => {
+    const loadChannels = async () => {
       try {
-        const response = await fetch("/weekly-film.json", {
-          cache: "no-store", // Always check for latest version
-        });
+        // Try to load legacy weekly-film.json first for backward compatibility
+        let legacyChannel: CommunityChannel | null = null;
 
-        if (!response.ok) {
-          throw new Error(`Failed to load film data: ${response.status}`);
+        try {
+          const response = await fetch("/weekly-film.json", {
+            cache: "no-store",
+          });
+
+          if (response.ok) {
+            const data: WeeklyFilmData = await response.json();
+            legacyChannel = convertLegacyFilm(data.weekOf, data.itemId);
+
+            // Calculate days until next film
+            const today = new Date();
+            const weekOfDate = new Date(data.weekOf + "T00:00:00Z");
+            const nextMonday = new Date(weekOfDate);
+            nextMonday.setUTCDate(weekOfDate.getUTCDate() + 7);
+
+            const daysDiff = Math.ceil(
+              (nextMonday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+            );
+            setDaysUntilNext(daysDiff);
+
+            console.log("🎬 Loaded legacy weekly film:", data.itemId);
+          }
+        } catch (legacyErr) {
+          logErrorDetails("CommunityPlayer", legacyErr, {
+            context: "loadLegacyFilm",
+          });
         }
 
-        const data: WeeklyFilmData = await response.json();
-        setFilmData(data);
+        // Build channel list: legacy film first (if exists), then static channels
+        const channels = legacyChannel
+          ? [legacyChannel, ...COMMUNITY_CHANNELS]
+          : COMMUNITY_CHANNELS;
 
-        // Calculate days until next film (Monday at 00:00 UTC)
-        const today = new Date();
-        const weekOfDate = new Date(data.weekOf + "T00:00:00Z");
-
-        // Get next Monday
-        const nextMonday = new Date(weekOfDate);
-        nextMonday.setUTCDate(weekOfDate.getUTCDate() + 7);
-
-        const daysDiff = Math.ceil(
-          (nextMonday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-        );
-        setDaysUntilNext(daysDiff);
-
+        setChannelQueue(createChannelQueue(channels));
         setIsLoading(false);
-        console.log(
-          "🎬 Loaded weekly film:",
-          data.itemId,
-          "Week of:",
-          data.weekOf
-        );
       } catch (err) {
-        console.error("❌ Failed to load weekly film data:", err);
-        setError("Failed to load film");
+        logErrorDetails("CommunityPlayer", err, { context: "loadChannels" });
+        setError(ERROR_MESSAGES.loadFailed);
         setIsLoading(false);
 
-        // Fallback to first film
-        setFilmData({
-          weekOf: new Date().toISOString().slice(0, 10),
-          itemId: filmPlaylist[0],
-        });
+        // Fallback to static channels
+        setChannelQueue(createChannelQueue(COMMUNITY_CHANNELS));
       }
     };
 
-    loadFilmData();
+    loadChannels();
   }, []);
 
-  if (error && !filmData) {
+  // Pre-buffer next short when current is a short
+  useEffect(() => {
+    if (!currentChannel || currentChannel.type !== "short") return;
+
+    const shorts = getValidShorts();
+    const currentShortIndex = shorts.findIndex(
+      (s) => s.id === currentChannel.id
+    );
+    const nextShort = shorts[(currentShortIndex + 1) % shorts.length];
+
+    if (nextShort && preBufferRef.current) {
+      preBufferRef.current.src = nextShort.url;
+      preBufferRef.current.load();
+    }
+  }, [currentChannel]);
+
+  // Navigate to next channel
+  const goToNextChannel = useCallback(() => {
+    if (!channelQueue) return;
+
+    setChannelQueue((prev) => {
+      if (!prev) return prev;
+      const nextIndex = (prev.currentIndex + 1) % prev.channels.length;
+      return { ...prev, currentIndex: nextIndex };
+    });
+  }, [channelQueue]);
+
+  // Navigate to previous channel
+  const goToPrevChannel = useCallback(() => {
+    if (!channelQueue) return;
+
+    setChannelQueue((prev) => {
+      if (!prev) return prev;
+      const prevIndex =
+        (prev.currentIndex - 1 + prev.channels.length) % prev.channels.length;
+      return { ...prev, currentIndex: prevIndex };
+    });
+  }, [channelQueue]);
+
+  // Handle swipe for shorts
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (currentChannel?.type !== "short") return;
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartX.current || currentChannel?.type !== "short") return;
+
+    const touchEndX = e.changedTouches[0].clientX;
+    const diff = touchStartX.current - touchEndX;
+
+    // Swipe left to advance (threshold: 50px)
+    if (diff > 50) {
+      goToNextChannel();
+    }
+
+    touchStartX.current = null;
+  };
+
+  // Handle tap on left third to replay/go back
+  const handleTapOverlay = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (currentChannel?.type !== "short") return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const thirdWidth = rect.width / 3;
+
+    if (clickX < thirdWidth) {
+      // Left third: go to previous
+      goToPrevChannel();
+    }
+  };
+
+  // Toggle mute
+  const toggleMute = () => setIsMuted((prev) => !prev);
+
+  // Toggle captions
+  const toggleCaptions = () => setShowCaptions((prev) => !prev);
+
+  // Get thumbnail for current channel
+  const getThumbnail = () => {
+    if (!currentChannel || currentChannel.thumbnails.length === 0) return null;
+
+    const index = getThumbnailIndex(
+      currentChannel.thumbnails,
+      channelQueue?.lastRotation || new Date().toISOString()
+    );
+    return currentChannel.thumbnails[index];
+  };
+
+  // Render error state
+  if (error && !channelQueue) {
     return (
       <div
         className="youtube-player-container max-w-[420px] md:max-w-[560px] h-[750px] mx-auto rounded-2xl flex flex-col items-center justify-center p-4"
@@ -109,15 +214,35 @@ export default function CommunityPlayer(_props: CommunityPlayerProps) {
             🎬 Community Player
           </h3>
           <p className="text-xs" style={{ color: "var(--muted)" }}>
-            Unable to load film content
+            {error}
           </p>
         </div>
       </div>
     );
   }
 
-  const filmId = filmData?.itemId || filmPlaylist[0];
-  const embedUrl = `https://archive.org/embed/${filmId}`;
+  // Build embed URL based on channel type
+  const getEmbedUrl = () => {
+    if (!currentChannel) return "";
+
+    // YouTube embeds already have proper URL format
+    if (currentChannel.url.includes("youtube.com/embed")) {
+      return currentChannel.url;
+    }
+
+    // Archive.org embeds
+    if (currentChannel.url.includes("archive.org/embed")) {
+      return currentChannel.url;
+    }
+
+    // Direct video files (for shorts)
+    return currentChannel.url;
+  };
+
+  const isDirectVideo =
+    currentChannel?.type === "short" ||
+    currentChannel?.url.endsWith(".mp4") ||
+    currentChannel?.url.endsWith(".webm");
 
   return (
     <div
@@ -143,9 +268,17 @@ export default function CommunityPlayer(_props: CommunityPlayerProps) {
             className="text-sm font-medium"
             style={{ color: "var(--muted)", opacity: 0.6 }}
           >
-            🎬 Community Player
+            {currentChannel?.title || "🎬 Community Player"}
           </h3>
-          {daysUntilNext !== null && (
+          {currentChannel?.description && (
+            <span
+              className="text-xs"
+              style={{ color: "var(--muted)", opacity: 0.5 }}
+            >
+              {currentChannel.description}
+            </span>
+          )}
+          {daysUntilNext !== null && currentChannel?.id?.startsWith("legacy-") && (
             <span
               className="text-xs font-medium"
               style={{ color: "var(--accent)" }}
@@ -155,15 +288,123 @@ export default function CommunityPlayer(_props: CommunityPlayerProps) {
             </span>
           )}
         </div>
+
+        {/* Controls: Mute + Captions */}
+        <div className="flex gap-2">
+          <button
+            onClick={toggleMute}
+            className="p-1.5 rounded-lg transition-colors"
+            style={{
+              backgroundColor: "var(--btn2)",
+              color: "var(--muted)",
+            }}
+            aria-label={isMuted ? "Unmute" : "Mute"}
+          >
+            {isMuted ? (
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                <line x1="23" y1="9" x2="17" y2="15" />
+                <line x1="17" y1="9" x2="23" y2="15" />
+              </svg>
+            ) : (
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" />
+              </svg>
+            )}
+          </button>
+
+          {currentChannel?.captions && (
+            <button
+              onClick={toggleCaptions}
+              className="p-1.5 rounded-lg transition-colors"
+              style={{
+                backgroundColor: showCaptions ? "var(--accent)" : "var(--btn2)",
+                color: showCaptions ? "white" : "var(--muted)",
+              }}
+              aria-label={showCaptions ? "Hide captions" : "Show captions"}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <rect x="2" y="4" width="20" height="16" rx="2" />
+                <path d="M7 15h4M13 15h4M7 11h2M11 11h6" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Video frame with Archive.org iframe - flex to fill remaining space */}
-      <div className="flex-1 my-3 px-3 flex items-center justify-center min-h-0">
+      {/* Genre tags */}
+      {currentChannel?.genreTags && currentChannel.genreTags.length > 0 && (
+        <div className="px-3 pb-2 flex flex-wrap gap-1">
+          {currentChannel.genreTags.map((tag) => (
+            <span
+              key={tag}
+              className="text-xs px-2 py-0.5 rounded-full"
+              style={{
+                backgroundColor: "var(--accent)",
+                color: "white",
+                opacity: 0.8,
+              }}
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Video frame */}
+      <div
+        className="flex-1 my-3 px-3 flex items-center justify-center min-h-0 relative"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {isLoading && (
-          <div className="player-loading">
+          <div className="player-loading absolute inset-0 flex items-center justify-center z-10">
             <div className="loading-spinner"></div>
-            <p>Loading film...</p>
+            <p className="text-xs" style={{ color: "var(--muted)" }}>
+              Loading...
+            </p>
           </div>
+        )}
+
+        {/* Thumbnail overlay when loading */}
+        {isLoading && getThumbnail() && (
+          <img
+            src={getThumbnail()!}
+            alt={currentChannel?.title || "Channel thumbnail"}
+            className="absolute inset-3 object-cover rounded-xl"
+            style={{ zIndex: 5 }}
+          />
+        )}
+
+        {/* Tap overlay for shorts (left third for previous) */}
+        {currentChannel?.type === "short" && (
+          <div
+            className="absolute inset-3 z-20 cursor-pointer"
+            onClick={handleTapOverlay}
+            style={{ pointerEvents: "auto" }}
+          />
         )}
 
         <div
@@ -174,46 +415,147 @@ export default function CommunityPlayer(_props: CommunityPlayerProps) {
             borderStyle: "solid",
           }}
         >
-          <iframe
-            id="ia-player"
-            src={embedUrl}
-            width="100%"
-            height="100%"
-            frameBorder="0"
-            allowFullScreen
-            loading="lazy"
-            title="Public-domain feature film"
-            style={{
-              display: isLoading ? "none" : "block",
-              border: "none",
-            }}
-            onLoad={() => {
-              setIsLoading(false);
-              console.log("🎬 Archive.org player loaded:", filmId);
-            }}
-          />
+          {isDirectVideo ? (
+            // Direct video element for shorts/MP4s
+            <video
+              src={getEmbedUrl()}
+              autoPlay={currentChannel?.autoplay !== false}
+              muted={isMuted}
+              loop={currentChannel?.type !== "short"}
+              playsInline
+              className="w-full h-full object-cover"
+              style={{ display: isLoading ? "none" : "block" }}
+              onLoadedData={() => {
+                setIsLoading(false);
+                console.log("🎬 Video loaded:", currentChannel?.id);
+              }}
+              onEnded={() => {
+                if (currentChannel?.type === "short") {
+                  goToNextChannel();
+                }
+              }}
+            >
+              {/* Captions track */}
+              {typeof currentChannel?.captions === "string" && showCaptions && (
+                <track
+                  kind="captions"
+                  src={currentChannel.captions}
+                  srcLang="en"
+                  default
+                />
+              )}
+            </video>
+          ) : (
+            // iframe for embeds (YouTube, Archive.org)
+            <iframe
+              id="ia-player"
+              src={getEmbedUrl()}
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              allowFullScreen
+              allow="autoplay; encrypted-media"
+              loading="lazy"
+              title={currentChannel?.title || "Community content"}
+              style={{
+                display: isLoading ? "none" : "block",
+                border: "none",
+              }}
+              onLoad={() => {
+                setIsLoading(false);
+                console.log("🎬 Player loaded:", currentChannel?.id);
+              }}
+            />
+          )}
         </div>
+
+        {/* Hidden pre-buffer for next short */}
+        <video
+          ref={preBufferRef}
+          preload="auto"
+          muted
+          playsInline
+          style={{ display: "none" }}
+        />
       </div>
 
-      {/* Footer section with attribution */}
+      {/* Footer section */}
       <div
         className="rounded-b-2xl p-3 flex flex-col items-center gap-2"
         style={{
           backgroundColor: "var(--btn2)",
         }}
       >
+        {/* Social proof placeholder */}
         <p
-          className="ia-attribution"
-          style={{
-            fontSize: "0.75rem",
-            opacity: 0.7,
-            marginTop: "4px",
-            textAlign: "center",
-            color: "var(--muted)",
-          }}
+          className="text-xs"
+          style={{ color: "var(--muted)", opacity: 0.6 }}
         >
-          Film courtesy Internet Archive – public domain.
+          12 watchers today
         </p>
+
+        {/* Source attribution */}
+        {currentChannel?.source && (
+          <p
+            className="text-xs"
+            style={{
+              opacity: 0.7,
+              textAlign: "center",
+              color: "var(--muted)",
+            }}
+          >
+            Content courtesy {currentChannel.source}
+            {currentChannel.source === "Internet Archive" && " – public domain"}
+          </p>
+        )}
+
+        {/* Channel navigation */}
+        {channelQueue && channelQueue.channels.length > 1 && (
+          <div className="flex items-center gap-3 mt-1">
+            <button
+              onClick={goToPrevChannel}
+              className="p-1 rounded transition-colors"
+              style={{ color: "var(--muted)" }}
+              aria-label="Previous channel"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+
+            <span
+              className="text-xs"
+              style={{ color: "var(--muted)", opacity: 0.6 }}
+            >
+              {channelQueue.currentIndex + 1} / {channelQueue.channels.length}
+            </span>
+
+            <button
+              onClick={goToNextChannel}
+              className="p-1 rounded transition-colors"
+              style={{ color: "var(--muted)" }}
+              aria-label="Next channel"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

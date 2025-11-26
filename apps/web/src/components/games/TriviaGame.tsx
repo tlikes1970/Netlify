@@ -11,6 +11,7 @@ import { authManager } from '../../lib/auth';
 import { syncGameStats } from '../../lib/gameStatsSync';
 import { shareWithFallback } from '../../lib/shareLinks';
 import { getToastCallback } from '@/state/actions';
+import { ERROR_MESSAGES, logErrorDetails } from '../../lib/errorMessages';
 
 interface TriviaGameProps {
   onClose?: () => void;
@@ -521,11 +522,9 @@ export default function TriviaGame({
             formattedQuestions[0]?.options.length || 4
           ).fill(null);
         } catch (error) {
-          console.error("❌ Failed to load trivia questions:", error);
+          logErrorDetails('TriviaGame', error, { context: 'loadQuestions' });
           trackGameError('trivia', 'load_questions_failed', { error: String(error) });
-          setErrorMessage(
-            "Failed to load questions from server. Using backup questions."
-          );
+          setErrorMessage(ERROR_MESSAGES.game.loadFailed);
           // Fallback to hardcoded questions (same questions for all users)
           const fallbackQuestions = getTodaysQuestions(isPro, gameNumber)
             .slice(0, 10); // Always 10 questions per game
@@ -795,7 +794,7 @@ export default function TriviaGame({
       <div className="trivia-game" role="alert">
         <div className="trivia-error">
           <h3>Error Loading Game</h3>
-          <p>{errorMessage || "Something went wrong. Please try again."}</p>
+          <p>{errorMessage || ERROR_MESSAGES.generic}</p>
           <button className="btn-primary" onClick={handleRestart}>
             Try Again
           </button>
@@ -818,7 +817,7 @@ export default function TriviaGame({
     return (
       <div className="trivia-game" role="region" aria-label="Game completed">
         <div className="trivia-completed">
-          <h3>🎉 Game {currentGame} Complete!</h3>
+            <h3>Game {currentGame} Complete</h3>
           {isPro && (
             <p className="game-progress">Game {currentGame} of 3</p>
           )}
@@ -842,13 +841,13 @@ export default function TriviaGame({
 
           <div className="score-message">
             {percentage >= 80 && (
-              <p>🏆 Excellent! You&apos;re a movie trivia master!</p>
+              <p>Excellent! You really know your movies.</p>
             )}
             {percentage >= 60 && percentage < 80 && (
-              <p>👍 Good job! You know your movies!</p>
+              <p>Good job! You know your stuff.</p>
             )}
             {percentage < 60 && (
-              <p>📚 Keep watching! You&apos;ll get better!</p>
+              <p>Keep watching, you'll get better.</p>
             )}
           </div>
 
@@ -908,17 +907,17 @@ export default function TriviaGame({
           {!isPro && (
             <div className="pro-upsell">
               <p>
-                ✅ You&apos;ve completed your game today! Come back tomorrow for the next game!
+                Nice work! That's your daily game. Come back tomorrow.
               </p>
               <p>
-                🔒 Want more games? Upgrade to Pro for 3 games per day (10 questions each)!
+                Pro members get 3 games per day (10 questions each).
               </p>
             </div>
           )}
           {isPro && gamesCompletedToday >= 3 && (
             <div className="games-limit">
               <p>
-                ✅ You&apos;ve completed all 3 games today! Come back tomorrow for the next games!
+                Nice work! You've completed all 3 games today. Come back tomorrow.
               </p>
             </div>
           )}

@@ -37,6 +37,23 @@ function getScrollElement(): HTMLElement | null {
 export default function HomeDownArrow({ contentAnchorRef, className = '' }: HomeDownArrowProps) {
   // Start visible - at the top of Home, the arrow should be visible (content is below)
   const [isVisible, setIsVisible] = useState(true);
+  // Mobile-only: hide on desktop (≥1024px)
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return window.innerWidth < 1024;
+  });
+
+  // Listen for resize to update mobile state
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   // Show/hide arrow based on anchor's position in viewport
   // Show when anchor is still below viewport, hide when near/past it
@@ -121,8 +138,8 @@ export default function HomeDownArrow({ contentAnchorRef, className = '' }: Home
     }
   };
 
-  // Guard against rendering before anchor exists or when not visible
-  if (!contentAnchorRef.current || !isVisible) return null;
+  // Guard against rendering before anchor exists, when not visible, or on desktop
+  if (!contentAnchorRef.current || !isVisible || !isMobile) return null;
 
   const buttonStyle = {
     backgroundColor: "var(--accent)",

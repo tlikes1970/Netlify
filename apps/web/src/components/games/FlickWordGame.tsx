@@ -18,6 +18,7 @@ import { trackFlickWordGameStart, trackFlickWordGameComplete, trackFlickWordGues
 import { shareWithFallback } from '../../lib/shareLinks';
 import { getToastCallback } from '@/state/actions';
 import { parseFlickWordShareParams, storageKeyFlickWordShareParams, type FlickWordShareParams } from '../../lib/games/flickwordShared';
+import { ERROR_MESSAGES, logErrorDetails } from '../../lib/errorMessages';
 
 // Game configuration
 const KEYBOARD_ROWS = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM"];
@@ -424,8 +425,8 @@ export default function FlickWordGame({
           throw new Error("Invalid word data received");
         }
       } catch (error) {
-        console.error("❌ Failed to load daily word:", error);
-        setErrorMessage("Failed to load today's word. Using backup word.");
+        logErrorDetails('FlickWordGame', error, { context: 'loadTodaysWord' });
+        setErrorMessage(ERROR_MESSAGES.game.loadFailed);
         // Fallback to different words for different game numbers (deterministic based on date + game number)
         const fallbackWords = ["HOUSE", "CRANE", "BLISS"];
         const gameNumber = isPro ? currentGame : 1;
@@ -778,7 +779,7 @@ export default function FlickWordGame({
 
       if (currentWord === currentTarget) {
         setTimeout(() => {
-          showNotification("🎉 Correct! Well done!", "success");
+          showNotification("Correct! Well done.", "success");
           const gameNumber = isPro ? currentGame : 1;
           const today = getDailySeedDate();
           
@@ -891,7 +892,7 @@ export default function FlickWordGame({
     } catch (error) {
       // Handle validation errors or network failures
       console.error("❌ Error during word validation or submission:", error);
-      showNotification("Unable to validate word. Please try again.", "error");
+      showNotification(ERROR_MESSAGES.game.submitFailed, "error");
       setGame((p) => ({ ...p, current: "" }));
     } finally {
       // ALWAYS reset both flags, regardless of success or failure
@@ -1518,11 +1519,11 @@ export default function FlickWordGame({
           return (
             <div className="fw-games-limit">
               <p>
-                ✅ You&apos;ve completed {maxGames === 1 ? "your game" : `all ${maxGames} games`} today! Come back tomorrow for the next {maxGames === 1 ? "game" : "games"}!
+                Nice work! That's your {maxGames === 1 ? "daily game" : `${maxGames} games for today`}. Come back tomorrow.
               </p>
               {!isPro && (
                 <p className="fw-pro-upsell">
-                  🔒 Want more games? Upgrade to Pro for 3 games per day!
+                  Pro members get 3 games per day.
                 </p>
               )}
             </div>
@@ -1550,7 +1551,7 @@ export default function FlickWordGame({
       {showWinScreen && (
         <div className="fw-lost-screen">
           <div className="fw-lost-content">
-            <h2>🎉 Congratulations!</h2>
+            <h2>Congratulations!</h2>
             <p className="fw-lost-word">You guessed it in <strong>{game.guesses.length}</strong> {game.guesses.length === 1 ? 'guess' : 'guesses'}!</p>
             <p className="fw-lost-word">The word was: <strong>{game.target}</strong></p>
             <div className="fw-lost-actions">

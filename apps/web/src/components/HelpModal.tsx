@@ -100,18 +100,18 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
         return (
           <div className="space-y-4 text-gray-700 dark:text-gray-300">
             <p>
-              Flicklet helps you <strong>keep track of what you watch</strong>{" "}
-              and <strong>discover what to watch next</strong>. You can use it
-              on your phone, tablet, or computer—your lists sync automatically
-              when you're signed in.
+              Track what you watch, find what's next. We'll help you stay organized.
             </p>
-            <p>Think of it as a personal entertainment dashboard:</p>
+            <p>Here's what you can do:</p>
             <ul className="list-disc list-inside space-y-2 ml-4">
               <li>Save what you're watching now</li>
               <li>Build a wishlist of what's next</li>
               <li>Mark what you've finished</li>
-              <li>Find new recommendations that fit your taste</li>
+              <li>Get recommendations that fit your taste</li>
             </ul>
+            <p className="text-sm" style={{ color: "var(--muted)" }}>
+              <strong>Pro tip:</strong> Your lists sync across devices when you sign in.
+            </p>
           </div>
         );
       case "getting-started":
@@ -256,12 +256,10 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
           <div className="space-y-4 text-gray-700 dark:text-gray-300">
             <div>
               <p className="mb-3">
-                Pro unlocks the full experience. If you're using the free
-                version, you'll still have everything you need to track
-                shows—Pro simply adds more fun.
+                Free covers the basics. Pro adds more ways to enjoy your watchlist.
               </p>
 
-              <h4 className="font-semibold mb-2">Included with Pro:</h4>
+              <h4 className="font-semibold mb-2">What you get with Pro:</h4>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li>
                   🎬 <strong>Bloopers & Outtakes:</strong> watch
@@ -485,7 +483,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
         return (
           <div className="space-y-4 text-gray-700 dark:text-gray-300">
             <div>
-              <h4 className="font-semibold mb-3">Common Fixes</h4>
+              <h4 className="font-semibold mb-3">Quick fixes for common issues</h4>
               <div className="overflow-x-auto">
                 <table className="min-w-full border-collapse border border-gray-300 dark:border-gray-600">
                   <thead>
@@ -555,19 +553,10 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
 
             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
               <h4 className="font-semibold mb-2 text-blue-900 dark:text-blue-100">
-                Still Stuck?
+                Still stuck?
               </h4>
               <p className="text-blue-800 dark:text-blue-200 text-sm mb-2">
-                Open <strong>Settings → Feedback</strong>. Include:
-              </p>
-              <ul className="list-disc list-inside space-y-1 ml-4 text-sm text-blue-800 dark:text-blue-200">
-                <li>What you were doing</li>
-                <li>What you expected</li>
-                <li>What happened instead</li>
-                <li>Your browser and device</li>
-              </ul>
-              <p className="text-blue-800 dark:text-blue-200 text-sm mt-2">
-                This helps us fix it faster.
+                <strong>Pro tip:</strong> Go to Settings → Feedback and tell us what happened. The more detail, the faster we can help.
               </p>
             </div>
           </div>

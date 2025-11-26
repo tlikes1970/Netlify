@@ -18,10 +18,11 @@ export default function OnboardingCoachmarks() {
   const { step, setStep, completeOnboarding, skipOnboarding, isActive } =
     useOnboardingCoachmarks();
   
-  // Early return if onboarding should not be shown
-  if (!isActive) {
-    return null;
-  }
+  // Declare ALL hooks first, before any conditional returns (React rules of hooks)
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
+  const [currentlyWatchingRect, setCurrentlyWatchingRect] =
+    useState<DOMRect | null>(null);
+  const [upNextRect, setUpNextRect] = useState<DOMRect | null>(null);
 
   // Debug logging - always log on mount
   useEffect(() => {
@@ -42,11 +43,6 @@ export default function OnboardingCoachmarks() {
       (window as any).__onboardingDebug = { step, isActive, localStorageValue };
     }
   }, [step, isActive]);
-
-  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
-  const [currentlyWatchingRect, setCurrentlyWatchingRect] =
-    useState<DOMRect | null>(null);
-  const [upNextRect, setUpNextRect] = useState<DOMRect | null>(null);
 
   // Find anchor element(s) based on current step
   useEffect(() => {
@@ -337,11 +333,10 @@ export default function OnboardingCoachmarks() {
                 className="text-base font-semibold mb-1"
                 style={{ color: "var(--text)" }}
               >
-                Your Shows
+                You're all set
               </h3>
               <p className="text-sm" style={{ color: "var(--muted)" }}>
-                The shows you&apos;re watching appear up here. The one with the
-                next upcoming episode shows down here first.
+                Your shows live here. We'll track what's next for you.
               </p>
             </div>
 
@@ -481,13 +476,13 @@ export default function OnboardingCoachmarks() {
         return {
           stepNumber: 1,
           title: "Welcome to Flicklet",
-          body: "Let's get you set up! We'll show you how to add your first show in just a few quick steps.",
+          body: "Let's add your first show. It only takes a sec.",
           primaryAction: {
             label: "Let's go",
             onClick: handleWelcomeNext,
           },
           secondaryAction: {
-            label: "Skip setup",
+            label: "Not now",
             onClick: skipOnboarding,
           },
         };
@@ -495,14 +490,14 @@ export default function OnboardingCoachmarks() {
       case "search":
         return {
           stepNumber: 2,
-          title: "Search for a show",
-          body: "Go ahead, type the name of something you're watching in the search box above and hit search!",
+          title: "Find something you're watching",
+          body: "Type a show name in the search box above.",
           primaryAction: {
             label: "Got it",
             onClick: handleSearchGotIt,
           },
           secondaryAction: {
-            label: "Skip setup",
+            label: "Not now",
             onClick: skipOnboarding,
           },
         };
@@ -510,11 +505,11 @@ export default function OnboardingCoachmarks() {
       case "addShow":
         return {
           stepNumber: 3,
-          title: "Add it to Your Shows",
-          body: "Perfect! Now go ahead and click the 'Currently Watching' button below to add this show to your home screen.",
+          title: "Add it to your list",
+          body: "Tap 'Currently Watching' to save it.",
           primaryAction: null,
           secondaryAction: {
-            label: "Skip setup",
+            label: "Not now",
             onClick: skipOnboarding,
           },
         };

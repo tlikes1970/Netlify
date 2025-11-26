@@ -1168,12 +1168,12 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
           className="text-xl font-semibold mb-2"
           style={{ color: "var(--text)" }}
         >
-          {isProUser ? "You are a Pro User!" : "Upgrade to Flicklet Pro"}
+          {isProUser ? "You're a Pro" : "Upgrade to Flicklet Pro"}
         </h3>
         <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
           {isProUser
-            ? "Thank you for supporting Flicklet! Enjoy all Pro features."
-            : "Unlock advanced features and premium content to enhance your TV and movie tracking experience."}
+            ? "Thanks for going Pro! All features are unlocked."
+            : "Get more out of Flicklet with Pro features."}
         </p>
         {!isProUser && (
           <UpgradeToProCTA variant="button" />

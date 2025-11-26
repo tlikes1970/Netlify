@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslations } from '../lib/language';
 // import { useSettings } from '../lib/settings'; // Unused
 import { useToast } from '../components/Toast';
+import { ERROR_MESSAGES, logErrorDetails } from '../lib/errorMessages';
 
 export default function FeedbackPanel() {
   const translations = useTranslations();
@@ -70,8 +71,8 @@ export default function FeedbackPanel() {
       setFeedback('');
       
     } catch (error) {
-      console.error('❌ Error submitting feedback:', error);
-      addToast('Sorry, there was an error submitting your feedback. Please try again.', 'error');
+      logErrorDetails('FeedbackPanel', error, { context: 'submitFeedback' });
+      addToast(ERROR_MESSAGES.saveFailed, 'error');
     } finally {
       setIsSubmitting(false);
     }

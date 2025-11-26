@@ -1,5 +1,6 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { derr } from '../lib/log';
+import { ERROR_MESSAGES, logErrorDetails } from '../lib/errorMessages';
 
 interface Props {
   children: ReactNode;
@@ -25,6 +26,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     const boundaryName = this.props.name ? `[ErrorBoundary: ${this.props.name}]` : '[ErrorBoundary]';
     derr(boundaryName, error, errorInfo);
+    logErrorDetails(boundaryName, error, { componentStack: errorInfo.componentStack });
   }
 
   handleReset = () => {
@@ -45,7 +47,7 @@ export default class ErrorBoundary extends Component<Props, State> {
           style={{ minHeight: '120px' }}
         >
           <p className="text-sm mb-3" style={{ color: 'var(--muted)' }}>
-            Something went wrong here. Try again.
+            {ERROR_MESSAGES.generic}
           </p>
           <button
             onClick={this.handleReset}

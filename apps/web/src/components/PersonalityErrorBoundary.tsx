@@ -1,6 +1,7 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { derr } from '../lib/log';
 import { settingsManager, getPersonalityText } from '../lib/settings';
+import { logErrorDetails } from '../lib/errorMessages';
 
 interface Props {
   children: ReactNode;
@@ -24,6 +25,7 @@ export default class PersonalityErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     derr('PersonalityErrorBoundary caught an error:', error, errorInfo);
+    logErrorDetails('PersonalityErrorBoundary', error, { componentStack: errorInfo.componentStack });
   }
 
   render() {
@@ -65,7 +67,7 @@ export default class PersonalityErrorBoundary extends Component<Props, State> {
             </svg>
           </div>
           <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--text)' }}>
-            Oops! Something went wrong
+            Hmm, that didn't work
           </h2>
           <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
             {errorMessage}
