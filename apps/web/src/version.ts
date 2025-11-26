@@ -1,5 +1,16 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.178: Low Priority Items + Firestore Channel Config
+// - Centralized error messages (errorMessages.ts) - consistent, warm, neutral tone
+// - Onboarding/Pro voice updates - benefit-focused, reduced emoji/exclamation spam
+// - Tone conformity - Help Modal, CommunityPanel, games all use friendly host voice
+// - HomeDownArrow mobile-only visibility (<1024px)
+// - Community Player multi-channel support (14 channels, live/loop/short types)
+// - Channel Management UI in Admin settings (edit URL, title, description, source)
+// - Auto-extract URL from pasted iframe embed code
+// - Migrated channel config from localStorage to Firestore global config
+// - Fallback to static communityChannels.ts if Firestore unavailable
+// - Rollback: Revert this commit to restore previous behavior
 // ⚠️ VERSION 0.1.177: Removed useless "Only favorites" toggle from Discovery
 // - Removed favoritesOnly state and toggle button from DiscoveryPage
 // - Removed DiscoveryFavoritesFilter.test.tsx (toggle no longer exists)
@@ -289,4 +300,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.177";
+export const APP_VERSION = "0.1.178";
