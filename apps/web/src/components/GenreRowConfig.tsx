@@ -27,12 +27,27 @@ const AVAILABLE_GENRES: GenreConfig[] = [
     id: 'anime',
     name: 'Anime',
     subgenres: [
-      { id: 'action', name: 'Action' },
-      { id: 'romance', name: 'Romance' },
+      { id: 'shonen', name: 'Shōnen' },
+      { id: 'shojo', name: 'Shōjo' },
+      { id: 'mecha', name: 'Mecha' },
       { id: 'fantasy', name: 'Fantasy' },
-      { id: 'slice-of-life', name: 'Slice of Life' },
-      { id: 'thriller', name: 'Thriller' },
-      { id: 'comedy', name: 'Comedy' }
+      { id: 'romance', name: 'Romance' },
+      { id: 'comedy', name: 'Comedy' },
+      { id: 'popular', name: 'Popular' },
+      { id: 'sports', name: 'Sports' },
+      { id: 'horror', name: 'Horror' }
+    ]
+  },
+  {
+    id: 'animation',
+    name: 'Animation',
+    subgenres: [
+      { id: 'comedy', name: 'Comedy' },
+      { id: 'family', name: 'Family' },
+      { id: 'action', name: 'Action' },
+      { id: 'adventure', name: 'Adventure' },
+      { id: 'fantasy', name: 'Fantasy' },
+      { id: 'musical', name: 'Musical' }
     ]
   },
   {

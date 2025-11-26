@@ -13,6 +13,9 @@ import VoiceSearch from "./VoiceSearch";
 import Portal from "./Portal";
 import { isMobileNow } from "../lib/isMobile";
 
+// Note: Anime and Animation both use TMDB genre ID 16 (Animation)
+// The distinction is handled in ForYou/Discovery with origin_country filter
+// In search, both will return animation content (TMDB limitation)
 const POPULAR_GENRES = [
   { id: null, name: "All Genres" },
   { id: 28, name: "Action" },
@@ -23,7 +26,8 @@ const POPULAR_GENRES = [
   { id: 878, name: "Sci-Fi" },
   { id: 14, name: "Fantasy" },
   { id: 53, name: "Thriller" },
-  { id: 16, name: "Animation" },
+  { id: 16, name: "Anime" }, // Japanese animation
+  { id: 16, name: "Animation" }, // Western animation (Simpsons, etc.)
   { id: 99, name: "Documentary" },
   { id: 80, name: "Crime" },
   { id: 12, name: "Adventure" },

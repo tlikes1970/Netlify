@@ -28,6 +28,7 @@ const POPULAR_SUGGESTIONS = [
   'Marvel movies',
   'Netflix originals',
   'Anime series',
+  'Animated movies',
   'Horror movies',
   'Romantic comedies',
   'Sci-fi shows',

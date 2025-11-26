@@ -168,10 +168,18 @@ export async function searchMulti(query: string) {
 }
 
 // Genre mapping from our custom genres to TMDB genre IDs
-const GENRE_MAPPING: Record<string, { movie: number[]; tv: number[] }> = {
+// Note: "anime" uses origin_country=JP filter in discover calls (see getGenreContent)
+// "animation" is for Western animation (Simpsons, Family Guy, etc.)
+const GENRE_MAPPING: Record<string, { movie: number[]; tv: number[]; originCountry?: string }> = {
   anime: {
-    movie: [16], // Animation
-    tv: [16], // Animation
+    movie: [16], // Animation genre + JP origin filter
+    tv: [16], // Animation genre + JP origin filter
+    originCountry: "JP", // Japan - distinguishes anime from Western animation
+  },
+  animation: {
+    movie: [16], // Animation (Western - Simpsons, Family Guy, etc.)
+    tv: [16], // Animation (Western)
+    // No originCountry = excludes JP to avoid overlap with anime
   },
   horror: {
     movie: [27], // Horror
@@ -213,6 +221,7 @@ const GENRE_MAPPING: Record<string, { movie: number[]; tv: number[] }> = {
 
 // Subgenre mapping to additional TMDB genre IDs
 const SUBGENRE_MAPPING: Record<string, number[]> = {
+  // General subgenres
   action: [28], // Action
   romance: [10749], // Romance
   fantasy: [14], // Fantasy
@@ -221,6 +230,13 @@ const SUBGENRE_MAPPING: Record<string, number[]> = {
   comedy: [35], // Comedy
   psychological: [18], // Drama
   supernatural: [27], // Horror
+  // Anime-specific subgenres (demographics/themes)
+  shonen: [28, 12], // Action + Adventure (target: young males)
+  shojo: [10749, 18], // Romance + Drama (target: young females)
+  mecha: [878, 28], // Sci-Fi + Action (giant robots)
+  sports: [18], // Drama (sports anime are drama-coded in TMDB)
+  popular: [], // No specific filter - just popularity sort
+  horror: [27], // Horror
   slasher: [27], // Horror
   gothic: [27], // Horror
   "found-footage": [27], // Horror
@@ -242,6 +258,7 @@ const SUBGENRE_MAPPING: Record<string, number[]> = {
   war: [10752], // War
   adventure: [12], // Adventure
   superhero: [28], // Action
+  musical: [10402], // Music
   "space-opera": [878], // Science Fiction
   cyberpunk: [878], // Science Fiction
   dystopian: [878], // Science Fiction
@@ -287,28 +304,75 @@ export async function fetchGenreContent(mainGenre: string, subGenre: string) {
   try {
     let combined: CardData[] = [];
 
-    // For anime, use a different approach since TMDB doesn't have great anime categorization
+    // For anime, filter by Japan origin country to get actual anime (not Western animation)
     if (mainGenre === "anime") {
-      // Try to get animation content first
-      const animationData = await get("/discover/tv", {
+      // Get Japanese animation TV shows
+      const animeParams: Record<string, string> = {
         with_genres: "16", // Animation
+        with_origin_country: "JP", // Japan only = anime
         sort_by: "popularity.desc",
-        page: 1,
-      });
+        page: "1",
+      };
+      
+      // Add subgenre filter if specified
+      if (subGenreIds.length > 0) {
+        animeParams.with_genres = ["16", ...subGenreIds].join(",");
+      }
 
-      const animationShows = (animationData.results ?? [])
+      const animeTvData = await get("/discover/tv", animeParams);
+
+      const animeShows = (animeTvData.results ?? [])
         .filter((r: Raw) => r.poster_path)
         .map((r: Raw) => ({ ...map(r), kind: "tv" as const }));
 
-      console.log(`📺 Found ${animationShows.length} animation TV shows`);
+      console.log(`📺 Found ${animeShows.length} anime TV shows (JP origin)`);
+      combined = [...animeShows];
+
+      // If we don't have enough, try anime movies too
+      if (combined.length < 12) {
+        const animeMovieParams: Record<string, string> = {
+          with_genres: "16", // Animation
+          with_origin_country: "JP", // Japan only
+          sort_by: "popularity.desc",
+          page: "1",
+        };
+        
+        if (subGenreIds.length > 0) {
+          animeMovieParams.with_genres = ["16", ...subGenreIds].join(",");
+        }
+
+        const animeMovies = await get("/discover/movie", animeMovieParams);
+
+        const movies = (animeMovies.results ?? [])
+          .filter((r: Raw) => r.poster_path)
+          .map((r: Raw) => ({ ...map(r), kind: "movie" as const }));
+
+        combined = [...combined, ...movies];
+      }
+    } 
+    // For Western animation (not anime), exclude Japan
+    else if (mainGenre === "animation") {
+      const animationTvData = await get("/discover/tv", {
+        with_genres: "16", // Animation
+        without_origin_country: "JP", // Exclude Japan = Western animation only
+        sort_by: "popularity.desc",
+        page: "1",
+      });
+
+      const animationShows = (animationTvData.results ?? [])
+        .filter((r: Raw) => r.poster_path)
+        .map((r: Raw) => ({ ...map(r), kind: "tv" as const }));
+
+      console.log(`📺 Found ${animationShows.length} Western animation TV shows`);
       combined = [...animationShows];
 
-      // If we don't have enough, try movies too
+      // If we don't have enough, try animation movies too
       if (combined.length < 12) {
         const animationMovies = await get("/discover/movie", {
           with_genres: "16", // Animation
+          without_origin_country: "JP", // Exclude Japan
           sort_by: "popularity.desc",
-          page: 1,
+          page: "1",
         });
 
         const movies = (animationMovies.results ?? [])

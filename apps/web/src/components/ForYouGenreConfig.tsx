@@ -18,7 +18,7 @@ export default function ForYouGenreConfig() {
     
     // Default configuration
     return [
-      { id: '1', mainGenre: 'anime', subGenre: 'action', title: 'Anime/Action' },
+      { id: '1', mainGenre: 'anime', subGenre: 'shonen', title: 'Anime/Shōnen' },
       { id: '2', mainGenre: 'horror', subGenre: 'psychological', title: 'Horror/Psychological' },
       { id: '3', mainGenre: 'comedy', subGenre: 'romantic', title: 'Comedy/Romantic' }
     ];
