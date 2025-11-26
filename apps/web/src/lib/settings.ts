@@ -16,7 +16,8 @@ import { authManager } from './auth';
 import type { UserSettings } from './auth.types';
 
 // Settings data model based on design document
-export type PersonalityLevel = 1 | 2 | 3; // Regular, Semi-sarcastic, Severely sarcastic
+// Personality modes: distinct personalities instead of "sass levels"
+export type PersonalityLevel = 1 | 2 | 3; // Classic, Sassy, Brooding
 export type Theme = 'light' | 'dark';
 export type TargetList = 'watching' | 'wishlist';
 
@@ -417,114 +418,117 @@ export function useSetting<K extends keyof Settings>(key: K): Settings[K] {
 // Export manager for direct access
 export { settingsManager };
 
-// Personality text variations - Apple App Store compliant
+// Personality text variations - Three distinct modes (Apple App Store compliant)
+// Classic: Warm, friendly, encouraging
+// Sassy: Playful, witty, light banter
+// Brooding: Dry, melancholic, dramatically understated
 export const PERSONALITY_TEXTS = {
-  1: { // Regular - Friendly and helpful
-    welcome: "Welcome back, {username}! ✨",
-    empty: "No shows here yet.",
-    add: "Add some shows to get started!",
+  1: { // Classic - Warm and friendly
+    welcome: "Welcome back, {username}!",
+    empty: "Nothing here yet.",
+    add: "Ready when you are.",
     sarcasm: "",
     
     // Empty states
-    emptyWatching: "No shows in your currently watching list.",
-    emptyWishlist: "Your wishlist is empty.",
-    emptyWatched: "You haven't marked anything as watched yet.",
-    emptyUpNext: "No upcoming episodes scheduled.",
+    emptyWatching: "Your watch list is waiting to be filled.",
+    emptyWishlist: "Save something for later.",
+    emptyWatched: "Your watched list is a blank canvas.",
+    emptyUpNext: "All caught up for now.",
     
     // User interactions
-    itemAdded: "Added to your list!",
+    itemAdded: "Added to your list.",
     itemRemoved: "Removed from your list.",
-    searchEmpty: "No results found. Try a different search.",
+    searchEmpty: "No results. Try another search.",
     searchLoading: "Searching...",
     
     // Error messages
-    errorGeneric: "Something went wrong. Please try again.",
-    errorNetwork: "Network error. Check your connection.",
+    errorGeneric: "Something went wrong. Try again.",
+    errorNetwork: "Connection issue. Check your network.",
     errorNotFound: "Content not found.",
     
     // Success messages
-    successSave: "Settings saved!",
-    successImport: "Data imported successfully!",
-    successExport: "Data exported successfully!",
+    successSave: "Saved.",
+    successImport: "Import complete.",
+    successExport: "Export complete.",
     
     // Marquee messages
-    marquee1: "Discover your next favorite show",
-    marquee2: "Track what you're watching",
-    marquee3: "Never miss an episode",
-    marquee4: "Find your next binge-watch",
-    marquee5: "Organize your entertainment",
+    marquee1: "Find your next favorite",
+    marquee2: "Keep track of what matters",
+    marquee3: "Stay on top of new episodes",
+    marquee4: "Discover something great",
+    marquee5: "Your entertainment hub",
   },
   
-  2: { // Semi-sarcastic - A bit cheeky (Apple-safe)
-    welcome: "Oh, you're back, {username}. How... delightful.",
-    empty: "Well, this is awkward. Nothing here.",
-    add: "Maybe try adding something? Just a thought.",
-    sarcasm: "Because clearly you need help.",
+  2: { // Sassy - Playful and witty
+    welcome: "Look who's back, {username}.",
+    empty: "Crickets over here.",
+    add: "Go on, add something fun.",
+    sarcasm: "",
     
     // Empty states
-    emptyWatching: "Well, this is awkward. Nothing here.",
-    emptyWishlist: "Your wishlist is as empty as a Monday morning.",
-    emptyWatched: "You haven't watched anything? That's... impressive.",
-    emptyUpNext: "No episodes coming up. Shocking.",
+    emptyWatching: "This list is lonelier than a Friday night in.",
+    emptyWishlist: "Wishlist looking pretty bare.",
+    emptyWatched: "The watched pile needs some love.",
+    emptyUpNext: "Nothing on deck. Rare quiet moment.",
     
     // User interactions
-    itemAdded: "There you go. You're welcome.",
-    itemRemoved: "And it's gone. Poof.",
-    searchEmpty: "Nothing found. Surprise, surprise.",
-    searchLoading: "Searching... this might take a while.",
+    itemAdded: "Done deal.",
+    itemRemoved: "Poof. Gone.",
+    searchEmpty: "Nada. Try a different angle.",
+    searchLoading: "On it...",
     
     // Error messages
-    errorGeneric: "Well, that didn't work. Shocking.",
-    errorNetwork: "No internet? In this day and age?",
-    errorNotFound: "It's gone. Vanished. Poof.",
+    errorGeneric: "Whoops. Give it another shot.",
+    errorNetwork: "Signal's being dramatic.",
+    errorNotFound: "That one slipped away.",
     
     // Success messages
-    successSave: "Settings saved. Finally.",
-    successImport: "Data imported. Hope it's better than the last batch.",
-    successExport: "Data exported. Don't lose it this time.",
+    successSave: "Locked in.",
+    successImport: "All set.",
+    successExport: "Packed up and ready.",
     
     // Marquee messages
-    marquee1: "Because clearly you need help finding shows",
-    marquee2: "Track what you're watching (if anything)",
-    marquee3: "Never miss an episode (that exists)",
-    marquee4: "Find your next binge-watch (good luck)",
-    marquee5: "Organize your entertainment (finally)",
+    marquee1: "Your next obsession awaits",
+    marquee2: "Stay in the loop",
+    marquee3: "New episodes won't sneak past",
+    marquee4: "Time for a new binge",
+    marquee5: "Command center for couch time",
   },
   
-  3: { // Severely sarcastic - Maximum sass (Apple-safe, no user-directed digs)
-    welcome: "Oh joy, {username}. Another visit. I'm absolutely thrilled.",
-    empty: "Shocking. Absolutely shocking that this is empty.",
-    add: "Perhaps you'd like to actually use this app? Revolutionary concept.",
-    sarcasm: "I'm sure this will end well.",
+  3: { // Brooding - Dry and melancholic
+    welcome: "Ah, {username}. Here we are again.",
+    empty: "The void stares back.",
+    add: "Fill the emptiness, perhaps.",
+    sarcasm: "",
     
-    // Empty states - Apple-safe: punch at the situation, not the user
-    emptyWatching: "This list is emptier than a politician's promises.",
-    emptyWishlist: "Your wishlist is emptier than a Monday morning coffee shop.",
-    emptyWatched: "Nothing watched yet. The algorithm is probably confused.",
-    emptyUpNext: "No episodes coming up. What a surprise. I'm devastated.",
+    // Empty states
+    emptyWatching: "An empty list. How fitting.",
+    emptyWishlist: "Wishes unfulfilled. A familiar feeling.",
+    emptyWatched: "Nothing watched. Time remains unspent.",
+    emptyUpNext: "Silence on the horizon.",
     
-    // User interactions - Apple-safe: focus on the action, not the user
-    itemAdded: "There. The algorithm is pleased.",
-    itemRemoved: "Gone. Vanished. Like my will to live.",
-    searchEmpty: "Nothing found. What a shock. I'm devastated.",
-    searchLoading: "Searching... this could take forever. Literally.",
+    // User interactions
+    itemAdded: "Noted. The archive grows.",
+    itemRemoved: "Erased. As if it never was.",
+    searchEmpty: "Nothing found. The search continues.",
+    searchLoading: "Seeking...",
     
-    // Error messages - Apple-safe: punch at the technology, not the user
-    errorGeneric: "It broke. Shocking. Absolutely shocking.",
-    errorNetwork: "No internet? What is this, 1995?",
-    errorNotFound: "It's gone. Disappeared. Like my hopes and dreams.",
+    // Error messages
+    errorGeneric: "It failed. These things happen.",
+    errorNetwork: "The connection falters.",
+    errorNotFound: "Lost to the digital ether.",
     
-    // Success messages - Apple-safe: focus on the system, not the user
-    successSave: "Settings saved. The system is pleased.",
-    successImport: "Data imported. Hope it's not as disappointing as everything else.",
-    successExport: "Data exported. Don't lose it. Again.",
+    // Success messages
+    successSave: "Preserved.",
+    successImport: "Restored from the past.",
+    successExport: "Archived for uncertain futures.",
     
-    // Marquee messages - Apple-safe: punch at the situation, not the user
-    marquee1: "Discover your next favorite show (if such a thing exists)",
-    marquee2: "Track what you're watching (assuming you watch anything)",
-    marquee3: "Never miss an episode (that actually airs)",
-    marquee4: "Find your next binge-watch (good luck with that)",
-    marquee5: "Organize your entertainment (finally, some order)",
+    // Marquee messages
+    marquee1: "Something to fill the hours",
+    marquee2: "Keep watch over your collection",
+    marquee3: "Episodes arrive like old friends",
+    marquee4: "Another story to lose yourself in",
+    marquee5: "Where entertainment finds its rest",
   },
 };
 

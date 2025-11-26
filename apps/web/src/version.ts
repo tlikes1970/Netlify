@@ -1,5 +1,13 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.186: Riley Feedback Fixes - Phase 1
+// 1. Personality Modes: Replaced "sass levels" with distinct personalities (Classic, Sassy, Brooding)
+// 2. Half-Star Ratings: Now supports 0.5 increments (click left/right half of star)
+// 3. Search Tolerance: Added fuzzy matching for typos (haikyuu vs haikyu), query variations
+// 4. List Count Badge: Changed from notification-style pill to subtle parenthetical (5) format
+// 5. For You Personalize: Changed from underlined link to button with gear icon
+// 6. In Theaters: Added manual location entry when geolocation fails, with persistence
+// - Rollback: Revert this commit to restore previous behavior
 // ⚠️ VERSION 0.1.185: Fixed "Search Works" button on person search results
 // - Button was dispatching event but nothing was listening
 // - Added event handler in App.tsx for search:person-works event
@@ -343,4 +351,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.185";
+export const APP_VERSION = "0.1.186";

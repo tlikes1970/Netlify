@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   getTheatersNearLocation,
@@ -14,7 +14,11 @@ export interface LocationData {
   city: string;
   region: string;
   country: string;
+  isManual?: boolean; // True if user manually set location
 }
+
+// Storage key for persisted manual location
+const MANUAL_LOCATION_KEY = 'flicklet:manualLocation';
 
 export function useLocation() {
   const [location, setLocation] = useState<LocationData | null>(null);
@@ -22,17 +26,44 @@ export function useLocation() {
     "granted" | "denied" | "prompt" | "loading"
   >("loading");
   const geoResolverRef = useRef<(() => Promise<any>) | null>(null);
+  const [detectionTimedOut, setDetectionTimedOut] = useState(false);
 
+  // Load persisted manual location on mount
   useEffect(() => {
+    try {
+      const savedLocation = localStorage.getItem(MANUAL_LOCATION_KEY);
+      if (savedLocation) {
+        const parsed = JSON.parse(savedLocation) as LocationData;
+        setLocation({ ...parsed, isManual: true });
+        setLocationPermission("granted");
+        console.log("📍 Loaded saved manual location:", parsed.city, parsed.region);
+        return; // Skip auto-detection if manual location is set
+      }
+    } catch (e) {
+      console.warn("Failed to load saved location:", e);
+    }
+    
+    // No saved location, proceed with auto-detection
     let eventHandler: (() => void) | null = null;
     let fallbackTimeoutId: ReturnType<typeof setTimeout> | null = null;
+    let detectionTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
     const requestLocation = () => {
+      // Set a timeout for detection - if it takes too long, show fallback UI
+      detectionTimeoutId = setTimeout(() => {
+        if (locationPermission === "loading") {
+          console.log("📍 Location detection timed out, showing manual entry");
+          setDetectionTimedOut(true);
+          setLocationPermission("denied");
+        }
+      }, 8000); // 8 seconds timeout
+      
       try {
         // Try to get precise location first
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             async (position) => {
+              if (detectionTimeoutId) clearTimeout(detectionTimeoutId);
               const { latitude, longitude } = position.coords;
 
               // Get city info from coordinates (reverse geocoding) - single-flight + cache
@@ -67,6 +98,7 @@ export function useLocation() {
               }
             },
             (error) => {
+              if (detectionTimeoutId) clearTimeout(detectionTimeoutId);
               console.log("Geolocation denied or failed:", error);
               setLocationPermission("denied");
 
@@ -88,6 +120,7 @@ export function useLocation() {
           );
         } else {
           // Browser doesn't support geolocation, use IP
+          if (detectionTimeoutId) clearTimeout(detectionTimeoutId);
           getLocationFromIP()
             .then((ipLocation) => {
               setLocation(ipLocation);
@@ -100,6 +133,7 @@ export function useLocation() {
             });
         }
       } catch (error) {
+        if (detectionTimeoutId) clearTimeout(detectionTimeoutId);
         console.error("Location setup failed:", error);
         setLocationPermission("denied");
       }
@@ -141,6 +175,9 @@ export function useLocation() {
       if (fallbackTimeoutId) {
         clearTimeout(fallbackTimeoutId);
       }
+      if (detectionTimeoutId) {
+        clearTimeout(detectionTimeoutId);
+      }
     };
   }, []);
 
@@ -150,11 +187,54 @@ export function useLocation() {
     window.location.reload();
   };
 
+  // Set manual location (city/region input)
+  const setManualLocation = useCallback((city: string, region: string, country: string = "US") => {
+    // Use a simple geocoding approximation or default coordinates
+    // For now, we'll set placeholder coords - the theater API can still work with city/region
+    const manualLoc: LocationData = {
+      latitude: 0, // Will be refined by theater API
+      longitude: 0,
+      city: city.trim(),
+      region: region.trim(),
+      country,
+      isManual: true,
+    };
+    
+    setLocation(manualLoc);
+    setLocationPermission("granted");
+    setDetectionTimedOut(false);
+    
+    // Persist for future visits
+    try {
+      localStorage.setItem(MANUAL_LOCATION_KEY, JSON.stringify(manualLoc));
+      console.log("📍 Saved manual location:", city, region);
+    } catch (e) {
+      console.warn("Failed to save location:", e);
+    }
+  }, []);
+  
+  // Clear manual location and re-detect
+  const clearManualLocation = useCallback(() => {
+    try {
+      localStorage.removeItem(MANUAL_LOCATION_KEY);
+    } catch (e) {
+      // Ignore
+    }
+    setLocation(null);
+    setLocationPermission("loading");
+    setDetectionTimedOut(false);
+    // Trigger re-detection by reloading
+    window.location.reload();
+  }, []);
+
   return {
     location,
     locationPermission,
     requestLocationPermission,
+    setManualLocation,
+    clearManualLocation,
     isLoading: locationPermission === "loading",
+    detectionTimedOut,
   };
 }
 

@@ -245,15 +245,15 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
                   fontWeight: current === tab.id ? '600' : '500'
                 }}
               >
-                <span className="text-sm font-medium">{tab.label}</span>
-                {tab.count > 0 && (
-                  <span 
-                    className="bg-gray-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 mt-0.5"
-                    style={{ fontSize: '10px' }}
-                  >
-                    {tab.count}
-                  </span>
-                )}
+                <span className="text-sm font-medium">
+                  {tab.label}
+                  {/* Count displayed as subtle parenthetical, not notification badge */}
+                  {tab.count > 0 && (
+                    <span className="font-normal opacity-70 ml-0.5">
+                      ({tab.count})
+                    </span>
+                  )}
+                </span>
                 {current === tab.id && (
                   <div 
                     className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 rounded-full"
@@ -285,12 +285,15 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
                   aria-haspopup="menu"
                   aria-expanded={moreOpen}
                 >
-                  <span className="text-sm font-medium">More</span>
-                  {overflowTabs.some(t => t.count > 0) && (
-                    <span className="bg-gray-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1 mt-0.5">
-                      {overflowTabs.reduce((sum, t) => sum + (t.count || 0), 0)}
-                    </span>
-                  )}
+                  <span className="text-sm font-medium">
+                    More
+                    {/* Count displayed as subtle parenthetical */}
+                    {overflowTabs.some(t => t.count > 0) && (
+                      <span className="font-normal opacity-70 ml-0.5">
+                        ({overflowTabs.reduce((sum, t) => sum + (t.count || 0), 0)})
+                      </span>
+                    )}
+                  </span>
                   {moreOpen && (
                     <div 
                       role="menu"
@@ -306,8 +309,9 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
                           style={{ color: 'var(--text)' }}
                         >
                           <span>{t.label}</span>
+                          {/* Subtle count, not notification badge */}
                           {t.count > 0 && (
-                            <span className="ml-2 px-2 py-0.5 rounded-full text-xs font-bold" style={{ backgroundColor: 'var(--accent)', color: 'white' }}>{t.count}</span>
+                            <span className="ml-2 text-xs opacity-70" style={{ color: 'var(--muted)' }}>({t.count})</span>
                           )}
                         </button>
                       ))}

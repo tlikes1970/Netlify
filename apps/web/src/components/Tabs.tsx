@@ -67,17 +67,17 @@ export default function Tabs({ current, onChange }: TabsProps) {
                   }}
                 >
                   <span className="truncate">{t.label}</span>
-                  <span 
-                    className="ml-2 px-2 py-1 rounded-full text-sm font-bold flex-shrink-0"
-                    style={{
-                      backgroundColor: t.count > 0 ? (current === t.id ? 'rgba(255,255,255,0.2)' : 'var(--accent)') : 'transparent',
-                      color: t.count > 0 ? 'white' : 'transparent',
-                      minWidth: '20px',
-                      textAlign: 'center'
-                    }}
-                  >
-                    {t.count > 0 ? t.count : ''}
-                  </span>
+                  {/* Count displayed as subtle text, not notification-style badge */}
+                  {t.count > 0 && (
+                    <span 
+                      className="ml-1.5 text-sm font-normal opacity-70"
+                      style={{
+                        color: current === t.id ? 'white' : 'var(--muted)',
+                      }}
+                    >
+                      ({t.count})
+                    </span>
+                  )}
                 </button>
               ))}
             </div>

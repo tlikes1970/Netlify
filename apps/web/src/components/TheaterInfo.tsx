@@ -5,34 +5,138 @@ import { Theater } from '../lib/tmdb';
 
 export default function TheaterInfo() {
   const translations = useTranslations();
-  const { location, locationPermission, requestLocationPermission, isLoading } = useLocation();
+  const { 
+    location, 
+    locationPermission, 
+    requestLocationPermission, 
+    setManualLocation,
+    clearManualLocation,
+    isLoading,
+    detectionTimedOut 
+  } = useLocation();
   const { data: theaters, isLoading: theatersLoading } = useTheaters();
   const [showTheaters, setShowTheaters] = useState(false);
+  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [manualCity, setManualCity] = useState('');
+  const [manualRegion, setManualRegion] = useState('');
 
-  if (isLoading) {
+  const handleManualSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (manualCity.trim()) {
+      setManualLocation(manualCity.trim(), manualRegion.trim() || manualCity.trim());
+      setShowManualEntry(false);
+      setManualCity('');
+      setManualRegion('');
+    }
+  };
+
+  // Loading state with timeout fallback
+  if (isLoading && !detectionTimedOut) {
     return (
       <div className="mb-3 flex flex-col gap-1">
         <div className="text-sm font-medium text-neutral-200">{translations.inTheatersNearYou}</div>
-        <div className="text-xs text-neutral-400">📍 {translations.detectingLocation || 'Detecting your location...'}</div>
+        <div className="text-xs text-neutral-400 flex items-center gap-2">
+          <span className="animate-pulse">📍</span> 
+          {translations.detectingLocation || 'Detecting your location...'}
+        </div>
       </div>
     );
   }
 
-  if (!location) {
+  // No location - show manual entry option
+  if (!location || detectionTimedOut) {
     return (
-      <div className="mb-3 flex flex-col gap-1">
+      <div className="mb-3 flex flex-col gap-2">
         <div className="text-sm font-medium text-neutral-200">{translations.inTheatersNearYou}</div>
-        <div className="text-xs text-neutral-400">
-          <span className="font-medium">📍 {translations.locationUnavailable || 'Location unavailable'}</span>
-          {locationPermission === 'denied' && (
-            <button 
-              onClick={requestLocationPermission}
-              className="ml-2 text-blue-400 hover:text-blue-300 underline"
-            >
-              {translations.enableLocation || 'Enable location'}
-            </button>
-          )}
-        </div>
+        
+        {!showManualEntry ? (
+          <div className="flex flex-col gap-2">
+            <div className="text-xs text-neutral-400">
+              <span className="font-medium">📍 {translations.locationUnavailable || 'Location unavailable'}</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {locationPermission === 'denied' && (
+                <button 
+                  onClick={requestLocationPermission}
+                  className="text-xs px-2 py-1 rounded border transition-colors"
+                  style={{ 
+                    color: 'var(--accent)', 
+                    borderColor: 'var(--accent)',
+                    backgroundColor: 'transparent'
+                  }}
+                >
+                  {translations.enableLocation || 'Try again'}
+                </button>
+              )}
+              <button 
+                onClick={() => setShowManualEntry(true)}
+                className="text-xs px-2 py-1 rounded border transition-colors"
+                style={{ 
+                  color: 'var(--text)', 
+                  borderColor: 'var(--line)',
+                  backgroundColor: 'var(--btn)'
+                }}
+              >
+                Enter location manually
+              </button>
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleManualSubmit} className="flex flex-col gap-2">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="City (e.g., Los Angeles)"
+                value={manualCity}
+                onChange={(e) => setManualCity(e.target.value)}
+                className="flex-1 text-xs px-2 py-1.5 rounded border"
+                style={{ 
+                  backgroundColor: 'var(--card)', 
+                  borderColor: 'var(--line)',
+                  color: 'var(--text)'
+                }}
+                autoFocus
+              />
+              <input
+                type="text"
+                placeholder="State/Region"
+                value={manualRegion}
+                onChange={(e) => setManualRegion(e.target.value)}
+                className="w-24 text-xs px-2 py-1.5 rounded border"
+                style={{ 
+                  backgroundColor: 'var(--card)', 
+                  borderColor: 'var(--line)',
+                  color: 'var(--text)'
+                }}
+              />
+            </div>
+            <div className="flex gap-2">
+              <button 
+                type="submit"
+                disabled={!manualCity.trim()}
+                className="text-xs px-3 py-1 rounded transition-colors disabled:opacity-50"
+                style={{ 
+                  backgroundColor: 'var(--accent)', 
+                  color: 'white'
+                }}
+              >
+                Set Location
+              </button>
+              <button 
+                type="button"
+                onClick={() => setShowManualEntry(false)}
+                className="text-xs px-2 py-1 rounded border transition-colors"
+                style={{ 
+                  color: 'var(--muted)', 
+                  borderColor: 'var(--line)',
+                  backgroundColor: 'transparent'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     );
   }
@@ -45,15 +149,99 @@ export default function TheaterInfo() {
     <div className="mb-3 flex flex-col gap-2">
       <div className="text-sm font-medium text-neutral-200">{translations.inTheatersNearYou}</div>
       
-      <div className="text-xs text-neutral-400">
-        <span className="font-medium">📍 {location.city}, {location.region}</span>
+      <div className="text-xs text-neutral-400 flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="font-medium">
+          📍 {location.city}, {location.region}
+          {location.isManual && <span className="ml-1 opacity-60">(manual)</span>}
+        </span>
+        <span className="opacity-50">•</span>
         <button 
           onClick={handleFindShowtimes}
-          className="ml-2 text-blue-400 hover:text-blue-300 underline"
+          className="text-blue-400 hover:text-blue-300 underline"
         >
           {showTheaters ? (translations.hideShowtimes || 'Hide') : (translations.findShowtimes || 'Find')} Showtimes
         </button>
+        <span className="opacity-50">•</span>
+        <button 
+          onClick={() => setShowManualEntry(true)}
+          className="opacity-70 hover:opacity-100 underline"
+          style={{ color: 'var(--muted)' }}
+        >
+          Change location
+        </button>
       </div>
+      
+      {/* Manual location entry overlay */}
+      {showManualEntry && (
+        <form onSubmit={handleManualSubmit} className="flex flex-col gap-2 p-2 rounded-lg" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--line)' }}>
+          <div className="text-xs font-medium" style={{ color: 'var(--text)' }}>Enter new location:</div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="City"
+              value={manualCity}
+              onChange={(e) => setManualCity(e.target.value)}
+              className="flex-1 text-xs px-2 py-1.5 rounded border"
+              style={{ 
+                backgroundColor: 'var(--bg)', 
+                borderColor: 'var(--line)',
+                color: 'var(--text)'
+              }}
+              autoFocus
+            />
+            <input
+              type="text"
+              placeholder="State/Region"
+              value={manualRegion}
+              onChange={(e) => setManualRegion(e.target.value)}
+              className="w-24 text-xs px-2 py-1.5 rounded border"
+              style={{ 
+                backgroundColor: 'var(--bg)', 
+                borderColor: 'var(--line)',
+                color: 'var(--text)'
+              }}
+            />
+          </div>
+          <div className="flex gap-2">
+            <button 
+              type="submit"
+              disabled={!manualCity.trim()}
+              className="text-xs px-3 py-1 rounded transition-colors disabled:opacity-50"
+              style={{ 
+                backgroundColor: 'var(--accent)', 
+                color: 'white'
+              }}
+            >
+              Update
+            </button>
+            <button 
+              type="button"
+              onClick={() => { setShowManualEntry(false); setManualCity(''); setManualRegion(''); }}
+              className="text-xs px-2 py-1 rounded border transition-colors"
+              style={{ 
+                color: 'var(--muted)', 
+                borderColor: 'var(--line)',
+                backgroundColor: 'transparent'
+              }}
+            >
+              Cancel
+            </button>
+            {location.isManual && (
+              <button 
+                type="button"
+                onClick={() => { clearManualLocation(); }}
+                className="text-xs px-2 py-1 rounded transition-colors ml-auto"
+                style={{ 
+                  color: 'var(--red, #ef4444)', 
+                  backgroundColor: 'transparent'
+                }}
+              >
+                Use auto-detect
+              </button>
+            )}
+          </div>
+        </form>
+      )}
 
       {showTheaters && (
         <div className="mt-2 space-y-2">

@@ -305,7 +305,7 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
         </button>
       </div>
 
-      {/* Personality Level */}
+      {/* Personality Mode */}
       <div>
         <label
           className="block text-sm font-medium mb-2"
@@ -317,18 +317,18 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
           {[
             {
               level: 1 as PersonalityLevel,
-              label: translations.regular,
-              description: translations.friendlyAndHelpful,
+              label: "Classic",
+              description: "Warm and friendly",
             },
             {
               level: 2 as PersonalityLevel,
-              label: translations.semiSarcastic,
-              description: translations.aBitCheeky,
+              label: "Sassy",
+              description: "Playful and witty",
             },
             {
               level: 3 as PersonalityLevel,
-              label: translations.severelySarcastic,
-              description: translations.maximumSass,
+              label: "Brooding",
+              description: "Dry and melancholic",
             },
           ].map(({ level, label, description }) => (
             <label

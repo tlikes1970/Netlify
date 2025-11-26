@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 export type StarRatingProps = {
-  value: number; // 0-5 stars
+  value: number; // 0-5 stars (supports 0.5 increments)
   onChange?: (rating: number) => void;
   readOnly?: boolean;
   size?: 'sm' | 'md' | 'lg';
@@ -10,9 +10,10 @@ export type StarRatingProps = {
 
 /**
  * Interactive star rating component
- * - Shows 5 stars with half-star support
- * - Clickable when not read-only
- * - Hover effects for better UX
+ * - Shows 5 stars with half-star support (0.5 increments)
+ * - Click left half = X.5 stars, right half = X stars
+ * - Hover effects show preview
+ * - Keyboard accessible: arrows adjust by 0.5
  */
 export default function StarRating({ 
   value = 0, 
@@ -22,6 +23,7 @@ export default function StarRating({
   className = ''
 }: StarRatingProps) {
   const [hoverValue, setHoverValue] = useState<number | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   const sizeClasses = {
     sm: 'w-6 h-6',
@@ -29,17 +31,28 @@ export default function StarRating({
     lg: 'w-8 h-8'
   };
   
-  const handleClick = (rating: number) => {
+  // Handle click with half-star detection
+  const handleClick = (star: number, event: React.MouseEvent<HTMLButtonElement>) => {
     if (!readOnly && onChange) {
-      // Ensure rating is 1-5 integer (consistent scale)
-      const normalizedRating = Math.max(1, Math.min(5, Math.round(rating)));
+      const rect = event.currentTarget.getBoundingClientRect();
+      const clickX = event.clientX - rect.left;
+      const isLeftHalf = clickX < rect.width / 2;
+      
+      // Left half = X - 0.5, right half = X
+      const rating = isLeftHalf ? star - 0.5 : star;
+      // Clamp to 0.5-5 range
+      const normalizedRating = Math.max(0.5, Math.min(5, rating));
       onChange(normalizedRating);
     }
   };
   
-  const handleMouseEnter = (rating: number) => {
+  // Handle mouse move for half-star hover preview
+  const handleMouseMove = (star: number, event: React.MouseEvent<HTMLButtonElement>) => {
     if (!readOnly) {
-      setHoverValue(rating);
+      const rect = event.currentTarget.getBoundingClientRect();
+      const mouseX = event.clientX - rect.left;
+      const isLeftHalf = mouseX < rect.width / 2;
+      setHoverValue(isLeftHalf ? star - 0.5 : star);
     }
   };
   
@@ -49,49 +62,112 @@ export default function StarRating({
     }
   };
   
+  // Keyboard navigation (0.5 increments)
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (readOnly || !onChange) return;
+    
+    let newValue = value;
+    switch (event.key) {
+      case 'ArrowRight':
+      case 'ArrowUp':
+        newValue = Math.min(5, value + 0.5);
+        event.preventDefault();
+        break;
+      case 'ArrowLeft':
+      case 'ArrowDown':
+        newValue = Math.max(0.5, value - 0.5);
+        event.preventDefault();
+        break;
+      case 'Home':
+        newValue = 0.5;
+        event.preventDefault();
+        break;
+      case 'End':
+        newValue = 5;
+        event.preventDefault();
+        break;
+    }
+    if (newValue !== value) {
+      onChange(newValue);
+    }
+  };
+  
   const displayValue = hoverValue !== null ? hoverValue : value;
   
+  // Determine star fill state: empty, half, or full
+  const getStarFill = (star: number): 'empty' | 'half' | 'full' => {
+    if (displayValue >= star) return 'full';
+    if (displayValue >= star - 0.5) return 'half';
+    return 'empty';
+  };
+  
   return (
-    <div className={`flex items-center gap-1.5 ${className}`}>
+    <div 
+      ref={containerRef}
+      className={`flex items-center gap-1.5 ${className}`}
+      role="slider"
+      aria-valuemin={0.5}
+      aria-valuemax={5}
+      aria-valuenow={value}
+      aria-valuetext={`${value} out of 5 stars`}
+      tabIndex={readOnly ? -1 : 0}
+      onKeyDown={handleKeyDown}
+    >
       {[1, 2, 3, 4, 5].map((star) => {
-        const isFilled = star <= displayValue;
-        const isHalfFilled = star === Math.ceil(displayValue) && displayValue % 1 !== 0;
+        const fillState = getStarFill(star);
         
         return (
           <button
             key={star}
             type="button"
-            onClick={() => handleClick(star)}
-            onMouseEnter={() => handleMouseEnter(star)}
+            onClick={(e) => handleClick(star, e)}
+            onMouseMove={(e) => handleMouseMove(star, e)}
             onMouseLeave={handleMouseLeave}
             disabled={readOnly}
+            tabIndex={-1}
             className={`
               ${sizeClasses[size]} 
               ${readOnly ? 'cursor-default' : 'cursor-pointer'} 
               transition-all duration-200
-              focus:outline-none focus:ring-2 focus:ring-accent focus:ring-opacity-50 rounded
+              focus:outline-none rounded relative
               ${!readOnly ? 'hover:scale-110' : ''}
             `}
-            style={{
-              color: isFilled ? 'var(--accent)' : 'var(--muted)',
-              opacity: isHalfFilled ? 0.5 : 1
-            }}
-            aria-label={`Rate ${star} star${star !== 1 ? 's' : ''}`}
+            aria-hidden="true"
           >
             <svg
               viewBox="0 0 24 24"
               className="w-full h-full"
-              stroke={isFilled ? 'none' : 'currentColor'}
-              strokeWidth={isFilled ? '0' : '1.5'}
-              fill={isFilled ? 'currentColor' : 'none'}
             >
-              {/* Empty star outline */}
-              {!isFilled && (
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              {/* Background empty star */}
+              <path 
+                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                fill="none"
+                stroke="var(--muted)"
+                strokeWidth="1.5"
+              />
+              
+              {/* Half star (left half filled) */}
+              {fillState === 'half' && (
+                <defs>
+                  <clipPath id={`half-clip-${star}`}>
+                    <rect x="0" y="0" width="12" height="24" />
+                  </clipPath>
+                </defs>
               )}
-              {/* Filled star */}
-              {isFilled && (
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              {fillState === 'half' && (
+                <path 
+                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                  fill="var(--accent)"
+                  clipPath={`url(#half-clip-${star})`}
+                />
+              )}
+              
+              {/* Full star */}
+              {fillState === 'full' && (
+                <path 
+                  d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+                  fill="var(--accent)"
+                />
               )}
             </svg>
           </button>

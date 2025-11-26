@@ -13,7 +13,7 @@ export type RatingState = 'null' | 'unchanged' | 'changed';
 export interface RatingUpdate {
   id: string | number;
   mediaType: MediaType;
-  rating: number; // 1-5 stars, must be integer
+  rating: number; // 0.5-5 stars in 0.5 increments (supports half-stars)
   timestamp: number; // epoch ms
   origin: 'user' | 'sync' | 'discovery'; // Track where update came from
 }
@@ -23,18 +23,21 @@ const recentUpdates = new Map<string, { rating: number; timestamp: number; origi
 const DEDUP_WINDOW_MS = 500; // 500ms window for deduplication
 
 /**
- * Normalize rating to 1-5 integer scale
+ * Normalize rating to 0.5-5 scale with 0.5 increments (half-star support)
+ * Valid values: 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5
  */
 export function normalizeRating(rating: number | null | undefined): number | null {
   if (rating === null || rating === undefined) return null;
-  // Clamp to 1-5 and round to nearest integer
-  const normalized = Math.max(1, Math.min(5, Math.round(rating)));
+  // Round to nearest 0.5 increment
+  const rounded = Math.round(rating * 2) / 2;
+  // Clamp to 0.5-5 range
+  const normalized = Math.max(0.5, Math.min(5, rounded));
   return normalized;
 }
 
 /**
  * Determine rating state: null, unchanged, or changed
- * Note: 'zero' state was removed because normalizeRating clamps to 1-5,
+ * Note: 'zero' state was removed because normalizeRating clamps to 0.5-5,
  * making newNorm === 0 unreachable.
  */
 export function getRatingState(

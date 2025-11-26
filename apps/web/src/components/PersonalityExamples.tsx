@@ -17,19 +17,19 @@ export default function PersonalityExamples({ personalityLevel }: PersonalityExa
 
   const getPersonalityName = (level: PersonalityLevel): string => {
     switch (level) {
-      case 1: return 'Regular';
-      case 2: return 'Semi-sarcastic';
-      case 3: return 'Severely sarcastic';
-      default: return 'Regular';
+      case 1: return 'Classic';
+      case 2: return 'Sassy';
+      case 3: return 'Brooding';
+      default: return 'Classic';
     }
   };
 
   const getPersonalityDescription = (level: PersonalityLevel): string => {
     switch (level) {
-      case 1: return 'Friendly and helpful';
-      case 2: return 'A bit cheeky';
-      case 3: return 'Maximum sass';
-      default: return 'Friendly and helpful';
+      case 1: return 'Warm and friendly';
+      case 2: return 'Playful and witty';
+      case 3: return 'Dry and melancholic';
+      default: return 'Warm and friendly';
     }
   };
 
