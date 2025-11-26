@@ -24,6 +24,10 @@ import {
   toggleCommentHidden,
   type Report,
 } from "../lib/communityReports";
+import {
+  COMMUNITY_CHANNELS,
+  type CommunityChannel,
+} from "../data/communityChannels";
 
 interface UGCSubmission {
   id: string;
@@ -369,6 +373,7 @@ export default function AdminExtrasPage({
     | "admin"
     | "insights"
     | "moderation"
+    | "channels"
   >("community");
 
   // Use prop if provided, otherwise fall back to isMobileNow()
@@ -1218,7 +1223,9 @@ export default function AdminExtrasPage({
                         ? "Pro Status"
                         : activeTab === "admin"
                           ? "Admin Management"
-                          : "Admin"}
+                          : activeTab === "channels"
+                            ? "Community Player Channels"
+                            : "Admin"}
         </h3>
 
         {/* Helper text based on active tab */}
@@ -1271,6 +1278,7 @@ export default function AdminExtrasPage({
             <option value="videos">Video Submissions ({pendingUGC})</option>
             <option value="pro">Pro Status</option>
             {isAdmin && <option value="admin">Admin Management</option>}
+            {isAdmin && <option value="channels">📺 Channels</option>}
           </select>
         ) : (
           <div
@@ -1340,6 +1348,15 @@ export default function AdminExtrasPage({
                 title="Admin Management"
               >
                 Admin Management
+              </button>
+            )}
+            {isAdmin && (
+              <button
+                onClick={() => setActiveTab("channels")}
+                className={`admin-extras-tab ${activeTab === "channels" ? "admin-extras-tab--active" : ""}`}
+                title="Community Channels"
+              >
+                📺 Channels
               </button>
             )}
           </div>
@@ -3165,7 +3182,332 @@ export default function AdminExtrasPage({
             </div>
           </div>
         )}
+
+        {/* Channels Tab */}
+        {activeTab === "channels" && isAdmin && (
+          <ChannelManagement />
+        )}
       </div>
     </>
+  );
+}
+
+/**
+ * Channel Management Component
+ * Allows admins to view and edit community player channel URLs
+ */
+function ChannelManagement() {
+  const [channels, setChannels] = useState<CommunityChannel[]>([]);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editUrl, setEditUrl] = useState("");
+  const [testStatus, setTestStatus] = useState<Record<string, "loading" | "success" | "error">>({});
+  const [saveStatus, setSaveStatus] = useState<string | null>(null);
+
+  // Load channels on mount
+  useEffect(() => {
+    loadChannels();
+  }, []);
+
+  const loadChannels = () => {
+    // Check localStorage for custom overrides
+    const customChannelsJson = localStorage.getItem("flicklet.admin.customChannels");
+    if (customChannelsJson) {
+      try {
+        const customChannels = JSON.parse(customChannelsJson) as Record<string, string>;
+        // Merge with defaults
+        const merged = COMMUNITY_CHANNELS.map((ch) => ({
+          ...ch,
+          url: customChannels[ch.id] || ch.url,
+        }));
+        setChannels(merged);
+      } catch {
+        setChannels([...COMMUNITY_CHANNELS]);
+      }
+    } else {
+      setChannels([...COMMUNITY_CHANNELS]);
+    }
+  };
+
+  const startEditing = (channel: CommunityChannel) => {
+    setEditingId(channel.id);
+    setEditUrl(channel.url);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setEditUrl("");
+  };
+
+  const saveUrl = (channelId: string) => {
+    // Get existing custom channels
+    const customChannelsJson = localStorage.getItem("flicklet.admin.customChannels");
+    const customChannels: Record<string, string> = customChannelsJson
+      ? JSON.parse(customChannelsJson)
+      : {};
+
+    // Update the URL
+    customChannels[channelId] = editUrl;
+
+    // Save to localStorage
+    localStorage.setItem("flicklet.admin.customChannels", JSON.stringify(customChannels));
+
+    // Update state
+    setChannels((prev) =>
+      prev.map((ch) => (ch.id === channelId ? { ...ch, url: editUrl } : ch))
+    );
+
+    setSaveStatus(`Saved ${channelId}`);
+    setTimeout(() => setSaveStatus(null), 2000);
+
+    setEditingId(null);
+    setEditUrl("");
+  };
+
+  const resetToDefault = (channelId: string) => {
+    // Get existing custom channels
+    const customChannelsJson = localStorage.getItem("flicklet.admin.customChannels");
+    if (!customChannelsJson) return;
+
+    const customChannels: Record<string, string> = JSON.parse(customChannelsJson);
+    delete customChannels[channelId];
+
+    if (Object.keys(customChannels).length === 0) {
+      localStorage.removeItem("flicklet.admin.customChannels");
+    } else {
+      localStorage.setItem("flicklet.admin.customChannels", JSON.stringify(customChannels));
+    }
+
+    // Find default URL
+    const defaultChannel = COMMUNITY_CHANNELS.find((ch) => ch.id === channelId);
+    if (defaultChannel) {
+      setChannels((prev) =>
+        prev.map((ch) => (ch.id === channelId ? { ...ch, url: defaultChannel.url } : ch))
+      );
+    }
+
+    setSaveStatus(`Reset ${channelId} to default`);
+    setTimeout(() => setSaveStatus(null), 2000);
+  };
+
+  const testUrl = async (channelId: string, url: string) => {
+    setTestStatus((prev) => ({ ...prev, [channelId]: "loading" }));
+
+    try {
+      // For Archive.org embeds, check if the page exists
+      if (url.includes("archive.org/embed/")) {
+        const itemId = url.split("/embed/")[1];
+        const metadataUrl = `https://archive.org/metadata/${itemId}`;
+        const response = await fetch(metadataUrl);
+        if (response.ok) {
+          setTestStatus((prev) => ({ ...prev, [channelId]: "success" }));
+        } else {
+          setTestStatus((prev) => ({ ...prev, [channelId]: "error" }));
+        }
+      } else if (url.includes("youtube.com/embed/")) {
+        // For YouTube, we can't easily check without CORS issues
+        // Just mark as success if URL looks valid
+        setTestStatus((prev) => ({ ...prev, [channelId]: "success" }));
+      } else {
+        // For other URLs, try a HEAD request
+        const response = await fetch(url, { method: "HEAD", mode: "no-cors" });
+        setTestStatus((prev) => ({ ...prev, [channelId]: response ? "success" : "error" }));
+      }
+    } catch {
+      setTestStatus((prev) => ({ ...prev, [channelId]: "error" }));
+    }
+
+    // Clear status after 5 seconds
+    setTimeout(() => {
+      setTestStatus((prev) => {
+        const copy = { ...prev };
+        delete copy[channelId];
+        return copy;
+      });
+    }, 5000);
+  };
+
+  const isCustomized = (channelId: string): boolean => {
+    const customChannelsJson = localStorage.getItem("flicklet.admin.customChannels");
+    if (!customChannelsJson) return false;
+    const customChannels: Record<string, string> = JSON.parse(customChannelsJson);
+    return channelId in customChannels;
+  };
+
+  return (
+    <div className="space-y-6">
+      <p className="text-sm" style={{ color: "var(--muted)" }}>
+        Manage Community Player channel URLs. Changes are saved to localStorage
+        and will override the default values. Refresh the app to see changes in the player.
+      </p>
+
+      {saveStatus && (
+        <div
+          className="p-3 rounded-lg text-sm"
+          style={{
+            backgroundColor: "var(--accent)",
+            color: "white",
+          }}
+        >
+          ✓ {saveStatus}
+        </div>
+      )}
+
+      <div className="space-y-4">
+        {channels.map((channel) => (
+          <div
+            key={channel.id}
+            className="rounded-lg p-4"
+            style={{
+              backgroundColor: "var(--card)",
+              border: `1px solid ${isCustomized(channel.id) ? "var(--accent)" : "var(--line)"}`,
+            }}
+          >
+            <div className="flex items-start justify-between gap-4 mb-2">
+              <div>
+                <h4 className="font-medium" style={{ color: "var(--text)" }}>
+                  {channel.title}
+                  {isCustomized(channel.id) && (
+                    <span
+                      className="ml-2 text-xs px-2 py-0.5 rounded"
+                      style={{ backgroundColor: "var(--accent)", color: "white" }}
+                    >
+                      Custom
+                    </span>
+                  )}
+                </h4>
+                <p className="text-xs" style={{ color: "var(--muted)" }}>
+                  Type: {channel.type} | ID: {channel.id}
+                </p>
+              </div>
+              <div className="flex gap-2">
+                {testStatus[channel.id] === "loading" && (
+                  <span className="text-xs" style={{ color: "var(--muted)" }}>Testing...</span>
+                )}
+                {testStatus[channel.id] === "success" && (
+                  <span className="text-xs text-green-600">✓ Valid</span>
+                )}
+                {testStatus[channel.id] === "error" && (
+                  <span className="text-xs text-red-600">✗ Failed</span>
+                )}
+              </div>
+            </div>
+
+            {editingId === channel.id ? (
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={editUrl}
+                  onChange={(e) => setEditUrl(e.target.value)}
+                  className="w-full px-3 py-2 rounded text-sm"
+                  style={{
+                    backgroundColor: "var(--bg)",
+                    border: "1px solid var(--line)",
+                    color: "var(--text)",
+                  }}
+                  placeholder="Enter URL..."
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => saveUrl(channel.id)}
+                    className="px-3 py-1.5 text-sm rounded"
+                    style={{ backgroundColor: "var(--accent)", color: "white" }}
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={cancelEditing}
+                    className="px-3 py-1.5 text-sm rounded"
+                    style={{
+                      backgroundColor: "var(--btn2)",
+                      color: "var(--text)",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div
+                  className="text-xs font-mono p-2 rounded break-all"
+                  style={{
+                    backgroundColor: "var(--bg)",
+                    color: "var(--muted)",
+                  }}
+                >
+                  {channel.url}
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  <button
+                    onClick={() => startEditing(channel)}
+                    className="px-3 py-1.5 text-xs rounded"
+                    style={{
+                      backgroundColor: "var(--btn)",
+                      color: "var(--text)",
+                      border: "1px solid var(--line)",
+                    }}
+                  >
+                    Edit URL
+                  </button>
+                  <button
+                    onClick={() => testUrl(channel.id, channel.url)}
+                    className="px-3 py-1.5 text-xs rounded"
+                    style={{
+                      backgroundColor: "var(--btn2)",
+                      color: "var(--text)",
+                    }}
+                  >
+                    Test
+                  </button>
+                  {isCustomized(channel.id) && (
+                    <button
+                      onClick={() => resetToDefault(channel.id)}
+                      className="px-3 py-1.5 text-xs rounded"
+                      style={{
+                        backgroundColor: "var(--btn2)",
+                        color: "var(--muted)",
+                      }}
+                    >
+                      Reset to Default
+                    </button>
+                  )}
+                  <a
+                    href={channel.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 text-xs rounded"
+                    style={{
+                      backgroundColor: "var(--btn2)",
+                      color: "var(--text)",
+                      textDecoration: "none",
+                    }}
+                  >
+                    Open ↗
+                  </a>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div
+        className="p-4 rounded-lg"
+        style={{
+          backgroundColor: "var(--card)",
+          border: "1px solid var(--line)",
+        }}
+      >
+        <h4 className="font-medium mb-2" style={{ color: "var(--text)" }}>
+          How to add/modify channels
+        </h4>
+        <ol className="text-sm space-y-1" style={{ color: "var(--muted)" }}>
+          <li>1. Go to <a href="https://archive.org/details/movies" target="_blank" rel="noopener noreferrer" className="underline">archive.org/details/movies</a></li>
+          <li>2. Search for the film or clip</li>
+          <li>3. Copy the item ID from the URL: archive.org/details/<strong>ITEM_ID</strong></li>
+          <li>4. Use format: <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">https://archive.org/embed/ITEM_ID</code></li>
+        </ol>
+      </div>
+    </div>
   );
 }

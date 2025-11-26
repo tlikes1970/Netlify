@@ -49,6 +49,7 @@ export default function CommunityPlayer(_props: CommunityPlayerProps) {
   const currentChannel = channelQueue?.channels[channelQueue.currentIndex];
 
   // Load channels with backward compatibility for weekly-film.json
+  // Also checks localStorage for admin-customized URLs
   useEffect(() => {
     const loadChannels = async () => {
       try {
@@ -83,10 +84,28 @@ export default function CommunityPlayer(_props: CommunityPlayerProps) {
           });
         }
 
-        // Build channel list: legacy film first (if exists), then static channels
+        // Check localStorage for admin-customized channel URLs
+        let customChannels: Record<string, string> = {};
+        try {
+          const customChannelsJson = localStorage.getItem("flicklet.admin.customChannels");
+          if (customChannelsJson) {
+            customChannels = JSON.parse(customChannelsJson);
+            console.log("🎬 Loaded custom channel URLs:", Object.keys(customChannels).length);
+          }
+        } catch {
+          // Ignore localStorage errors
+        }
+
+        // Merge custom URLs with default channels
+        const mergedChannels = COMMUNITY_CHANNELS.map((ch) => ({
+          ...ch,
+          url: customChannels[ch.id] || ch.url,
+        }));
+
+        // Build channel list: legacy film first (if exists), then merged channels
         const channels = legacyChannel
-          ? [legacyChannel, ...COMMUNITY_CHANNELS]
-          : COMMUNITY_CHANNELS;
+          ? [legacyChannel, ...mergedChannels]
+          : mergedChannels;
 
         setChannelQueue(createChannelQueue(channels));
         setIsLoading(false);
