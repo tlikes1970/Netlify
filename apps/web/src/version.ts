@@ -1,5 +1,12 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.181: Fixed Username Prompt escape issues
+// - Added X button to UsernamePromptModal (always visible escape hatch)
+// - Skip button now always visible, even on error state (was hidden, trapping users)
+// - Added Escape key handler to close modal
+// - Added session guard to prevent modal re-showing due to race conditions
+// - Users can now always exit the username prompt modal
+// - Rollback: Revert this commit to restore previous modal behavior
 // ⚠️ VERSION 0.1.180: Fixed YouTube URLs + Removed legacy weekly-film loading
 // - Auto-converts YouTube watch URLs to embed URLs (watch?v=ID → embed/ID)
 // - Auto-converts youtu.be short URLs to embed URLs
@@ -311,4 +318,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.180";
+export const APP_VERSION = "0.1.181";

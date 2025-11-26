@@ -52,6 +52,19 @@ export default function UsernamePromptModal({ isOpen, onClose }: UsernamePromptM
     return () => { style.overflow = prev; };
   }, [isOpen]);
 
+  // Escape key handler - allows user to close modal with keyboard
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -151,9 +164,21 @@ export default function UsernamePromptModal({ isOpen, onClose }: UsernamePromptM
         style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
       >
         <div
-          className="username-prompt-modal-content rounded-xl w-full max-w-md p-6"
+          className="username-prompt-modal-content rounded-xl w-full max-w-md p-6 relative"
           style={{ backgroundColor: 'var(--card)', border: '1px solid var(--line)' }}
         >
+          {/* X button - always visible escape hatch */}
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            aria-label="Close"
+            style={{ color: 'var(--muted)' }}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
           
           <div className="text-center mb-6">
             {showWelcomeMessage && (
@@ -238,24 +263,23 @@ export default function UsernamePromptModal({ isOpen, onClose }: UsernamePromptM
             {/* Hide buttons when success message is shown (modal will auto-close) */}
             {!(state === 'done' && username.trim()) && (
               <div className="flex gap-3">
-                {state !== 'error' && (
-                  <button
-                    type="button"
-                    onClick={handleSkip}
-                    disabled={state === 'working'}
-                    className="flex-1 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
-                  >
-                    {state === 'working' ? (
-                      <div className="flex items-center justify-center">
-                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>
-                        {translations.saving || 'Saving...'}
-                      </div>
-                    ) : (
-                      translations.skip || 'Skip'
-                    )}
-                  </button>
-                )}
+                {/* Skip button - always visible (even on error) so user can escape */}
+                <button
+                  type="button"
+                  onClick={handleSkip}
+                  disabled={state === 'working'}
+                  className="flex-1 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
+                >
+                  {state === 'working' ? (
+                    <div className="flex items-center justify-center">
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2"></div>
+                      {translations.saving || 'Saving...'}
+                    </div>
+                  ) : (
+                    translations.skip || 'Skip'
+                  )}
+                </button>
                 <button
                   type="submit"
                   disabled={state === 'working' || !username.trim()}

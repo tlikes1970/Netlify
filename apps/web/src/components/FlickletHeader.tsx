@@ -62,6 +62,10 @@ export default function FlickletHeader({
   } = useUsername();
   const [showUsernamePrompt, setShowUsernamePrompt] = useState(false);
 
+  // Session guard: Track if we've already shown the prompt this session
+  // This prevents re-showing the modal due to race conditions during navigation
+  const SESSION_KEY = 'flicklet.usernamePrompt.shownThisSession';
+
   // Non-blocking prompt check
   // Onboarding gating: Don't show username prompt if onboarding was already completed
   // Config: onboarding.ts - shouldShowOnboarding()
@@ -72,10 +76,15 @@ export default function FlickletHeader({
     const currentUser = authManager.getCurrentUser();
     const needsPrompt = !!(currentUser?.uid && !username && !usernamePrompted);
 
+    // Session guard: Don't re-show if we already showed it this session
+    // This prevents race conditions from briefly resetting state during navigation
+    const alreadyShownThisSession = sessionStorage.getItem(SESSION_KEY) === 'true';
+
     // Check if onboarding was completed - if so, don't show "Welcome to Flicklet" modal
     // The username prompt can still show, but without the welcome message
-    if (needsPrompt && !showUsernamePrompt) {
+    if (needsPrompt && !showUsernamePrompt && !alreadyShownThisSession) {
       setShowUsernamePrompt(true);
+      sessionStorage.setItem(SESSION_KEY, 'true');
     }
   }, [username, usernamePrompted, usernameLoading, showUsernamePrompt]);
 
