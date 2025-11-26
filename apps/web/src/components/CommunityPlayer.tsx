@@ -8,20 +8,13 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
-  type CommunityChannel,
   type ChannelQueue,
-  convertLegacyFilm,
   getThumbnailIndex,
   createChannelQueue,
   getValidShorts,
 } from "../data/communityChannels";
 import { loadCommunityChannelsConfig, getDefaultChannels } from "../lib/communityChannelsConfig";
 import { ERROR_MESSAGES, logErrorDetails } from "../lib/errorMessages";
-
-interface WeeklyFilmData {
-  weekOf: string;
-  itemId: string;
-}
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface CommunityPlayerProps {
@@ -33,7 +26,6 @@ export default function CommunityPlayer(_props: CommunityPlayerProps) {
   const [channelQueue, setChannelQueue] = useState<ChannelQueue | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [daysUntilNext, setDaysUntilNext] = useState<number | null>(null);
 
   // Player controls state
   const [isMuted, setIsMuted] = useState(true);
@@ -49,50 +41,15 @@ export default function CommunityPlayer(_props: CommunityPlayerProps) {
   const currentChannel = channelQueue?.channels[channelQueue.currentIndex];
 
   // Load channels from Firestore global config (with fallback to static defaults)
-  // Also supports legacy weekly-film.json for backward compatibility
   useEffect(() => {
     const loadChannels = async () => {
       try {
-        // Try to load legacy weekly-film.json first for backward compatibility
-        let legacyChannel: CommunityChannel | null = null;
-
-        try {
-          const response = await fetch("/weekly-film.json", {
-            cache: "no-store",
-          });
-
-          if (response.ok) {
-            const data: WeeklyFilmData = await response.json();
-            legacyChannel = convertLegacyFilm(data.weekOf, data.itemId);
-
-            // Calculate days until next film
-            const today = new Date();
-            const weekOfDate = new Date(data.weekOf + "T00:00:00Z");
-            const nextMonday = new Date(weekOfDate);
-            nextMonday.setUTCDate(weekOfDate.getUTCDate() + 7);
-
-            const daysDiff = Math.ceil(
-              (nextMonday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-            );
-            setDaysUntilNext(daysDiff);
-
-            console.log("🎬 Loaded legacy weekly film:", data.itemId);
-          }
-        } catch (legacyErr) {
-          logErrorDetails("CommunityPlayer", legacyErr, {
-            context: "loadLegacyFilm",
-          });
-        }
-
         // Load channels from Firestore global config (falls back to static defaults)
         const configChannels = await loadCommunityChannelsConfig();
+        
+        console.log("🎬 Loaded channels from config:", configChannels.length);
 
-        // Build channel list: legacy film first (if exists), then config channels
-        const channels = legacyChannel
-          ? [legacyChannel, ...configChannels]
-          : configChannels;
-
-        setChannelQueue(createChannelQueue(channels));
+        setChannelQueue(createChannelQueue(configChannels));
         setIsLoading(false);
       } catch (err) {
         logErrorDetails("CommunityPlayer", err, { context: "loadChannels" });
@@ -295,15 +252,6 @@ export default function CommunityPlayer(_props: CommunityPlayerProps) {
               style={{ color: "var(--muted)", opacity: 0.5 }}
             >
               {currentChannel.description}
-            </span>
-          )}
-          {daysUntilNext !== null && currentChannel?.id?.startsWith("legacy-") && (
-            <span
-              className="text-xs font-medium"
-              style={{ color: "var(--accent)" }}
-            >
-              Next film in {daysUntilNext}{" "}
-              {daysUntilNext === 1 ? "day" : "days"}
             </span>
           )}
         </div>

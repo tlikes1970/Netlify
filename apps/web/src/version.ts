@@ -1,5 +1,11 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.180: Fixed YouTube URLs + Removed legacy weekly-film loading
+// - Auto-converts YouTube watch URLs to embed URLs (watch?v=ID → embed/ID)
+// - Auto-converts youtu.be short URLs to embed URLs
+// - Removed legacy weekly-film.json loading (Firestore is now sole source)
+// - Cleaned up unused legacy code (WeeklyFilmData, convertLegacyFilm, daysUntilNext)
+// - Rollback: Revert this commit to restore legacy film loading
 // ⚠️ VERSION 0.1.179: Added Delete button to Channel Management
 // - Added deleteChannel() function with confirmation dialog
 // - Deletes channel from Firestore array (affects all users)
@@ -305,4 +311,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.179";
+export const APP_VERSION = "0.1.180";

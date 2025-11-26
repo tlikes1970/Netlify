@@ -3612,6 +3612,22 @@ function ChannelManagement() {
                           value = match[1];
                         }
                       }
+                      // Auto-convert YouTube watch URLs to embed URLs
+                      // youtube.com/watch?v=VIDEO_ID → youtube.com/embed/VIDEO_ID
+                      if (value.includes('youtube.com/watch?v=')) {
+                        const videoIdMatch = value.match(/[?&]v=([a-zA-Z0-9_-]+)/);
+                        if (videoIdMatch && videoIdMatch[1]) {
+                          value = `https://www.youtube.com/embed/${videoIdMatch[1]}`;
+                        }
+                      }
+                      // Also handle youtu.be short URLs
+                      // youtu.be/VIDEO_ID → youtube.com/embed/VIDEO_ID
+                      if (value.includes('youtu.be/')) {
+                        const shortMatch = value.match(/youtu\.be\/([a-zA-Z0-9_-]+)/);
+                        if (shortMatch && shortMatch[1]) {
+                          value = `https://www.youtube.com/embed/${shortMatch[1]}`;
+                        }
+                      }
                       setEditUrl(value);
                     }}
                     className="w-full px-3 py-2 rounded text-sm"
@@ -3620,7 +3636,7 @@ function ChannelManagement() {
                       border: "1px solid var(--line)",
                       color: "var(--text)",
                     }}
-                    placeholder="https://archive.org/embed/... (paste iframe code or URL)"
+                    placeholder="Paste YouTube/Archive URL or iframe code"
                   />
                 </div>
                 <div className="flex gap-2">
