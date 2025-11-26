@@ -545,8 +545,9 @@ export const Library = {
     const entry = state[key];
     if (!entry) return;
 
-    // Normalize rating to 1-5 integer (consistent scale)
-    const normalizedRating = Math.max(1, Math.min(5, Math.round(rating)));
+    // Normalize rating to 0.5-5 with 0.5 increments (half-star support)
+    const rounded = Math.round(rating * 2) / 2; // Round to nearest 0.5
+    const normalizedRating = Math.max(0.5, Math.min(5, rounded));
 
     // Check if rating actually changed
     if (entry.userRating === normalizedRating) {
