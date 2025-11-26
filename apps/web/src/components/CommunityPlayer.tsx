@@ -1,21 +1,21 @@
 /**
  * Process: Community Player Multi-Channel
  * Purpose: Displays community content from multiple channel types (live, loop, short, audio)
- * Data Source: communityChannels.ts (primary), weekly-film.json (backward compat)
- * Update Path: Modify communityChannels.ts to add/change channels
- * Dependencies: Archive.org embed API, YouTube embeds, communityChannels.ts
+ * Data Source: Firestore appConfig/communityChannels (global), fallback to communityChannels.ts
+ * Update Path: Admin edits via Settings → Admin → Channels (writes to Firestore)
+ * Dependencies: Archive.org embed API, YouTube embeds, communityChannelsConfig.ts
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   type CommunityChannel,
   type ChannelQueue,
-  COMMUNITY_CHANNELS,
   convertLegacyFilm,
   getThumbnailIndex,
   createChannelQueue,
   getValidShorts,
 } from "../data/communityChannels";
+import { loadCommunityChannelsConfig, getDefaultChannels } from "../lib/communityChannelsConfig";
 import { ERROR_MESSAGES, logErrorDetails } from "../lib/errorMessages";
 
 interface WeeklyFilmData {
@@ -48,8 +48,8 @@ export default function CommunityPlayer(_props: CommunityPlayerProps) {
   // Get current channel
   const currentChannel = channelQueue?.channels[channelQueue.currentIndex];
 
-  // Load channels with backward compatibility for weekly-film.json
-  // Also checks localStorage for admin-customized URLs
+  // Load channels from Firestore global config (with fallback to static defaults)
+  // Also supports legacy weekly-film.json for backward compatibility
   useEffect(() => {
     const loadChannels = async () => {
       try {
@@ -84,47 +84,13 @@ export default function CommunityPlayer(_props: CommunityPlayerProps) {
           });
         }
 
-        // Check localStorage for admin-customized channel values
-        let customUrls: Record<string, string> = {};
-        let customTitles: Record<string, string> = {};
-        let customDescriptions: Record<string, string> = {};
-        let customSources: Record<string, string> = {};
-        try {
-          const customUrlsJson = localStorage.getItem("flicklet.admin.customChannels");
-          const customTitlesJson = localStorage.getItem("flicklet.admin.customTitles");
-          const customDescriptionsJson = localStorage.getItem("flicklet.admin.customDescriptions");
-          const customSourcesJson = localStorage.getItem("flicklet.admin.customSources");
-          
-          if (customUrlsJson) {
-            customUrls = JSON.parse(customUrlsJson);
-            console.log("🎬 Loaded custom channel URLs:", Object.keys(customUrls).length);
-          }
-          if (customTitlesJson) {
-            customTitles = JSON.parse(customTitlesJson);
-          }
-          if (customDescriptionsJson) {
-            customDescriptions = JSON.parse(customDescriptionsJson);
-          }
-          if (customSourcesJson) {
-            customSources = JSON.parse(customSourcesJson);
-          }
-        } catch {
-          // Ignore localStorage errors
-        }
+        // Load channels from Firestore global config (falls back to static defaults)
+        const configChannels = await loadCommunityChannelsConfig();
 
-        // Merge custom values with default channels
-        const mergedChannels = COMMUNITY_CHANNELS.map((ch) => ({
-          ...ch,
-          url: customUrls[ch.id] || ch.url,
-          title: customTitles[ch.id] || ch.title,
-          description: customDescriptions[ch.id] || ch.description,
-          source: customSources[ch.id] || ch.source,
-        }));
-
-        // Build channel list: legacy film first (if exists), then merged channels
+        // Build channel list: legacy film first (if exists), then config channels
         const channels = legacyChannel
-          ? [legacyChannel, ...mergedChannels]
-          : mergedChannels;
+          ? [legacyChannel, ...configChannels]
+          : configChannels;
 
         setChannelQueue(createChannelQueue(channels));
         setIsLoading(false);
@@ -133,8 +99,8 @@ export default function CommunityPlayer(_props: CommunityPlayerProps) {
         setError(ERROR_MESSAGES.loadFailed);
         setIsLoading(false);
 
-        // Fallback to static channels
-        setChannelQueue(createChannelQueue(COMMUNITY_CHANNELS));
+        // Fallback to static defaults
+        setChannelQueue(createChannelQueue(getDefaultChannels()));
       }
     };
 

@@ -24,10 +24,13 @@ import {
   toggleCommentHidden,
   type Report,
 } from "../lib/communityReports";
+import { type CommunityChannel } from "../data/communityChannels";
 import {
-  COMMUNITY_CHANNELS,
-  type CommunityChannel,
-} from "../data/communityChannels";
+  loadCommunityChannelsConfig,
+  saveCommunityChannelsConfig,
+  getDefaultChannels,
+} from "../lib/communityChannelsConfig";
+import { auth } from "../lib/firebaseBootstrap";
 
 interface UGCSubmission {
   id: string;
@@ -3194,10 +3197,18 @@ export default function AdminExtrasPage({
 
 /**
  * Channel Management Component
- * Allows admins to view and edit community player channel URLs
+ * Allows admins to view and edit community player channels
+ * 
+ * Data flow:
+ * - Reads from Firestore appConfig/communityChannels (global config)
+ * - Falls back to static defaults from communityChannels.ts if no Firestore doc
+ * - Writes to Firestore on save (global, visible to all users)
+ * - Admin-only: component is gated by isAdmin check in parent
  */
 function ChannelManagement() {
   const [channels, setChannels] = useState<CommunityChannel[]>([]);
+  const [configLoading, setConfigLoading] = useState(true);
+  const [configError, setConfigError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editUrl, setEditUrl] = useState("");
   const [editTitle, setEditTitle] = useState("");
@@ -3205,42 +3216,26 @@ function ChannelManagement() {
   const [editSource, setEditSource] = useState("");
   const [testStatus, setTestStatus] = useState<Record<string, "loading" | "success" | "error">>({});
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  // Load channels on mount
+  // Load channels from Firestore on mount
   useEffect(() => {
-    loadChannels();
+    loadChannelsFromFirestore();
   }, []);
 
-  const loadChannels = () => {
-    // Check localStorage for custom overrides
-    const customUrlsJson = localStorage.getItem("flicklet.admin.customChannels");
-    const customTitlesJson = localStorage.getItem("flicklet.admin.customTitles");
-    const customDescriptionsJson = localStorage.getItem("flicklet.admin.customDescriptions");
-    const customSourcesJson = localStorage.getItem("flicklet.admin.customSources");
-    
-    let customUrls: Record<string, string> = {};
-    let customTitles: Record<string, string> = {};
-    let customDescriptions: Record<string, string> = {};
-    let customSources: Record<string, string> = {};
-    
+  const loadChannelsFromFirestore = async () => {
+    setConfigLoading(true);
+    setConfigError(null);
     try {
-      if (customUrlsJson) customUrls = JSON.parse(customUrlsJson);
-      if (customTitlesJson) customTitles = JSON.parse(customTitlesJson);
-      if (customDescriptionsJson) customDescriptions = JSON.parse(customDescriptionsJson);
-      if (customSourcesJson) customSources = JSON.parse(customSourcesJson);
-    } catch {
-      // Ignore parse errors
+      const loadedChannels = await loadCommunityChannelsConfig();
+      setChannels(loadedChannels);
+    } catch (error) {
+      console.error("[ChannelManagement] Error loading config:", error);
+      setConfigError("Failed to load channel config. Using defaults.");
+      setChannels(getDefaultChannels());
+    } finally {
+      setConfigLoading(false);
     }
-    
-    // Merge with defaults
-    const merged = COMMUNITY_CHANNELS.map((ch) => ({
-      ...ch,
-      url: customUrls[ch.id] || ch.url,
-      title: customTitles[ch.id] || ch.title,
-      description: customDescriptions[ch.id] || ch.description,
-      source: customSources[ch.id] || ch.source,
-    }));
-    setChannels(merged);
   };
 
   const startEditing = (channel: CommunityChannel) => {
@@ -3259,83 +3254,126 @@ function ChannelManagement() {
     setEditSource("");
   };
 
-  const saveChannel = (channelId: string) => {
-    // Get existing custom values
-    const customUrlsJson = localStorage.getItem("flicklet.admin.customChannels");
-    const customTitlesJson = localStorage.getItem("flicklet.admin.customTitles");
-    const customDescriptionsJson = localStorage.getItem("flicklet.admin.customDescriptions");
-    const customSourcesJson = localStorage.getItem("flicklet.admin.customSources");
-    
-    const customUrls: Record<string, string> = customUrlsJson ? JSON.parse(customUrlsJson) : {};
-    const customTitles: Record<string, string> = customTitlesJson ? JSON.parse(customTitlesJson) : {};
-    const customDescriptions: Record<string, string> = customDescriptionsJson ? JSON.parse(customDescriptionsJson) : {};
-    const customSources: Record<string, string> = customSourcesJson ? JSON.parse(customSourcesJson) : {};
-
-    // Update all fields
-    customUrls[channelId] = editUrl;
-    customTitles[channelId] = editTitle;
-    customDescriptions[channelId] = editDescription;
-    customSources[channelId] = editSource;
-
-    // Save to localStorage
-    localStorage.setItem("flicklet.admin.customChannels", JSON.stringify(customUrls));
-    localStorage.setItem("flicklet.admin.customTitles", JSON.stringify(customTitles));
-    localStorage.setItem("flicklet.admin.customDescriptions", JSON.stringify(customDescriptions));
-    localStorage.setItem("flicklet.admin.customSources", JSON.stringify(customSources));
-
-    // Update state
-    setChannels((prev) =>
-      prev.map((ch) => (ch.id === channelId ? { 
-        ...ch, 
-        url: editUrl, 
-        title: editTitle,
-        description: editDescription,
-        source: editSource,
-      } : ch))
-    );
-
-    setSaveStatus(`Saved ${channelId}`);
-    setTimeout(() => setSaveStatus(null), 2000);
-
-    setEditingId(null);
-    setEditUrl("");
-    setEditTitle("");
-    setEditDescription("");
-    setEditSource("");
-  };
-
-  const resetToDefault = (channelId: string) => {
-    // Clear all custom values for this channel
-    const keys = [
-      "flicklet.admin.customChannels",
-      "flicklet.admin.customTitles", 
-      "flicklet.admin.customDescriptions",
-      "flicklet.admin.customSources",
-    ];
-    
-    keys.forEach((key) => {
-      const json = localStorage.getItem(key);
-      if (json) {
-        const data: Record<string, string> = JSON.parse(json);
-        delete data[channelId];
-        if (Object.keys(data).length === 0) {
-          localStorage.removeItem(key);
-        } else {
-          localStorage.setItem(key, JSON.stringify(data));
-        }
-      }
-    });
-
-    // Find default values
-    const defaultChannel = COMMUNITY_CHANNELS.find((ch) => ch.id === channelId);
-    if (defaultChannel) {
-      setChannels((prev) =>
-        prev.map((ch) => (ch.id === channelId ? { ...defaultChannel } : ch))
-      );
+  const saveChannel = async (channelId: string) => {
+    // Runtime admin check (UI is already gated, but extra safety)
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      setSaveStatus("Error: Not authenticated");
+      setTimeout(() => setSaveStatus(null), 3000);
+      return;
     }
 
-    setSaveStatus(`Reset ${channelId} to default`);
-    setTimeout(() => setSaveStatus(null), 2000);
+    setSaving(true);
+
+    // Update the channel in local state
+    const updatedChannels = channels.map((ch) =>
+      ch.id === channelId
+        ? {
+            ...ch,
+            url: editUrl,
+            title: editTitle,
+            description: editDescription,
+            source: editSource,
+          }
+        : ch
+    );
+
+    // Save entire config to Firestore
+    const success = await saveCommunityChannelsConfig(
+      updatedChannels,
+      currentUser.email || currentUser.uid
+    );
+
+    setSaving(false);
+
+    if (success) {
+      setChannels(updatedChannels);
+      setSaveStatus(`Saved ${channelId} (global)`);
+      setEditingId(null);
+      setEditUrl("");
+      setEditTitle("");
+      setEditDescription("");
+      setEditSource("");
+    } else {
+      setSaveStatus("Error: Failed to save to Firestore");
+    }
+
+    setTimeout(() => setSaveStatus(null), 3000);
+  };
+
+  const resetToDefault = async (channelId: string) => {
+    // Runtime admin check
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      setSaveStatus("Error: Not authenticated");
+      setTimeout(() => setSaveStatus(null), 3000);
+      return;
+    }
+
+    setSaving(true);
+
+    // Find the default channel and replace it in the array
+    const defaultChannel = getDefaultChannels().find((ch) => ch.id === channelId);
+    if (!defaultChannel) {
+      setSaving(false);
+      setSaveStatus("Error: Default channel not found");
+      setTimeout(() => setSaveStatus(null), 3000);
+      return;
+    }
+
+    const updatedChannels = channels.map((ch) =>
+      ch.id === channelId ? { ...defaultChannel } : ch
+    );
+
+    // Save to Firestore
+    const success = await saveCommunityChannelsConfig(
+      updatedChannels,
+      currentUser.email || currentUser.uid
+    );
+
+    setSaving(false);
+
+    if (success) {
+      setChannels(updatedChannels);
+      setSaveStatus(`Reset ${channelId} to default (global)`);
+    } else {
+      setSaveStatus("Error: Failed to save reset to Firestore");
+    }
+
+    setTimeout(() => setSaveStatus(null), 3000);
+  };
+
+  const resetAllToDefaults = async () => {
+    // Runtime admin check
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      setSaveStatus("Error: Not authenticated");
+      setTimeout(() => setSaveStatus(null), 3000);
+      return;
+    }
+
+    if (!confirm("Reset ALL channels to defaults? This affects all users.")) {
+      return;
+    }
+
+    setSaving(true);
+
+    const defaults = getDefaultChannels();
+    const success = await saveCommunityChannelsConfig(
+      defaults,
+      currentUser.email || currentUser.uid
+    );
+
+    setSaving(false);
+
+    if (success) {
+      setChannels(defaults);
+      setSaveStatus("All channels reset to defaults (global)");
+    } else {
+      setSaveStatus("Error: Failed to reset to defaults");
+    }
+
+    setTimeout(() => setSaveStatus(null), 3000);
   };
 
   const testUrl = async (channelId: string, url: string) => {
@@ -3375,43 +3413,67 @@ function ChannelManagement() {
     }, 5000);
   };
 
+  // Check if a channel differs from the static default
   const isCustomized = (channelId: string): boolean => {
-    const customChannelsJson = localStorage.getItem("flicklet.admin.customChannels");
-    const customTitlesJson = localStorage.getItem("flicklet.admin.customTitles");
+    const currentChannel = channels.find((ch) => ch.id === channelId);
+    const defaultChannel = getDefaultChannels().find((ch) => ch.id === channelId);
     
-    let hasCustomUrl = false;
-    let hasCustomTitle = false;
+    if (!currentChannel || !defaultChannel) return false;
     
-    if (customChannelsJson) {
-      const customChannels: Record<string, string> = JSON.parse(customChannelsJson);
-      hasCustomUrl = channelId in customChannels;
-    }
-    if (customTitlesJson) {
-      const customTitles: Record<string, string> = JSON.parse(customTitlesJson);
-      hasCustomTitle = channelId in customTitles;
-    }
-    
-    return hasCustomUrl || hasCustomTitle;
+    return (
+      currentChannel.url !== defaultChannel.url ||
+      currentChannel.title !== defaultChannel.title ||
+      currentChannel.description !== defaultChannel.description ||
+      currentChannel.source !== defaultChannel.source
+    );
   };
 
   return (
     <div className="space-y-6">
       <p className="text-sm" style={{ color: "var(--muted)" }}>
-        Manage Community Player channel URLs. Changes are saved to localStorage
-        and will override the default values. Refresh the app to see changes in the player.
+        Manage Community Player channels. Changes are saved globally to Firestore
+        and apply to all users immediately (no refresh needed).
       </p>
+
+      {configLoading && (
+        <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: "var(--card)", border: "1px solid var(--line)" }}>
+          Loading channel config...
+        </div>
+      )}
+
+      {configError && (
+        <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: "#fee2e2", color: "#b91c1c" }}>
+          ⚠️ {configError}
+        </div>
+      )}
 
       {saveStatus && (
         <div
           className="p-3 rounded-lg text-sm"
           style={{
-            backgroundColor: "var(--accent)",
-            color: "white",
+            backgroundColor: saveStatus.startsWith("Error") ? "#fee2e2" : "var(--accent)",
+            color: saveStatus.startsWith("Error") ? "#b91c1c" : "white",
           }}
         >
-          ✓ {saveStatus}
+          {saveStatus.startsWith("Error") ? "⚠️" : "✓"} {saveStatus}
         </div>
       )}
+
+      {/* Reset All button */}
+      <div className="flex justify-end">
+        <button
+          onClick={resetAllToDefaults}
+          disabled={saving || configLoading}
+          className="px-3 py-1.5 text-xs rounded"
+          style={{
+            backgroundColor: "var(--btn2)",
+            color: "var(--muted)",
+            opacity: saving || configLoading ? 0.5 : 1,
+          }}
+        >
+          Reset All to Defaults
+        </button>
+      </div>
 
       <div className="space-y-4">
         {channels.map((channel) => (
@@ -3518,13 +3580,19 @@ function ChannelManagement() {
                 <div className="flex gap-2">
                   <button
                     onClick={() => saveChannel(channel.id)}
+                    disabled={saving}
                     className="px-3 py-1.5 text-sm rounded"
-                    style={{ backgroundColor: "var(--accent)", color: "white" }}
+                    style={{ 
+                      backgroundColor: "var(--accent)", 
+                      color: "white",
+                      opacity: saving ? 0.5 : 1,
+                    }}
                   >
-                    Save
+                    {saving ? "Saving..." : "Save"}
                   </button>
                   <button
                     onClick={cancelEditing}
+                    disabled={saving}
                     className="px-3 py-1.5 text-sm rounded"
                     style={{
                       backgroundColor: "var(--btn2)",
