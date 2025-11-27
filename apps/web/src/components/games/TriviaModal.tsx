@@ -139,7 +139,32 @@ export default function TriviaModal({ isOpen, onClose }: TriviaModalProps) {
     }
   }, [isOpen]);
 
+  // Handle orientation change to prevent oversizing/undersizing
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const handleOrientationChange = () => {
+      // Reset modal position on orientation change to prevent layout issues
+      setModalPosition({ x: 0, y: 0 });
+      // Small delay to let viewport settle
+      setTimeout(() => {
+        setModalPosition({ x: 0, y: 0 });
+      }, 100);
+    };
+
+    window.addEventListener('orientationchange', handleOrientationChange);
+    window.addEventListener('resize', handleOrientationChange);
+
+    return () => {
+      window.removeEventListener('orientationchange', handleOrientationChange);
+      window.removeEventListener('resize', handleOrientationChange);
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
+
+  // Detect mobile for responsive height (check on each render to handle orientation changes)
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
 
   const modalStyle = {
     position: "fixed" as const,
@@ -147,7 +172,8 @@ export default function TriviaModal({ isOpen, onClose }: TriviaModalProps) {
     left: "50%",
     transform: `translate(-50%, -50%) translate(${modalPosition.x}px, ${modalPosition.y}px)`,
     width: "min(90vw, 500px)",
-    height: "min(90vh, 750px)",
+    height: isMobile ? "100vh" : "min(90vh, 750px)",
+    maxHeight: "100vh",
     cursor: isDragging ? "grabbing" : "default",
     zIndex: "var(--z-modal, 9999)",
   };

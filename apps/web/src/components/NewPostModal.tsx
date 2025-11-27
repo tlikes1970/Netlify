@@ -160,6 +160,12 @@ export default function NewPostModal({
       return;
     }
 
+    // Prevent double submission
+    if (submitting) {
+      console.warn("[NewPostModal] Submit already in progress, ignoring duplicate submit");
+      return;
+    }
+    
     setSubmitting(true);
     setError(null);
 

@@ -1689,7 +1689,7 @@ function SearchRow({
               onCompositionEnd={() => setIsComposing(false)}
               className={`w-full rounded-none border-l-0 border-r-0 border-y-0 py-2 md:py-3 outline-none ring-0 focus:border-primary ${
                 isMobile
-                  ? `px-3 text-sm ${q.length > 0 ? (hasVoiceSearch ? "pr-20" : "pr-10") : hasVoiceSearch ? "pr-10" : "pr-3"}`
+                  ? `px-3 text-base ${q.length > 0 ? (hasVoiceSearch ? "pr-20" : "pr-10") : hasVoiceSearch ? "pr-10" : "pr-3"}`
                   : "px-4 pr-12 text-sm"
               }`}
               spellCheck="true"

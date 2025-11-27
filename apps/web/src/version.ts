@@ -1,5 +1,14 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.189: Mobile fixes and community post duplication fix
+// - Fixed mobile zooming: Added maximum-scale=1.0, user-scalable=no to viewport meta tag
+// - Fixed input zoom: Changed search input font-size from 14px to 16px on mobile to prevent iOS auto-zoom
+// - Fixed trivia modal scroll: Added min-height: 0 to flex containers to enable proper scrolling
+// - Fixed FlickWord layout: Added orientation change handling to prevent oversizing/undersizing
+// - Fixed FlickWord modal height: Uses 100vh on mobile instead of min(100vh, 750px) for proper fit
+// - Fixed community post duplication: Only show excerpt if different from title (prevents duplicate content display)
+// - Added deduplication guards: Prevents duplicate posts in array and double form submissions
+// - Rollback: Revert this commit to restore previous mobile behavior and post display
 // ⚠️ VERSION 0.1.188: 8 Personality System - Valley Girl to Fantasy Wizard
 // - Added data/personalities.ts with 8 distinct personalities × 20 text keys × 3 variants each
 // - Personalities: Valley Girl, Detective Noir, Sports Announcer, Zen, Surfer, Medieval Bard, Grumpy Old Man, Fantasy Wizard
@@ -369,4 +378,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.188";
+export const APP_VERSION = "0.1.189";

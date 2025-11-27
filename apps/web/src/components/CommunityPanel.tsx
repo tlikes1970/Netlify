@@ -262,6 +262,17 @@ const CommunityPanel = memo(function CommunityPanel() {
         // Limit to pageSize after filtering/sorting
         newPosts = newPosts.slice(0, pageSize);
 
+        // Deduplicate within newPosts array itself (in case of any edge cases)
+        const seenIds = new Set<string>();
+        newPosts = newPosts.filter((post) => {
+          if (seenIds.has(post.id)) {
+            console.warn(`[CommunityPanel] Duplicate post ID in fetch results: ${post.id}`, post);
+            return false;
+          }
+          seenIds.add(post.id);
+          return true;
+        });
+
         // Update last document for pagination
         if (snapshot.docs.length > 0) {
           lastDocRef.current = snapshot.docs[snapshot.docs.length - 1];
@@ -272,12 +283,17 @@ const CommunityPanel = memo(function CommunityPanel() {
 
         // Append or replace posts
         if (reset) {
+          // On reset, completely replace posts array with deduplicated new posts
+          console.log(`[CommunityPanel] Resetting posts: ${newPosts.length} new posts`, newPosts.map(p => ({ id: p.id, title: p.title })));
           setPosts(newPosts);
         } else {
           setPosts((prev) => {
-            // Avoid duplicates
+            // Avoid duplicates when appending
             const existingIds = new Set(prev.map((p) => p.id));
             const uniqueNew = newPosts.filter((p) => !existingIds.has(p.id));
+            if (uniqueNew.length !== newPosts.length) {
+              console.warn(`[CommunityPanel] Filtered out ${newPosts.length - uniqueNew.length} duplicate posts when appending`);
+            }
             return [...prev, ...uniqueNew];
           });
         }
@@ -329,15 +345,28 @@ const CommunityPanel = memo(function CommunityPanel() {
     };
   }, [fetchPosts]);
 
+  const handlePostCreatedRef = useRef(false);
   const handlePostCreated = () => {
+    // Prevent rapid duplicate calls
+    if (handlePostCreatedRef.current) {
+      console.log("[CommunityPanel] Post created callback already in progress, skipping...");
+      return;
+    }
+    
     // Refresh posts list immediately after new post is created
     console.log(
       "[CommunityPanel] Post created callback triggered, refreshing posts..."
     );
+    handlePostCreatedRef.current = true;
+    
     // Small delay to ensure Firestore write is complete
     setTimeout(() => {
       console.log("[CommunityPanel] Fetching posts after delay...");
       fetchPosts(true);
+      // Reset guard after fetch completes
+      setTimeout(() => {
+        handlePostCreatedRef.current = false;
+      }, 500);
     }, 300);
   };
 
@@ -725,23 +754,49 @@ const CommunityPanel = memo(function CommunityPanel() {
                 }
               }}
             >
-              {posts.map((post) => {
-                const publishDate = post.publishedAt
-                  ? new Date(post.publishedAt).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })
-                  : null;
+              {(() => {
+                // Debug: Check for duplicate IDs in posts array
+                const postIds = posts.map(p => p.id);
+                const duplicateIds = postIds.filter((id, index) => postIds.indexOf(id) !== index);
+                if (duplicateIds.length > 0) {
+                  console.error(`[CommunityPanel] DUPLICATE POST IDs FOUND:`, duplicateIds, posts.filter(p => duplicateIds.includes(p.id)));
+                }
+                
+                // Additional check: log all post IDs to see if there are duplicates
+                console.log(`[CommunityPanel] Rendering ${posts.length} posts with IDs:`, postIds);
+                
+                // Deduplicate posts array before rendering (safety net)
+                const seenIds = new Set<string>();
+                const uniquePosts = posts.filter((post) => {
+                  if (seenIds.has(post.id)) {
+                    console.warn(`[CommunityPanel] Filtering out duplicate post during render: ${post.id}`, post);
+                    return false;
+                  }
+                  seenIds.add(post.id);
+                  return true;
+                });
+                
+                if (uniquePosts.length !== posts.length) {
+                  console.warn(`[CommunityPanel] Filtered ${posts.length - uniquePosts.length} duplicate posts during render`);
+                }
+                
+                return uniquePosts.map((post) => {
+                  const publishDate = post.publishedAt
+                    ? new Date(post.publishedAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })
+                    : null;
 
-                // Check if post is new (within last 24 hours)
-                const isNew = post.publishedAt
-                  ? Date.now() - new Date(post.publishedAt).getTime() <
+                  // Check if post is new (within last 24 hours)
+                  const isNew = post.publishedAt
+                    ? Date.now() - new Date(post.publishedAt).getTime() <
                     24 * 60 * 60 * 1000
-                  : false;
+                    : false;
 
-                return (
-                  <div
-                    key={post.id}
+                  return (
+                    <div
+                      key={post.id}
                     onClick={() => handlePostClick(post.slug)}
                     className="cursor-pointer rounded-lg p-3 transition-colors mb-3 last:mb-0 relative group"
                     style={{
@@ -777,7 +832,7 @@ const CommunityPanel = memo(function CommunityPanel() {
                         </span>
                       )}
                     </div>
-                    {post.excerpt && (
+                    {post.excerpt && post.excerpt !== post.title && (
                       <p
                         className="text-xs mb-2 line-clamp-2"
                         style={{ color: "var(--muted)" }}
@@ -858,7 +913,8 @@ const CommunityPanel = memo(function CommunityPanel() {
                     )}
                   </div>
                 );
-              })}
+              });
+              })()}
               {loadingMore && (
                 <div className="flex items-center justify-center py-4">
                   <div className="text-xs" style={{ color: "var(--muted)" }}>

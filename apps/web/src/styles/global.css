@@ -1017,6 +1017,13 @@ input:focus-visible {
   .gm-body {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    min-height: 0; /* Allow flex children to shrink and enable scrolling */
+  }
+  
+  /* Ensure trivia game content can scroll within modal */
+  .gm-body .trivia-game {
+    min-height: 0; /* Allow flex child to shrink */
+    overflow-y: visible; /* Content scrolls via parent .gm-body */
   }
 }
 
