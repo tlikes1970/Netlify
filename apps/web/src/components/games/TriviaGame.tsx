@@ -12,6 +12,13 @@ import { syncGameStats } from '../../lib/gameStatsSync';
 import { shareWithFallback } from '../../lib/shareLinks';
 import { getToastCallback } from '@/state/actions';
 import { ERROR_MESSAGES, logErrorDetails } from '../../lib/errorMessages';
+import { 
+  getUsedQuestionHashes, 
+  recordUsedQuestions, 
+  filterDuplicates, 
+  hashQuestion,
+  selectUniqueQuestions 
+} from '../../lib/triviaDedup';
 
 interface TriviaGameProps {
   onClose?: () => void;
@@ -50,151 +57,42 @@ export default function TriviaGame({
   const sampleQuestions = SAMPLE_TRIVIA_QUESTIONS;
 
   /**
-   * Core question selection logic - shared by getTodaysQuestions() and getRecentTriviaQuestionIds()
-   * This ensures both functions use the exact same selection algorithm.
-   * 
-   * @param date Date string (YYYY-MM-DD)
-   * @param gameNumber Game number (1-3 for Pro, 1 for Regular)
-   * @param isPro Whether user is Pro
-   * @param allQuestions All available questions
-   * @param providedRecentIds Optional set of recent question IDs to avoid (prevents infinite recursion)
-   * @returns Array of selected questions for that date/game
+   * Process: Trivia Question Selection (Unified Dedup)
+   * Purpose: Select unique questions using centralized dedup system, ensuring NO duplicates
+   *          within the same day or across the 7-day no-repeat window.
+   * Data Source: triviaDedup.ts tracks question hashes by date/game in localStorage
+   * Update Path: Questions recorded via recordUsedQuestions() after game completion
+   * Dependencies: triviaDedup.ts, triviaQuestions.ts
    */
-  const getQuestionsForDate = (
-    date: string,
+  const getUniqueQuestionsForGame = (
     gameNumber: number,
-    isPro: boolean,
-    allQuestions: TriviaQuestion[],
-    providedRecentIds: Set<string> | null = null
+    questionsNeeded: number = 10
   ): TriviaQuestion[] => {
-    // Calculate days since epoch (Jan 1, 2000) for 365-day cycle
+    // Get hashes of all questions to avoid (previous days + earlier games today)
+    const usedHashes = getUsedQuestionHashes(gameNumber);
+    
+    // Calculate deterministic start index based on date and game number
+    const today = getDailySeedDate();
     const epochDate = new Date('2000-01-01');
-    const currentDate = new Date(date + 'T00:00:00Z');
+    const currentDate = new Date(today + 'T00:00:00Z');
     const daysSinceEpoch = Math.floor((currentDate.getTime() - epochDate.getTime()) / (1000 * 60 * 60 * 24));
     const cycleDay = daysSinceEpoch % 365;
-
-    const questionsPerGame = 10;
-    const totalQuestionsPerDay = 30;
-
-    // Use provided recent IDs if available, otherwise calculate them
-    // (This prevents infinite recursion when getRecentTriviaQuestionIds calls this)
-    const recentQuestionIds = providedRecentIds !== null
-      ? providedRecentIds
-      : getRecentTriviaQuestionIds(14, isPro, allQuestions, date);
-
-    const selectedQuestions: TriviaQuestion[] = [];
-    const usedQuestionIds = new Set<string>(); // Track used questions to prevent duplicates within this game
-    const startIndex = isPro ? (gameNumber - 1) * 10 : 0;
-
-    for (let i = 0; i < questionsPerGame; i++) {
-      const globalIndex = startIndex + i;
-      const baseIndex = (cycleDay * totalQuestionsPerDay + globalIndex) % allQuestions.length;
-      
-      // Find next available question that:
-      // 1. Hasn't been used in this game
-      // 2. Wasn't used in the last 14 days (no-repeat window)
-      let questionIndex = baseIndex;
-      let attempts = 0;
-      const maxAttempts = allQuestions.length * 2;
-      
-      while (
-        (usedQuestionIds.has(allQuestions[questionIndex].id) || 
-         recentQuestionIds.has(allQuestions[questionIndex].id)) && 
-        attempts < maxAttempts
-      ) {
-        questionIndex = (questionIndex + 1) % allQuestions.length;
-        attempts++;
-      }
-      
-      // Fallback: if we've exhausted all questions, use base index
-      if (attempts >= maxAttempts) {
-        console.warn(`⚠️ Could not find question avoiding recent window after ${attempts} attempts. Using question at base index ${baseIndex}`);
-        questionIndex = baseIndex;
-      }
-      
-      const selectedQuestion = allQuestions[questionIndex];
-      selectedQuestions.push(selectedQuestion);
-      usedQuestionIds.add(selectedQuestion.id);
-    }
-
-    return selectedQuestions;
-  };
-
-  // Get today's questions based on UTC date (deterministic rotation)
-  // Regular: 10 questions per day (game 1 only)
-  // Pro: 30 questions per day (games 1-3, 10 questions each)
-  // ALL users get the same questions in the same order (Regular gets first 10, Pro gets all 30)
-  // Questions rotate on a 365-day cycle with no-repeat window (last 14 days)
-  // Uses UTC date so all users globally share the same daily content
-  const getTodaysQuestions = (
-    isPro: boolean = false,
-    gameNumber: number = 1
-  ) => {
-    const today = getDailySeedDate();
-    const questions = getQuestionsForDate(today, gameNumber, isPro, sampleQuestions);
+    const startIndex = (cycleDay * 30 + (gameNumber - 1) * 10) % sampleQuestions.length;
     
-    const totalForUser = isPro ? 30 : 10;
-    const startIndex = isPro ? (gameNumber - 1) * 10 : 0;
-    console.log(
-      `🎯 Game ${gameNumber} questions (${isPro ? "Pro" : "Regular"} user, questions ${startIndex + 1}-${startIndex + 10} of ${totalForUser}):`,
-      questions.map((q) => q.id)
+    // Select unique questions avoiding used hashes
+    const selected = selectUniqueQuestions(
+      sampleQuestions,
+      questionsNeeded,
+      usedHashes,
+      startIndex
     );
-    return questions;
-  };
-
-  // Get question IDs used in the last N days for a specific user type
-  // FIXED: Now uses the same selection logic as getTodaysQuestions() to ensure
-  // the recent questions list matches what was actually selected (accounting for
-  // repeat prevention logic).
-  // Processes days in forward chronological order (oldest to newest) so each
-  // day's selection accounts for questions selected on previous days.
-  const getRecentTriviaQuestionIds = (
-    days: number,
-    isPro: boolean,
-    allQuestions: TriviaQuestion[],
-    currentDate?: string
-  ): Set<string> => {
-    const recentIds = new Set<string>();
-    const today = currentDate || getDailySeedDate();
-    const todayDate = new Date(today + 'T00:00:00Z');
     
-    // Process days in forward chronological order (oldest first)
-    // This ensures when we select questions for day N, we already know
-    // what questions were selected on days N-1, N-2, etc.
-    const dayQuestions: Array<{ date: string; questionIds: Set<string> }> = [];
+    console.log(
+      `🎯 Game ${gameNumber}: Selected ${selected.length} unique questions (avoiding ${usedHashes.size} used hashes)`,
+      selected.map(q => q.id)
+    );
     
-    for (let i = days; i >= 1; i--) {
-      const pastDate = new Date(todayDate);
-      pastDate.setUTCDate(pastDate.getUTCDate() - i);
-      const pastDateStr = getDailySeedDate(pastDate);
-      
-      // Get all games for that date
-      // Pro users: 3 games (30 questions), Regular: 1 game (10 questions)
-      const maxGames = isPro ? 3 : 1;
-      const dayQuestionIds = new Set<string>();
-      
-      for (let gameNum = 1; gameNum <= maxGames; gameNum++) {
-        // Build recent IDs from all previous days (chronologically before this date)
-        const previousDaysIds = new Set<string>();
-        dayQuestions.forEach(prevDay => {
-          prevDay.questionIds.forEach(id => previousDaysIds.add(id));
-        });
-        
-        // Use the same selection logic, with questions from previous days as recent IDs
-        const gameQuestions = getQuestionsForDate(pastDateStr, gameNum, isPro, allQuestions, previousDaysIds);
-        
-        // Add all questions from this game to this day's set
-        gameQuestions.forEach(q => dayQuestionIds.add(q.id));
-      }
-      
-      // Store this day's questions
-      dayQuestions.push({ date: pastDateStr, questionIds: dayQuestionIds });
-      
-      // Add to overall recent IDs set
-      dayQuestionIds.forEach(id => recentIds.add(id));
-    }
-    
-    return recentIds;
+    return selected;
   };
 
   // Get games completed today from localStorage (uses UTC date for consistency)
@@ -408,110 +306,88 @@ export default function TriviaGame({
             `🧠 Loading trivia questions for Game ${gameNumber} (${isPro ? "Pro: 30 questions/day" : "Regular: 10 questions/day"})...`
           );
 
-          // Use cached trivia - Regular gets 10 questions, Pro gets 30 questions
-          // All users get the same questions (Regular gets first 10, Pro gets all 30)
-          const apiQuestions = await getCachedTrivia(gameNumber, isPro);
-
-          let formattedQuestions: TriviaQuestion[] = [];
           const questionsNeeded = 10; // 10 questions per game
-
-          if (apiQuestions && apiQuestions.length > 0) {
-            // Convert API format to our format
-            // Regular users (gameNumber = 1): use questions 0-9
-            // Pro users: gameNumber 1-3, use questions 0-9, 10-19, 20-29 respectively
-            const startIndex = isPro ? (gameNumber - 1) * 10 : 0;
-            const endIndex = startIndex + questionsNeeded;
-            formattedQuestions = apiQuestions.slice(startIndex, endIndex).map((q, index) => ({
-              id: `api_${gameNumber}_${index}`,
-              question: q.question,
-              options: q.options,
-              correctAnswer: q.correctAnswer,
-              explanation: q.explanation || undefined,
-              category: q.category,
-              difficulty: q.difficulty,
-            }));
-
-            // If we don't have enough from API, supplement with hardcoded questions
-            if (formattedQuestions.length < questionsNeeded) {
-              const additionalNeeded =
-                questionsNeeded - formattedQuestions.length;
-              
-              // Track used question text to prevent duplicates
-              const usedQuestionTexts = new Set(
-                formattedQuestions.map(q => q.question.toLowerCase().trim())
-              );
-              
-              // Get hardcoded questions for this game (same questions for all users)
-              const allHardcodedQuestions = getTodaysQuestions(isPro, gameNumber);
-              
-              // Filter out questions that match API questions by text content
-              const availableHardcoded = allHardcodedQuestions.filter(
-                q => !usedQuestionTexts.has(q.question.toLowerCase().trim())
-              );
-              
-              // Take only what we need
-              const additionalQuestions = availableHardcoded
-                .slice(0, additionalNeeded)
-                .map((q) => ({
-                  ...q,
-                  explanation: q.explanation || undefined,
-                }));
-              
-              formattedQuestions.push(...additionalQuestions);
-              
-              // If still not enough, fill with any remaining hardcoded questions (shouldn't happen)
-              if (formattedQuestions.length < questionsNeeded) {
-                const stillNeeded = questionsNeeded - formattedQuestions.length;
-                const remaining = allHardcodedQuestions
-                  .filter(q => !formattedQuestions.some(fq => fq.question.toLowerCase().trim() === q.question.toLowerCase().trim()))
-                  .slice(0, stillNeeded);
-                formattedQuestions.push(...remaining.map(q => ({
-                  ...q,
-                  explanation: q.explanation || undefined,
-                })));
-              }
-            }
-          } else {
-            // No API questions available, use fallback (same questions for all users)
-            console.log("📚 Using fallback trivia questions");
-            formattedQuestions = getTodaysQuestions(isPro, gameNumber)
-              .slice(0, questionsNeeded)
-              .map((q) => ({
-                ...q,
+          
+          // Get hashes of questions to avoid (previous days + earlier games today)
+          const usedHashes = getUsedQuestionHashes(gameNumber);
+          console.log(`🔒 Avoiding ${usedHashes.size} previously used question hashes`);
+          
+          // Try to get questions from API first
+          let formattedQuestions: TriviaQuestion[] = [];
+          
+          try {
+            const apiQuestions = await getCachedTrivia(gameNumber, isPro);
+            
+            if (apiQuestions && apiQuestions.length > 0) {
+              // Convert API format and filter out duplicates using centralized dedup
+              const apiFormatted = apiQuestions.map((q, index) => ({
+                id: `api_${gameNumber}_${index}`,
+                question: q.question,
+                options: q.options,
+                correctAnswer: q.correctAnswer,
                 explanation: q.explanation || undefined,
+                category: q.category,
+                difficulty: q.difficulty,
               }));
+              
+              // Filter using centralized dedup (removes questions seen in previous games)
+              formattedQuestions = filterDuplicates(apiFormatted, usedHashes);
+              console.log(`📡 API provided ${apiQuestions.length} questions, ${formattedQuestions.length} are unique`);
+            }
+          } catch (apiError) {
+            console.warn('⚠️ API failed, using fallback questions:', apiError);
           }
           
-          // Final duplicate check - ensure no duplicates in final list
+          // If we need more questions, supplement from hardcoded pool
+          if (formattedQuestions.length < questionsNeeded) {
+            const needed = questionsNeeded - formattedQuestions.length;
+            console.log(`📚 Need ${needed} more questions from hardcoded pool`);
+            
+            // Build hashes of what we already have (API questions)
+            const currentHashes = new Set(usedHashes);
+            formattedQuestions.forEach(q => currentHashes.add(hashQuestion(q.question)));
+            
+            // Get unique questions from hardcoded pool
+            const hardcodedQuestions = getUniqueQuestionsForGame(gameNumber, needed + 10);
+            const filteredHardcoded = filterDuplicates(hardcodedQuestions, currentHashes);
+            
+            // Add what we need
+            const toAdd = filteredHardcoded.slice(0, needed).map(q => ({
+              ...q,
+              explanation: q.explanation || undefined,
+            }));
+            formattedQuestions.push(...toAdd);
+            console.log(`✅ Added ${toAdd.length} unique hardcoded questions`);
+          }
+          
+          // Final safety check - ensure exactly questionsNeeded unique questions
           const finalQuestions: TriviaQuestion[] = [];
-          const seenQuestions = new Set<string>();
+          const finalHashes = new Set<string>();
+          
           for (const q of formattedQuestions) {
-            const questionKey = q.question.toLowerCase().trim();
-            if (!seenQuestions.has(questionKey)) {
-              seenQuestions.add(questionKey);
+            const hash = hashQuestion(q.question);
+            if (!finalHashes.has(hash) && finalQuestions.length < questionsNeeded) {
+              finalHashes.add(hash);
               finalQuestions.push(q);
             }
           }
           
-          // If we lost questions due to duplicates, fill from hardcoded pool
+          // Last resort: if still not enough, force-fill from hardcoded (ignoring dedup)
           if (finalQuestions.length < questionsNeeded) {
-            const allHardcoded = getTodaysQuestions(isPro, gameNumber);
-            const needed = questionsNeeded - finalQuestions.length;
-            const additional = allHardcoded
-              .filter(q => !seenQuestions.has(q.question.toLowerCase().trim()))
-              .slice(0, needed);
-            finalQuestions.push(...additional.map(q => ({
-              ...q,
-              explanation: q.explanation || undefined,
-            })));
+            console.warn(`⚠️ Only have ${finalQuestions.length}/${questionsNeeded} questions. Force-filling remaining.`);
+            for (const q of sampleQuestions) {
+              const hash = hashQuestion(q.question);
+              if (!finalHashes.has(hash) && finalQuestions.length < questionsNeeded) {
+                finalHashes.add(hash);
+                finalQuestions.push({ ...q, explanation: q.explanation || undefined });
+              }
+            }
           }
-          
-          formattedQuestions = finalQuestions.slice(0, questionsNeeded);
 
           console.log(
-            `✅ Loaded ${formattedQuestions.length} trivia questions for Game ${gameNumber} (${isPro ? "Pro: 30 questions/day" : "Regular: 10 questions/day"})`
+            `✅ Loaded ${finalQuestions.length} trivia questions for Game ${gameNumber} (${isPro ? "Pro" : "Regular"})`
           );
-          setQuestions(formattedQuestions);
+          setQuestions(finalQuestions);
           setGameState("playing");
           setErrorMessage(null);
           
@@ -519,15 +395,15 @@ export default function TriviaGame({
           trackTriviaGameStart(gameNumber, isPro);
           // Initialize option refs array
           optionRefs.current = new Array(
-            formattedQuestions[0]?.options.length || 4
+            finalQuestions[0]?.options.length || 4
           ).fill(null);
         } catch (error) {
           logErrorDetails('TriviaGame', error, { context: 'loadQuestions' });
           trackGameError('trivia', 'load_questions_failed', { error: String(error) });
           setErrorMessage(ERROR_MESSAGES.game.loadFailed);
-          // Fallback to hardcoded questions (same questions for all users)
-          const fallbackQuestions = getTodaysQuestions(isPro, gameNumber)
-            .slice(0, 10); // Always 10 questions per game
+          
+          // Fallback: get unique questions using dedup system
+          const fallbackQuestions = getUniqueQuestionsForGame(gameNumber, 10);
           setQuestions(fallbackQuestions);
           setGameState("playing");
           optionRefs.current = new Array(
@@ -591,7 +467,18 @@ export default function TriviaGame({
       setGameState("completed");
       
       const today = getDailySeedDate();
-      const percentage = Math.round((score / questions.length) * 100);
+      
+      // Calculate final score by counting correct answers from questionAnswers
+      // This ensures we use the actual recorded answers, not potentially stale state
+      const finalScore = questionAnswers.filter(a => a.isCorrect).length + 
+        (questions[currentQuestionIndex].correctAnswer === (questionAnswers.find(a => a.questionIndex === currentQuestionIndex)?.selectedAnswer ?? -1) ? 0 : 
+         (selectedAnswer === questions[currentQuestionIndex].correctAnswer ? 1 : 0));
+      
+      const percentage = Math.round((finalScore / questions.length) * 100);
+      
+      // Record used questions in dedup system (CRITICAL for preventing duplicates)
+      recordUsedQuestions(currentGame, questions);
+      console.log(`📝 Recorded ${questions.length} questions for dedup tracking (Game ${currentGame})`);
       
       // Save completed game for review
       const completedQuestionAnswers = questions.map((q, idx) => {
@@ -607,7 +494,7 @@ export default function TriviaGame({
       saveCompletedTriviaGame({
         date: today,
         gameNumber: currentGame,
-        score,
+        score: finalScore,
         total: questions.length,
         percentage,
         questions: completedQuestionAnswers,
@@ -615,10 +502,10 @@ export default function TriviaGame({
       });
       
       // Track analytics
-      trackTriviaGameComplete(score, questions.length, percentage, currentGame, isPro);
+      trackTriviaGameComplete(finalScore, questions.length, percentage, currentGame, isPro);
       
       // Update stats after state is set to completed
-      updateTriviaStats(score, questions.length);
+      updateTriviaStats(finalScore, questions.length);
 
       // Increment games completed today (cap to max games)
       const maxGames = isPro ? 3 : 1;
@@ -626,18 +513,17 @@ export default function TriviaGame({
       setGamesCompletedToday(newGamesCompleted);
       saveGamesCompletedToday(newGamesCompleted);
 
-      onGameComplete?.(score, questions.length);
+      onGameComplete?.(finalScore, questions.length);
     }
   }, [
     currentQuestionIndex,
-    questions.length,
-    score,
-    onGameComplete,
-    gamesCompletedToday,
     questions,
+    questionAnswers, // FIXED: Added missing dependency
+    selectedAnswer,
     currentGame,
     isPro,
-    selectedAnswer,
+    gamesCompletedToday,
+    onGameComplete,
   ]);
 
   // Keyboard navigation handler

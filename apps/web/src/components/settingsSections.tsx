@@ -10,9 +10,11 @@ import { useState, useEffect } from "react";
 import {
   useSettings,
   settingsManager,
-  PersonalityLevel,
   getPersonalityText,
+  PERSONALITY_LIST,
+  DEFAULT_PERSONALITY,
 } from "../lib/settings";
+import type { PersonalityName } from "../lib/settings";
 import { useProStatus } from "../lib/proStatus";
 import { useTranslations, useLanguage, changeLanguage } from "../lib/language";
 import { PRO_FEATURES_AVAILABLE, PRO_FEATURES_COMING_SOON } from "./settingsProConfig";
@@ -305,7 +307,7 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
         </button>
       </div>
 
-      {/* Personality Mode */}
+      {/* Personality Mode - 8 distinct personalities */}
       <div>
         <label
           className="block text-sm font-medium mb-2"
@@ -313,58 +315,51 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
         >
           {translations.personalityLevel}
         </label>
-        <div className="space-y-2">
-          {[
-            {
-              level: 1 as PersonalityLevel,
-              label: "Classic",
-              description: "Warm and friendly",
-            },
-            {
-              level: 2 as PersonalityLevel,
-              label: "Sassy",
-              description: "Playful and witty",
-            },
-            {
-              level: 3 as PersonalityLevel,
-              label: "Brooding",
-              description: "Dry and melancholic",
-            },
-          ].map(({ level, label, description }) => (
-            <label
-              key={level}
-              className="flex items-center space-x-3 cursor-pointer"
-            >
-              <input
-                type="radio"
-                name="personality"
-                value={level}
-                checked={settings.personalityLevel === level}
-                onChange={() => settingsManager.updatePersonalityLevel(level)}
-                className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 focus:ring-blue-500"
-              />
-              <div>
-                <div className="font-medium" style={{ color: "var(--text)" }}>
-                  {label}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {PERSONALITY_LIST.map(({ name, description }) => {
+            const currentPersonality = settings.personality || DEFAULT_PERSONALITY;
+            const isSelected = currentPersonality === name;
+            return (
+              <label
+                key={name}
+                className={`flex items-center space-x-3 cursor-pointer p-3 rounded-lg transition-all ${
+                  isSelected ? 'ring-2 ring-blue-500' : ''
+                }`}
+                style={{ 
+                  backgroundColor: isSelected ? 'var(--card)' : 'transparent',
+                  border: '1px solid var(--border)'
+                }}
+              >
+                <input
+                  type="radio"
+                  name="personality"
+                  value={name}
+                  checked={isSelected}
+                  onChange={() => settingsManager.updatePersonality(name)}
+                  className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 focus:ring-blue-500"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium truncate" style={{ color: "var(--text)" }}>
+                    {name}
+                  </div>
+                  <div className="text-xs truncate" style={{ color: "var(--muted)" }}>
+                    {description}
+                  </div>
                 </div>
-                <div className="text-sm" style={{ color: "var(--muted)" }}>
-                  {description}
-                </div>
-              </div>
-            </label>
-          ))}
+              </label>
+            );
+          })}
         </div>
         <div
-          className="mt-2 p-3 rounded-lg"
+          className="mt-3 p-3 rounded-lg"
           style={{ backgroundColor: "var(--card)" }}
         >
-          <p className="text-sm" style={{ color: "var(--text)" }}>
-            {translations.preview}:{" "}
-            {getPersonalityText("welcome", settings.personalityLevel)}
+          <p className="text-sm" style={{ color: "var(--muted)" }}>
+            {translations.preview}:
           </p>
-        </div>
-        <div className="mt-4">
-          <PersonalityExamples personalityLevel={settings.personalityLevel} />
+          <p className="text-sm mt-1" style={{ color: "var(--text)" }}>
+            "{getPersonalityText(settings.personality || DEFAULT_PERSONALITY, 'welcome', { username: settings.displayName || 'Guest' })}"
+          </p>
         </div>
       </div>
 

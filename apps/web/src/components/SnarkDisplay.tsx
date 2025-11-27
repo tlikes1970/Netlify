@@ -1,6 +1,6 @@
 import { useRef, useEffect } from "react";
 import { useUsername } from "../hooks/useUsername";
-import { useSettings, getPersonalityText } from "../lib/settings";
+import { useSettings, getPersonalityText, DEFAULT_PERSONALITY } from "../lib/settings";
 import { useAuth } from "../hooks/useAuth";
 // ⚠️ REMOVED: flickerDiagnostics import disabled
 
@@ -55,8 +55,9 @@ export default function SnarkDisplay() {
     return null;
   }
 
-  // Show welcome message when username exists
-  const snarkText = getPersonalityText("welcome", settings.personalityLevel, {
+  // Show welcome message when username exists (using new personality system)
+  const personality = settings.personality || DEFAULT_PERSONALITY;
+  const snarkText = getPersonalityText(personality, "welcome", {
     username,
   });
 

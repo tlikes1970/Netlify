@@ -1,66 +1,69 @@
-// import { useState } from 'react'; // Unused
-import { PersonalityLevel, getPersonalityText } from '../lib/settings';
+/**
+ * Process: Personality Examples Display
+ * Purpose: Shows example text for the currently selected personality
+ * Data Source: personalities.ts via getPersonalityText helper
+ * Update Path: Updates automatically when personality prop changes
+ * Dependencies: data/personalities.ts
+ */
+
+import { getPersonalityText, PERSONALITY_LIST, DEFAULT_PERSONALITY } from '../lib/settings';
+import type { PersonalityName, TextKey } from '../data/personalities';
 
 interface PersonalityExamplesProps {
-  personalityLevel: PersonalityLevel;
+  personality?: PersonalityName;
+  // Legacy support - will be ignored if personality is provided
+  personalityLevel?: 1 | 2 | 3;
 }
 
-export default function PersonalityExamples({ personalityLevel }: PersonalityExamplesProps) {
-  const examples = [
-    { category: 'Welcome Message', key: 'welcome' as const },
-    { category: 'Empty List', key: 'emptyWatching' as const },
-    { category: 'Item Added', key: 'itemAdded' as const },
-    { category: 'Search Empty', key: 'searchEmpty' as const },
-    { category: 'Error Message', key: 'errorGeneric' as const },
-    { category: 'Marquee Message', key: 'marquee1' as const },
+export default function PersonalityExamples({ personality, personalityLevel }: PersonalityExamplesProps) {
+  // Use new personality name if provided, otherwise try to map from legacy level
+  const currentPersonality: PersonalityName = personality || DEFAULT_PERSONALITY;
+  
+  // Find the personality info
+  const personalityInfo = PERSONALITY_LIST.find(p => p.name === currentPersonality);
+  
+  const examples: Array<{ category: string; key: TextKey }> = [
+    { category: 'Welcome', key: 'welcome' },
+    { category: 'Empty List', key: 'emptyWatching' },
+    { category: 'Item Added', key: 'itemAdded' },
+    { category: 'Search Empty', key: 'searchEmpty' },
+    { category: 'Error', key: 'errorGeneric' },
+    { category: 'Marquee', key: 'marquee1' },
   ];
 
-  const getPersonalityName = (level: PersonalityLevel): string => {
-    switch (level) {
-      case 1: return 'Classic';
-      case 2: return 'Sassy';
-      case 3: return 'Brooding';
-      default: return 'Classic';
-    }
-  };
-
-  const getPersonalityDescription = (level: PersonalityLevel): string => {
-    switch (level) {
-      case 1: return 'Warm and friendly';
-      case 2: return 'Playful and witty';
-      case 3: return 'Dry and melancholic';
-      default: return 'Warm and friendly';
-    }
-  };
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="text-center">
         <h3 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>
-          {getPersonalityName(personalityLevel)} Personality
+          {currentPersonality}
         </h3>
         <p className="text-sm" style={{ color: 'var(--muted)' }}>
-          {getPersonalityDescription(personalityLevel)}
+          {personalityInfo?.description || 'Unique personality'}
         </p>
       </div>
 
-      <div className="grid gap-3">
+      <div className="grid gap-2">
         {examples.map(({ category, key }) => (
-          <div key={key} className="p-3 rounded-lg" style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', border: '1px solid' }}>
-            <div className="text-xs font-medium mb-1" style={{ color: 'var(--muted)' }}>
+          <div 
+            key={key} 
+            className="p-2 rounded-lg" 
+            style={{ 
+              backgroundColor: 'var(--card)', 
+              border: '1px solid var(--border)' 
+            }}
+          >
+            <div className="text-xs font-medium mb-0.5" style={{ color: 'var(--muted)' }}>
               {category}:
             </div>
             <div className="text-sm" style={{ color: 'var(--text)' }}>
-              "{getPersonalityText(key, personalityLevel)}"
+              "{getPersonalityText(currentPersonality, key, { username: 'Guest' })}"
             </div>
           </div>
         ))}
       </div>
 
       <div className="text-center text-xs" style={{ color: 'var(--muted)' }}>
-        These messages will appear throughout the app based on your personality setting.
-        <br />
-        <span className="text-green-400">✓ Apple App Store compliant</span>
+        Text varies randomly from 3 variants per category.
       </div>
     </div>
   );

@@ -16,15 +16,22 @@ import { authManager } from './auth';
 import type { UserSettings } from './auth.types';
 
 // Settings data model based on design document
-// Personality modes: distinct personalities instead of "sass levels"
-export type PersonalityLevel = 1 | 2 | 3; // Classic, Sassy, Brooding
+// Personality modes: 8 distinct personalities with unique commentary styles
+import { PersonalityName, DEFAULT_PERSONALITY, clearVariantCache } from '../data/personalities';
+export type { PersonalityName } from '../data/personalities';
+export { getPersonalityText, PERSONALITY_LIST, DEFAULT_PERSONALITY, clearVariantCache } from '../data/personalities';
+
 export type Theme = 'light' | 'dark';
 export type TargetList = 'watching' | 'wishlist';
+
+// Legacy type alias for backwards compatibility
+export type PersonalityLevel = 1 | 2 | 3;
 
 export interface Settings {
   // General
   displayName: string;
-  personalityLevel: PersonalityLevel;
+  personalityLevel: PersonalityLevel; // Legacy field (kept for migration)
+  personality: PersonalityName; // New personality system
   
   // Notifications
   notifications: {
@@ -69,7 +76,8 @@ export interface Settings {
 // Default settings
 const DEFAULT_SETTINGS: Settings = {
   displayName: 'Guest',
-  personalityLevel: 1, // Regular
+  personalityLevel: 1, // Legacy (kept for migration)
+  personality: DEFAULT_PERSONALITY, // New: defaults to 'Zen'
   
   notifications: {
     upcomingEpisodes: true,
@@ -328,6 +336,13 @@ class SettingsManager {
     this.saveSettings();
   }
 
+  updatePersonality(personality: PersonalityName): void {
+    this.settings.personality = personality;
+    // Clear variant cache so new personality gets fresh variants
+    clearVariantCache();
+    this.saveSettings();
+  }
+
   updateTheme(theme: Theme): void {
     this.settings.layout.theme = theme;
     this.applyTheme(theme);
@@ -418,132 +433,5 @@ export function useSetting<K extends keyof Settings>(key: K): Settings[K] {
 // Export manager for direct access
 export { settingsManager };
 
-// Personality text variations - Three distinct modes (Apple App Store compliant)
-// Classic: Warm, friendly, encouraging
-// Sassy: Playful, witty, light banter
-// Brooding: Dry, melancholic, dramatically understated
-export const PERSONALITY_TEXTS = {
-  1: { // Classic - Warm and friendly
-    welcome: "Welcome back, {username}!",
-    empty: "Nothing here yet.",
-    add: "Ready when you are.",
-    sarcasm: "",
-    
-    // Empty states
-    emptyWatching: "Your watch list is waiting to be filled.",
-    emptyWishlist: "Save something for later.",
-    emptyWatched: "Your watched list is a blank canvas.",
-    emptyUpNext: "All caught up for now.",
-    
-    // User interactions
-    itemAdded: "Added to your list.",
-    itemRemoved: "Removed from your list.",
-    searchEmpty: "No results. Try another search.",
-    searchLoading: "Searching...",
-    
-    // Error messages
-    errorGeneric: "Something went wrong. Try again.",
-    errorNetwork: "Connection issue. Check your network.",
-    errorNotFound: "Content not found.",
-    
-    // Success messages
-    successSave: "Saved.",
-    successImport: "Import complete.",
-    successExport: "Export complete.",
-    
-    // Marquee messages
-    marquee1: "Find your next favorite",
-    marquee2: "Keep track of what matters",
-    marquee3: "Stay on top of new episodes",
-    marquee4: "Discover something great",
-    marquee5: "Your entertainment hub",
-  },
-  
-  2: { // Sassy - Playful and witty
-    welcome: "Look who's back, {username}.",
-    empty: "Crickets over here.",
-    add: "Go on, add something fun.",
-    sarcasm: "",
-    
-    // Empty states
-    emptyWatching: "This list is lonelier than a Friday night in.",
-    emptyWishlist: "Wishlist looking pretty bare.",
-    emptyWatched: "The watched pile needs some love.",
-    emptyUpNext: "Nothing on deck. Rare quiet moment.",
-    
-    // User interactions
-    itemAdded: "Done deal.",
-    itemRemoved: "Poof. Gone.",
-    searchEmpty: "Nada. Try a different angle.",
-    searchLoading: "On it...",
-    
-    // Error messages
-    errorGeneric: "Whoops. Give it another shot.",
-    errorNetwork: "Signal's being dramatic.",
-    errorNotFound: "That one slipped away.",
-    
-    // Success messages
-    successSave: "Locked in.",
-    successImport: "All set.",
-    successExport: "Packed up and ready.",
-    
-    // Marquee messages
-    marquee1: "Your next obsession awaits",
-    marquee2: "Stay in the loop",
-    marquee3: "New episodes won't sneak past",
-    marquee4: "Time for a new binge",
-    marquee5: "Command center for couch time",
-  },
-  
-  3: { // Brooding - Dry and melancholic
-    welcome: "Ah, {username}. Here we are again.",
-    empty: "The void stares back.",
-    add: "Fill the emptiness, perhaps.",
-    sarcasm: "",
-    
-    // Empty states
-    emptyWatching: "An empty list. How fitting.",
-    emptyWishlist: "Wishes unfulfilled. A familiar feeling.",
-    emptyWatched: "Nothing watched. Time remains unspent.",
-    emptyUpNext: "Silence on the horizon.",
-    
-    // User interactions
-    itemAdded: "Noted. The archive grows.",
-    itemRemoved: "Erased. As if it never was.",
-    searchEmpty: "Nothing found. The search continues.",
-    searchLoading: "Seeking...",
-    
-    // Error messages
-    errorGeneric: "It failed. These things happen.",
-    errorNetwork: "The connection falters.",
-    errorNotFound: "Lost to the digital ether.",
-    
-    // Success messages
-    successSave: "Preserved.",
-    successImport: "Restored from the past.",
-    successExport: "Archived for uncertain futures.",
-    
-    // Marquee messages
-    marquee1: "Something to fill the hours",
-    marquee2: "Keep watch over your collection",
-    marquee3: "Episodes arrive like old friends",
-    marquee4: "Another story to lose yourself in",
-    marquee5: "Where entertainment finds its rest",
-  },
-};
-
-// Get personality text
-export function getPersonalityText(
-  key: keyof typeof PERSONALITY_TEXTS[1], 
-  personalityLevel: PersonalityLevel,
-  context?: { username?: string }
-): string {
-  const text = PERSONALITY_TEXTS[personalityLevel][key];
-  
-  // Replace {username} placeholder if provided
-  if (context?.username) {
-    return text.replace('{username}', context.username);
-  }
-  
-  return text;
-}
+// Legacy PERSONALITY_TEXTS removed - now using data/personalities.ts
+// The getPersonalityText function is re-exported from data/personalities.ts above

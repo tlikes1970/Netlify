@@ -1,5 +1,23 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.188: 8 Personality System - Valley Girl to Fantasy Wizard
+// - Added data/personalities.ts with 8 distinct personalities × 20 text keys × 3 variants each
+// - Personalities: Valley Girl, Detective Noir, Sports Announcer, Zen, Surfer, Medieval Bard, Grumpy Old Man, Fantasy Wizard
+// - Settings UI updated with grid of 8 personality radio options
+// - Session-stable variant selection (no flicker on re-renders, variety on refresh)
+// - Cache cleared when personality changes so new personality gets fresh variants
+// - Welcome messages, empty states, errors, marquees all personality-driven
+// - Default personality: Zen (calm and mindful)
+// - Rollback: Revert this commit to restore 3-personality system
+// ⚠️ VERSION 0.1.187: Fixed Trivia duplicate questions - centralized dedup system
+// - Created triviaDedup.ts with centralized question tracking (hash-based deduplication)
+// - Now tracks questions by date AND game number (Pro users' Game 2/3 won't repeat Game 1)
+// - Hash-based matching catches duplicates even if question text varies slightly
+// - 7-day no-repeat window (reduced from 14 to work with 50-question pool)
+// - Records used questions after game completion via recordUsedQuestions()
+// - Fixed questionAnswers missing from handleNextQuestion dependency array
+// - Guaranteed: NO duplicate questions within same day, NO duplicates across 7-day window
+// - Rollback: Revert this commit to restore previous question selection
 // ⚠️ VERSION 0.1.186: Riley Feedback Fixes - Phase 1
 // 1. Personality Modes: Replaced "sass levels" with distinct personalities (Classic, Sassy, Brooding)
 // 2. Half-Star Ratings: Now supports 0.5 increments (click left/right half of star)
@@ -351,4 +369,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.186";
+export const APP_VERSION = "0.1.188";

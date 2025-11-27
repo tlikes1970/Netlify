@@ -27,3 +27,4 @@
 - **Admin user**: `getVisibleSections(isAdmin)` exposes the `Admin` button and `AdminSection` renders `AdminExtrasPage`. The `Pro` section still respects `useProStatus().isPro` for its headline, and because `useAdminRole().isAdmin` is `true` it now renders the “Treat this device as Pro (Alpha / Testing)” checkbox wired to `settingsManager.updateProStatus`. Admins typically verify this toggle while the rest of the UI (notifications, display, data, about) follows the same rules as the Pro tier.
 
 
+
