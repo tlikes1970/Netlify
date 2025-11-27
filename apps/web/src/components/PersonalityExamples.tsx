@@ -15,8 +15,9 @@ interface PersonalityExamplesProps {
   personalityLevel?: 1 | 2 | 3;
 }
 
-export default function PersonalityExamples({ personality, personalityLevel }: PersonalityExamplesProps) {
-  // Use new personality name if provided, otherwise try to map from legacy level
+export default function PersonalityExamples({ personality, personalityLevel: _personalityLevel }: PersonalityExamplesProps) {
+  // Use new personality name if provided, otherwise use default
+  // Note: _personalityLevel is kept for legacy compatibility but not used
   const currentPersonality: PersonalityName = personality || DEFAULT_PERSONALITY;
   
   // Find the personality info

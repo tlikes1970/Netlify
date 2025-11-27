@@ -2,7 +2,7 @@
 import CardV2 from '../cards/CardV2';
 import { useLibrary, Library } from '../../lib/storage';
 import { useTranslations } from '../../lib/language';
-import { useSettings, getPersonalityText } from '../../lib/settings';
+import { useSettings, getPersonalityText, DEFAULT_PERSONALITY } from '../../lib/settings';
 
 export default function HomeYourShowsRail() {
   const items = useLibrary('watching');
@@ -33,7 +33,7 @@ export default function HomeYourShowsRail() {
         </div>
       ) : (
         <div className="text-sm text-neutral-400">
-          {getPersonalityText('emptyWatching', settings.personalityLevel)} {translations.addSomeFromSearchOrDiscovery}
+          {getPersonalityText(settings.personality || DEFAULT_PERSONALITY, 'emptyWatching')} {translations.addSomeFromSearchOrDiscovery}
         </div>
       )}
     </div>

@@ -2,7 +2,7 @@ import TabCard from "@/components/cards/TabCard";
 import UpNextCard from "@/components/cards/UpNextCard";
 import type { MediaItem } from "@/components/cards/card.types";
 import { Library, LibraryEntry } from "@/lib/storage";
-import { useSettings, getPersonalityText } from "@/lib/settings";
+import { useSettings, getPersonalityText, DEFAULT_PERSONALITY } from "@/lib/settings";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import ScrollToTopArrow from "@/components/ScrollToTopArrow";
 import { EpisodeTrackingModal } from "@/components/modals/EpisodeTrackingModal";
@@ -688,25 +688,26 @@ export default function ListPage({
 
   // Get appropriate empty state text based on title
   const getEmptyText = () => {
+    const personality = settings.personality || DEFAULT_PERSONALITY;
     if (mode === "returning") {
-      return "No returning shows yet. When a series is confirmed, it’ll show up here automatically.";
+      return "No returning shows yet. When a series is confirmed, it'll show up here automatically.";
     }
     if (title.toLowerCase().includes("watching")) {
-      return getPersonalityText("emptyWatching", settings.personalityLevel);
+      return getPersonalityText(personality, "emptyWatching");
     } else if (
       title.toLowerCase().includes("wishlist") ||
       title.toLowerCase().includes("want")
     ) {
-      return getPersonalityText("emptyWishlist", settings.personalityLevel);
+      return getPersonalityText(personality, "emptyWishlist");
     } else if (title.toLowerCase().includes("watched")) {
-      return getPersonalityText("emptyWatched", settings.personalityLevel);
+      return getPersonalityText(personality, "emptyWatched");
     } else if (title.toLowerCase().includes("not interested")) {
       return (
-        getPersonalityText("empty", settings.personalityLevel) ||
+        getPersonalityText(personality, "empty") ||
         "No items marked as not interested yet."
       );
     }
-    return getPersonalityText("empty", settings.personalityLevel);
+    return getPersonalityText(personality, "empty");
   };
 
   // Action handlers using new Library system

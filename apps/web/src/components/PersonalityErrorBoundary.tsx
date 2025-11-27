@@ -1,6 +1,6 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { derr } from '../lib/log';
-import { settingsManager, getPersonalityText } from '../lib/settings';
+import { settingsManager, getPersonalityText, DEFAULT_PERSONALITY } from '../lib/settings';
 import { logErrorDetails } from '../lib/errorMessages';
 
 interface Props {
@@ -38,10 +38,11 @@ export default class PersonalityErrorBoundary extends Component<Props, State> {
       let errorMessage = "Something went wrong. Please try again.";
       try {
         const settings = settingsManager.getSettings();
-        errorMessage = getPersonalityText('errorGeneric', settings.personalityLevel);
-      } catch (e) {
+        const personality = settings.personality || DEFAULT_PERSONALITY;
+        errorMessage = getPersonalityText(personality, 'errorGeneric');
+      } catch (_e) {
         // If settings manager fails, use default message
-        console.warn('Error boundary: Could not get settings:', e);
+        console.warn('Error boundary: Could not get settings:', _e);
       }
 
       // Display error details in dev mode

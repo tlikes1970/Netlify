@@ -9,7 +9,7 @@ import { addToListWithConfirmation, Library } from "../lib/storage";
 import { fetchFullMediaMetadata, fetchNetworkInfo } from "./api";
 import { fetchNextAirDate, fetchShowStatus } from "../tmdb/tv";
 import { useTranslations } from "../lib/language";
-import { useSettings, getPersonalityText } from "../lib/settings";
+import { useSettings, getPersonalityText, DEFAULT_PERSONALITY } from "../lib/settings";
 import MyListToggle from "../components/MyListToggle";
 import { OptimizedImage } from "../components/OptimizedImage";
 import { searchTagsLocal } from "../lib/libraryIndex";
@@ -198,7 +198,7 @@ export default function SearchResults({
 
       {isLoading && items.length === 0 && (
         <p className="mt-2 text-sm text-muted-foreground">
-          {getPersonalityText("searchLoading", settings.personalityLevel)}
+          {getPersonalityText(settings.personality || DEFAULT_PERSONALITY, "searchLoading")}
         </p>
       )}
 

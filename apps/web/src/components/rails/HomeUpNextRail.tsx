@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import UpNextCard from '../cards/UpNextCard';
 import { useLibrary } from '../../lib/storage';
 import { useTranslations } from '../../lib/language';
-import { useSettings, getPersonalityText } from '../../lib/settings';
+import { useSettings, getPersonalityText, DEFAULT_PERSONALITY } from '../../lib/settings';
 import { getShowStatusInfo } from '../../utils/showStatus';
 import { getNextAirDate, getValidatedNextAirDate, getNextAirStatus } from '../../lib/constants/metadata';
 
@@ -91,7 +91,7 @@ export default function HomeUpNextRail() {
         </div>
       ) : (
         <div className="text-sm text-neutral-400">
-          {getPersonalityText('emptyUpNext', settings.personalityLevel)} {translations.addTvShowsToWatchingList}
+          {getPersonalityText(settings.personality || DEFAULT_PERSONALITY, 'emptyUpNext')} {translations.addTvShowsToWatchingList}
         </div>
       )}
     </div>

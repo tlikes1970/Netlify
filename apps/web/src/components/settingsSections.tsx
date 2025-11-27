@@ -14,7 +14,7 @@ import {
   PERSONALITY_LIST,
   DEFAULT_PERSONALITY,
 } from "../lib/settings";
-import type { PersonalityName } from "../lib/settings";
+// PersonalityName type used implicitly through PERSONALITY_LIST
 import { useProStatus } from "../lib/proStatus";
 import { useTranslations, useLanguage, changeLanguage } from "../lib/language";
 import { PRO_FEATURES_AVAILABLE, PRO_FEATURES_COMING_SOON } from "./settingsProConfig";
@@ -24,7 +24,7 @@ import { useUsername } from "../hooks/useUsername";
 import { useAuth } from "../hooks/useAuth";
 import { useLibrary } from "../lib/storage";
 import { useAdminRole } from "../hooks/useAdminRole";
-import PersonalityExamples from "./PersonalityExamples";
+// PersonalityExamples removed - inline preview is sufficient
 import ForYouGenreConfig from "./ForYouGenreConfig";
 import type { Language } from "../lib/language.types";
 import type { SettingsSectionId } from "./settingsConfig";

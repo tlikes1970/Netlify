@@ -2,7 +2,7 @@ import { on } from '../lib/events';
 import { Library } from '../lib/storage';
 import type { MediaType } from '../components/cards/card.types';
 import { fetchNextAirDate } from '../tmdb/tv';
-import { settingsManager, getPersonalityText } from '../lib/settings';
+import { settingsManager, getPersonalityText, DEFAULT_PERSONALITY } from '../lib/settings';
 import { get } from '../lib/tmdb';
 
 // Toast system for user feedback
@@ -57,7 +57,8 @@ export function mountActionBridge() {
     
     // Show personality-based feedback
     const settings = settingsManager.getSettings();
-    const message = getPersonalityText('itemAdded', settings.personalityLevel);
+    const personality = settings.personality || DEFAULT_PERSONALITY;
+    const message = getPersonalityText(personality, 'itemAdded');
     toastCallback?.(message, 'success');
   });
 
@@ -77,7 +78,8 @@ export function mountActionBridge() {
     
     // Show personality-based feedback
     const settings = settingsManager.getSettings();
-    const message = getPersonalityText('itemAdded', settings.personalityLevel);
+    const personality = settings.personality || DEFAULT_PERSONALITY;
+    const message = getPersonalityText(personality, 'itemAdded');
     toastCallback?.(message, 'success');
   });
 
@@ -97,7 +99,8 @@ export function mountActionBridge() {
     
     // Show personality-based feedback
     const settings = settingsManager.getSettings();
-    const message = getPersonalityText('itemRemoved', settings.personalityLevel);
+    const personality = settings.personality || DEFAULT_PERSONALITY;
+    const message = getPersonalityText(personality, 'itemRemoved');
     toastCallback?.(message, 'success');
   });
 
@@ -125,7 +128,8 @@ export function mountActionBridge() {
     
     // Show personality-based feedback
     const settings = settingsManager.getSettings();
-    const message = getPersonalityText('itemAdded', settings.personalityLevel);
+    const personality = settings.personality || DEFAULT_PERSONALITY;
+    const message = getPersonalityText(personality, 'itemAdded');
     toastCallback?.(message, 'success');
   });
 

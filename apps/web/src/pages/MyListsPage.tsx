@@ -3,7 +3,7 @@ import CardV2 from '../components/cards/CardV2';
 import { useCustomLists, customListManager } from '../lib/customLists';
 import { Library } from '../lib/storage';
 import { useTranslations } from '../lib/language';
-import { useSettings, getPersonalityText } from '../lib/settings';
+import { useSettings, getPersonalityText, DEFAULT_PERSONALITY } from '../lib/settings';
 import type { ListName } from '../state/library.types';
 import { shareListWithFallback } from '../lib/shareLinks';
 import { getToastCallback } from '../state/actions';
@@ -306,7 +306,7 @@ export default function MyListsPage() {
           ) : (
             <div className="text-center py-12">
               <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
-                {getPersonalityText('emptyWishlist', settings.personalityLevel)}
+                {getPersonalityText(settings.personality || DEFAULT_PERSONALITY, 'emptyWishlist')}
               </p>
               <p className="text-xs" style={{ color: 'var(--muted)' }}>
                 {translations.addItemsFromSearchOrDiscovery || 'Add items from search or discovery'}
