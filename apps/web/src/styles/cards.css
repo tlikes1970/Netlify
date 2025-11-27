@@ -135,15 +135,25 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
   margin-bottom: 0.5rem; /* 8px */
 }
 
+/* Desktop List Content Column - Centered layout for watching/want/watched tabs */
+@media (min-width: 769px) {
+  .list-content-column {
+    max-width: 1200px;
+    margin: 0 auto;
+    /* Preserve existing section padding - don't override px-4 */
+  }
+}
+
 /* NEW: Unified Desktop Card Layout - Refined spacing and typography */
 .card-desktop {
   display: flex;
   gap: 1.25rem; /* Reduced from 1.5rem */
-  padding: 1rem 1.25rem 0.875rem 1.25rem; /* Minimal bottom padding */
+  padding: 0.75rem 1.25rem 0.625rem 1.25rem; /* Reduced top/bottom padding: ~25% tighter */
   border-radius: var(--radius-xl, 16px);
   background: var(--card, #171a21);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border: 1px solid var(--line, #242a33);
+  width: 100%; /* Full width of parent container */
 }
 
 .card-desktop .poster-col {
@@ -153,7 +163,7 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
 }
 
 .card-desktop .poster-col img {
-  width: 225px;
+  width: 200px; /* Reduced from 225px - ~11% smaller */
   height: 100%; /* Full height of card */
   object-fit: cover;
   border-radius: var(--radius-md, 8px);
@@ -163,7 +173,7 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem; /* Reduced from var(--space-4) - consistent 12px spacing */
+  gap: 0.5rem; /* Reduced from 0.75rem - tighter vertical rhythm */
 }
 
 .card-desktop .info-col header {
@@ -174,14 +184,14 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
   font-size: 1.1rem; /* Slightly increased from 18px */
   font-weight: 650; /* Stronger weight */
   color: var(--text);
-  margin: 0 0 0.375rem 0; /* Tightened to 6px */
+  margin: 0 0 0.25rem 0; /* Reduced from 0.375rem - tighter title to meta */
   line-height: 1.3;
 }
 
 .card-desktop .info-col header .meta {
   font-size: 0.8125rem; /* Slightly smaller */
   color: rgba(255, 255, 255, 0.5); /* More muted */
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.375rem; /* Reduced from 0.5rem - tighter meta to next section */
 }
 
 .card-desktop .streaming-info {
@@ -207,7 +217,7 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.625rem; /* Tightened to 10px */
+  margin-bottom: 0.5rem; /* Reduced from 0.625rem - tighter rating to description */
   line-height: 1; /* Tight line height */
 }
 
@@ -218,7 +228,7 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
 
 .card-desktop .synopsis-wrapper {
   flex-grow: 1;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem; /* Reduced from 0.75rem - tighter description to buttons */
 }
 
 .card-desktop .synopsis {
@@ -237,9 +247,9 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
 .card-desktop .buttons-container {
   display: flex;
   flex-direction: column;
-  gap: 0.625rem; /* Tightened to 10px */
+  gap: 0.5rem; /* Reduced from 0.625rem - tighter button groups */
   margin-top: auto; /* Push to bottom */
-  padding-top: 0.5rem;
+  padding-top: 0.375rem; /* Reduced from 0.5rem - tighter spacing from description */
 }
 
 .card-desktop .actions-row {
@@ -247,7 +257,7 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   grid-template-rows: auto auto; /* Two-row grid */
   gap: 0.5rem; /* Equal gaps */
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem; /* Reduced from 0.75rem - tighter actions to footer */
 }
 
 .card-desktop .pro-buttons-row {
@@ -291,7 +301,15 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
 /* Align Delete button properly with content bottom */
 .card-desktop .info-col {
   position: relative;
-  padding-bottom: 48px; /* Space for Delete button */
+  padding-bottom: 36px; /* Reduced from 48px - Delete button sits closer to actions */
+}
+
+/* Desktop only: Bring Delete button closer to content */
+@media (min-width: 769px) {
+  .card-desktop .info-col button[title="Delete this item"] {
+    bottom: 0.5rem; /* Reduced from 0.75rem (bottom-3) - sits closer */
+    right: 0.75rem; /* Keep right-3 spacing */
+  }
 }
 
 /* Remove extra space from empty synopsis */

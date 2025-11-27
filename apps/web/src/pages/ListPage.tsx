@@ -769,10 +769,15 @@ export default function ListPage({
     onExtrasOpen: onExtrasOpen,
   };
 
+  // Content wrapper for desktop centering (watching/want/watched tabs only)
+  const isListTab = mode === "watching" || mode === "want" || mode === "watched";
+  
   return (
     <section className="px-4 py-4">
-      <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
-        <div className="flex items-center gap-3 flex-wrap">
+      {isListTab ? (
+        <div className="list-content-column">
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
           <h1
             className="text-base font-semibold"
             style={{ color: "var(--text)" }}
@@ -1192,6 +1197,8 @@ export default function ListPage({
           </p>
         </div>
       )}
+        </div>
+      ) : null}
 
       {/* Scroll to top arrow - appears when scrolled down */}
       <ScrollToTopArrow threshold={300} />

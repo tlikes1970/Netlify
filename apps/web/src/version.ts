@@ -1,5 +1,11 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.190: Desktop list layout fix - centered content column for 3 tabs
+// - Added centered content column wrapper (max-width: 1200px) for Currently Watching, Want to Watch, and Watched tabs
+// - Removed max-width constraint from card component (cards now fill parent wrapper)
+// - Sort controls now align within the same centered column as cards
+// - All changes desktop-only (min-width: 769px), mobile layout unchanged
+// - Rollback: Revert this commit to restore left-aligned layout
 // ⚠️ VERSION 0.1.189: Mobile fixes and community post duplication fix
 // - Fixed mobile zooming: Added maximum-scale=1.0, user-scalable=no to viewport meta tag
 // - Fixed input zoom: Changed search input font-size from 14px to 16px on mobile to prevent iOS auto-zoom
@@ -378,4 +384,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.189";
+export const APP_VERSION = "0.1.190";
