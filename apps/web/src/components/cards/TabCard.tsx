@@ -17,6 +17,7 @@ import { MovieCardMobile } from "./mobile/MovieCardMobile";
 import { ProviderBadges } from "./ProviderBadge";
 import { startProUpgrade } from "../../lib/proUpgrade";
 import { useProStatus } from "../../lib/proStatus";
+import { useBackdropCallbacks } from "../WatchingListWithBackdrop";
 
 export type TabCardProps = {
   item: MediaItem;
@@ -62,6 +63,7 @@ export default function TabCard({
 }: TabCardProps) {
   const proStatus = useProStatus();
   const isPro = proStatus.isPro;
+  const backdropCallbacks = useBackdropCallbacks();
 
   dlog("🔔 TabCard render:", {
     title: item.title,
@@ -598,6 +600,18 @@ export default function TabCard({
         touchAction: "pan-y",
       }}
       draggable={false}
+      onMouseEnter={() => {
+        // Activate backdrop on hover (desktop only, all list tabs)
+        if (isDesktop && (tabType === "watching" || tabType === "want" || tabType === "watched") && backdropCallbacks && posterUrl) {
+          backdropCallbacks.onBackdropActivate(posterUrl);
+        }
+      }}
+      onFocus={() => {
+        // Activate backdrop on focus (desktop only, all list tabs)
+        if (isDesktop && (tabType === "watching" || tabType === "want" || tabType === "watched") && backdropCallbacks && posterUrl) {
+          backdropCallbacks.onBackdropActivate(posterUrl);
+        }
+      }}
       // Note: Drag handlers moved to wrapper div in ListPage for proper drop zone
       // Keeping these for backward compatibility but they may not fire if wrapper handles it first
       onDragOver={(e) => {

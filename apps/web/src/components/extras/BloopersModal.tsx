@@ -273,7 +273,7 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
                   Bloopers are a Pro feature
                 </h3>
                 <p className="text-sm mb-6" style={{ color: "var(--muted)" }}>
-                  Upgrade in Settings → Pro to unlock bloopers and behind-the-scenes content.
+                  Upgrade to Pro in Settings to unlock bloopers, behind-the-scenes content, and other exclusive features.
                 </p>
                 <button
                   onClick={() => {

@@ -621,7 +621,7 @@ function CommunitySection({ isMobile: _isMobile }: SettingsSectionProps) {
           </div>
           {emailSubscribed === null && (
             <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>
-              Loading...
+              Checking subscription status...
             </p>
           )}
           {emailSubscribed === true && (
@@ -2048,7 +2048,7 @@ function AdminSection(props: SettingsSectionProps) {
   const { isAdmin, loading } = useAdminRole();
   
   if (loading) {
-    return <div>Loading admin...</div>;
+    return <div style={{ color: "var(--muted)" }}>Checking admin access...</div>;
   }
   
   if (!isAdmin) {
@@ -2057,7 +2057,7 @@ function AdminSection(props: SettingsSectionProps) {
   
   return (
     <div className="w-full" style={{ minWidth: 0, maxWidth: "100%", overflow: "hidden", boxSizing: "border-box" }}>
-      <Suspense fallback={<div>Loading admin...</div>}>
+      <Suspense fallback={<div style={{ color: "var(--muted)" }}>Loading admin tools...</div>}>
         <AdminExtrasPage isMobile={props.isMobile ?? false} />
       </Suspense>
     </div>

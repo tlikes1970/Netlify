@@ -234,7 +234,11 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   4").
                 </li>
                 <li>Use tags to group items ("comedy," "family," "2024").</li>
-                <li>Rate items ⭐ 1-5 to improve your recommendations.</li>
+                <li>
+                  Rate items ⭐ 0.5-5 stars (half-star increments) to improve
+                  your recommendations. Click the left half of a star for 0.5,
+                  right half for whole stars.
+                </li>
               </ul>
             </div>
 
@@ -320,6 +324,10 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   Type anything into the Search bar—title, actor, or genre.
                 </li>
                 <li>
+                  Search is smart: it handles typos and spelling variations
+                  automatically (e.g., "haikyuu" finds "Haikyu!!").
+                </li>
+                <li>
                   Use the filter above the results to limit by{" "}
                   <strong>Movies</strong>, <strong>TV</strong>, or{" "}
                   <strong>People</strong>.
@@ -345,6 +353,11 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   Discovery shows only refresh when your tastes change—rate or
                   tag more items to improve accuracy.
                 </li>
+                <li>
+                  <strong>"In Theaters Near You":</strong> If location detection
+                  isn't working, tap <strong>Enter location manually</strong> to
+                  set your city and region.
+                </li>
               </ul>
             </div>
           </div>
@@ -366,7 +379,8 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   totals.
                 </li>
                 <li>
-                  <strong>Custom Reminders:</strong> set alerts ahead of time.
+                  <strong>Custom Reminders:</strong> set alerts ahead of time
+                  (Pro feature: precise timing control and email notifications).
                 </li>
               </ul>
             </div>
@@ -379,7 +393,9 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 </li>
                 <li>Toggle each alert on or off.</li>
                 <li>
-                  Adjust timing for episode reminders (e.g., 1 hour before).
+                  Adjust timing for episode reminders (e.g., 1 hour before). Pro
+                  users can set custom lead times and choose which list receives
+                  alerts.
                 </li>
                 <li>
                   Make sure your browser or device allows notifications from
@@ -417,8 +433,11 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   or Pro features).
                 </li>
                 <li>
-                  Choose your <strong>personality level</strong>—controls the
-                  humor tone of messages and empty states.
+                  Choose your <strong>personality</strong>—pick from 8
+                  distinct voices (Valley Girl, Detective Noir, Sports
+                  Announcer, Zen, Surfer, Medieval Bard, Grumpy Old Man, or
+                  Fantasy Wizard) to customize how the app talks to you in
+                  empty states, errors, and confirmations.
                 </li>
                 <li>
                   Pick your favorite genres to shape <em>For You</em>{" "}

@@ -476,13 +476,13 @@ export default function OnboardingCoachmarks() {
         return {
           stepNumber: 1,
           title: "Welcome to Flicklet",
-          body: "Let's add your first show. It only takes a sec.",
+          body: "Let's get you started! We'll help you add your first show—it only takes a moment.",
           primaryAction: {
             label: "Let's go",
             onClick: handleWelcomeNext,
           },
           secondaryAction: {
-            label: "Not now",
+            label: "Skip for now",
             onClick: skipOnboarding,
           },
         };
@@ -491,13 +491,13 @@ export default function OnboardingCoachmarks() {
         return {
           stepNumber: 2,
           title: "Find something you're watching",
-          body: "Type a show name in the search box above.",
+          body: "Type a show or movie name in the search box above. We'll help you find it even if you spell it a little differently.",
           primaryAction: {
             label: "Got it",
             onClick: handleSearchGotIt,
           },
           secondaryAction: {
-            label: "Not now",
+            label: "Skip for now",
             onClick: skipOnboarding,
           },
         };
@@ -506,10 +506,10 @@ export default function OnboardingCoachmarks() {
         return {
           stepNumber: 3,
           title: "Add it to your list",
-          body: "Tap 'Currently Watching' to save it.",
+          body: "Tap the 'Currently Watching' button to save it to your list. You can always move it later.",
           primaryAction: null,
           secondaryAction: {
-            label: "Not now",
+            label: "Skip for now",
             onClick: skipOnboarding,
           },
         };
@@ -518,7 +518,7 @@ export default function OnboardingCoachmarks() {
         return {
           stepNumber: 4,
           title: "Need Help?",
-          body: "If you want to find out more, click here. Have fun!",
+          body: "Tap the help icon anytime to learn more about features. We're here if you need us!",
           primaryAction: {
             label: "Got it",
             onClick: handleHelpGotIt,

@@ -42,8 +42,8 @@ export function UpgradeToProCTA({
   }
 
   const defaultMessages = {
-    banner: 'Upgrade to Pro for precise timing control and email notifications.',
-    panel: 'Get precise timing control, email notifications, and advanced features',
+    banner: 'Upgrade to Pro for precise timing control, email notifications, and more.',
+    panel: 'Get precise timing control, email notifications, bloopers access, and other advanced features',
     inline: 'Upgrade to Pro',
     button: 'Upgrade to Pro',
   };

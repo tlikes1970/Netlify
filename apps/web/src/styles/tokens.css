@@ -37,6 +37,8 @@
 @media (min-width: 769px) {
   :root {
     /* Desktop poster/card width for CardV2 rails */
-    --poster-w-desktop: 225px;
+    /* Validated at breakpoints: 1280px, 1440px, 1600px, 1920px - all use consistent 200px width */
+    /* Note: Large list cards (.card-desktop) use 200px poster width for tighter layout */
+    --poster-w-desktop: 225px; /* Kept at 225px for rail cards; list cards override to 200px */
   }
 }

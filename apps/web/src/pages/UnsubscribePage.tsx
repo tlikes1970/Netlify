@@ -34,9 +34,9 @@ export default function UnsubscribePage() {
       if (error.code === 'functions/invalid-argument') {
         setMessage('Invalid or expired unsubscribe link. Please contact support if you continue to receive emails.');
       } else if (error.code === 'functions/internal') {
-        setMessage('An error occurred while processing your unsubscribe request. Please try again later or contact support.');
+        setMessage('We couldn\'t process your unsubscribe request right now. Please try again in a moment, or contact support if the issue persists.');
       } else {
-        setMessage(error.message || 'Failed to unsubscribe. Please try again later.');
+        setMessage(error.message || 'We couldn\'t complete your unsubscribe request. Please try again in a moment.');
       }
     }
   };

@@ -142,6 +142,41 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
     margin: 0 auto;
     /* Preserve existing section padding - don't override px-4 */
   }
+
+  /* Backdrop styles for Currently Watching - ensure content remains readable */
+  .watching-list-with-backdrop {
+    /* Wrapper is position: relative to contain the absolute backdrop */
+    /* Extends full width to show backdrop in gutters around centered column */
+    width: 100%;
+    min-height: 100%; /* Ensure backdrop covers content area */
+    /* Create new stacking context to prevent backdrop from affecting elements above */
+    isolation: isolate;
+    /* Ensure backdrop stays within this section, doesn't affect tabs/header above */
+    contain: layout style paint;
+    /* Clip backdrop to wrapper boundaries */
+    overflow: hidden;
+  }
+
+  .watching-list-with-backdrop .list-content-column {
+    background-color: color-mix(in srgb, var(--bg, #0f1115) 85%, transparent);
+    backdrop-filter: blur(10px);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    position: relative; /* Ensure content sits above backdrop */
+    z-index: 2;
+  }
+
+  /* Backdrop layer styles - positioned absolutely within wrapper */
+  .watching-list-backdrop {
+    will-change: opacity;
+    /* Extends to wrapper edges, creating backdrop in gutters */
+    border-radius: 0; /* Match wrapper shape if needed */
+  }
+
+  .watching-list-backdrop-image {
+    will-change: transform;
+  }
 }
 
 /* NEW: Unified Desktop Card Layout - Refined spacing and typography */
