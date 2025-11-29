@@ -96,7 +96,7 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
     }
   };
 
-  const saveEpisodeProgress = (showId: number, progress: Record<string, boolean>) => {
+  const saveEpisodeProgress = async (showId: number, progress: Record<string, boolean>) => {
     try {
       // Use the actual show's total episode count from TMDB instead of counting loaded seasons
       // This ensures accuracy even if not all seasons are loaded
@@ -105,6 +105,10 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
         totalEpisodes: show.number_of_episodes
       };
       localStorage.setItem(`episode-progress-${showId}`, JSON.stringify(progressData));
+      
+      // Sync to Firebase in background
+      const { syncEpisodeProgressToFirebase } = await import('../../lib/episodeProgressSync');
+      await syncEpisodeProgressToFirebase(showId);
     } catch (err) {
       console.error('Failed to save episode progress:', err);
     }

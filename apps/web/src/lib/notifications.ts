@@ -56,10 +56,40 @@ export interface UpcomingEpisode {
 class NotificationManager {
   private settings: NotificationSettings;
   private log: NotificationLogEntry[] = [];
+  private syncTimeout: ReturnType<typeof setTimeout> | null = null;
+  private isSyncing = false;
 
   constructor() {
     this.settings = this.loadSettings();
     this.log = this.loadLog();
+  }
+
+  /**
+   * Sync settings to Firebase (debounced)
+   */
+  private syncToFirebase(): void {
+    // Clear existing timeout
+    if (this.syncTimeout) {
+      clearTimeout(this.syncTimeout);
+    }
+
+    // Debounce sync calls (1 second delay)
+    this.syncTimeout = setTimeout(async () => {
+      if (this.isSyncing) {
+        return; // Skip if sync already in progress
+      }
+
+      try {
+        this.isSyncing = true;
+        const { syncNotificationSettingsToFirebase } = await import('./notificationSettingsSync');
+        await syncNotificationSettingsToFirebase(this.settings);
+      } catch (error) {
+        // Don't block UI on sync failure
+        console.warn('Failed to sync notification settings to Firebase:', error);
+      } finally {
+        this.isSyncing = false;
+      }
+    }, 1000); // 1 second debounce
   }
 
   // Settings Management
@@ -90,6 +120,9 @@ class NotificationManager {
   saveSettings(): void {
     try {
       localStorage.setItem('notification-settings', JSON.stringify(this.settings));
+      
+      // Sync to Firebase in background (non-blocking)
+      this.syncToFirebase();
     } catch (error) {
       console.error('Failed to save notification settings:', error);
     }

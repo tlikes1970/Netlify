@@ -2,6 +2,7 @@ import type { MediaItem } from '../components/cards/card.types';
 import { get } from '../lib/tmdb';
 import { normalizeQuery } from '../lib/string';
 import { computeSearchScore } from './rank';
+import { Library } from '../lib/storage';
 
 
 export type SearchResult = MediaItem;
@@ -159,9 +160,12 @@ export async function searchMulti(
 
   const mapped = filtered.map(mapTMDBToMediaItem).filter(Boolean) as SearchResult[];
 
+  // Enrich with library data (ratings, notes, tags)
+  const enriched = mapped.map(enrichWithLibraryData);
+
   const finalResults = genre
-    ? mapped.filter((m: any) => Array.isArray(m.genre_ids) && m.genre_ids.includes(genre))
-    : mapped;
+    ? enriched.filter((m: any) => Array.isArray(m.genre_ids) && m.genre_ids.includes(genre))
+    : enriched;
 
   return {
     items: finalResults,
@@ -171,6 +175,23 @@ export async function searchMulti(
 }
 
 // normalizeQuery is now imported from '../lib/string'
+
+/**
+ * Enrich MediaItem with library data (userRating, userNotes, tags)
+ * This ensures search results show user's existing ratings and notes
+ */
+function enrichWithLibraryData(item: MediaItem): MediaItem {
+  const libraryEntry = Library.getEntry(item.id, item.mediaType);
+  if (libraryEntry) {
+    return {
+      ...item,
+      userRating: libraryEntry.userRating,
+      userNotes: libraryEntry.userNotes,
+      tags: libraryEntry.tags,
+    };
+  }
+  return item;
+}
 
 export function mapTMDBToMediaItem(r: any): MediaItem {
   const mediaType = r.media_type ?? (r.first_air_date ? 'tv' : r.release_date ? 'movie' : r.known_for ? 'person' : 'movie');
@@ -275,9 +296,12 @@ export async function discoverByGenre(
     .map(mapTMDBToMediaItem)
     .filter(Boolean) as SearchResult[];
 
+  // Enrich with library data (ratings, notes, tags)
+  const enriched = mapped.map(enrichWithLibraryData);
+
   // For genre-only search we have no user text query, so pass empty string into computeSearchScore
   // and let popularity/recency/votes drive ranking.
-  const ranked = mapped
+  const ranked = enriched
     .map(item => {
       const scored = computeSearchScore('', {
         title: item.title || '',

@@ -149,7 +149,7 @@ export default function ListPage({
       }
 
       setSortMode(newMode);
-      saveTabState(tabKey, { sort: newMode });
+      void saveTabState(tabKey, { sort: newMode });
     },
     [sortMode, tabKey, mode]
   );
@@ -160,7 +160,7 @@ export default function ListPage({
       // Validate filters against available providers
       const validatedFilters = validateFilters(newFilters, availableProviders);
       setFilters(validatedFilters);
-      saveTabState(tabKey, { filter: validatedFilters });
+      void saveTabState(tabKey, { filter: validatedFilters });
       trackFilterChange(
         tabKey,
         validatedFilters.type,
@@ -172,12 +172,12 @@ export default function ListPage({
 
   // Persist sort mode changes
   useEffect(() => {
-    saveTabState(tabKey, { sort: sortMode });
+    void saveTabState(tabKey, { sort: sortMode });
   }, [sortMode, tabKey]);
 
   // Persist filter changes (already handled by handleFilterChange, but keep for safety)
   useEffect(() => {
-    saveTabState(tabKey, { filter: filters });
+    void saveTabState(tabKey, { filter: filters });
   }, [filters, tabKey]);
 
   // Stable sort function with secondary sort key

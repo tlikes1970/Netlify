@@ -1,3 +1,4 @@
+import React from 'react';
 import type { MediaItem, CardActionHandlers } from '../card.types';
 import SwipeableCard from '../../SwipeableCard';
 import { OptimizedImage } from '../../OptimizedImage';
@@ -6,6 +7,7 @@ import StarRating from '../StarRating';
 import { ProviderBadges } from '../ProviderBadge';
 import { DragHandle } from '../DragHandle';
 import MyListToggle from '../../MyListToggle';
+import { Library } from '../../../lib/storage';
 
 // neutral 112x168 poster placeholder (SVG data URI)
 const POSTER_PLACEHOLDER = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
@@ -46,7 +48,29 @@ export interface MovieCardMobileProps {
 }
 
 export function MovieCardMobile({ item, actions, tabKey = 'watching', index = 0, onDragStart, onDragEnd, onKeyboardReorder, isDragging }: MovieCardMobileProps) {
-  const { title, year, posterUrl, userRating, synopsis } = item;
+  const [enrichedItem, setEnrichedItem] = React.useState(item);
+  const { title, year, posterUrl, synopsis } = enrichedItem;
+  
+  // Subscribe to library changes to update rating/notes
+  React.useEffect(() => {
+    const updateFromLibrary = () => {
+      const latestEntry = Library.getEntry(item.id, item.mediaType);
+      if (latestEntry) {
+        setEnrichedItem({
+          ...item,
+          userRating: latestEntry.userRating,
+          userNotes: latestEntry.userNotes,
+          tags: latestEntry.tags,
+        });
+      } else {
+        setEnrichedItem(item);
+      }
+    };
+
+    updateFromLibrary();
+    const unsubscribe = Library.subscribe(updateFromLibrary);
+    return () => { unsubscribe(); };
+  }, [item.id, item.mediaType]);
   
   // Get Movie-specific meta information
   const getMetaText = () => {
@@ -61,7 +85,7 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching', index = 0,
 
   const handleRatingChange = (rating: number) => {
     if (actions?.onRatingChange) {
-      actions.onRatingChange(item, rating);
+      actions.onRatingChange(enrichedItem, rating);
     }
   };
 
@@ -87,7 +111,7 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching', index = 0,
 
   return (
     <SwipeableCard
-      item={item}
+      item={enrichedItem}
       actions={actions}
       context={getContextFromTabKey(tabKey)}
     >
@@ -99,7 +123,7 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching', index = 0,
         {/* Drag Handle - Mobile (always visible, dimmed; full opacity on touch-hold) */}
         {onDragStart && (
           <DragHandle
-            itemId={String(item.id)}
+            itemId={String(enrichedItem.id)}
             index={index}
             onDragStart={(e, idx) => {
               if ('touches' in e) {
@@ -112,7 +136,7 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching', index = 0,
             onDragEnd={onDragEnd}
             onKeyboardReorder={onKeyboardReorder}
             isDragging={isDragging}
-            itemTitle={item.title}
+            itemTitle={enrichedItem.title}
             onTouchDragMove={(_e, _idx) => {
               // Touch drag move is handled by global listener in DragHandle
               // This callback is called to notify parent about potential drop target
@@ -132,7 +156,7 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching', index = 0,
           />
           {/* My List + button */}
           <MyListToggle 
-            item={item} 
+            item={enrichedItem} 
             currentListContext={getCurrentListContext(tabKey)}
           />
         </div>
@@ -148,8 +172,8 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching', index = 0,
               </div>
             )}
             {/* Provider badges */}
-            {item.networks && item.networks.length > 0 && (
-              <ProviderBadges providers={item.networks} maxVisible={2} mediaType="movie" />
+            {enrichedItem.networks && enrichedItem.networks.length > 0 && (
+              <ProviderBadges providers={enrichedItem.networks} maxVisible={2} mediaType="movie" />
             )}
           </header>
 
@@ -160,7 +184,7 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching', index = 0,
 
           <div className="mobile-actions-row" style={{ marginTop: '12px' }}>
             <StarRating
-              value={userRating || 0}
+              value={enrichedItem.userRating || 0}
               onChange={handleRatingChange}
               size="sm"
             />
@@ -168,7 +192,7 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching', index = 0,
           
           <div className="mobile-overflow-position">
             <CompactOverflowMenu 
-              item={item as any} 
+              item={enrichedItem as any} 
               context={`tab-${tabKey}`}
               actions={actions}
               showText={false}

@@ -130,32 +130,50 @@ export function restoreTabState(tabKey: string, availableItemIds: Set<string>): 
 }
 
 /**
- * Save tab state to localStorage
+ * Save tab state to localStorage and sync to Firebase
  */
-export function saveTabState(tabKey: string, state: Partial<TabState>): void {
+export async function saveTabState(tabKey: string, state: Partial<TabState>): Promise<void> {
   try {
-    if (state.sort !== undefined) {
-      localStorage.setItem(`flk.tab.${tabKey}.sort`, state.sort);
+    // Get current state to merge with partial update
+    const currentState = restoreTabState(tabKey, new Set());
+    const mergedState: TabState = {
+      sort: state.sort !== undefined ? state.sort : currentState.sort,
+      filter: state.filter !== undefined ? state.filter : currentState.filter,
+      order: state.order !== undefined ? state.order : currentState.order,
+    };
+
+    // Save to localStorage
+    if (mergedState.sort !== undefined) {
+      localStorage.setItem(`flk.tab.${tabKey}.sort`, mergedState.sort);
     }
 
-    if (state.filter !== undefined) {
-      localStorage.setItem(`flk.tab.${tabKey}.filter.type`, state.filter.type);
+    if (mergedState.filter !== undefined) {
+      localStorage.setItem(`flk.tab.${tabKey}.filter.type`, mergedState.filter.type);
       localStorage.setItem(
         `flk.tab.${tabKey}.filter.providers`,
-        JSON.stringify(state.filter.providers)
+        JSON.stringify(mergedState.filter.providers)
       );
     }
 
-    if (state.order !== undefined) {
-      if (state.order.mode === 'custom' && state.order.ids && state.order.ids.length > 0) {
+    if (mergedState.order !== undefined) {
+      if (mergedState.order.mode === 'custom' && mergedState.order.ids && mergedState.order.ids.length > 0) {
         localStorage.setItem(
           `flk.tab.${tabKey}.order.custom`,
-          JSON.stringify(state.order.ids)
+          JSON.stringify(mergedState.order.ids)
         );
       } else {
         // Clear custom order if switching to default
         localStorage.removeItem(`flk.tab.${tabKey}.order.custom`);
       }
+    }
+
+    // Sync to Firebase in background (non-blocking)
+    try {
+      const { syncTabStateToFirebase } = await import('./tabStateSync');
+      await syncTabStateToFirebase(tabKey, mergedState);
+    } catch (error) {
+      // Don't block UI on sync failure
+      console.warn(`[TabState] Failed to sync to Firebase:`, error);
     }
   } catch (error) {
     console.warn(`[TabState] Error saving state for ${tabKey}:`, error);

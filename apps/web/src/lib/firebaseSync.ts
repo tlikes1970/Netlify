@@ -224,6 +224,23 @@ export class FirebaseSyncManager {
         await loadGameStatsFromFirebase(uid);
       }
 
+      // Load episode progress from Firebase for cross-device sync
+      const { loadEpisodeProgressFromFirebase } = await import('./episodeProgressSync');
+      await loadEpisodeProgressFromFirebase(uid);
+
+      // Load tab state from Firebase for cross-device sync
+      const { loadTabStateFromFirebase } = await import('./tabStateSync');
+      await loadTabStateFromFirebase(uid);
+
+      // Load notification settings from Firebase for cross-device sync
+      const { loadNotificationSettingsFromFirebase } = await import('./notificationSettingsSync');
+      const loadedNotificationSettings = await loadNotificationSettingsFromFirebase(uid);
+      if (loadedNotificationSettings) {
+        // Update NotificationManager with loaded settings
+        const { notificationManager } = await import('./notifications');
+        notificationManager.updateSettings(loadedNotificationSettings);
+      }
+
       // Load settings from Firebase for cross-device sync
       const { settingsManager } = await import('./settings');
       await settingsManager.loadSettingsFromFirebase(uid);
@@ -278,8 +295,8 @@ export class FirebaseSyncManager {
           const key = `movie:${cloudItem.id}`;
           const itemId = `movie:${cloudItem.id}`;
           
-          // Only add if not already in Library
           if (!existingIds.has(itemId)) {
+            // Add new item
             const localItem = {
               id: String(cloudItem.id),
               mediaType: 'movie',
@@ -288,6 +305,8 @@ export class FirebaseSyncManager {
               posterUrl: cloudItem.poster_path,
               voteAverage: cloudItem.vote_average,
               userRating: cloudItem.user_rating || undefined,
+              userNotes: cloudItem.user_notes || undefined,
+              tags: cloudItem.user_tags || undefined,
               synopsis: cloudItem.synopsis || '',
               list: list,
               addedAt: Date.now(),
@@ -297,7 +316,24 @@ export class FirebaseSyncManager {
             existingIds.add(itemId);
             console.log('➕ Added movie:', cloudItem.title);
           } else {
-            console.log('⏭️ Skipping duplicate movie:', cloudItem.title);
+            // Update existing item with cloud user data (ratings, notes, tags)
+            const existingKey = key;
+            if (cleanedData[existingKey]) {
+              cleanedData[existingKey] = {
+                ...cleanedData[existingKey],
+                // Update user data from cloud (preserve local if cloud doesn't have it)
+                userRating: cloudItem.user_rating !== null && cloudItem.user_rating !== undefined 
+                  ? cloudItem.user_rating 
+                  : cleanedData[existingKey].userRating,
+                userNotes: cloudItem.user_notes || cleanedData[existingKey].userNotes,
+                tags: cloudItem.user_tags && cloudItem.user_tags.length > 0 
+                  ? cloudItem.user_tags 
+                  : cleanedData[existingKey].tags,
+                // Update list if it changed
+                list: list,
+              };
+              console.log('🔄 Updated movie with cloud data:', cloudItem.title);
+            }
           }
         }
       }
@@ -308,8 +344,8 @@ export class FirebaseSyncManager {
           const key = `tv:${cloudItem.id}`;
           const itemId = `tv:${cloudItem.id}`;
           
-          // Only add if not already in Library
           if (!existingIds.has(itemId)) {
+            // Add new item
             const localItem = {
               id: String(cloudItem.id),
               mediaType: 'tv',
@@ -318,6 +354,8 @@ export class FirebaseSyncManager {
               posterUrl: cloudItem.poster_path,
               voteAverage: cloudItem.vote_average,
               userRating: cloudItem.user_rating || undefined,
+              userNotes: cloudItem.user_notes || undefined,
+              tags: cloudItem.user_tags || undefined,
               synopsis: cloudItem.synopsis || '',
               showStatus: cloudItem.show_status,
               lastAirDate: cloudItem.last_air_date,
@@ -332,7 +370,24 @@ export class FirebaseSyncManager {
             existingIds.add(itemId);
             console.log('➕ Added TV show:', cloudItem.title);
           } else {
-            console.log('⏭️ Skipping duplicate TV show:', cloudItem.title);
+            // Update existing item with cloud user data (ratings, notes, tags)
+            const existingKey = key;
+            if (cleanedData[existingKey]) {
+              cleanedData[existingKey] = {
+                ...cleanedData[existingKey],
+                // Update user data from cloud (preserve local if cloud doesn't have it)
+                userRating: cloudItem.user_rating !== null && cloudItem.user_rating !== undefined 
+                  ? cloudItem.user_rating 
+                  : cleanedData[existingKey].userRating,
+                userNotes: cloudItem.user_notes || cleanedData[existingKey].userNotes,
+                tags: cloudItem.user_tags && cloudItem.user_tags.length > 0 
+                  ? cloudItem.user_tags 
+                  : cleanedData[existingKey].tags,
+                // Update list if it changed
+                list: list,
+              };
+              console.log('🔄 Updated TV show with cloud data:', cloudItem.title);
+            }
           }
         }
       }
@@ -346,8 +401,8 @@ export class FirebaseSyncManager {
             const key = `${cloudItem.media_type}:${cloudItem.id}`;
             const itemId = `${cloudItem.media_type}:${cloudItem.id}`;
             
-            // Only add if not already in Library
             if (!existingIds.has(itemId)) {
+              // Add new item
               const localItem = {
                 id: String(cloudItem.id),
                 mediaType: cloudItem.media_type,
@@ -356,6 +411,8 @@ export class FirebaseSyncManager {
                 posterUrl: cloudItem.poster_path,
                 voteAverage: cloudItem.vote_average,
                 userRating: cloudItem.user_rating || undefined,
+                userNotes: cloudItem.user_notes || undefined,
+                tags: cloudItem.user_tags || undefined,
                 synopsis: cloudItem.synopsis || '',
                 showStatus: cloudItem.show_status,
                 lastAirDate: cloudItem.last_air_date,
@@ -370,7 +427,24 @@ export class FirebaseSyncManager {
               existingIds.add(itemId);
               console.log(`➕ Added custom list item: ${cloudItem.title || cloudItem.name} to ${customListId}`);
             } else {
-              console.log(`⏭️ Skipping duplicate custom item: ${cloudItem.title || cloudItem.name}`);
+              // Update existing item with cloud user data (ratings, notes, tags)
+              const existingKey = key;
+              if (cleanedData[existingKey]) {
+                cleanedData[existingKey] = {
+                  ...cleanedData[existingKey],
+                  // Update user data from cloud (preserve local if cloud doesn't have it)
+                  userRating: cloudItem.user_rating !== null && cloudItem.user_rating !== undefined 
+                    ? cloudItem.user_rating 
+                    : cleanedData[existingKey].userRating,
+                  userNotes: cloudItem.user_notes || cleanedData[existingKey].userNotes,
+                  tags: cloudItem.user_tags && cloudItem.user_tags.length > 0 
+                    ? cloudItem.user_tags 
+                    : cleanedData[existingKey].tags,
+                  // Update list if it changed
+                  list: `custom:${customListId}`,
+                };
+                console.log(`🔄 Updated custom item with cloud data: ${cloudItem.title || cloudItem.name}`);
+              }
             }
           }
         }

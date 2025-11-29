@@ -1052,6 +1052,13 @@ export default function App() {
                   handleClear();
                   setView("home");
                 }}
+                onNotesEdit={handleNotesEdit}
+                onTagsEdit={handleTagsEdit}
+                onNotificationToggle={handleNotificationToggle}
+                onSimpleReminder={handleSimpleReminder}
+                onBloopersOpen={handleBloopersOpen}
+                onGoofsOpen={handleGoofsOpen}
+                onExtrasOpen={handleExtrasOpen}
               />
             ) : (
               <>
@@ -1571,6 +1578,13 @@ export default function App() {
                 handleClear();
                 setView("home");
               }}
+              onNotesEdit={handleNotesEdit}
+              onTagsEdit={handleTagsEdit}
+              onNotificationToggle={handleNotificationToggle}
+              onSimpleReminder={handleSimpleReminder}
+              onBloopersOpen={handleBloopersOpen}
+              onGoofsOpen={handleGoofsOpen}
+              onExtrasOpen={handleExtrasOpen}
             />
           </PullToRefreshWrapper>
         ) : (

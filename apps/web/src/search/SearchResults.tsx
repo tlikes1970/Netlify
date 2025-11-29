@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 // import CardV2 from '../components/cards/CardV2'; // Unused
-import type { MediaItem } from "../components/cards/card.types";
+import type { MediaItem, CardActionHandlers } from "../components/cards/card.types";
 import { cachedSearchMulti } from "./cache";
 import { smartSearch } from "./smartSearch";
 import { discoverByGenre } from "./api";
@@ -18,6 +18,9 @@ import Portal from "../components/Portal";
 import SearchTip from "../components/onboarding/SearchTip";
 import { getSearchTipDismissed } from "../lib/onboarding";
 import { ListMembershipBadge } from "../components/ListMembershipBadge";
+import LibraryActions from "../components/LibraryActions";
+import { EpisodeTrackingModal } from "../components/modals/EpisodeTrackingModal";
+import { getTVShowDetails } from "../lib/tmdb";
 
 type SearchResultWithPagination = {
   items: MediaItem[];
@@ -31,18 +34,98 @@ export default function SearchResults({
   searchType = "all",
   mediaTypeFilter,
   onBackToHome,
+  onNotesEdit,
+  onTagsEdit,
+  onNotificationToggle,
+  onSimpleReminder,
+  onBloopersOpen,
+  onGoofsOpen,
+  onExtrasOpen,
+  onEpisodeTracking,
 }: {
   query: string;
   genre?: number | null;
   searchType?: "all" | "movies-tv" | "people";
   mediaTypeFilter?: "tv" | "movie" | null;
   onBackToHome?: () => void;
+  onNotesEdit?: (item: MediaItem) => void;
+  onTagsEdit?: (item: MediaItem) => void;
+  onNotificationToggle?: (item: MediaItem) => void;
+  onSimpleReminder?: (item: MediaItem) => void;
+  onBloopersOpen?: (item: MediaItem) => void;
+  onGoofsOpen?: (item: MediaItem) => void;
+  onExtrasOpen?: (item: MediaItem) => void;
+  onEpisodeTracking?: (item: MediaItem) => void;
 }) {
+  // Create actions object using Library methods and passed handlers
+  const actions: CardActionHandlers = {
+    onWant: (item: MediaItem) => {
+      if (item.id && item.mediaType) {
+        Library.move(item.id, item.mediaType, "wishlist");
+      }
+    },
+    onWatched: (item: MediaItem) => {
+      if (item.id && item.mediaType) {
+        Library.move(item.id, item.mediaType, "watched");
+      }
+    },
+    onNotInterested: (item: MediaItem) => {
+      if (item.id && item.mediaType) {
+        Library.move(item.id, item.mediaType, "not");
+      }
+    },
+    onDelete: (item: MediaItem) => {
+      if (item.id && item.mediaType) {
+        Library.remove(item.id, item.mediaType);
+      }
+    },
+    onRatingChange: (item: MediaItem, rating: number) => {
+      if (item.id && item.mediaType) {
+        Library.updateRating(item.id, item.mediaType, rating);
+      }
+    },
+    onNotesEdit: onNotesEdit,
+    onTagsEdit: onTagsEdit,
+    onEpisodeTracking: async (item: MediaItem) => {
+      if (item.mediaType === "tv") {
+        setSelectedShow(item);
+        setEpisodeModalOpen(true);
+
+        // Fetch real show details from TMDB
+        try {
+          const showId =
+            typeof item.id === "string" ? parseInt(item.id) : item.id;
+          const details = await getTVShowDetails(showId);
+          setShowDetails(details);
+        } catch (error) {
+          console.error("Failed to fetch show details:", error);
+          // Still open modal with basic info
+          setShowDetails({
+            id: typeof item.id === "string" ? parseInt(item.id) : item.id,
+            name: item.title,
+            number_of_seasons: 1,
+            number_of_episodes: 1,
+          });
+        }
+      } else if (onEpisodeTracking) {
+        // Fallback to passed handler if provided
+        onEpisodeTracking(item);
+      }
+    },
+    onNotificationToggle: onNotificationToggle,
+    onSimpleReminder: onSimpleReminder,
+    onBloopersOpen: onBloopersOpen,
+    onGoofsOpen: onGoofsOpen,
+    onExtrasOpen: onExtrasOpen,
+  };
   const [items, setItems] = useState<MediaItem[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [episodeModalOpen, setEpisodeModalOpen] = useState(false);
+  const [selectedShow, setSelectedShow] = useState<MediaItem | null>(null);
+  const [showDetails, setShowDetails] = useState<any>(null);
   const abortRef = useRef<AbortController | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -213,6 +296,7 @@ export default function SearchResults({
             onRemove={() =>
               setItems((prev) => prev.filter((i) => i.id !== item.id))
             }
+            actions={actions}
           />
         ))}
       </div>
@@ -227,6 +311,29 @@ export default function SearchResults({
             <div className="text-sm text-muted-foreground">Loading more...</div>
           )}
         </div>
+      )}
+
+      {/* Episode Tracking Modal */}
+      {selectedShow && (
+        <EpisodeTrackingModal
+          isOpen={episodeModalOpen}
+          onClose={() => {
+            setEpisodeModalOpen(false);
+            setSelectedShow(null);
+            setShowDetails(null);
+          }}
+          show={
+            showDetails || {
+              id:
+                typeof selectedShow.id === "string"
+                  ? parseInt(selectedShow.id)
+                  : selectedShow.id,
+              name: selectedShow.title,
+              number_of_seasons: 1,
+              number_of_episodes: 1,
+            }
+          }
+        />
       )}
     </section>
   );
@@ -243,13 +350,16 @@ function SearchResultCard({
   item,
   index,
   onRemove,
+  actions,
 }: {
   item: MediaItem;
   index: number;
   onRemove: () => void;
+  actions?: CardActionHandlers;
 }) {
   const translations = useTranslations();
-  const { posterUrl, mediaType, synopsis } = item;
+  const [enrichedItem, setEnrichedItem] = React.useState(item);
+  const { posterUrl, mediaType, synopsis } = enrichedItem;
   const [pressedButtons, setPressedButtons] = React.useState<Set<string>>(
     new Set()
   );
@@ -258,6 +368,7 @@ function SearchResultCard({
     productionCompanies?: string[];
   }>({});
   const [showMoreMenu, setShowMoreMenu] = React.useState(false);
+  const [showManageSheet, setShowManageSheet] = React.useState(false);
   const moreMenuRef = React.useRef<HTMLDivElement>(null);
   const moreButtonRef = React.useRef<HTMLButtonElement>(null);
   const addButtonRef = React.useRef<HTMLButtonElement>(null);
@@ -268,18 +379,43 @@ function SearchResultCard({
     return onMobileChange(setIsMobile);
   }, []);
 
+  // Store full library entry for management actions
+  const [libraryEntry, setLibraryEntry] = React.useState<ReturnType<typeof Library.getEntry>>(null);
+  
+  // Enrich item with library data and subscribe to library changes
+  React.useEffect(() => {
+    const enrichItem = () => {
+      const entry = Library.getEntry(item.id, item.mediaType);
+      setLibraryEntry(entry);
+      if (entry) {
+        setEnrichedItem({
+          ...item,
+          userRating: entry.userRating,
+          userNotes: entry.userNotes,
+          tags: entry.tags,
+        });
+      } else {
+        setEnrichedItem(item);
+      }
+    };
+
+    enrichItem();
+    const unsubscribe = Library.subscribe(enrichItem);
+    return () => { unsubscribe(); };
+  }, [item.id, item.mediaType]);
+
   // Check if item is already in a list to determine primary action
-  const currentList = Library.getCurrentList(item.id, item.mediaType);
-  const isInList = !!currentList;
+  const currentList = libraryEntry?.list || Library.getCurrentList(enrichedItem.id, enrichedItem.mediaType);
+  const isInList = !!currentList || !!libraryEntry;
   // Only show tip on first card that's not in a list
   const showSearchTip = !getSearchTipDismissed() && !isInList && index === 0;
 
   // Fetch network information when component mounts
   React.useEffect(() => {
     if (mediaType === "movie" || mediaType === "tv") {
-      fetchNetworkInfo(Number(item.id), mediaType).then(setNetworkInfo);
+      fetchNetworkInfo(Number(enrichedItem.id), mediaType).then(setNetworkInfo);
     }
-  }, [item.id, mediaType]);
+  }, [enrichedItem.id, mediaType]);
 
   // Safe title display helper
   function displayTitle(item: { title?: any; year?: string | number }) {
@@ -351,7 +487,7 @@ function SearchResultCard({
   }
 
   // Use actual data from TMDB or sensible defaults
-  const genre = getGenreName((item as any).genre_ids);
+  const genre = getGenreName((enrichedItem as any).genre_ids);
   const mediaTypeLabel = mediaType === "movie" ? "Movie" : "TV Series";
   const badges = ["NEW", "TRENDING"]; // TODO: Generate based on actual data
 
@@ -379,9 +515,9 @@ function SearchResultCard({
       "🎬 handleAction called with:",
       action,
       "for item:",
-      item.title
+      enrichedItem.title
     );
-    const buttonKey = `${action}-${item.id}`;
+    const buttonKey = `${action}-${enrichedItem.id}`;
 
     // Add pressed state
     setPressedButtons((prev) => new Set(prev).add(buttonKey));
@@ -390,20 +526,20 @@ function SearchResultCard({
       switch (action) {
         case "want": {
           // Fetch full metadata to ensure all fields are populated
-          const fullMetadata = await fetchFullMediaMetadata(item);
+          const fullMetadata = await fetchFullMediaMetadata(enrichedItem);
 
           // Merge full metadata with item, prioritizing fetched metadata
           // Include network data if available (from fetchFullMediaMetadata or networkInfo)
           const networks =
-            fullMetadata.networks || networkInfo.networks || item.networks;
+            fullMetadata.networks || networkInfo.networks || enrichedItem.networks;
           const productionCompanies =
             fullMetadata.productionCompanies ||
             networkInfo.productionCompanies ||
-            item.productionCompanies;
+            enrichedItem.productionCompanies;
 
           addToListWithConfirmation(
             {
-              ...item,
+              ...enrichedItem,
               ...fullMetadata, // Full metadata from TMDB (title, year, synopsis, poster, etc.)
               networks: networks, // ✅ Save network data
               productionCompanies: productionCompanies, // ✅ Save production companies
@@ -411,8 +547,8 @@ function SearchResultCard({
             "wishlist",
             () => {
               emit("card:want", {
-                id: item.id,
-                mediaType: item.mediaType as any,
+                id: enrichedItem.id,
+                mediaType: enrichedItem.mediaType as any,
               });
               onRemove(); // Remove from search results
             }
@@ -421,7 +557,7 @@ function SearchResultCard({
         }
         case "currently-watching": {
           // Fetch full metadata to ensure all fields are populated
-          const fullMetadata = await fetchFullMediaMetadata(item);
+          const fullMetadata = await fetchFullMediaMetadata(enrichedItem);
 
           // Fetch next air date and show status for TV shows
           let nextAirDate: string | null = null;
@@ -429,8 +565,8 @@ function SearchResultCard({
           let lastAirDate: string | undefined = undefined;
 
           if (mediaType === "tv") {
-            nextAirDate = await fetchNextAirDate(Number(item.id));
-            const statusData = await fetchShowStatus(Number(item.id));
+            nextAirDate = await fetchNextAirDate(Number(enrichedItem.id));
+            const statusData = await fetchShowStatus(Number(enrichedItem.id));
             if (statusData) {
               showStatus = statusData.status;
               lastAirDate = statusData.lastAirDate || undefined;
@@ -440,17 +576,17 @@ function SearchResultCard({
           // Merge full metadata with item, prioritizing fetched metadata
           // Include network data if available (from fetchFullMediaMetadata or networkInfo)
           const networks =
-            fullMetadata.networks || networkInfo.networks || item.networks;
+            fullMetadata.networks || networkInfo.networks || enrichedItem.networks;
           const productionCompanies =
             fullMetadata.productionCompanies ||
             networkInfo.productionCompanies ||
-            item.productionCompanies;
+            enrichedItem.productionCompanies;
 
           addToListWithConfirmation(
             {
-              ...item,
+              ...enrichedItem,
               ...fullMetadata, // Full metadata from TMDB (title, year, synopsis, poster, etc.)
-              nextAirDate: nextAirDate || item.nextAirDate, // Preserve existing nextAirDate if already set
+              nextAirDate: nextAirDate || enrichedItem.nextAirDate, // Preserve existing nextAirDate if already set
               showStatus: (showStatus || fullMetadata.showStatus) as
                 | "Ended"
                 | "Returning Series"
@@ -471,20 +607,20 @@ function SearchResultCard({
         }
         case "watched": {
           // Fetch full metadata to ensure all fields are populated
-          const fullMetadata = await fetchFullMediaMetadata(item);
+          const fullMetadata = await fetchFullMediaMetadata(enrichedItem);
 
           // Merge full metadata with item, prioritizing fetched metadata
           // Include network data if available (from fetchFullMediaMetadata or networkInfo)
           const networks =
-            fullMetadata.networks || networkInfo.networks || item.networks;
+            fullMetadata.networks || networkInfo.networks || enrichedItem.networks;
           const productionCompanies =
             fullMetadata.productionCompanies ||
             networkInfo.productionCompanies ||
-            item.productionCompanies;
+            enrichedItem.productionCompanies;
 
           addToListWithConfirmation(
             {
-              ...item,
+              ...enrichedItem,
               ...fullMetadata, // Full metadata from TMDB (title, year, synopsis, poster, etc.)
               networks: networks, // ✅ Save network data
               productionCompanies: productionCompanies, // ✅ Save production companies
@@ -492,8 +628,8 @@ function SearchResultCard({
             "watched",
             () => {
               emit("card:watched", {
-                id: item.id,
-                mediaType: item.mediaType as any,
+                id: enrichedItem.id,
+                mediaType: enrichedItem.mediaType as any,
               });
               onRemove(); // Remove from search results
             }
@@ -501,18 +637,18 @@ function SearchResultCard({
           break;
         }
         case "not-interested":
-          addToListWithConfirmation(item, "not", () => {
+          addToListWithConfirmation(enrichedItem, "not", () => {
             emit("card:notInterested", {
-              id: item.id,
-              mediaType: item.mediaType as any,
+              id: enrichedItem.id,
+              mediaType: enrichedItem.mediaType as any,
             });
             onRemove(); // Remove from search results
           });
           break;
         case "holiday":
           emit("card:holidayAdd", {
-            id: item.id,
-            mediaType: item.mediaType as any,
+            id: enrichedItem.id,
+            mediaType: enrichedItem.mediaType as any,
           });
           break;
         default:
@@ -575,7 +711,7 @@ function SearchResultCard({
     >
       {/* Poster - proper size */}
       <a
-        href={`https://www.themoviedb.org/${mediaType}/${item.id}`}
+        href={`https://www.themoviedb.org/${mediaType}/${enrichedItem.id}`}
         target="_blank"
         rel="noopener noreferrer"
         className={`flex-shrink-0 bg-muted cursor-pointer ${isMobile ? "w-20 h-28" : "w-24 h-36"}`}
@@ -605,9 +741,9 @@ function SearchResultCard({
           className={`font-bold ${isMobile ? "text-base" : "text-lg"} mb-1 flex items-center gap-2 flex-wrap`}
         >
           <span>{title}</span>
-          {isMobile && item.voteAverage && (
+          {isMobile && enrichedItem.voteAverage && (
             <span className="text-muted-foreground text-xs font-normal">
-              ⭐ {item.voteAverage.toFixed(1)}/10
+              ⭐ {enrichedItem.voteAverage.toFixed(1)}/10
             </span>
           )}
         </div>
@@ -617,7 +753,7 @@ function SearchResultCard({
           className={`text-muted-foreground ${isMobile ? "text-xs" : "text-sm"} mb-1 flex items-center gap-2 flex-wrap`}
         >
           <span>{genre} • {mediaTypeLabel}</span>
-          <ListMembershipBadge item={item} />
+          <ListMembershipBadge item={enrichedItem} />
         </div>
 
         {/* Streaming Info - only show when we have real data */}
@@ -677,9 +813,9 @@ function SearchResultCard({
             <span className="text-muted-foreground text-xs ml-2">
               (Your rating)
             </span>
-            {item.voteAverage && (
+            {enrichedItem.voteAverage && (
               <span className="text-muted-foreground text-xs ml-4">
-                TMDB: {item.voteAverage.toFixed(1)}/10
+                TMDB: {enrichedItem.voteAverage.toFixed(1)}/10
               </span>
             )}
           </div>
@@ -730,19 +866,27 @@ function SearchResultCard({
                 )}
               </div>
             ) : (
-              // Show status pill if already in list
-              <div
-                className="flex-1 px-3 py-2 text-xs font-medium rounded-lg bg-muted min-h-[36px] flex items-center justify-center"
-                style={{ color: "var(--text)" }}
-              >
-                {currentList === "watching"
-                  ? translations.currentlyWatchingAction || "Watching"
-                  : currentList === "wishlist"
-                    ? translations.wantToWatchAction || "Want"
-                    : currentList === "watched"
-                      ? translations.watchedAction || "Watched"
-                      : "In List"}
-              </div>
+              // Show status pill with Manage button if already in list
+              <>
+                <div
+                  className="flex-1 px-3 py-2 text-xs font-medium rounded-lg bg-muted min-h-[36px] flex items-center justify-center"
+                  style={{ color: "var(--text)" }}
+                >
+                  {currentList === "watching"
+                    ? translations.currentlyWatchingAction || "Watching"
+                    : currentList === "wishlist"
+                      ? translations.wantToWatchAction || "Want"
+                      : currentList === "watched"
+                        ? translations.watchedAction || "Watched"
+                        : "In List"}
+                </div>
+                <button
+                  onClick={() => setShowManageSheet(true)}
+                  className="px-3 py-2 text-xs font-medium rounded-lg bg-accent text-white hover:opacity-90 transition-opacity min-h-[36px]"
+                >
+                  Manage
+                </button>
+              </>
             )}
 
             {/* More Menu Button */}
@@ -871,7 +1015,7 @@ function SearchResultCard({
                         </>
                       )}
                       <div className="px-4 py-2">
-                        <MyListToggle item={item} />
+                        <MyListToggle item={enrichedItem} />
                       </div>
                     </div>
                   </div>
@@ -884,23 +1028,140 @@ function SearchResultCard({
                 </Portal>
               )}
             </div>
+            
+            {/* Mobile Bottom Sheet for Library Management */}
+            {showManageSheet && isInList && libraryEntry && (
+              <Portal>
+                <div
+                  className="fixed inset-0 z-50 flex items-end"
+                  onClick={() => setShowManageSheet(false)}
+                >
+                  {/* Backdrop */}
+                  <div
+                    className="absolute inset-0 bg-black/50"
+                    onClick={() => setShowManageSheet(false)}
+                  />
+                  {/* Sheet */}
+                  <div
+                    className="relative w-full max-h-[80vh] bg-card rounded-t-xl border-t border-line overflow-hidden"
+                    onClick={(e) => e.stopPropagation()}
+                    style={{ zIndex: 10004 }}
+                  >
+                    {/* Handle */}
+                    <div className="flex justify-center pt-3 pb-2">
+                      <div className="w-12 h-1 bg-muted rounded-full" />
+                    </div>
+                    {/* Header */}
+                    <div className="px-4 pb-3 border-b border-line">
+                      <h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>
+                        Manage {enrichedItem.title}
+                      </h3>
+                      {currentList && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          In: {currentList === "watching" ? "Currently Watching" : currentList === "wishlist" ? "Want to Watch" : currentList === "watched" ? "Watched" : currentList}
+                        </p>
+                      )}
+                    </div>
+                    {/* Content */}
+                    <div className="overflow-y-auto p-4" style={{ maxHeight: "calc(80vh - 80px)" }}>
+                      <LibraryActions
+                        item={enrichedItem}
+                        libraryEntry={libraryEntry}
+                        actions={{
+                          ...actions,
+                          // Wrap actions to close sheet after execution
+                          onWant: (item) => {
+                            actions?.onWant?.(item);
+                            setShowManageSheet(false);
+                          },
+                          onWatched: (item) => {
+                            actions?.onWatched?.(item);
+                            setShowManageSheet(false);
+                          },
+                          onNotInterested: (item) => {
+                            actions?.onNotInterested?.(item);
+                            setShowManageSheet(false);
+                          },
+                          onDelete: (item) => {
+                            actions?.onDelete?.(item);
+                            setShowManageSheet(false);
+                          },
+                          onRatingChange: (item, rating) => {
+                            actions?.onRatingChange?.(item, rating);
+                            // Don't close on rating change
+                          },
+                          onNotesEdit: (item) => {
+                            actions?.onNotesEdit?.(item);
+                            setShowManageSheet(false);
+                          },
+                          onEpisodeTracking: (item) => {
+                            actions?.onEpisodeTracking?.(item);
+                            setShowManageSheet(false);
+                          },
+                          onSimpleReminder: (item) => {
+                            actions?.onSimpleReminder?.(item);
+                            setShowManageSheet(false);
+                          },
+                          onNotificationToggle: (item) => {
+                            actions?.onNotificationToggle?.(item);
+                            setShowManageSheet(false);
+                          },
+                          onGoofsOpen: (item) => {
+                            actions?.onGoofsOpen?.(item);
+                            setShowManageSheet(false);
+                          },
+                          onExtrasOpen: (item) => {
+                            actions?.onExtrasOpen?.(item);
+                            setShowManageSheet(false);
+                          },
+                        }}
+                        mode="search-sheet"
+                        currentList={currentList || undefined}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </Portal>
+            )}
           </div>
         ) : (
-          // Desktop: Full action buttons
+          // Desktop: Show LibraryActions if in library, otherwise show add buttons
           <div className="mt-auto flex flex-wrap gap-2 justify-between items-center">
-            <div
-              className="flex flex-wrap gap-2 p-2 rounded-lg"
-              style={{ borderColor: "var(--line)", border: "1px dashed" }}
-            >
-              {createButton("want", translations.wantToWatchAction)}
-              {createButton(
-                "currently-watching",
-                translations.currentlyWatchingAction
-              )}
-              {createButton("watched", translations.watchedAction)}
-              {createButton("not-interested", translations.notInterestedAction)}
-              <MyListToggle item={item} />
-            </div>
+            {isInList && libraryEntry ? (
+              <div className="w-full">
+                {/* Status indicator */}
+                <div className="mb-2">
+                  <span
+                    className="inline-block px-3 py-1 text-xs font-medium rounded-lg bg-muted"
+                    style={{ color: "var(--text)" }}
+                  >
+                    In list: {currentList === "watching" ? "Currently Watching" : currentList === "wishlist" ? "Want to Watch" : currentList === "watched" ? "Watched" : currentList}
+                  </span>
+                </div>
+                {/* Library management actions */}
+                <LibraryActions
+                  item={enrichedItem}
+                  libraryEntry={libraryEntry}
+                  actions={actions}
+                  mode="search-inline"
+                  currentList={currentList || undefined}
+                />
+              </div>
+            ) : (
+              <div
+                className="flex flex-wrap gap-2 p-2 rounded-lg"
+                style={{ borderColor: "var(--line)", border: "1px dashed" }}
+              >
+                {createButton("want", translations.wantToWatchAction)}
+                {createButton(
+                  "currently-watching",
+                  translations.currentlyWatchingAction
+                )}
+                {createButton("watched", translations.watchedAction)}
+                {createButton("not-interested", translations.notInterestedAction)}
+                <MyListToggle item={enrichedItem} />
+              </div>
+            )}
           </div>
         )}
       </div>

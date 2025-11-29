@@ -277,7 +277,7 @@ export async function smartSearch(
           console.log(`🔍 Fuzzy match: "${variant}" found ${newItems.length} additional results`);
           allItems = [...allItems, ...newItems];
         }
-      } catch (err) {
+      } catch (_err) {
         // Ignore variant search failures
       }
     }
