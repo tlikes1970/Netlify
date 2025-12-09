@@ -104,12 +104,41 @@ export async function get(
     "/api/tmdb-proxy?" +
     new URLSearchParams({ endpoint, ...params } as Record<string, string>);
   const pr = await fetch(proxyURL);
+  
+  // Check content-type before attempting to parse JSON
+  const contentType = pr.headers.get('content-type') || '';
+  const isJson = contentType.includes('application/json');
+  
   if (!pr.ok) {
     const txt = await pr.text().catch(() => "");
-    console.error("[TMDB proxy] HTTP", pr.status, proxyURL, txt.slice(0, 200));
+    console.error("[TMDB proxy] HTTP", pr.status, proxyURL, {
+      contentType,
+      isJson,
+      bodyPreview: txt.slice(0, 200),
+    });
     lastSource = "error";
+    
+    // If we got HTML instead of JSON, provide a clearer error message
+    if (!isJson && txt.trim().startsWith('<!DOCTYPE')) {
+      throw new Error(`TMDB proxy returned non-JSON response, status ${pr.status}, content-type ${contentType}`);
+    }
+    
     throw new Error(`tmdb-proxy ${pr.status}`);
   }
+  
+  // Defensive check: ensure response is JSON before parsing
+  if (!isJson) {
+    const txt = await pr.text().catch(() => "");
+    console.error("[TMDB proxy] Non-JSON response received", {
+      status: pr.status,
+      contentType,
+      bodyPreview: txt.slice(0, 200),
+      url: proxyURL,
+    });
+    lastSource = "error";
+    throw new Error(`TMDB proxy returned non-JSON response, status ${pr.status}, content-type ${contentType}`);
+  }
+  
   lastSource = "proxy";
   return pr.json();
 }

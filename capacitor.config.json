@@ -1,5 +1,9 @@
 {
   "appId": "com.TravisL.tvtracker",
   "appName": "TV Tracker",
-  "webDir": "apps/web/dist"
+  "webDir": "apps/web/dist",
+  "server": {
+    "androidScheme": "https",
+    "comment": "Dev server URL (e.g., http://your_local_ip:8888) removed so Android/iOS builds load bundled assets instead of a live dev server."
+  }
 }

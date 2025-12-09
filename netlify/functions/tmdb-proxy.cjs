@@ -1,3 +1,5 @@
+const { validateOrigin } = require('./origin-validation.cjs');
+
 const API_BASE = 'https://api.themoviedb.org/3/';
 
 const cors = (contentType = 'application/json') => ({
@@ -12,6 +14,34 @@ const isProd = process.env.NODE_ENV === 'production';
 exports.handler = async function handler(event) {
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: cors('text/plain'), body: '' };
+  }
+
+  // Validate origin before processing request
+  const originCheck = validateOrigin(event);
+  if (!originCheck.allowed) {
+    // Log detailed error information for debugging
+    console.error('[AUTH] Origin validation failed', {
+      origin: originCheck.origin,
+      referer: originCheck.referer,
+      userAgent: originCheck.userAgent,
+      error: originCheck.error,
+    });
+    
+    // Return JSON error with 403 status (not HTML with 200)
+    // Ensure content-type is explicitly set to application/json
+    return {
+      statusCode: 403,
+      headers: {
+        'content-type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      },
+      body: JSON.stringify({
+        error: 'origin-rejected',
+        origin: originCheck.origin || null,
+        referer: originCheck.referer || null,
+      }),
+    };
   }
 
   if (event.httpMethod !== 'GET') {
