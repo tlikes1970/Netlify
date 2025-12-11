@@ -1,0 +1,6 @@
+{
+  "appId": "com.TravisL.tvtracker",
+  "appName": "tv-tracker",
+  "webDir": "../../apps/web",
+  "bundledWebRuntime": false
+}

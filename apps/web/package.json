@@ -1,7 +1,7 @@
 {
   "name": "flicklet-web",
   "private": true,
-  "version": "0.1.171",
+  "version": "0.1.172",
   "type": "module",
   "engines": {
     "node": ">=18 <21"
@@ -10,6 +10,7 @@
     "dev": "vite",
     "prebuild": "npm run lexicon:build",
     "build": "tsc && vite build",
+    "// NOTE: mobile builds use --mode mobile so API_BASE points at production backend.": "",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",

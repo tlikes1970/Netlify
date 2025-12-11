@@ -1,36 +1,56 @@
 /**
  * Process: Billing Status
- * Purpose: Billing information structure (skeleton for future payment integration)
- * Data Source: Firestore users/{uid}/billing/status (future)
- * Update Path: Payment provider webhooks, manual admin updates (future)
- * Dependencies: Firebase (future)
+ * Purpose: Billing information structure and Firestore integration
+ * Data Source: Firestore users/{uid}/billing/status
+ * Update Path: Payment provider webhooks, purchase validation, manual admin updates
+ * Dependencies: Firebase Firestore
  */
 
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, doc, getDoc, setDoc } from 'firebase/firestore';
+import { db, auth } from './firebaseBootstrap';
 
 export interface BillingStatus {
   isPro: boolean;
   source: 'alpha' | 'gift' | 'stripe' | 'ios' | 'android' | 'manual' | null;
   currentPeriodEnd: Timestamp | null;
   cancelAtPeriodEnd: boolean;
+  productId?: string;
+  purchaseToken?: string;
 }
 
 /**
- * Get billing status for a user
- * 
- * TODO: When payment integration is added:
- * - Read from Firestore: users/{uid}/billing/status
- * - Check subscription validity (currentPeriodEnd > now)
- * - Return actual billing data
- * 
- * For now, returns default (no active billing)
+ * Get billing status for current user
+ * Reads from Firestore: users/{uid}/billing/status
  */
-export function getBillingStatus(_uid?: string): BillingStatus {
-  // Placeholder implementation
-  // When Stripe/App Store integration is added, this will:
-  // 1. Read from Firestore users/{uid}/billing/status
-  // 2. Check subscription validity
-  // 3. Return actual billing data
+export async function getBillingStatus(uid?: string): Promise<BillingStatus> {
+  const userId = uid || auth.currentUser?.uid;
+  
+  if (!userId) {
+    return {
+      isPro: false,
+      source: null,
+      currentPeriodEnd: null,
+      cancelAtPeriodEnd: false,
+    };
+  }
+  
+  try {
+    const billingDoc = await getDoc(doc(db, 'users', userId, 'billing', 'status'));
+    
+    if (billingDoc.exists()) {
+      const data = billingDoc.data();
+      return {
+        isPro: data.isPro || false,
+        source: data.source || null,
+        currentPeriodEnd: data.currentPeriodEnd || null,
+        cancelAtPeriodEnd: data.cancelAtPeriodEnd || false,
+        productId: data.productId,
+        purchaseToken: data.purchaseToken,
+      };
+    }
+  } catch (error) {
+    console.error('[Billing] Error reading billing status:', error);
+  }
   
   return {
     isPro: false,
@@ -41,18 +61,27 @@ export function getBillingStatus(_uid?: string): BillingStatus {
 }
 
 /**
- * Update billing status (for future use)
- * 
- * TODO: When payment integration is added:
- * - Write to Firestore: users/{uid}/billing/status
- * - Called by webhook handlers or admin functions
+ * Update billing status
+ * Writes to Firestore: users/{uid}/billing/status
+ * Called by backend webhooks, purchase validation, or admin functions
  */
 export async function updateBillingStatus(
   uid: string,
   status: Partial<BillingStatus>
 ): Promise<void> {
-  // Placeholder implementation
-  // When payment integration is added, this will write to Firestore
-  console.log('[Billing] Update billing status (not implemented yet):', { uid, status });
+  try {
+    await setDoc(
+      doc(db, 'users', uid, 'billing', 'status'),
+      {
+        ...status,
+        updatedAt: Timestamp.now(),
+      },
+      { merge: true }
+    );
+    console.log('[Billing] Billing status updated:', { uid, status });
+  } catch (error) {
+    console.error('[Billing] Error updating billing status:', error);
+    throw error;
+  }
 }
 

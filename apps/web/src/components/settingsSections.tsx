@@ -1149,7 +1149,6 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
 function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
   const proStatus = useProStatus();
   const isProUser = proStatus.isPro;
-  const { isAdmin } = useAdminRole();
 
   return (
     <div className="space-y-6">
@@ -1174,56 +1173,6 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
           <UpgradeToProCTA variant="button" />
         )}
       </div>
-
-      {/* Alpha/Testing Toggle - Admin only */}
-      {isAdmin && (
-        <div
-          className="p-4 rounded-lg border"
-          style={{ backgroundColor: "var(--bg)", borderColor: "var(--line)" }}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <h4
-                className="text-sm font-medium mb-1"
-                style={{ color: "var(--text)" }}
-              >
-                Treat this device as Pro (Alpha / Testing)
-              </h4>
-              <p className="text-xs" style={{ color: "var(--muted)" }}>
-                This is for testing only and is not a real purchase. Toggle this
-                to test Pro features.
-              </p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer ml-4">
-              <input
-                type="checkbox"
-                checked={isProUser}
-                onChange={(e) => {
-                  settingsManager.updateProStatus(e.target.checked);
-                }}
-                className="sr-only peer"
-              />
-              <div
-                className="w-11 h-6 rounded-full peer transition-colors"
-                style={{
-                  backgroundColor: isProUser ? "var(--accent)" : "var(--line)",
-                }}
-              >
-                <div
-                  className="w-5 h-5 rounded-full transition-transform peer-checked:translate-x-5"
-                  style={{
-                    backgroundColor: "#fff",
-                    transform: isProUser
-                      ? "translateX(1.25rem)"
-                      : "translateX(0.125rem)",
-                    marginTop: "0.125rem",
-                  }}
-                />
-              </div>
-            </label>
-          </div>
-        </div>
-      )}
 
       {/* Pro Features */}
       <div>
@@ -2037,6 +1986,31 @@ function AboutSection(_props: SettingsSectionProps) {
           <p>
             If you watch TV or movies and don't want to make it a hobby just to
             track them, this app's for you. Simple lists, zero drama.
+          </p>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h4 className="text-lg font-semibold" style={{ color: "var(--text)" }}>
+          📜 Legal & Privacy
+        </h4>
+
+        <div
+          className="space-y-3 text-sm leading-relaxed"
+          style={{ color: "var(--text)" }}
+        >
+          <p>
+            <a
+              href="https://flicklet.netlify.app/privacy.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:no-underline transition-all"
+              style={{ color: "var(--accent)" }}
+            >
+              Privacy Policy
+            </a>
+            {" - "}
+            Learn how we collect, use, and protect your data.
           </p>
         </div>
       </div>
