@@ -24,15 +24,13 @@ const CACHE_DURATION = 60000; // 1 minute cache
  * Resolves Pro status from billing (takes precedence) and settings (fallback)
  */
 export async function getProStatus(): Promise<ProStatus> {
-  const settings = settingsManager.getSettings();
-  
   // Check cache first
   const now = Date.now();
   if (billingCache && billingCache.expiresAt > now) {
     // Use cached billing status (alpha toggle removed)
     return { 
       isPro: billingCache.isPro, 
-      source: billingCache.source 
+      source: (billingCache.source as ProStatus['source']) || null
     };
   }
   
@@ -53,7 +51,7 @@ export async function getProStatus(): Promise<ProStatus> {
       // Subscription is valid
       return {
         isPro: true,
-        source: billing.source || 'android',
+        source: (billing.source as ProStatus['source']) || 'android',
       };
     }
   }
@@ -61,8 +59,25 @@ export async function getProStatus(): Promise<ProStatus> {
   // Only billing-based Pro status (alpha toggle removed)
   return {
     isPro: billing.isPro,
-    source: billing.source,
+    source: (billing.source as ProStatus['source']) || null,
   };
+}
+
+/**
+ * Get Pro status synchronously (uses cache only)
+ * Returns false if cache is expired or missing
+ * For accurate status, use async getProStatus() instead
+ */
+export function getProStatusSync(): ProStatus {
+  const now = Date.now();
+  if (billingCache && billingCache.expiresAt > now) {
+    return {
+      isPro: billingCache.isPro,
+      source: (billingCache.source as ProStatus['source']) || null,
+    };
+  }
+  // Cache expired or missing - return false conservatively
+  return { isPro: false, source: null };
 }
 
 /**
@@ -79,7 +94,6 @@ export function clearBillingCache(): void {
  */
 export function useProStatus(): ProStatus {
   const [proStatus, setProStatus] = useState<ProStatus>({ isPro: false, source: null });
-  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     let mounted = true;
@@ -88,7 +102,6 @@ export function useProStatus(): ProStatus {
     getProStatus().then((status) => {
       if (mounted) {
         setProStatus(status);
-        setIsLoading(false);
       }
     });
     

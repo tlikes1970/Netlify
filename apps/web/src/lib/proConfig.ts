@@ -6,7 +6,7 @@
  * Dependencies: proStatus.ts, customLists.ts, notifications.ts, communitySorting.ts
  */
 
-import { getProStatus } from './proStatus';
+import { getProStatusSync } from './proStatus';
 
 /**
  * Pro feature limits configuration
@@ -51,7 +51,7 @@ export const PRO_LIMITS = {
  * Uses centralized Pro status helper
  */
 export function getMaxCustomLists(): number {
-  const proStatus = getProStatus();
+  const proStatus = getProStatusSync();
   return proStatus.isPro ? PRO_LIMITS.lists.pro : PRO_LIMITS.lists.free;
 }
 

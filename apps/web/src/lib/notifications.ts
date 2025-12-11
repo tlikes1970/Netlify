@@ -1,4 +1,5 @@
-import { getProStatus } from './proStatus';
+import { getProStatusSync } from './proStatus';
+import { API_BASE } from './apiConfig';
 
 export interface NotificationSettings {
   // Global settings
@@ -263,7 +264,7 @@ class NotificationManager {
     console.log('🔔 Attempting to send email notification:', { episode, userEmail });
 
     try {
-      const response = await fetch('/.netlify/functions/send-email', {
+      const response = await fetch(`${API_BASE}/.netlify/functions/send-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -360,7 +361,7 @@ class NotificationManager {
     console.log('🧪 Sending test notification to:', userEmail);
     
     try {
-      const response = await fetch('/.netlify/functions/send-email', {
+      const response = await fetch(`${API_BASE}/.netlify/functions/send-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -394,8 +395,10 @@ class NotificationManager {
   }
 
   isProUser(): boolean {
-    // Use centralized Pro status helper
-    const proStatus = getProStatus();
+    // Use cached billing status synchronously
+    // This is a synchronous method, so we use the cache
+    // For React components, use useProStatus() hook instead
+    const proStatus = getProStatusSync();
     return proStatus.isPro;
   }
 

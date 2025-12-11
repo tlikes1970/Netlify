@@ -8,7 +8,6 @@
 
 import { Capacitor } from '@capacitor/core';
 import { auth } from './firebaseBootstrap';
-import { updateBillingStatus } from './billing';
 import { clearBillingCache } from './proStatus';
 
 /**
@@ -53,10 +52,13 @@ async function startAndroidPurchase(): Promise<void> {
   try {
     console.log('[Pro Upgrade] Starting Android purchase flow');
     
-    // Access Capacitor plugin
-    const { Plugins } = await import('@capacitor/core');
-    const Billing = (Plugins as any).Billing;
+    // Access Capacitor plugin via window.Capacitor
+    const CapacitorGlobal = (window as any).Capacitor;
+    if (!CapacitorGlobal || !CapacitorGlobal.Plugins) {
+      throw new Error('Capacitor plugins not available. Make sure the native plugin is installed.');
+    }
     
+    const Billing = CapacitorGlobal.Plugins.Billing;
     if (!Billing) {
       throw new Error('Billing plugin not available. Make sure the native plugin is installed.');
     }
