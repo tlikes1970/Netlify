@@ -6,9 +6,18 @@
  * Dependencies: Settings navigation, payment providers, Capacitor
  */
 
-import { Capacitor } from '@capacitor/core';
 import { auth } from './firebaseBootstrap';
 import { clearBillingCache } from './proStatus';
+
+// Capacitor is only available in mobile builds - use conditional access
+function getCapacitor(): any {
+  if (typeof window === 'undefined') return null;
+  // Check if Capacitor is available via window (mobile builds)
+  if ((window as any).Capacitor) {
+    return (window as any).Capacitor;
+  }
+  return null;
+}
 
 /**
  * Start Pro upgrade flow
@@ -22,7 +31,8 @@ import { clearBillingCache } from './proStatus';
 export async function startProUpgrade(): Promise<void> {
   console.log('[Pro Upgrade] startProUpgrade() called');
   
-  const platform = Capacitor.getPlatform();
+  const Capacitor = getCapacitor();
+  const platform = Capacitor?.getPlatform() || 'web';
   
   // Check if user is authenticated (required for purchases)
   if (!auth.currentUser) {

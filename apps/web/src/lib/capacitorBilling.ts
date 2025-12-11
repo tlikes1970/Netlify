@@ -6,7 +6,21 @@
  * Dependencies: Capacitor native bridge, Android BillingClient
  */
 
-import { Capacitor } from '@capacitor/core';
+// Capacitor is only available in mobile builds - use dynamic import
+let Capacitor: any = null;
+try {
+  // Only import if available (mobile builds)
+  if (typeof window !== 'undefined' && (window as any).Capacitor) {
+    Capacitor = (window as any).Capacitor;
+  } else {
+    // Try to import dynamically (will fail gracefully in web builds)
+    const capacitorModule = await import('@capacitor/core').catch(() => null);
+    Capacitor = capacitorModule?.Capacitor || null;
+  }
+} catch {
+  // Capacitor not available - this is fine for web builds
+  Capacitor = null;
+}
 
 interface Product {
   productId: string;
@@ -33,7 +47,8 @@ interface Purchase {
  * Attempts to load the plugin if available
  */
 export async function initializeBilling(): Promise<boolean> {
-  if (Capacitor.getPlatform() !== 'android') {
+  const Capacitor = getCapacitor();
+  if (!Capacitor || Capacitor.getPlatform() !== 'android') {
     console.log('[Billing] Not Android platform, billing not available');
     return false;
   }
@@ -58,7 +73,8 @@ export async function initializeBilling(): Promise<boolean> {
  * Get available products from Google Play
  */
 export async function getProducts(productIds: string[]): Promise<Product[]> {
-  if (Capacitor.getPlatform() !== 'android') {
+  const Capacitor = getCapacitor();
+  if (!Capacitor || Capacitor.getPlatform() !== 'android') {
     return [];
   }
 
@@ -87,7 +103,8 @@ export async function getProducts(productIds: string[]): Promise<Product[]> {
  * Launch purchase flow
  */
 export async function launchPurchase(productId: string, productType: 'subscription' = 'subscription'): Promise<PurchaseResult | null> {
-  if (Capacitor.getPlatform() !== 'android') {
+  const Capacitor = getCapacitor();
+  if (!Capacitor || Capacitor.getPlatform() !== 'android') {
     console.log('[Billing] Not Android platform, purchase not available');
     return null;
   }
@@ -124,7 +141,8 @@ export async function launchPurchase(productId: string, productType: 'subscripti
  * Restore purchases
  */
 export async function restorePurchases(): Promise<Purchase[]> {
-  if (Capacitor.getPlatform() !== 'android') {
+  const Capacitor = getCapacitor();
+  if (!Capacitor || Capacitor.getPlatform() !== 'android') {
     return [];
   }
 
