@@ -8,17 +8,6 @@
 
 import { Capacitor } from '@capacitor/core';
 
-/**
- * Interface for in-app purchase plugin
- * This will be implemented as a Capacitor plugin
- */
-interface InAppPurchasesPlugin {
-  initialize(): Promise<void>;
-  getProducts(options: { productIds: string[]; productType: 'subscription' | 'consumable' | 'nonConsumable' }): Promise<{ products: Product[] }>;
-  purchase(options: { productId: string; productType: 'subscription' | 'consumable' | 'nonConsumable' }): Promise<PurchaseResult>;
-  restorePurchases(): Promise<{ purchases: Purchase[] }>;
-}
-
 interface Product {
   productId: string;
   price: string;
