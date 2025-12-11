@@ -6,20 +6,14 @@
  * Dependencies: Capacitor native bridge, Android BillingClient
  */
 
-// Capacitor is only available in mobile builds - use dynamic import
-let Capacitor: any = null;
-try {
-  // Only import if available (mobile builds)
-  if (typeof window !== 'undefined' && (window as any).Capacitor) {
-    Capacitor = (window as any).Capacitor;
-  } else {
-    // Try to import dynamically (will fail gracefully in web builds)
-    const capacitorModule = await import('@capacitor/core').catch(() => null);
-    Capacitor = capacitorModule?.Capacitor || null;
+// Capacitor is only available in mobile builds - use conditional access
+function getCapacitor(): any {
+  if (typeof window === 'undefined') return null;
+  // Check if Capacitor is available via window (mobile builds)
+  if ((window as any).Capacitor) {
+    return (window as any).Capacitor;
   }
-} catch {
-  // Capacitor not available - this is fine for web builds
-  Capacitor = null;
+  return null;
 }
 
 interface Product {
