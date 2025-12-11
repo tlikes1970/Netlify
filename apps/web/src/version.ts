@@ -1,6 +1,6 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
-// ⚠️ VERSION 0.1.190: Desktop list layout fix - centered content column for 3 tabs
+// ⚠️ VERSION 0.1.172: Google Play Billing API integration and remove alpha mode
 // - Added centered content column wrapper (max-width: 1200px) for Currently Watching, Want to Watch, and Watched tabs
 // - Removed max-width constraint from card component (cards now fill parent wrapper)
 // - Sort controls now align within the same centered column as cards
@@ -384,4 +384,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.190";
+export const APP_VERSION = "0.1.172";
