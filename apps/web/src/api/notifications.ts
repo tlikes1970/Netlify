@@ -1,6 +1,8 @@
 // Client API utility for notification functions
 // Handles communication with Netlify functions
 
+import { API_BASE } from '../lib/apiConfig';
+
 export interface SendTestEmailResponse {
   ok: boolean;
   status?: string;
@@ -34,7 +36,7 @@ export async function sendTestEmail(to: string): Promise<void> {
   };
 
   try {
-    const response = await fetch('/.netlify/functions/send-email', {
+    const response = await fetch(`${API_BASE}/.netlify/functions/send-email`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

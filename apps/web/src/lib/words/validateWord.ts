@@ -1,3 +1,5 @@
+import { API_BASE } from '../apiConfig';
+
 /**
  * Process: Word Validation
  * Purpose: Validate guesses using accepted words list with dictionary API fallback
@@ -23,7 +25,7 @@ const MEMO = new Map<string, Verdict>();
 async function checkDictionary(word: string): Promise<boolean> {
   try {
     // Use Netlify function proxy
-    const proxyUrl = '/.netlify/functions/dict-proxy';
+    const proxyUrl = `${API_BASE}/.netlify/functions/dict-proxy`;
     const url = `${proxyUrl}?word=${encodeURIComponent(word)}`;
     
     console.log(`🔍 Checking dictionary for "${word}": ${url}`);

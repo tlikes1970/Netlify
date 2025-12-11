@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="description" content="Track your favorite TV shows and movies with Flicklet. Discover new content, manage your watchlist, and never miss an episode." />
+    <meta name="theme-color" content="#3b82f6" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icon-152.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="/icon-120.png" />
+    <link rel="preconnect" href="https://image.tmdb.org" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>Flicklet V2</title>
+    
+    <!-- TMDB API Key for local development -->
+    <meta name="tmdb-api-key" content="b7247bb415b50f25b5e35e2566430b96" />
+    
+    <!-- First-Paint Gate CSS: kills transitions while gated -->
+    <style id="fp-gate-css">
+      html.fp-gate * { transition: none !important; animation: none !important; }
+      html.fp-gate body { visibility: hidden; }
+      /* if you have a splash, you can show it instead of hiding body */
+      html.fp-gate .app-splash { visibility: visible; }
+    </style>
+    
+    <!-- Mark the page as gated as early as possible -->
+    <script>
+      try {
+        if (localStorage.getItem('app:primed') !== '1') {
+          document.documentElement.classList.add('fp-gate');
+        }
+      } catch {}
+    </script>
+    <script type="module" crossorigin src="/assets/index-eeb54837.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/react-vendor-57209f9c.js">
+    <link rel="modulepreload" crossorigin href="/assets/firebase-auth-70bba237.js">
+    <link rel="modulepreload" crossorigin href="/assets/firebase-firestore-fc84574a.js">
+    <link rel="modulepreload" crossorigin href="/assets/firebase-app-c7d96424.js">
+    <link rel="modulepreload" crossorigin href="/assets/games-d81ba331.js">
+    <link rel="modulepreload" crossorigin href="/assets/modals-5307312a.js">
+    <link rel="modulepreload" crossorigin href="/assets/pages-396d862e.js">
+    <link rel="modulepreload" crossorigin href="/assets/settings-eeea8e86.js">
+    <link rel="modulepreload" crossorigin href="/assets/community-cba5dcbf.js">
+    <link rel="stylesheet" href="/assets/index-d5708660.css">
+  </head>
+  <body>
+    <!-- Optional: tiny splash so users don't see a blank -->
+    <div class="app-splash" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;visibility:hidden;">
+      <div style="font: 600 14px/1.2 system-ui, sans-serif;opacity:.7;">Loading…</div>
+    </div>
+    <div id="root"></div>
+    
+    <!-- Hidden form for Netlify Forms detection -->
+    <form name="feedback" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="message" />
+      <input type="text" name="theme" />
+      <input type="text" name="timestamp" />
+    </form>
+    
+    
+  </body>
+</html>

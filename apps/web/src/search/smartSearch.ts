@@ -11,6 +11,7 @@ import type { SearchResult, SearchResultWithPagination } from './api';
 import { mapTMDBToMediaItem } from './api';
 import { computeSearchScore, tieBreak, tokensLower } from './rank';
 import { normalizeQuery, generateQueryVariations } from '../lib/string';
+import { API_BASE } from '../lib/apiConfig';
 
 type SearchType = 'all' | 'movies-tv' | 'people';
 
@@ -89,7 +90,8 @@ async function fetchTMDBWithCircuitBreaker(
   signal?: AbortSignal,
   maxRetries = 2
 ): Promise<any> {
-  const url = `/api/tmdb-proxy?${qs({ path, ...params })}`;
+  const TMDB_PROXY_URL = `${API_BASE}/api/tmdb-proxy`;
+  const url = `${TMDB_PROXY_URL}?${qs({ path, ...params })}`;
   const timeoutMs = 4000; // 4 second timeout
   
   for (let attempt = 0; attempt <= maxRetries; attempt++) {

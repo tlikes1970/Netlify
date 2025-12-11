@@ -1,0 +1,2 @@
+(function(){"use strict";const s=new Map;async function o(a){if(s.has(a))return s.get(a);let e="";try{const t=await fetch(`/words/shards/${a}.txt`,{cache:"force-cache"});t.ok&&(e=await t.text())}catch{}if(!e)try{const t=await fetch("/words/valid-guess.txt",{cache:"force-cache"});t.ok&&(e=await t.text())}catch{}const c=new Set(e.split(`
+`).map(t=>t.trim()).filter(Boolean));return s.set(a,c),c}self.onmessage=async a=>{const e=a.data||{};if(e.type!=="check"||!e.word)return;const c=e.word,t=await o(c[0]);self.postMessage({ok:t.has(c)})}})();

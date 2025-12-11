@@ -1,5 +1,10 @@
+// NOTE: API_BASE lets mobile builds hit the production backend instead of localhost/capacitor://localhost.
+// When VITE_API_BASE_URL is set (e.g., in .env.mobile), API calls will use that base URL.
+// When empty (dev mode), relative URLs work with netlify dev proxy.
+
 import { getOptimalImageSize } from "../hooks/useImageOptimization";
 import { makeGeoResolver } from "../utils/geoClient";
+import { API_BASE } from "./apiConfig";
 
 // const BASE = 'https://api.themoviedb.org/3'; // Unused
 
@@ -99,9 +104,10 @@ export async function get(
   }
 
   // Use /api/tmdb-proxy which redirects to /.netlify/functions/tmdb-proxy
-  // This works in both dev (netlify dev) and production
+  // API_BASE is set for mobile builds (production backend), empty for dev (relative URLs)
+  const TMDB_PROXY_URL = `${API_BASE}/api/tmdb-proxy`;
   const proxyURL =
-    "/api/tmdb-proxy?" +
+    `${TMDB_PROXY_URL}?` +
     new URLSearchParams({ endpoint, ...params } as Record<string, string>);
   const pr = await fetch(proxyURL);
   
