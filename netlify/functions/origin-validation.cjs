@@ -34,9 +34,10 @@ const ALLOWED_ORIGINS = [
   "https://flicklet-71dff.firebaseapp.com",
 
   // Dev/emulator origins
+  "https://localhost",       // Android WebView / https localhost
   "http://localhost:8888",
   "http://127.0.0.1:8888",
-  "http://10.0.2.2:8888", // Android emulator loopback
+  "http://10.0.2.2:8888",    // Android emulator loopback
 
   // Additional dev origins (if needed)
   "http://localhost:3000",
