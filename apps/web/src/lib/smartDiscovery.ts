@@ -387,8 +387,17 @@ export async function getSmartRecommendations(
     return results;
   } catch (error) {
     console.error("Failed to get smart recommendations:", error);
-    return [];
+    throw error;
   }
+}
+
+/**
+ * Clear the recommendation cache (useful for debugging/testing)
+ * ⚠️ TEMPORARY: Console command for refreshing discovery queue
+ */
+export function clearRecommendationCache(): void {
+  recommendationCache.clear();
+  console.log("✅ Discovery recommendation cache cleared");
 }
 
 /**

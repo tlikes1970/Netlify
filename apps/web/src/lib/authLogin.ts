@@ -790,6 +790,7 @@ export function validateOAuthOrigin(): boolean {
   // Known allowed origins (canonical form, no www)
   const allowedOrigins = new Set([
     "http://localhost",
+    "https://localhost",          // Android WebView / https localhost
     "http://localhost:8888",
     "http://127.0.0.1:8888",
     "http://192.168.50.56:8888",

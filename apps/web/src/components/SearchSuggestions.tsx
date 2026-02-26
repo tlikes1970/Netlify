@@ -379,10 +379,6 @@ export default function SearchSuggestions({
         {/* TMDB Autocomplete Section */}
         {tmdbSuggestions.length > 0 && (
           <div className="mb-3">
-            <div className="text-xs font-medium mb-2" style={{ color: 'var(--muted)' }}>
-              From TMDB
-            </div>
-            
             <div className="space-y-1">
               {tmdbSuggestions.map((suggestion, index) => {
                 const historyCount = Math.min(searchHistory.length, 3);

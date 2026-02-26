@@ -50,6 +50,7 @@ export type FlickletHeaderProps = {
   onClear?: () => void;
   onHelpOpen?: () => void; // callback for opening help modal
   onNavigateHome?: () => void; // callback for navigating to home
+  screenshotMode?: boolean; // ⚠️ TEMPORARY: Hide greeting in screenshot mode
 };
 
 export default function FlickletHeader({
@@ -58,6 +59,7 @@ export default function FlickletHeader({
   onClear,
   onHelpOpen,
   onNavigateHome,
+  screenshotMode = false,
 }: FlickletHeaderProps) {
   const {
     username,
@@ -99,8 +101,9 @@ export default function FlickletHeader({
         <div className="mx-auto w-full max-w-screen-2xl px-3 py-3 md:px-6 md:py-6">
           <div className="grid grid-cols-3 items-center gap-2 md:gap-4">
             {/* Left: username + snark */}
+            {/* Hide greeting in screenshot mode */}
             <div className="min-w-0 text-left md:text-sm">
-              <SnarkDisplay />
+              {!screenshotMode && <SnarkDisplay />}
             </div>
             {/* Center: title */}
             <div className="text-center">

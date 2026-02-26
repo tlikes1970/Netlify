@@ -29,6 +29,7 @@ export interface MediaItem {
 
 export type CardContext =
   | "home"
+  | "home-cw-preview" // Home rail: single "Go to Currently Watching" nav button
   | "tab-watching" // Your Shows / Currently Watching
   | "tab-want" // Want to Watch / Wishlist
   | "tab-watched" // Watched

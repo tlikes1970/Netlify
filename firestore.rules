@@ -12,7 +12,9 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAuthenticated() && request.auth.token.role == 'admin';
+      return isAuthenticated()
+        && request.auth.token != null
+        && request.auth.token.role == 'admin';
     }
 
     // Rule for reading public channel/config data
@@ -21,9 +23,9 @@ service cloud.firestore {
     }
 
     // App configuration - community channels config
-    // Allows authenticated users to read, admins to write
+    // Allows all users to read (public config), admins to write
     match /appConfig/{configId} {
-        allow read: if isAuthenticated();
+        allow read: if true;
         allow write: if isAdmin();
     }
 
@@ -102,9 +104,9 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Admin rules
+    // Admin rules (fallback)
     match /{document=**} {
-      allow read, write: if request.auth.token.role == 'admin';
+      allow read, write: if isAdmin();
     }
 
     // Default deny

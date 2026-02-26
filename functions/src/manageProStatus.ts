@@ -7,6 +7,7 @@
  */
 
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { FieldValue } from 'firebase-admin/firestore';
 import { db } from './admin';
 import { getAuth } from 'firebase-admin/auth';
 
@@ -56,10 +57,17 @@ export const manageProStatus = onCall(
       },
     };
 
-    // Update Firestore
+    // Update Firestore: user settings and billing/status (for getProStatus)
     await userRef.set({
       ...existingData,
       settings: updatedSettings,
+    }, { merge: true });
+
+    const billingStatusRef = db.collection('users').doc(userId).collection('billing').doc('status');
+    await billingStatusRef.set({
+      isPro,
+      source: isPro ? 'manual' : null,
+      updatedAt: FieldValue.serverTimestamp(),
     }, { merge: true });
 
     return { 

@@ -14,6 +14,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     // Actions
     wantToWatchAction: "Want to Watch",
     currentlyWatchingAction: "Currently Watching",
+    manageCurrentlyWatchingAction: "Manage Currently Watching",
     watchedAction: "Watched",
     notInterestedAction: "Not Interested",
     deleteAction: "Delete",
@@ -373,6 +374,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     // Actions
     wantToWatchAction: "Quiero Ver",
     currentlyWatchingAction: "Viendo Ahora",
+    manageCurrentlyWatchingAction: "Administrar Viendo Ahora",
     watchedAction: "Visto",
     notInterestedAction: "No Me Interesa",
     deleteAction: "Eliminar",

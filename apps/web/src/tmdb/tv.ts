@@ -1,7 +1,7 @@
-import { API_BASE } from '../lib/apiConfig';
+import { TMDB_PROXY_BASE } from '../lib/apiConfig';
 
 export async function fetchNextAirDate(tvId: number): Promise<string | null> {
-  const TMDB_PROXY_URL = `${API_BASE}/api/tmdb-proxy`;
+  const TMDB_PROXY_URL = TMDB_PROXY_BASE;
   const url = `${TMDB_PROXY_URL}?path=tv/${tvId}&language=en-US`;
   const res = await fetch(url);
   if (!res.ok) return null;
@@ -19,7 +19,7 @@ export async function fetchNextAirDate(tvId: number): Promise<string | null> {
 }
 
 export async function fetchShowStatus(tvId: number): Promise<{status: string, lastAirDate: string | null} | null> {
-  const TMDB_PROXY_URL = `${API_BASE}/api/tmdb-proxy`;
+  const TMDB_PROXY_URL = TMDB_PROXY_BASE;
   const url = `${TMDB_PROXY_URL}?path=tv/${tvId}&language=en-US`;
   const res = await fetch(url);
   if (!res.ok) return null;
@@ -32,7 +32,7 @@ export async function fetchShowStatus(tvId: number): Promise<{status: string, la
 }
 
 export async function fetchCurrentEpisodeInfo(tvId: number): Promise<{season: number, episode: number} | null> {
-  const TMDB_PROXY_URL = `${API_BASE}/api/tmdb-proxy`;
+  const TMDB_PROXY_URL = TMDB_PROXY_BASE;
   const url = `${TMDB_PROXY_URL}?path=tv/${tvId}&language=en-US`;
   const res = await fetch(url);
   if (!res.ok) return null;

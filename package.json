@@ -1,6 +1,6 @@
 {
   "name": "flicklet-tv-tracker",
-  "version": "28.170.6",
+  "version": "28.170.7",
   "description": "Flicklet - TV & Movie Tracker",
   "main": "www/index.html",
   "scripts": {
@@ -31,7 +31,8 @@
     "// NOTE: mobile builds use --mode mobile so API_BASE points at production backend.": "",
     "mobile:build": "npm run build --prefix apps/web -- --mode mobile",
     "mobile:sync": "npm run mobile:build && npx cap copy && npx cap sync",
-    "mobile:android": "npm run mobile:sync && npx cap open android"
+    "mobile:android": "npm run mobile:sync && npx cap open android",
+    "functions:add-mock-posts": "npm run add:mock-posts --prefix functions"
   },
   "dependencies": {
     "@playwright/test": "^1.55.0",

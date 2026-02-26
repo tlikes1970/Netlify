@@ -13,6 +13,7 @@ export interface LanguageStrings {
   // Actions
   wantToWatchAction: string;
   currentlyWatchingAction: string;
+  manageCurrentlyWatchingAction: string; // Home rail: "Manage Currently Watching"
   watchedAction: string;
   notInterestedAction: string;
   deleteAction: string;

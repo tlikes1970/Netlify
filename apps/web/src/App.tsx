@@ -245,6 +245,18 @@ export default function App() {
     };
   }, [addToast]);
 
+  // Navigate to tab (e.g. from home CW rail "Go to Currently Watching" button)
+  useEffect(() => {
+    const handleNavigateToTab = (e: Event) => {
+      const detail = (e as CustomEvent<{ tab: string }>).detail;
+      if (detail?.tab && ["watching", "want", "watched", "returning", "mylists", "discovery", "home"].includes(detail.tab)) {
+        setView(detail.tab as View);
+      }
+    };
+    window.addEventListener("navigate-to-tab", handleNavigateToTab);
+    return () => window.removeEventListener("navigate-to-tab", handleNavigateToTab);
+  }, []);
+
   // Handle "Search Works" button click from person search results
   useEffect(() => {
     const handlePersonWorksSearch = (e: Event) => {

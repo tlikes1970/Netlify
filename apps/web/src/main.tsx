@@ -447,6 +447,38 @@ import("./utils/debug-auth").then((m) => {
   (window as any).debugFirebaseAuth = m.debugFirebaseAuth;
 });
 
+// Expose discovery refresh command
+import("./lib/smartDiscovery").then((m) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any).refreshDiscovery = () => {
+    // Clear the cache
+    m.clearRecommendationCache();
+    
+    // Dispatch library:changed event to trigger hook refresh
+    // Use a dummy operation that won't interfere with normal flow
+    window.dispatchEvent(
+      new CustomEvent("library:changed", {
+        detail: {
+          operation: "refresh",
+          origin: "console",
+        },
+      })
+    );
+    
+    // Also dispatch force-refresh event (used by pull-to-refresh)
+    window.dispatchEvent(new CustomEvent("force-refresh"));
+    
+    console.log("🔄 Discovery queue refresh triggered");
+    console.log("💡 Cache cleared. Discovery should refresh automatically.");
+    console.log("💡 If it doesn't refresh immediately, try navigating away and back to Discovery tab.");
+    return {
+      success: true,
+      message: "Discovery refresh triggered",
+      cacheCleared: true,
+    };
+  };
+});
+
 // ⚠️ CRITICAL: Don't block UI on auth - wait for first auth tick or timeout
 // This ensures app renders even if auth state takes time to initialize
 (async function bootstrapApp() {

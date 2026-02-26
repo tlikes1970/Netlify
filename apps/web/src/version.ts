@@ -1,5 +1,12 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.174: Publication fixes for Google Play launch
+// - Home CW rail: single "Go to Currently Watching" nav button (home-cw-preview context)
+// - Pro propagation: manageProStatus now writes to billing/status for getProStatus
+// - Trivia: NO_REPEAT_DAYS 14, error banner cleared when fallback succeeds
+// - FlickWord: final fallback respects problematic letters
+// - TabCard Discovery: Watching button now correctly moves to watching (not wishlist)
+// - Rollback: Revert this commit to restore previous behavior
 // ⚠️ VERSION 0.1.172: Google Play Billing API integration and remove alpha mode
 // - Added centered content column wrapper (max-width: 1200px) for Currently Watching, Want to Watch, and Watched tabs
 // - Removed max-width constraint from card component (cards now fill parent wrapper)
@@ -384,4 +391,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.173";
+export const APP_VERSION = "0.1.174";

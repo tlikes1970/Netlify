@@ -4,7 +4,7 @@
 
 import { getOptimalImageSize } from "../hooks/useImageOptimization";
 import { makeGeoResolver } from "../utils/geoClient";
-import { API_BASE } from "./apiConfig";
+import { TMDB_PROXY_BASE } from "./apiConfig";
 
 // const BASE = 'https://api.themoviedb.org/3'; // Unused
 
@@ -103,11 +103,10 @@ export async function get(
     return { results: [] };
   }
 
-  // Use /api/tmdb-proxy which redirects to /.netlify/functions/tmdb-proxy
-  // API_BASE is set for mobile builds (production backend), empty for dev (relative URLs)
-  const TMDB_PROXY_URL = `${API_BASE}/api/tmdb-proxy`;
+  // Use TMDB_PROXY_BASE which defaults to /api/tmdb-proxy for web
+  // Can be overridden via VITE_TMDB_PROXY_BASE for mobile builds
   const proxyURL =
-    `${TMDB_PROXY_URL}?` +
+    `${TMDB_PROXY_BASE}?` +
     new URLSearchParams({ endpoint, ...params } as Record<string, string>);
   const pr = await fetch(proxyURL);
   

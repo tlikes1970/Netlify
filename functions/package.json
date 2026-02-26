@@ -11,6 +11,7 @@
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
     "seed:titles": "ts-node --project tsconfig.json scripts/seedTitles.ts",
+    "add:mock-posts": "ts-node --project tsconfig.json scripts/add-mock-community-posts.ts",
     "test:netlify": "node scripts/test-netlify-goofs-fetch.js",
     "check:insights": "node scripts/check-insights.js",
     "clear:insights": "node scripts/clear-insights.js"

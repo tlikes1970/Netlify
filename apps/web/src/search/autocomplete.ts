@@ -5,11 +5,11 @@ export type AutocompleteSuggestion = {
   id: number;
 };
 
-import { API_BASE } from '../lib/apiConfig';
+import { TMDB_PROXY_BASE } from '../lib/apiConfig';
 
 async function fetchTMDB(path: string, params: Record<string, any>, signal?: AbortSignal) {
   const qs = new URLSearchParams({ path, ...params });
-  const TMDB_PROXY_URL = `${API_BASE}/api/tmdb-proxy`;
+  const TMDB_PROXY_URL = TMDB_PROXY_BASE;
   const url = `${TMDB_PROXY_URL}?${qs.toString()}`;
   const res = await fetch(url, { signal });
   if (!res.ok) throw new Error(`${path} failed: ${res.status}`);

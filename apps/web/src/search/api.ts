@@ -3,7 +3,7 @@ import { get } from '../lib/tmdb';
 import { normalizeQuery } from '../lib/string';
 import { computeSearchScore } from './rank';
 import { Library } from '../lib/storage';
-import { API_BASE } from '../lib/apiConfig';
+import { TMDB_PROXY_BASE } from '../lib/apiConfig';
 
 
 export type SearchResult = MediaItem;
@@ -144,7 +144,7 @@ export async function searchMulti(
     ...(year ? { year, first_air_date_year: year } : {})
   });
 
-  const TMDB_PROXY_URL = `${API_BASE}/api/tmdb-proxy`;
+  const TMDB_PROXY_URL = TMDB_PROXY_BASE;
   const res = await fetch(`${TMDB_PROXY_URL}?${qs.toString()}`, { signal: opts?.signal });
   if (!res.ok) throw new Error(`search failed: ${res.status}`);
 
@@ -262,7 +262,7 @@ export async function discoverByGenre(
   };
 
   const fetchTMDB = async (path: string, params: Record<string, any>) => {
-    const TMDB_PROXY_URL = `${API_BASE}/api/tmdb-proxy`;
+    const TMDB_PROXY_URL = TMDB_PROXY_BASE;
     const res = await fetch(`${TMDB_PROXY_URL}?${qsBase({ path, ...params })}`, {
       signal: opts?.signal,
     });

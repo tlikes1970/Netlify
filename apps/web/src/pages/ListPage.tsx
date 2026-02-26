@@ -45,6 +45,7 @@ export default function ListPage({
   onBloopersOpen,
   onGoofsOpen,
   onExtrasOpen,
+  onEpisodeTracking,
 }: {
   title: string;
   items: LibraryEntry[];
@@ -56,6 +57,7 @@ export default function ListPage({
   onBloopersOpen?: (item: MediaItem) => void;
   onGoofsOpen?: (item: MediaItem) => void;
   onExtrasOpen?: (item: MediaItem) => void;
+  onEpisodeTracking?: (item: MediaItem) => void;
 }) {
   const settings = useSettings();
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -739,7 +741,7 @@ export default function ListPage({
     },
     onNotesEdit: onNotesEdit,
     onTagsEdit: onTagsEdit,
-    onEpisodeTracking: async (item: MediaItem) => {
+    onEpisodeTracking: onEpisodeTracking || (async (item: MediaItem) => {
       if (item.mediaType === "tv") {
         setSelectedShow(item);
         setEpisodeModalOpen(true);
@@ -761,7 +763,7 @@ export default function ListPage({
           });
         }
       }
-    },
+    }),
     onNotificationToggle: onNotificationToggle,
     onSimpleReminder: onSimpleReminder,
     onBloopersOpen: onBloopersOpen,

@@ -405,6 +405,7 @@ export default function TriviaGame({
           // Fallback: get unique questions using dedup system
           const fallbackQuestions = getUniqueQuestionsForGame(gameNumber, 10);
           setQuestions(fallbackQuestions);
+          setErrorMessage(null); // Clear error since fallback succeeded
           setGameState("playing");
           optionRefs.current = new Array(
             fallbackQuestions[0]?.options.length || 4

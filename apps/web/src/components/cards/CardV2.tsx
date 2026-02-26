@@ -55,6 +55,7 @@ function shouldShowMembershipBadge(context: CardContext): boolean {
 
 function getListContextFromCardContext(context: CardContext): ListName | undefined {
   switch (context) {
+    case 'home-cw-preview':
     case 'tab-watching':
       return 'watching';
     case 'tab-want':
@@ -199,13 +200,15 @@ export default function CardV2({ item, context, actions, compact, showRating = t
         {/* Actions per context */}
         <CardActions context={context} item={item} actions={actions} />
         
-        {/* Compact Actions - only visible when gate and flag are enabled */}
+        {/* Compact Actions - only visible when gate and flag are enabled (hidden for home-cw-preview) */}
         <div className="compact-actions-container" style={{ padding: 'var(--space-1, 4px)' }}>
-          <CompactPrimaryAction 
-            item={item as any} 
-            context={context === 'home' || context === 'tab-foryou' || context === 'search' ? 'home' : 'tab'}
-            actions={actions}
-          />
+          {context !== 'home-cw-preview' && (
+            <CompactPrimaryAction 
+              item={item as any} 
+              context={context === 'home' || context === 'tab-foryou' || context === 'search' ? 'home' : 'tab'}
+              actions={actions}
+            />
+          )}
           {!disableOverflow && (
             <CompactOverflowMenu 
               item={item as any} 
@@ -321,6 +324,22 @@ function CardActions({ context, item, actions }: { context: CardContext; item: M
   };
 
   // Map the context to a set of buttons, min 1, max 4 as per spec
+  if (context === 'home-cw-preview') {
+    return (
+      <div
+        className="actions grid grid-cols-1 justify-items-center gap-1.5 p-2"
+        style={{ ['--btn-pressed' as any]: 'var(--accent-weak, var(--accent))' }}
+        data-testid="cardv2-actions"
+      >
+        {btn(
+          translations.manageCurrentlyWatchingAction,
+          () => window.dispatchEvent(new CustomEvent('navigate-to-tab', { detail: { tab: 'watching' } })),
+          'act-go-watching'
+        )}
+      </div>
+    );
+  }
+
   if (context === 'tab-watching') {
     return (
       <div

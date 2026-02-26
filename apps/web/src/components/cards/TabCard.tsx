@@ -370,7 +370,9 @@ export default function TabCard({
               {isCondensed ? "Want" : translations.wantToWatchAction}
             </button>
             <button
-              onClick={() => actions?.onWant?.(item)}
+              onClick={() => {
+                if (item.id && item.mediaType) Library.move(item.id, item.mediaType, "watching");
+              }}
               className={buttonClass}
               style={{
                 backgroundColor: "var(--btn)",

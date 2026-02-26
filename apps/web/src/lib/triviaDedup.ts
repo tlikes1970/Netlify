@@ -34,7 +34,7 @@ interface TriviaQuestion {
 // ============================================================================
 
 const STORAGE_KEY = 'flicklet:trivia:question-history';
-const NO_REPEAT_DAYS = 7; // Reduced from 14 to be more realistic with limited pool
+const NO_REPEAT_DAYS = 14;
 // Note: Questions per game (10) is defined in TriviaGame.tsx
 
 // ============================================================================

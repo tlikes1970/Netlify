@@ -226,7 +226,15 @@ function getDeterministicWordForDate(
     }
   }
   
-  // Final fallback
+  // Final fallback: avoid problematic letters if possible, else use baseIndex
+  for (let i = 0; i < validWords.length; i++) {
+    const idx = (baseIndex + i) % validWords.length;
+    const candidate = validWords[idx].toUpperCase();
+    const firstLetter = candidate.toLowerCase().charAt(0);
+    if (problematicLetters.size === 0 || !problematicLetters.has(firstLetter)) {
+      return candidate;
+    }
+  }
   return validWords[baseIndex].toUpperCase();
 }
 
