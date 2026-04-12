@@ -17,6 +17,7 @@ import {
   hasRedirectStarted,
   clearRedirectGuard,
 } from "./authGuard";
+import { isCapacitorNative } from "./capacitorEnv";
 
 /**
  * Detects if we're in a WebView or standalone PWA
@@ -118,6 +119,31 @@ export async function googleLogin() {
   // iOS or Safari: always use popup (better compatibility)
   if (isIOS || isSafari) {
     await firebaseSignInWithPopup(auth, googleProvider);
+    return;
+  }
+
+  // Capacitor Android/iOS: use native Google Sign-In + signInWithCredential.
+  // signInWithPopup routes OAuth through Chrome — storage is partitioned from the WebView →
+  // Firebase "missing initial state" / auth/network-request-failed.
+  if (isCapacitorNative()) {
+    try {
+      authLogManager.log("tap_started", {
+        user_gesture: true,
+        capacitor_native: true,
+      });
+    } catch {
+      /* ignore */
+    }
+    await ensurePersistenceBeforeAuth();
+    clearRedirectGuard();
+    logger.log("[AuthLogin] Capacitor native: Google sign-in via native SDK + signInWithCredential");
+    if (isAuthDebug()) {
+      logAuth("capacitor_google_native", { origin: safeOrigin() });
+    }
+    const { signInWithGoogleNative } = await import("./googleAuthNative");
+    await signInWithGoogleNative();
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await authManager.checkAuthState();
     return;
   }
 

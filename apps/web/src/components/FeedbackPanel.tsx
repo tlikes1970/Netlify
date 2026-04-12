@@ -4,6 +4,11 @@ import { useTranslations } from '../lib/language';
 import { useToast } from '../components/Toast';
 import { ERROR_MESSAGES, logErrorDetails } from '../lib/errorMessages';
 
+function feedbackSubmitUrl(): string {
+  const base = (import.meta.env.VITE_PUBLIC_BASE_URL || '').trim().replace(/\/$/, '');
+  return base ? `${base}/api/feedback` : '/api/feedback';
+}
+
 export default function FeedbackPanel() {
   const translations = useTranslations();
   // const settings = useSettings(); // Unused
@@ -30,43 +35,34 @@ export default function FeedbackPanel() {
       //   return;
       // }
       
-      // For Netlify Dev or production, submit to Netlify Forms
-      console.log('🌐 Submitting via Netlify Forms');
-      
-      // Create FormData for Netlify Forms
-      const formData = new FormData();
-      formData.append('form-name', 'feedback');
-      formData.append('message', feedback.trim());
-      formData.append('theme', 'light'); // Default theme
-      formData.append('timestamp', new Date().toISOString());
-      
-      console.log('📤 Form data:', {
-        'form-name': 'feedback',
+      // Netlify Function + SendGrid (Netlify Forms POST / is unreliable with SPA /* → index.html)
+      const payload = {
         message: feedback.trim(),
-        theme: 'light', // Default theme
-        timestamp: new Date().toISOString()
-      });
-      
-      // Submit to Netlify Forms
-      const response = await fetch('/', {
+        theme: 'light',
+        timestamp: new Date().toISOString(),
+      };
+
+      const response = await fetch(feedbackSubmitUrl(), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams(formData as any).toString(),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
-      
-      console.log('📡 Response status:', response.status);
-      console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
-      
-      if (!response.ok) {
-        const responseText = await response.text();
-        console.error('❌ Response error:', responseText);
-        throw new Error(`HTTP ${response.status}: ${responseText}`);
+
+      const ct = response.headers.get('content-type') || '';
+      const raw = await response.text();
+      let data: { ok?: boolean; error?: string } = {};
+      if (ct.includes('application/json')) {
+        try {
+          data = JSON.parse(raw) as typeof data;
+        } catch {
+          throw new Error('Invalid response from server');
+        }
       }
-      
-      const responseText = await response.text();
-      console.log('📥 Response body:', responseText);
-      
-      console.log('✅ Feedback submitted successfully via Netlify Forms');
+
+      if (!response.ok || !data.ok) {
+        console.error('❌ Feedback API error:', response.status, raw);
+        throw new Error(data.error || `HTTP ${response.status}`);
+      }
       addToast('Thanks for sharing! Your thoughts have been received. 💭', 'success');
       setFeedback('');
       

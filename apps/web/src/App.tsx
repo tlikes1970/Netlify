@@ -70,6 +70,7 @@ import { useReturningShows } from "@/state/selectors/useReturningShows";
 import { trackTabOpenedReturning } from "@/lib/analytics";
 import { googleLogin } from "@/lib/authLogin";
 import { storageKeyFlickWordShareParams, type FlickWordShareParams } from "@/lib/games/flickwordShared";
+import { isCapacitorNative } from "@/lib/capacitorEnv";
 
 type View =
   | "home"
@@ -328,8 +329,12 @@ export default function App() {
     }
   });
 
-  // Auto-prompt for authentication when not authenticated
+  // Auto-prompt for authentication when not authenticated (web only — native app uses header / account to sign in)
   useEffect(() => {
+    if (isCapacitorNative()) {
+      return;
+    }
+
     // Don't auto-open modal if we're in redirecting or resolving state
     const isRedirectingOrResolving =
       status === "redirecting" || status === "resolving";

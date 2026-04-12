@@ -6,11 +6,14 @@ import ModalPortal from './ModalPortal';
 import { googleLogin } from '../lib/authLogin';
 import { logger } from '../lib/logger';
 import { authLogManager } from '../lib/authLog';
+import { isCapacitorNative } from '../lib/capacitorEnv';
 
-// Detect if we're in a blocked OAuth context
+// Detect if we're in a blocked OAuth context (embedded browsers where OAuth is unreliable).
+// Capacitor native shell uses WebView too but is not the same as FB/IG in-app browsers.
 function isBlockedOAuthContext(): boolean {
   if (typeof window === 'undefined') return false;
-  
+  if (isCapacitorNative()) return false;
+
   const ua = navigator.userAgent || '';
   const isPWAStandalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches;
   const isInAppBrowser = 
@@ -118,6 +121,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         setError(error.message || 'Sign-in failed. Please try again.');
       }
       setLoading(null);
+      setIsRedirecting(false);
     }
   };
 

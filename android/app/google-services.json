@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "1034923556763",
+    "project_id": "flicklet-71dff",
+    "storage_bucket": "flicklet-71dff.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034923556763:android:a20b06e4c16336229c2b3e",
+        "android_client_info": {
+          "package_name": "com.TravisL.tvtracker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1034923556763-ka44q9tsnetqbqi884usc6mibjfq7k5j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.TravisL.tvtracker",
+            "certificate_hash": "b3329ad5c7160ca1df94555b259188bcffb36657"
+          }
+        },
+        {
+          "client_id": "1034923556763-em6vnddgb5dcu8dnai6poqb04i37m27a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrYDztEWe0CJc98IPvBIpqSw-zfpV_B-g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1034923556763-em6vnddgb5dcu8dnai6poqb04i37m27a.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

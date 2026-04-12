@@ -1,4 +1,5 @@
 import { isOff } from './runtime/switches';
+import { isCapacitorNative } from './lib/capacitorEnv';
 
 export async function devUnregisterAllSW() {
   if (!('serviceWorker' in navigator)) return;
@@ -15,6 +16,18 @@ export function registerServiceWorker() {
   // Kill switch: Service Worker disabled
   if (isOff('isw')) {
     console.info('[SW] Disabled via kill switch (isw:off)');
+    return;
+  }
+
+  // Capacitor: do not register SW. It intercepts Firebase Auth popup URLs (__/auth/handler, __/auth/assets)
+  // and conflicts with the native WebView asset bridge — blank OAuth window + auth/network-request-failed.
+  if (isCapacitorNative()) {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((r) => void r.unregister());
+      }).catch(() => {});
+    }
+    console.info('[SW] Skipped on Capacitor native (OAuth / WebView compatibility)');
     return;
   }
   

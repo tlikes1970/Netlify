@@ -21,6 +21,7 @@ import { broadcastAuthComplete } from './authBroadcast';
 import { authLogManager } from './authLog';
 import { isAuthDebug, logAuth, safeOrigin, getAuthMode } from './authDebug';
 import { clearRedirectGuard, hasRedirectStarted } from './authGuard';
+import { isCapacitorNative } from './capacitorEnv';
 
 // Removed: isBlockedOAuthContext function (unused after removing signInWithGoogle method)
 
@@ -137,14 +138,29 @@ class AuthManager {
       }
     } catch (e) { void e; }
     
+    // Capacitor app uses popup-based Google sign-in only — never completes a web redirect cycle.
+    // Clear stale "redirecting" from failed attempts / older builds so UI and modal gating recover.
+    if (typeof window !== 'undefined' && isCapacitorNative()) {
+      try {
+        localStorage.removeItem('flicklet.auth.status');
+        localStorage.removeItem('flicklet.auth.redirect.start');
+        localStorage.removeItem('flicklet.auth.stateId');
+        localStorage.removeItem('flicklet.auth.resolving.start');
+      } catch (e) {
+        void e;
+      }
+      this.setStatus('checking');
+    } else
     // ⚠️ CRASH-SAFE: Check for stuck redirecting state (>60s = likely crash)
     try {
       const persistedStatus = localStorage.getItem('flicklet.auth.status');
       const resolvingStart = localStorage.getItem('flicklet.auth.resolving.start');
+      const redirectStart = localStorage.getItem('flicklet.auth.redirect.start');
+      const redirectOrResolveStart = resolvingStart || redirectStart;
       
       if (persistedStatus === 'redirecting' || persistedStatus === 'resolving') {
-        if (resolvingStart) {
-          const startTime = parseInt(resolvingStart);
+        if (redirectOrResolveStart) {
+          const startTime = parseInt(redirectOrResolveStart, 10);
           const now = Date.now();
           const timeSince = now - startTime;
           
@@ -157,6 +173,7 @@ class AuthManager {
             try {
               localStorage.removeItem('flicklet.auth.status');
               localStorage.removeItem('flicklet.auth.resolving.start');
+              localStorage.removeItem('flicklet.auth.redirect.start');
             } catch (e) {
               // ignore
             }

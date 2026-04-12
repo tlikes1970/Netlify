@@ -10,6 +10,7 @@ import { browserLocalPersistence, setPersistence, getRedirectResult, signInWithR
 import { markRedirectStarted, clearRedirectFlag, hasRedirectStarted, canAttemptRedirect, bumpAttempt, markInitDone } from './authGuard';
 import { isAuthDebug, logAuth, getQueryFlag } from './authDebug';
 import { auth, googleProvider } from './firebaseBootstrap';
+import { isCapacitorNative } from './capacitorEnv';
 
 let bootOnce = false;
 let _resolveReady: (() => void) | null = null;
@@ -103,21 +104,27 @@ export async function initAuthOnLoad(): Promise<void> {
 function shouldUseRedirect(): boolean {
   // Keep existing heuristic - for now, allow redirect on non-iOS/Safari
   if (typeof window === 'undefined') return false;
-  
+
+  // Capacitor WebView UA includes "wv" like other embedded browsers, but auto OAuth
+  // redirect on cold start opens the system browser chooser (Chrome / Just once) with no user tap.
+  // Sign-in should run from the button via authLogin.ts instead.
+  if (isCapacitorNative()) return false;
+
   const ua = navigator.userAgent || '';
   const isIOS = /iPhone|iPad|iPod/i.test(ua);
   const isSafari = /Safari/i.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS|Android/i.test(ua);
-  
+
   // Don't use redirect on iOS/Safari
   if (isIOS || isSafari) return false;
-  
+
   // Check if we're in a webview
-  const isInAppBrowser = ua.includes('wv') || 
-                         ua.includes('FBAN') || 
-                         ua.includes('FBAV') || 
-                         ua.includes('Instagram') ||
-                         (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-  
+  const isInAppBrowser =
+    ua.includes('wv') ||
+    ua.includes('FBAN') ||
+    ua.includes('FBAV') ||
+    ua.includes('Instagram') ||
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+
   return isInAppBrowser;
 }
 

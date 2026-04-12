@@ -35,6 +35,7 @@
     "functions:add-mock-posts": "npm run add:mock-posts --prefix functions"
   },
   "dependencies": {
+    "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
     "@playwright/test": "^1.55.0",
     "axios": "^1.13.2",
     "cheerio": "^1.1.2",
@@ -46,6 +47,7 @@
   "devDependencies": {
     "@capacitor/android": "^7.4.4",
     "@capacitor/cli": "^7.4.4",
+    "@capacitor/core": "^7.4.4",
     "@capacitor/ios": "^7.4.4",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",

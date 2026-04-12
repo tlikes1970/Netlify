@@ -55,6 +55,13 @@
   to   = "/.netlify/functions/billing/validate"
   status = 200
 
+# Feedback → SendGrid (avoids Netlify Forms + SPA POST / → index.html swallowing submissions)
+[[redirects]]
+  from = "/api/feedback"
+  to   = "/.netlify/functions/feedback"
+  status = 200
+  force = true
+
 # Backend API proxy
 # In production: uses Netlify function (requires BACKEND_API_URL env var)
 # In development (netlify dev): redirects to localhost:4000
