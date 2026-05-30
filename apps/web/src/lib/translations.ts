@@ -177,10 +177,8 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     hourlyConfig: "Hourly config",
     themePacks: "Theme packs (holiday and movie themes - not implemented)",
     holidayAndMovieThemes: "Holiday and movie themes - not implemented",
-    socialFeatures:
-      "Social features (FlickWord, Trivia, shared watchlists among friends)",
-    flickwordTriviaSharedWatchlists:
-      "FlickWord, Trivia, shared watchlists among friends",
+    socialFeatures: "Community features and shared watchlists among friends",
+    flickwordTriviaSharedWatchlists: "Shared watchlists among friends",
     bloopersBehindTheScenes:
       "Bloopers/Behind the scenes (activates button on show cards)",
     activatesButtonOnShowCards: "Activates button on show cards",
@@ -544,9 +542,8 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
       "Paquetes de temas (temas de fiestas y películas - no implementado)",
     holidayAndMovieThemes: "Temas de fiestas y películas - no implementado",
     socialFeatures:
-      "Características sociales (FlickWord, Trivia, listas compartidas entre amigos)",
-    flickwordTriviaSharedWatchlists:
-      "FlickWord, Trivia, listas compartidas entre amigos",
+      "Funciones de comunidad y listas compartidas entre amigos",
+    flickwordTriviaSharedWatchlists: "Listas compartidas entre amigos",
     bloopersBehindTheScenes:
       "Bloopers/Detrás de escena (activa botón en tarjetas de programas)",
     activatesButtonOnShowCards: "Activa botón en tarjetas de programas",

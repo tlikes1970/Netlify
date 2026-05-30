@@ -135,9 +135,6 @@ import "./styles/compact-cleanup.css";
 import "./styles/cards-mobile.css";
 import "./styles/cards.css";
 import "./components/cards/button-pro.css";
-// FlickWord mobile override - must be imported LAST to ensure cascade order wins
-// See flickword-mobile.css for documentation on why this file loads last
-import "./styles/flickword-mobile.css";
 import { installCompactMobileGate, installActionsSplitGate } from "./lib/flags";
 import { initFlags } from "./lib/mobileFlags";
 import { logAuthOriginHint } from "./lib/authLogin";

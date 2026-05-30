@@ -278,10 +278,6 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   holidays or genres.
                 </li>
                 <li>
-                  🕹️ <strong>FlickWord & Trivia:</strong> light games built into
-                  the app.
-                </li>
-                <li>
                   📺 <strong>Extended Episode Tracking:</strong> detailed season
                   progress for multiple shows.
                 </li>

@@ -29,7 +29,6 @@ const NotesAndTagsModal = lazy(
   () => import("@/components/modals/NotesAndTagsModal")
 );
 import { ShowNotificationSettingsModal } from "@/components/modals/ShowNotificationSettingsModal";
-const FlickWordModal = lazy(() => import("@/components/games/FlickWordModal"));
 import { BloopersModal } from "@/components/extras/BloopersModal";
 import { ExtrasModal } from "@/components/extras/ExtrasModal";
 import { GoofsModal } from "@/components/extras/GoofsModal";
@@ -62,13 +61,11 @@ import AuthModal from "@/components/AuthModal";
 import AuthConfigError from "@/components/AuthConfigError";
 import { isAuthInFlightInOtherTab } from "@/lib/authBroadcast";
 import { getOnboardingCompleted } from "@/lib/onboarding";
-import "@/styles/flickword.css";
 import { backfillShowStatus } from "@/utils/backfillShowStatus";
 import DebugAuthHUD from "@/components/DebugAuthHUD";
 import { useReturningShows } from "@/state/selectors/useReturningShows";
 import { trackTabOpenedReturning } from "@/lib/analytics";
 import { googleLogin } from "@/lib/authLogin";
-import { storageKeyFlickWordShareParams, type FlickWordShareParams } from "@/lib/games/flickwordShared";
 import { isCapacitorNative } from "@/lib/capacitorEnv";
 
 type View =
@@ -137,9 +134,6 @@ export default function App() {
   // Notes and Tags modal state
   const [notesModalItem, setNotesModalItem] = useState<any>(null);
   const [showNotesModal, setShowNotesModal] = useState(false);
-
-  // Game modal state
-  const [showFlickWordModal, setShowFlickWordModal] = useState(false);
 
   // Notification modal state
   const [notificationModalItem, setNotificationModalItem] = useState<any>(null);
@@ -471,30 +465,6 @@ export default function App() {
   const handleClear = () =>
     setSearch({ q: "", genre: null, type: "all", mediaTypeFilter: null });
 
-  // Listen for FlickWord explore event
-  useEffect(() => {
-    const handleFlickWordExplore = (e: Event) => {
-      const customEvent = e as CustomEvent<{ word: string }>;
-      const word = customEvent.detail?.word;
-      if (word) {
-        // Set search and switch to discovery view
-        const nextQ = word.trim();
-        setSearch({
-          q: nextQ,
-          genre: null,
-          type: "all",
-          mediaTypeFilter: null,
-        });
-        setView("discovery");
-      }
-    };
-
-    window.addEventListener("flickword:explore", handleFlickWordExplore);
-    return () => {
-      window.removeEventListener("flickword:explore", handleFlickWordExplore);
-    };
-  }, []);
-
   // For You configuration from settings
   const forYouRows = useForYouRows();
   const forYouContent = useForYouContent(forYouRows);
@@ -577,7 +547,7 @@ export default function App() {
     };
   }, [addToast]);
 
-  // Handle deep links for settings sheet and games
+  // Handle deep links for settings sheet and shared list/show URLs
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
@@ -612,25 +582,20 @@ export default function App() {
             })
           );
         }
-      } else if (hash === "#games/flickword") {
-        setShowFlickWordModal(true);
       }
     };
 
       /**
-       * Deep-link handling for shared URLs from list/show/game sharing.
-       * 
+       * Deep-link handling for shared URLs from list/show sharing.
+       *
        * Supported deep-link formats:
        * - ?view=list&listId=... - Opens list detail in My Lists view
        * - ?view=title&tmdbId=... - Navigates to search/discovery for the show
        * - ?view=title&titleId=... - Navigates to search/discovery for the show
-       * - ?game=flickword&date=...&gameNumber=... - Opens FlickWord game
-       * - ?game=trivia&date=...&gameNumber=... - Opens Trivia game
        */
       const handleQueryParams = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const viewParam = urlParams.get("view");
-        const gameParam = urlParams.get("game");
         
         // Handle list deep links - reuses same navigation as clicking a list in UI
         if (viewParam === "list") {
@@ -722,71 +687,7 @@ export default function App() {
           }
           // If both IDs are missing or empty, app boots normally (no deep-link action)
         }
-      // Handle game share links (existing)
-      else if (gameParam === "flickword") {
-        // Open FlickWord modal
-        setShowFlickWordModal(true);
-        
-        // Store share link params for FlickWord to use
-        const date = urlParams.get("date");
-        const gameNumber = urlParams.get("gameNumber");
-        const mode = urlParams.get("mode"); // 'sharedResult', 'sharedAll', or 'play'
-        
-        // Build properly typed share params object
-        if (date) {
-          try {
-            const shareParams: FlickWordShareParams = {
-              date: date,
-              gameNumber: gameNumber ? parseInt(gameNumber, 10) : null,
-              mode: (mode === "sharedResult" || mode === "sharedAll" || mode === "play") ? mode : mode || "play",
-            };
-            localStorage.setItem(storageKeyFlickWordShareParams, JSON.stringify(shareParams));
-          } catch (e) {
-            console.warn("Failed to store share params:", e);
-          }
-        }
-        
-        // Clean up URL (remove query params after processing)
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.delete("game");
-        newUrl.searchParams.delete("date");
-        newUrl.searchParams.delete("gameNumber");
-        newUrl.searchParams.delete("mode");
-        window.history.replaceState({}, "", newUrl.toString());
-      } else if (gameParam === "trivia") {
-        // Open Trivia modal
-        // Dispatch event to open Trivia modal (similar to FlickWord)
-        window.dispatchEvent(new CustomEvent("open-trivia-modal"));
-        
-        // Store share link params for Trivia to use
-        const date = urlParams.get("date");
-        const gameNumber = urlParams.get("gameNumber");
-        const score = urlParams.get("score");
-        const mode = urlParams.get("mode"); // 'sharedResult' or 'play'
-        
-        if (date || gameNumber || score || mode) {
-          try {
-            localStorage.setItem("trivia:shareParams", JSON.stringify({
-              date: date || null,
-              gameNumber: gameNumber ? parseInt(gameNumber, 10) : null,
-              score: score ? parseInt(score, 10) : null,
-              mode: mode || "play"
-            }));
-          } catch (e) {
-            console.warn("Failed to store Trivia share params:", e);
-          }
-        }
-        
-        // Clean up URL (remove query params after processing)
-        const newUrl = new URL(window.location.href);
-        newUrl.searchParams.delete("game");
-        newUrl.searchParams.delete("date");
-        newUrl.searchParams.delete("gameNumber");
-        newUrl.searchParams.delete("score");
-        newUrl.searchParams.delete("mode");
-        window.history.replaceState({}, "", newUrl.toString());
-      }
-    };
+      };
 
     // Check hash on load
     handleHashChange();
@@ -824,22 +725,6 @@ export default function App() {
         "auth:sign-in-required",
         handleSignInRequired
       );
-    };
-  }, []);
-
-  // Expose game functions globally for compatibility with legacy code
-  useEffect(() => {
-    (window as any).openFlickWordModal = () => {
-      setShowFlickWordModal(true);
-    };
-
-    (window as any).closeFlickWordModal = () => {
-      setShowFlickWordModal(false);
-    };
-
-    return () => {
-      delete (window as any).openFlickWordModal;
-      delete (window as any).closeFlickWordModal;
     };
   }, []);
 
@@ -1822,18 +1707,6 @@ export default function App() {
             isAuthenticated={isAuthenticated}
             showAuthModal={showAuthModal}
           />
-        )}
-
-        {/* FlickWord Game Modal */}
-        {showFlickWordModal && (
-          <Suspense
-            fallback={<div className="loading-spinner">Loading game...</div>}
-          >
-            <FlickWordModal
-              isOpen={showFlickWordModal}
-              onClose={() => setShowFlickWordModal(false)}
-            />
-          </Suspense>
         )}
 
         {/* Help Modal */}

@@ -1,7 +1,5 @@
 import {
   useState,
-  lazy,
-  Suspense,
   useEffect,
   useRef,
   memo,
@@ -18,13 +16,10 @@ import {
   QueryDocumentSnapshot,
 } from "firebase/firestore";
 import { db } from "../lib/firebaseBootstrap";
-import { useTranslations } from "@/lib/language";
 import { useSettings, settingsManager } from "../lib/settings";
 import { useProStatus } from "../lib/proStatus";
 import { useAdminRole } from "../hooks/useAdminRole";
 import { useAuth } from "../hooks/useAuth";
-import FlickWordStats from "./games/FlickWordStats";
-import TriviaStats from "./games/TriviaStats";
 import CommunityPlayer from "./CommunityPlayer";
 import NewPostModal from "./NewPostModal";
 import { TOPICS, getTopicBySlug } from "../lib/communityTopics";
@@ -40,10 +35,6 @@ import { UpgradeToProCTA } from "./UpgradeToProCTA";
 import { reportPostOrComment } from "../lib/communityReports";
 import { ERROR_MESSAGES, logErrorDetails } from "../lib/errorMessages";
 // ⚠️ REMOVED: flickerDiagnostics import disabled
-
-// Lazy load game modals
-const FlickWordModal = lazy(() => import("./games/FlickWordModal"));
-const TriviaModal = lazy(() => import("./games/TriviaModal"));
 
 interface Post {
   id: string;
@@ -71,7 +62,6 @@ interface Post {
 const CommunityPanel = memo(function CommunityPanel() {
   // ⚠️ REMOVED: flickerDiagnostics logging disabled
 
-  const translations = useTranslations();
   const { isAdmin } = useAdminRole();
   const { isAuthenticated, user } = useAuth();
   const settings = useSettings();
@@ -84,20 +74,6 @@ const CommunityPanel = memo(function CommunityPanel() {
     {}
   );
 
-  const [flickWordModalOpen, setFlickWordModalOpen] = useState(false);
-  const [triviaModalOpen, setTriviaModalOpen] = useState(false);
-
-  // Listen for custom event to open Trivia modal (e.g., from share links)
-  useEffect(() => {
-    const handleOpenTriviaModal = () => {
-      setTriviaModalOpen(true);
-    };
-
-    window.addEventListener("open-trivia-modal", handleOpenTriviaModal);
-    return () => {
-      window.removeEventListener("open-trivia-modal", handleOpenTriviaModal);
-    };
-  }, []);
   const [newPostModalOpen, setNewPostModalOpen] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
@@ -413,15 +389,6 @@ const CommunityPanel = memo(function CommunityPanel() {
     }
   }, [loadingMore, hasMore, fetchPosts]);
 
-  // Use global game functions if available
-  const openFlickWord = () => {
-    if (typeof (window as any).openFlickWordModal === "function") {
-      (window as any).openFlickWordModal();
-    } else {
-      setFlickWordModalOpen(true);
-    }
-  };
-
   const handlePostClick = (slug: string) => {
     window.history.pushState({}, "", `/posts/${slug}`);
     window.dispatchEvent(new Event("pushstate"));
@@ -450,147 +417,14 @@ const CommunityPanel = memo(function CommunityPanel() {
     <div className="relative">
       <div
         data-rail="community"
-        className="grid md:grid-cols-3 gap-4 items-start"
+        className="grid md:grid-cols-2 gap-4 items-start"
       >
-        {/* Left: Player (spans 1 column) */}
-        <div className="md:col-span-1">
+        {/* Left: Player */}
+        <div>
           <CommunityPlayer />
         </div>
 
-        {/* Middle: Stacked Games (spans 1 column) */}
-        <div
-          className="grid grid-rows-[1fr_1fr] gap-4"
-          style={{
-            height: "750px", // Match CommunityPlayer height
-            maxHeight: "750px",
-          }}
-        >
-          {/* FlickWord Game Card */}
-          <div
-            className="rounded-2xl p-4 flex flex-col justify-between cursor-pointer transition-colors"
-            style={{
-              backgroundColor: "var(--card)",
-              borderColor: "var(--line)",
-              borderWidth: "1px",
-              borderStyle: "solid",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--btn)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--card)";
-            }}
-            onClick={openFlickWord}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                openFlickWord();
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            aria-label="Play FlickWord game"
-          >
-            <div className="w-full">
-              <h3
-                className="text-sm font-semibold mb-2"
-                style={{ color: "var(--text)" }}
-              >
-                {translations.flickword || "FlickWord"}
-              </h3>
-              <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
-                {translations.flickword_tagline ||
-                  "Wordle-style daily word play"}
-              </p>
-            </div>
-
-            {/* Stats Display */}
-            <div
-              className="mt-auto"
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-            >
-              <FlickWordStats />
-            </div>
-
-            <div className="mt-3">
-              <button
-                className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openFlickWord();
-                }}
-                aria-label="Play FlickWord now"
-              >
-                {translations.play_now || "Play Now"}
-              </button>
-            </div>
-          </div>
-
-          {/* Trivia Game Card */}
-          <div
-            className="rounded-2xl p-4 flex flex-col justify-between cursor-pointer transition-colors"
-            style={{
-              backgroundColor: "var(--card)",
-              borderColor: "var(--line)",
-              borderWidth: "1px",
-              borderStyle: "solid",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--btn)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--card)";
-            }}
-            role="button"
-            tabIndex={0}
-            aria-label="Daily Trivia game card. Click to play."
-            onClick={() => setTriviaModalOpen(true)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                setTriviaModalOpen(true);
-              }
-            }}
-          >
-            <div className="w-full">
-              <h3
-                className="text-sm font-semibold mb-2"
-                style={{ color: "var(--text)" }}
-              >
-                {translations.daily_trivia || "Daily Trivia"}
-              </h3>
-              <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
-                {translations.daily_trivia_tagline ||
-                  "Fresh question, new bragging rights"}
-              </p>
-            </div>
-
-            {/* Stats Display */}
-            <div
-              className="mt-auto mb-3"
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-            >
-              <TriviaStats />
-            </div>
-
-            <div className="mt-auto">
-              <button
-                className="w-full px-3 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-lg transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setTriviaModalOpen(true);
-                }}
-                aria-label="Play Daily Trivia now"
-              >
-                {translations.play_now || "Play Now"}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Right: Recent Posts (spans 1 column) */}
+        {/* Right: Recent Posts */}
         <div
           className="rounded-2xl p-4 flex flex-col"
           style={{
@@ -933,26 +767,6 @@ const CommunityPanel = memo(function CommunityPanel() {
           )}
         </div>
       </div>
-
-      {/* FlickWord Modal - Now rendered via Portal */}
-      <Suspense
-        fallback={<div className="loading-spinner">Loading FlickWord...</div>}
-      >
-        <FlickWordModal
-          isOpen={flickWordModalOpen}
-          onClose={() => setFlickWordModalOpen(false)}
-        />
-      </Suspense>
-
-      {/* Trivia Modal - Now rendered via Portal */}
-      <Suspense
-        fallback={<div className="loading-spinner">Loading Trivia...</div>}
-      >
-        <TriviaModal
-          isOpen={triviaModalOpen}
-          onClose={() => setTriviaModalOpen(false)}
-        />
-      </Suspense>
 
       {/* New Post Modal */}
       <NewPostModal
