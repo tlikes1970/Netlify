@@ -34,7 +34,6 @@ import { HelpModal } from "@/components/HelpModal";
 const ListPage = lazy(() => import("@/pages/ListPage"));
 const MyListsPage = lazy(() => import("@/pages/MyListsPage"));
 const DiscoveryPage = lazy(() => import("@/pages/DiscoveryPage"));
-const AdminPage = lazy(() => import("@/pages/AdminPage"));
 const AuthDebugPage = lazy(() => import("@/debug/AuthDebugPage"));
 const UnsubscribePage = lazy(() => import("@/pages/UnsubscribePage"));
 import PullToRefreshWrapper from "@/components/PullToRefreshWrapper";
@@ -94,13 +93,15 @@ export default function App() {
   const [currentPath, setCurrentPath] = useState(
     typeof window !== "undefined" ? window.location.pathname : "/"
   );
-  const isAdmin = currentPath === "/admin";
   const isDebugAuth = currentPath === "/debug/auth";
   const isUnsubscribe = currentPath === "/unsubscribe";
 
-  // Legacy /posts/:slug URLs (community) → home
+  // Legacy community URLs → home
   useEffect(() => {
-    if (/^\/posts\/[^/]+$/.test(currentPath)) {
+    if (
+      /^\/posts\/[^/]+$/.test(currentPath) ||
+      currentPath === "/admin"
+    ) {
       window.history.replaceState({}, "", "/");
       setCurrentPath("/");
     }
@@ -1387,31 +1388,6 @@ export default function App() {
           }
         >
           <UnsubscribePage />
-        </Suspense>
-      </PersonalityErrorBoundary>
-    );
-  }
-
-  // Render admin page if on /admin route
-  if (isAdmin) {
-    return (
-      <PersonalityErrorBoundary>
-        <Suspense
-          fallback={
-            <div
-              className="min-h-screen flex items-center justify-center"
-              style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}
-            >
-              <div className="text-center">
-                <div className="w-8 h-8 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-sm" style={{ color: "var(--muted)" }}>
-                  Loading...
-                </p>
-              </div>
-            </div>
-          }
-        >
-          <AdminPage />
         </Suspense>
       </PersonalityErrorBoundary>
     );
