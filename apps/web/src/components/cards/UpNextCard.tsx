@@ -28,7 +28,7 @@ export default function UpNextCard({ item }: UpNextCardProps) {
   dlog(`🌍 Current timezone:`, Intl.DateTimeFormat().resolvedOptions().timeZone);
 
   // Get validated date and status
-  const rawDate = getNextAirDate({ nextAirDate, next_episode_to_air: null });
+  const rawDate = getNextAirDate(item);
   const validatedDate = getValidatedNextAirDate(rawDate);
   const airStatus = getNextAirStatus(rawDate);
 

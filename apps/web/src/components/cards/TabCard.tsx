@@ -9,6 +9,7 @@ import { useIsDesktop } from "../../hooks/useDeviceDetection";
 import SwipeableCard from "../SwipeableCard";
 import { OptimizedImage } from "../OptimizedImage";
 import { trackOpenFromReturning } from "@/lib/analytics";
+import { getUpNextLabel } from "@/lib/upNextShows";
 import { isCompactMobileV1, isActionsSplit } from "../../lib/mobileFlags";
 import { isMobileNow } from "../../lib/isMobile";
 import { dlog } from "../../lib/log";
@@ -114,6 +115,7 @@ export default function TabCard({
   const getTabSpecificActions = () => {
     switch (tabType) {
       case "watching":
+      case "returning":
         return (
           <>
             <button
@@ -682,7 +684,7 @@ export default function TabCard({
         <MyListToggle 
           item={item} 
           currentListContext={
-            tabType === "watching" ? "watching" :
+            tabType === "returning" || tabType === "watching" ? "watching" :
             tabType === "want" ? "wishlist" :
             tabType === "watched" ? "watched" :
             undefined
@@ -710,6 +712,15 @@ export default function TabCard({
               </span>
             )}
           </div>
+
+          {tabType === "returning" && mediaType === "tv" && (
+            <p
+              className="text-xs font-medium mt-1"
+              style={{ color: "var(--accent)" }}
+            >
+              {getUpNextLabel(item)}
+            </p>
+          )}
 
           {/* Provider badges */}
           {item.networks && item.networks.length > 0 && (

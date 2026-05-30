@@ -261,6 +261,10 @@ export default function ListPage({
 
   // Filter and sort items
   const processedItems = useMemo(() => {
+    if (mode === "returning") {
+      return items;
+    }
+
     let result = items;
 
     // Apply type filter (AND logic)
@@ -323,7 +327,7 @@ export default function ListPage({
     }
 
     return result;
-  }, [items, filters, selectedTag, sortByTag, sortMode, stableSort]);
+  }, [items, filters, selectedTag, sortByTag, sortMode, stableSort, mode]);
 
   // Map mode to Library list name
   const getListName = (
@@ -692,7 +696,7 @@ export default function ListPage({
   const getEmptyText = () => {
     const personality = settings.personality || DEFAULT_PERSONALITY;
     if (mode === "returning") {
-      return "No returning shows yet. When a series is confirmed, it'll show up here automatically.";
+      return "No upcoming shows in your Watching list yet. Add TV series you're following and they'll appear here when they have return dates or upcoming status.";
     }
     if (title.toLowerCase().includes("watching")) {
       return getPersonalityText(personality, "emptyWatching");
@@ -1174,10 +1178,71 @@ export default function ListPage({
       )}
           </div>
         </WatchingListWithBackdrop>
+      ) : mode === "returning" ? (
+        <div className="list-content-column">
+          <div className="mb-3">
+            <h1
+              className="text-base font-semibold"
+              style={{ color: "var(--text)" }}
+            >
+              {title}
+            </h1>
+            <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
+              All upcoming and returning shows from your Watching list.
+            </p>
+          </div>
+
+          {processedItems.length > 0 ? (
+            <ErrorBoundary
+              name="ReturningList"
+              onReset={() => {}}
+            >
+              <div className="space-y-3">
+                {processedItems.map((item, index) => {
+                  const mediaItem: MediaItem = {
+                    id: item.id,
+                    mediaType: item.mediaType,
+                    title: item.title,
+                    posterUrl: item.posterUrl,
+                    year: item.year,
+                    voteAverage: item.voteAverage,
+                    userRating: item.userRating,
+                    synopsis: item.synopsis,
+                    nextAirDate: item.nextAirDate,
+                    showStatus: item.showStatus,
+                    lastAirDate: item.lastAirDate,
+                    userNotes: item.userNotes,
+                    tags: item.tags,
+                    networks: item.networks,
+                    productionCompanies: item.productionCompanies,
+                  };
+
+                  return (
+                    <div key={`${item.mediaType}:${item.id}`}>
+                      <TabCard
+                        item={mediaItem}
+                        actions={actions}
+                        tabType="returning"
+                        index={index}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </ErrorBoundary>
+          ) : (
+            <div className="text-center py-8" style={{ color: "var(--muted)" }}>
+              <p className="text-sm">{getEmptyText()}</p>
+              <p className="text-xs mt-2">
+                Add TV shows to Watching to track return dates and upcoming
+                seasons.
+              </p>
+            </div>
+          )}
+        </div>
       ) : (
         <>
-          {/* Non-list tabs (returning, discovery) - no wrapper */}
-          {/* Content for returning/discovery modes - same structure as before */}
+          {/* Non-list tabs (discovery) - no wrapper */}
         </>
       )}
 
