@@ -21,7 +21,6 @@ import { PRO_FEATURES_AVAILABLE, PRO_FEATURES_COMING_SOON } from "./settingsProC
 import { UpgradeToProCTA } from "./UpgradeToProCTA";
 import { useCustomLists, customListManager } from "../lib/customLists";
 import { useUsername } from "../hooks/useUsername";
-import { useAuth } from "../hooks/useAuth";
 import { useLibrary } from "../lib/storage";
 import { useAdminRole } from "../hooks/useAdminRole";
 // PersonalityExamples removed - inline preview is sufficient
@@ -67,8 +66,6 @@ export function renderSettingsSection(
       return <NotificationsSection {...props} />;
     case "display":
       return <DisplaySection {...props} />;
-    case "community":
-      return <CommunitySection {...props} />;
     case "pro":
       return <ProSection {...props} />;
     case "data":
@@ -524,160 +521,6 @@ function NotificationsSection({
         </Suspense>
       )}
     </>
-  );
-}
-
-function CommunitySection({ isMobile: _isMobile }: SettingsSectionProps) {
-  const { isAuthenticated, user } = useAuth();
-  const [emailSubscribed, setEmailSubscribed] = useState<boolean | null>(null);
-  const [updatingEmailSub, setUpdatingEmailSub] = useState(false);
-  const settings = useSettings();
-
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      fetchEmailSubscriptionStatus();
-    }
-  }, [isAuthenticated, user]);
-
-  const fetchEmailSubscriptionStatus = async () => {
-    try {
-      const { doc, getDoc } = await import("firebase/firestore");
-      const { db } = await import("../lib/firebaseBootstrap");
-      const userRef = doc(db, "users", user!.uid);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        const data = userSnap.data();
-        setEmailSubscribed(data.emailSubscriber === true);
-      } else {
-        setEmailSubscribed(false);
-      }
-    } catch (err) {
-      console.error("Failed to fetch email subscription status:", err);
-      setEmailSubscribed(false);
-    }
-  };
-
-  const handleEmailSubscriptionToggle = async (enabled: boolean) => {
-    if (!isAuthenticated || !user || updatingEmailSub) return;
-
-    setUpdatingEmailSub(true);
-    try {
-      const { doc, updateDoc } = await import("firebase/firestore");
-      const { db } = await import("../lib/firebaseBootstrap");
-      const userRef = doc(db, "users", user.uid);
-      await updateDoc(userRef, {
-        emailSubscriber: enabled,
-      });
-      setEmailSubscribed(enabled);
-    } catch (err) {
-      console.error("Failed to update email subscription:", err);
-      alert("Failed to update email subscription. Please try again.");
-    } finally {
-      setUpdatingEmailSub(false);
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <h3 className="text-xl font-semibold" style={{ color: "var(--text)" }}>
-        Community
-      </h3>
-
-      {/* Weekly Email Digest */}
-      {isAuthenticated && (
-        <div
-          className="p-4 rounded-lg"
-          style={{
-            backgroundColor: "var(--card)",
-            borderColor: "var(--line)",
-            border: "1px solid",
-          }}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <h4
-                className="text-lg font-medium mb-1"
-                style={{ color: "var(--text)" }}
-              >
-                📧 Weekly Email Digest
-              </h4>
-              <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
-                Receive a weekly email with top posts, new comments, and
-                mentions from the community hub.
-              </p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={emailSubscribed === true}
-                onChange={(e) =>
-                  handleEmailSubscriptionToggle(e.target.checked)
-                }
-                disabled={updatingEmailSub || emailSubscribed === null}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-            </label>
-          </div>
-          {emailSubscribed === null && (
-            <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>
-              Checking subscription status...
-            </p>
-          )}
-          {emailSubscribed === true && (
-            <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>
-              ✓ You'll receive weekly emails every Friday at 9 AM UTC
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Topic Following - Placeholder for future settings */}
-      <div
-        className="p-4 rounded-lg"
-        style={{
-          backgroundColor: "var(--card)",
-          borderColor: "var(--line)",
-          border: "1px solid",
-        }}
-      >
-        <h4
-          className="text-lg font-medium mb-1"
-          style={{ color: "var(--text)" }}
-        >
-          📌 Topic Following
-        </h4>
-        <p className="text-sm" style={{ color: "var(--muted)" }}>
-          Manage your followed topics in the Community Hub. Follow topics to
-          prioritize posts in your feed.
-        </p>
-        <p className="text-xs mt-2 italic" style={{ color: "var(--muted)" }}>
-          Currently managed in the Community Hub interface
-        </p>
-      </div>
-
-      {/* Community Stats - Placeholder for future stats */}
-      {settings.community.followedTopics.length > 0 && (
-        <div
-          className="p-4 rounded-lg"
-          style={{
-            backgroundColor: "var(--card)",
-            borderColor: "var(--line)",
-            border: "1px solid",
-          }}
-        >
-          <h4
-            className="text-lg font-medium mb-2"
-            style={{ color: "var(--text)" }}
-          >
-            Community Activity
-          </h4>
-          <div className="text-sm" style={{ color: "var(--muted)" }}>
-            <div>Following {settings.community.followedTopics.length} topic{settings.community.followedTopics.length !== 1 ? 's' : ''}</div>
-          </div>
-        </div>
-      )}
-    </div>
   );
 }
 

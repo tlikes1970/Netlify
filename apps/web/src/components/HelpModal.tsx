@@ -420,8 +420,8 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   <strong>Dark</strong> mode.
                 </li>
                 <li>
-                  Change your <strong>display name</strong> (shown in community
-                  or Pro features).
+                  Change your <strong>display name</strong> in your account
+                  settings.
                 </li>
                 <li>
                   Choose your <strong>personality</strong>—pick from 8

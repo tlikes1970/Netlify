@@ -109,7 +109,7 @@ describe("Settings approval paths", () => {
     mockUseAdminRole.mockReturnValue({ isAdmin: false, loading: false });
 
     render(<SettingsSheet />);
-    expect(screen.getByRole("button", { name: "Community" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Community" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Admin" })).toBeNull();
 
     const user = userEvent.setup();

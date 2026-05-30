@@ -80,10 +80,6 @@ export default defineConfig(({ mode }) => {
               './src/pages/DiscoveryPage.tsx',
             ],
             settings: ['./src/components/SettingsPage.tsx'],
-            community: [
-              './src/components/CommunityPanel.tsx',
-              './src/components/CommunityPlayer.tsx',
-            ],
           },
         },
       },

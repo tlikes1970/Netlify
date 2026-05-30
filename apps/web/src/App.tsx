@@ -3,7 +3,6 @@ import MobileTabs, { useViewportOffset } from "@/components/MobileTabs";
 import FlickletHeader from "@/components/FlickletHeader";
 import Rail from "@/components/Rail";
 import Section from "@/components/Section";
-import CommunityPanel from "@/components/CommunityPanel";
 import FeedbackPanel from "@/components/FeedbackPanel";
 import SearchResults from "@/search/SearchResults";
 import HomeYourShowsRail from "@/components/rails/HomeYourShowsRail";
@@ -15,7 +14,6 @@ import OnboardingCoachmarks from "@/components/onboarding/OnboardingCoachmarks";
 import ScrollToTopArrow from "@/components/ScrollToTopArrow";
 import HomeDownArrow from "@/components/HomeDownArrow";
 import { lazy, Suspense } from "react";
-import PostDetail from "@/components/PostDetail";
 import { openSettingsSheet } from "@/components/settings/SettingsSheet";
 import SettingsSheet from "@/components/settings/SettingsSheet";
 import { flag } from "@/lib/flags";
@@ -100,9 +98,13 @@ export default function App() {
   const isDebugAuth = currentPath === "/debug/auth";
   const isUnsubscribe = currentPath === "/unsubscribe";
 
-  // Detect post routes
-  const postSlugMatch = currentPath.match(/^\/posts\/([^/]+)$/);
-  const postSlug = postSlugMatch ? postSlugMatch[1] : null;
+  // Legacy /posts/:slug URLs (community) → home
+  useEffect(() => {
+    if (/^\/posts\/[^/]+$/.test(currentPath)) {
+      window.history.replaceState({}, "", "/");
+      setCurrentPath("/");
+    }
+  }, [currentPath]);
 
   // Listen for path changes (from pushState/popState)
   useEffect(() => {
@@ -1415,15 +1417,6 @@ export default function App() {
     );
   }
 
-  // Render post detail page if on /posts/:slug route
-  if (postSlug) {
-    return (
-      <PersonalityErrorBoundary>
-        <PostDetail slug={postSlug} />
-      </PersonalityErrorBoundary>
-    );
-  }
-
   return (
     <PersonalityErrorBoundary>
       <main
@@ -1526,11 +1519,6 @@ export default function App() {
                       />
                       <HomeUpNextRail />
                     </div>
-                  </Section>
-
-                  {/* Community container, always visible */}
-                  <Section title={translations.community}>
-                    <CommunityPanel />
                   </Section>
 
                   {/* For you container with dynamic rails based on settings */}
