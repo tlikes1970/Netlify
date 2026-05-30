@@ -353,11 +353,6 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   Discovery shows only refresh when your tastes change—rate or
                   tag more items to improve accuracy.
                 </li>
-                <li>
-                  <strong>"In Theaters Near You":</strong> If location detection
-                  isn't working, tap <strong>Enter location manually</strong> to
-                  set your city and region.
-                </li>
               </ul>
             </div>
           </div>

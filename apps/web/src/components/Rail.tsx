@@ -20,7 +20,7 @@ export default function Rail({ id, title, enabled = true, skeletonCount = 0, ite
   // Map rail ID to CardV2 context
   const getContext = (railId: string): 'home' | 'tab-watching' | 'tab-foryou' => {
     if (railId === 'currently-watching') return 'tab-watching';
-    if (railId.startsWith('for-you-') || railId === 'in-theaters') return 'tab-foryou';
+    if (railId.startsWith('for-you-')) return 'tab-foryou';
     return 'home';
   };
 

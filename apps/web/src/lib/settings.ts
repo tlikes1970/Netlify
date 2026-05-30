@@ -88,7 +88,7 @@ const DEFAULT_SETTINGS: Settings = {
   layout: {
     condensedView: false,
     theme: 'dark',
-    homePageLists: ['currently-watching', 'up-next', 'community', 'for-you-drama', 'for-you-comedy', 'for-you-horror', 'in-theaters', 'feedback'],
+    homePageLists: ['currently-watching', 'up-next', 'community', 'for-you-drama', 'for-you-comedy', 'for-you-horror', 'feedback'],
     forYouGenres: ['drama', 'comedy', 'horror'],
     episodeTracking: false,
     discoveryLimit: 25, // Default to 25 recommendations

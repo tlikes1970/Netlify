@@ -6,7 +6,7 @@ test('home rails and debug functions exist', async ({ page }) => {
   expect(Array.isArray(rails)).toBeTruthy();
   expect(rails.length).toBeGreaterThanOrEqual(4);
   const ids = rails.map(r => r.id);
-  for (const id of ['your-shows','for-you','in-theaters','feedback']) {
+  for (const id of ['your-shows','for-you','feedback']) {
     expect(ids).toContain(id);
   }
 

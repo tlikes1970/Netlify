@@ -4,7 +4,6 @@ import FlickletHeader from "@/components/FlickletHeader";
 import Rail from "@/components/Rail";
 import Section from "@/components/Section";
 import CommunityPanel from "@/components/CommunityPanel";
-import TheaterInfo from "@/components/TheaterInfo";
 import FeedbackPanel from "@/components/FeedbackPanel";
 import SearchResults from "@/search/SearchResults";
 import HomeYourShowsRail from "@/components/rails/HomeYourShowsRail";
@@ -50,7 +49,6 @@ import { flushSync } from "react-dom";
 import { Library, useLibrary } from "@/lib/storage";
 import { mountActionBridge, setToastCallback } from "@/state/actions";
 import { useSettings, settingsManager } from "@/lib/settings";
-import { useInTheaters } from "@/hooks/useTmdb";
 import { useTranslations } from "@/lib/language";
 import Toast, { useToast } from "@/components/Toast";
 import PersonalityErrorBoundary from "@/components/PersonalityErrorBoundary";
@@ -520,9 +518,6 @@ export default function App() {
     }
   }, [view, returning]);
 
-  // Data rails
-  const theaters = useInTheaters();
-
   // Mobile Settings breakpoint - use sheet below this width
   const MOBILE_SETTINGS_BREAKPOINT = 744;
 
@@ -864,19 +859,6 @@ export default function App() {
       setLoadingTimeout(false);
     }
   }, [authInitialized]);
-
-  function itemsFor(id: string) {
-    switch (id) {
-      case "currently-watching":
-        return watching;
-      case "up-next":
-        return []; // TODO: populate from episodes
-      case "in-theaters":
-        return theaters.data ?? [];
-      default:
-        return undefined;
-    }
-  }
 
   // Notes and Tags handlers
   const handleNotesEdit = (item: any) => {
@@ -1738,27 +1720,6 @@ export default function App() {
                         />
                       ))}
                     </div>
-                  </Section>
-
-                  {/* In theaters container with address/info header */}
-                  <Section title={translations.inTheatersNearYou}>
-                    <TheaterInfo />
-                    <Rail
-                      id="in-theaters"
-                      title={translations.nowPlaying}
-                      items={
-                        Array.isArray(itemsFor("in-theaters"))
-                          ? itemsFor("in-theaters")!.map((item) => ({
-                              ...item,
-                              id: String(item.id),
-                              year: item.year
-                                ? parseInt(String(item.year))
-                                : undefined,
-                            }))
-                          : []
-                      }
-                      skeletonCount={12}
-                    />
                   </Section>
 
                   {/* Feedback container */}
