@@ -286,7 +286,6 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     spanish: "Español",
 
     // Home Page Sections
-    community: "Community",
     forYou: "For you",
     feedback: "Feedback",
 
@@ -331,9 +330,6 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     definitelyNotProcrastinating: "Definitely not procrastinating",
     breaksForPopcornOnly: "Breaks for popcorn only",
     curatesChaosLikeAPro: "Curates chaos like a pro",
-
-    // Community Player
-    community_player_placeholder: "Community content coming soon",
 
     // Data Management
     dataManagementComingSoon: "Data management features coming soon",
@@ -654,7 +650,6 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     spanish: "Español",
 
     // Home Page Sections
-    community: "Comunidad",
     forYou: "Para ti",
     feedback: "Comentarios",
 
@@ -693,9 +688,6 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     definitelyNotProcrastinating: "Definitivamente no procrastinando",
     breaksForPopcornOnly: "Descansos solo para palomitas",
     curatesChaosLikeAPro: "Curaduría del caos como profesional",
-
-    // Community Player
-    community_player_placeholder: "Contenido comunitario próximamente",
 
     // Data Management
     dataManagementComingSoon: "Funciones de gestión de datos próximamente",

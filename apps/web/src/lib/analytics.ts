@@ -51,13 +51,6 @@ export function trackTabStateReset(tabKey: string): void {
 }
 
 /**
- * Track community post creation
- */
-export function trackCommunityPostCreate(hasMedia: boolean, length: number): void {
-  track('community.post.create', { hasMedia, length });
-}
-
-/**
  * Game Analytics Tracking
  */
 

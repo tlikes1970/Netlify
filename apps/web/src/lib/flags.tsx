@@ -7,8 +7,6 @@ type Flags = Record<string, boolean>;
 
 const defaultFlags: Flags =
   (flagsData?.defaults as Flags) ?? {
-    community_player: false,
-    community_games_enabled: false,
     homeRowSpotlight: false
   };
 

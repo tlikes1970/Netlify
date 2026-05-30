@@ -3,7 +3,7 @@
  * Purpose: Single source of truth for Pro feature limits and entitlements
  * Data Source: Static configuration
  * Update Path: Modify this file to change Pro vs Free limits
- * Dependencies: proStatus.ts, customLists.ts, notifications.ts, communitySorting.ts
+ * Dependencies: proStatus.ts, customLists.ts, notifications.ts
  */
 
 import { getProStatusSync } from './proStatus';
@@ -25,25 +25,6 @@ export const PRO_LIMITS = {
     pro: Infinity, // Unlimited for Pro users
   },
 
-  /**
-   * Community Posts (daily limits)
-   * Free: 3 posts per day
-   * Pro: 100 posts per day
-   */
-  communityPosts: {
-    free: 3,
-    pro: 100,
-  },
-
-  /**
-   * Community Comments (daily limits)
-   * Free: 10 comments per day
-   * Pro: 500 comments per day
-   */
-  communityComments: {
-    free: 10,
-    pro: 500,
-  },
 } as const;
 
 /**

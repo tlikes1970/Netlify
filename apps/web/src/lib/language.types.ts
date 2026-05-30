@@ -266,7 +266,6 @@ export interface LanguageStrings {
   spanish: string;
 
   // Home Page Sections
-  community: string;
   forYou: string;
   feedback: string;
 
@@ -304,9 +303,6 @@ export interface LanguageStrings {
   definitelyNotProcrastinating: string;
   breaksForPopcornOnly: string;
   curatesChaosLikeAPro: string;
-
-  // Community Player
-  community_player_placeholder: string;
 
   // Data Management
   dataManagementComingSoon: string;

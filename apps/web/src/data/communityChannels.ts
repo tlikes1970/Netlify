@@ -3,7 +3,7 @@
  * Purpose: Define channel types and provide starter content for multi-channel player
  * Data Source: Static channel definitions with Archive.org and streaming sources
  * Update Path: Add/modify channels here, player reads from COMMUNITY_CHANNELS array
- * Dependencies: CommunityPlayer.tsx
+ * Dependencies: AdminExtrasPage (channel config)
  */
 
 /**

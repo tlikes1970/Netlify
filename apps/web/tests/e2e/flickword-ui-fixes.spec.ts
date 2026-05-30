@@ -142,25 +142,6 @@ test.describe("FlickWord UI Fixes", () => {
     }
   });
 
-  test("FW-10: Community Panel card keyboard navigation", async ({ page }) => {
-    // Find FlickWord card
-    const flickWordCard = page
-      .locator('div[role="button"][aria-label*="FlickWord"]')
-      .first();
-
-    await expect(flickWordCard).toHaveAttribute("tabIndex", "0");
-    await expect(flickWordCard).toHaveAttribute("role", "button");
-
-    // Test keyboard activation
-    await flickWordCard.focus();
-    await page.keyboard.press("Enter");
-
-    // Modal should open
-    await expect(page.locator(".flickword-game")).toBeVisible({
-      timeout: 5000,
-    });
-  });
-
   test("FW-11: Tile focus indicators", async ({ page }) => {
     await page.click('text="Play Now"', { first: true });
     await page.waitForSelector(".fw-tile", { timeout: 5000 });

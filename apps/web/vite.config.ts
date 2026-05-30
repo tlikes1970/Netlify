@@ -39,13 +39,6 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       fs: { allow: [inputsPath, path.resolve(__dirname, '..'), repoRoot] },
-      proxy: {
-        '/api/v1': {
-          target: 'http://localhost:4000',
-          changeOrigin: true,
-          secure: false,
-        },
-      },
       hmr:
         process.env.NETLIFY_DEV || process.argv.some((arg) => arg.includes('4173'))
           ? { clientPort: 8888 }

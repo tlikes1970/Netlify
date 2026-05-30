@@ -3,7 +3,7 @@
  * Purpose: Unified error messaging for consistent, friendly user-facing errors
  * Data Source: Static message constants
  * Update Path: Modify ERROR_MESSAGES to change error copy app-wide
- * Dependencies: Used by error boundaries, games, community panel, feedback panel
+ * Dependencies: Used by error boundaries, games, feedback panel
  */
 
 /**
@@ -46,13 +46,6 @@ export const ERROR_MESSAGES = {
     submitFailed: "Couldn't submit that. Try again.",
   },
   
-  // Community
-  community: {
-    loadPosts: "Couldn't load posts. Pull down to refresh.",
-    submitPost: "Post couldn't be sent. Try again.",
-    submitComment: "Comment couldn't be sent. Try again.",
-  },
-  
   // Generic fallback
   generic: "Something went wrong. Let's try that again.",
 } as const;
@@ -63,7 +56,6 @@ export const ERROR_MESSAGES = {
 export type ErrorMessageCategory = keyof typeof ERROR_MESSAGES;
 export type ValidationErrorKey = keyof typeof ERROR_MESSAGES.validation;
 export type GameErrorKey = keyof typeof ERROR_MESSAGES.game;
-export type CommunityErrorKey = keyof typeof ERROR_MESSAGES.community;
 
 /**
  * Get a user-friendly error message by category
@@ -96,7 +88,7 @@ export function getErrorMessage(
  * Log error details to console in development mode only
  * Never exposes technical details to users
  * 
- * @param context - Where the error occurred (e.g., 'FlickWordGame', 'CommunityPanel')
+ * @param context - Where the error occurred (e.g., 'FlickWordGame', 'FeedbackPanel')
  * @param error - The original error object
  * @param additionalInfo - Optional additional context
  */
