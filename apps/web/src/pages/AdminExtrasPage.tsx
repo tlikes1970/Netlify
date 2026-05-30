@@ -11,7 +11,7 @@ import {
   setDoc,
   getDocs,
 } from "firebase/firestore";
-import { db, functions } from "../lib/firebaseBootstrap";
+import { db, functions, auth } from "../lib/firebaseBootstrap";
 import { ExtrasVideo } from "../lib/extras/types";
 import { extrasProvider } from "../lib/extras/extrasProvider";
 import { useSettings, settingsManager } from "../lib/settings";
@@ -30,7 +30,8 @@ import {
   saveCommunityChannelsConfig,
   getDefaultChannels,
 } from "../lib/communityChannelsConfig";
-import { auth } from "../lib/firebaseBootstrap";
+import { httpsCallable } from "firebase/functions";
+import { clearBillingCache } from "../lib/proStatus";
 
 interface UGCSubmission {
   id: string;
@@ -456,24 +457,32 @@ export default function AdminExtrasPage({
     (r) => r.status === "pending"
   ).length;
 
-  // Pro status
+  // Pro status (settings mirror; useProStatus reads billing/status — keep both in sync via manageProStatus)
   const isPro = settings.pro?.isPro ?? false;
+  const [proTogglePending, setProTogglePending] = useState(false);
 
-  const handleTogglePro = () => {
+  const handleTogglePro = async () => {
+    const user = auth.currentUser;
+    if (!user?.uid) {
+      alert("You must be signed in to change Pro status.");
+      return;
+    }
     const newProStatus = !isPro;
-    settingsManager.updateSettings({
-      pro: {
-        ...settings.pro,
-        isPro: newProStatus,
-        features: {
-          advancedNotifications: newProStatus,
-          themePacks: newProStatus,
-          socialFeatures: newProStatus,
-          bloopersAccess: newProStatus,
-          extrasAccess: newProStatus,
-        },
-      },
-    });
+    setProTogglePending(true);
+    try {
+      const manageProStatus = httpsCallable(functions, "manageProStatus");
+      await manageProStatus({ userId: user.uid, isPro: newProStatus });
+      clearBillingCache();
+      await settingsManager.loadSettingsFromFirebase(user.uid);
+    } catch (error: unknown) {
+      console.error("[AdminExtrasPage] manageProStatus failed:", error);
+      const err = error as { message?: string; code?: string };
+      alert(
+        `Failed to update Pro status: ${err.message || err.code || "Unknown error"}`
+      );
+    } finally {
+      setProTogglePending(false);
+    }
   };
 
   const handleFetchVideos = async () => {
@@ -2327,11 +2336,16 @@ export default function AdminExtrasPage({
                       </strong>
                     </p>
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
+                  <label
+                    className={`relative inline-flex items-center ${proTogglePending ? "cursor-wait opacity-70" : "cursor-pointer"}`}
+                  >
                     <input
                       type="checkbox"
                       checked={isPro}
-                      onChange={handleTogglePro}
+                      disabled={proTogglePending}
+                      onChange={() => {
+                        void handleTogglePro();
+                      }}
                       className="sr-only peer"
                     />
                     <div
@@ -2412,9 +2426,10 @@ export default function AdminExtrasPage({
                     className="text-sm text-blue-800"
                     style={{ color: "var(--text)" }}
                   >
-                    <strong>Note:</strong> This toggle controls Pro status for
-                    the current user. Changes are saved immediately to
-                    localStorage and will persist across sessions.
+                    <strong>Note:</strong> This updates Pro for the signed-in
+                    account in Firestore (including billing status used by the
+                    app) via the admin backend. It is not for changing other
+                    users&apos; accounts from this screen.
                   </p>
                 </div>
               </div>

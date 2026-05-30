@@ -22,6 +22,7 @@ import SettingsSheet from "@/components/settings/SettingsSheet";
 import { flag } from "@/lib/flags";
 import { isCompactMobileV1 } from "@/lib/mobileFlags";
 import { openSettingsAtSection } from "@/lib/settingsNavigation";
+import type { SettingsSectionId } from "@/components/settingsConfig";
 
 // Lazy load heavy components
 const SettingsPage = lazy(() => import("@/components/SettingsPage"));
@@ -127,6 +128,9 @@ export default function App() {
   // Settings state
   const settings = useSettings();
   const [showSettings, setShowSettings] = useState(false);
+  /** When opening desktop SettingsPage, which section to show first (e.g. Pro from upgrade CTAs). */
+  const [settingsDesktopInitialSection, setSettingsDesktopInitialSection] =
+    useState<SettingsSectionId>("account");
   const translations = useTranslations();
 
   // Viewport offset for iOS Safari keyboard handling
@@ -554,6 +558,7 @@ export default function App() {
       openSettingsSheet();
     } else {
       console.log("🔧 Opening SettingsPage");
+      setSettingsDesktopInitialSection("account");
       setShowSettings(true);
     }
   };
@@ -799,19 +804,31 @@ export default function App() {
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
-  // Listen for custom event to open SettingsPage (e.g., from SnarkDisplay or startProUpgrade)
+  // Listen for custom event to open Settings (e.g., SnarkDisplay, startProUpgrade fallback)
   useEffect(() => {
-    const handleOpenSettingsPage = () => {
+    const handleOpenSettingsPage = (e: Event) => {
+      const detail = (e as CustomEvent<{ section?: SettingsSectionId }>).detail;
+      const section = detail?.section;
       if (shouldUseMobileSettings()) {
-        openSettingsSheet();
+        openSettingsSheet(section);
       } else {
+        setSettingsDesktopInitialSection(section ?? "account");
         setShowSettings(true);
       }
     };
 
+    const handleSignInRequired = () => {
+      setShowAuthModal(true);
+    };
+
     window.addEventListener("settings:open-page", handleOpenSettingsPage);
+    window.addEventListener("auth:sign-in-required", handleSignInRequired);
     return () => {
       window.removeEventListener("settings:open-page", handleOpenSettingsPage);
+      window.removeEventListener(
+        "auth:sign-in-required",
+        handleSignInRequired
+      );
     };
   }, []);
 
@@ -1237,7 +1254,13 @@ export default function App() {
                 <div className="loading-spinner">Loading settings...</div>
               }
             >
-              <SettingsPage onClose={() => setShowSettings(false)} />
+              <SettingsPage
+                initialSection={settingsDesktopInitialSection}
+                onClose={() => {
+                  setShowSettings(false);
+                  setSettingsDesktopInitialSection("account");
+                }}
+              />
             </Suspense>
           )}
 
@@ -1776,7 +1799,13 @@ export default function App() {
               <div className="loading-spinner">Loading settings...</div>
             }
           >
-            <SettingsPage onClose={() => setShowSettings(false)} />
+            <SettingsPage
+              initialSection={settingsDesktopInitialSection}
+              onClose={() => {
+                setShowSettings(false);
+                setSettingsDesktopInitialSection("account");
+              }}
+            />
           </Suspense>
         )}
 

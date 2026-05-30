@@ -26,8 +26,16 @@ const NotificationCenter = lazy(() =>
   }))
 );
 
-export default function SettingsPage({ onClose }: { onClose: () => void }) {
-  const [activeSection, setActiveSection] = useState<SettingsSectionId>("account");
+export default function SettingsPage({
+  onClose,
+  initialSection = "account",
+}: {
+  onClose: () => void;
+  /** First section shown when the modal mounts (e.g. `pro` from upgrade CTAs). */
+  initialSection?: SettingsSectionId;
+}) {
+  const [activeSection, setActiveSection] =
+    useState<SettingsSectionId>(initialSection);
   const [showSharingModal, setShowSharingModal] = useState(false);
   const [showNotInterestedModal, setShowNotInterestedModal] = useState(false);
   const [showNotificationSettings, setShowNotificationSettings] =
@@ -111,42 +119,6 @@ export default function SettingsPage({ onClose }: { onClose: () => void }) {
     lockScroll();
     return () => {
       unlockScroll();
-    };
-  }, []);
-
-  // Listen for navigation to Pro tab (from startProUpgrade)
-  useEffect(() => {
-    const handleNavigateToPro = () => {
-      setActiveSection("pro");
-    };
-
-    window.addEventListener(
-      "navigate-to-pro-settings",
-      handleNavigateToPro as EventListener
-    );
-    return () => {
-      window.removeEventListener(
-        "navigate-to-pro-settings",
-        handleNavigateToPro as EventListener
-      );
-    };
-  }, []);
-
-  // Listen for navigation to Layout tab (from For You section)
-  useEffect(() => {
-    const handleNavigateToLayout = () => {
-      setActiveSection("display");
-    };
-
-    window.addEventListener(
-      "navigate-to-layout-settings",
-      handleNavigateToLayout as EventListener
-    );
-    return () => {
-      window.removeEventListener(
-        "navigate-to-layout-settings",
-        handleNavigateToLayout as EventListener
-      );
     };
   }, []);
 

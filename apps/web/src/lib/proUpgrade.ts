@@ -134,14 +134,9 @@ async function startAndroidPurchase(): Promise<void> {
 async function startIOSPurchase(): Promise<void> {
   // TODO: Implement iOS purchase flow when iOS app is ready
   console.log('[Pro Upgrade] iOS purchase (not implemented yet)');
-  
-  // Fall back to Settings for now
-  const openSettingsEvent = new CustomEvent('settings:open-page');
-  window.dispatchEvent(openSettingsEvent);
-  setTimeout(() => {
-    const navigateEvent = new CustomEvent('navigate-to-pro-settings');
-    window.dispatchEvent(navigateEvent);
-  }, 150);
+  window.dispatchEvent(
+    new CustomEvent('settings:open-page', { detail: { section: 'pro' as const } })
+  );
 }
 
 /**
@@ -150,14 +145,9 @@ async function startIOSPurchase(): Promise<void> {
 async function startWebPurchase(): Promise<void> {
   // TODO: Implement Stripe checkout flow
   console.log('[Pro Upgrade] Web purchase (not implemented yet)');
-  
-  // Fall back to Settings for now
-  const openSettingsEvent = new CustomEvent('settings:open-page');
-  window.dispatchEvent(openSettingsEvent);
-  setTimeout(() => {
-    const navigateEvent = new CustomEvent('navigate-to-pro-settings');
-    window.dispatchEvent(navigateEvent);
-  }, 150);
+  window.dispatchEvent(
+    new CustomEvent('settings:open-page', { detail: { section: 'pro' as const } })
+  );
 }
 
 /**
