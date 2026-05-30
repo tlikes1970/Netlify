@@ -7,12 +7,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { SearchBar } from '../SearchBar';
 
-// Mock the useSearch hook
-vi.mock('../../hooks/useSearch', () => ({
-  useSearch: vi.fn(),
+// Mock the community post search hook
+vi.mock('../../hooks/useCommunityPostSearch', () => ({
+  useCommunityPostSearch: vi.fn(),
 }));
 
-import { useSearch } from '../../hooks/useSearch';
+import { useCommunityPostSearch } from '../../hooks/useCommunityPostSearch';
 
 describe('SearchBar', () => {
   beforeEach(() => {
@@ -20,7 +20,7 @@ describe('SearchBar', () => {
   });
 
   it('renders search input with placeholder', () => {
-    (useSearch as any).mockReturnValue({ results: [], loading: false });
+    (useCommunityPostSearch as any).mockReturnValue({ results: [], loading: false });
     
     render(<SearchBar placeholder="Search posts..." />);
     
@@ -29,7 +29,7 @@ describe('SearchBar', () => {
   });
 
   it('updates query on input change', async () => {
-    (useSearch as any).mockReturnValue({ results: [], loading: false });
+    (useCommunityPostSearch as any).mockReturnValue({ results: [], loading: false });
     
     render(<SearchBar />);
     
@@ -40,19 +40,19 @@ describe('SearchBar', () => {
   });
 
   it('debounces search query', async () => {
-    (useSearch as any).mockReturnValue({ results: [], loading: false });
+    (useCommunityPostSearch as any).mockReturnValue({ results: [], loading: false });
     
     render(<SearchBar debounceMs={200} />);
     
     const input = screen.getByPlaceholderText('Search posts...');
     fireEvent.change(input, { target: { value: 'test' } });
     
-    // Initially should not call useSearch with the new query
-    expect(useSearch).toHaveBeenCalledWith({ queryText: '', limitResults: 10 });
+    // Initially should not call useCommunityPostSearch with the new query
+    expect(useCommunityPostSearch).toHaveBeenCalledWith({ queryText: '', limitResults: 10 });
     
     // After debounce time, should update
     await waitFor(() => {
-      expect(useSearch).toHaveBeenCalledWith({ queryText: 'test', limitResults: 10 });
+      expect(useCommunityPostSearch).toHaveBeenCalledWith({ queryText: 'test', limitResults: 10 });
     }, { timeout: 300 });
   });
 
@@ -69,7 +69,7 @@ describe('SearchBar', () => {
       },
     ];
     
-    (useSearch as any).mockReturnValue({ results: mockResults, loading: false });
+    (useCommunityPostSearch as any).mockReturnValue({ results: mockResults, loading: false });
     
     render(<SearchBar />);
     
@@ -98,7 +98,7 @@ describe('SearchBar', () => {
       },
     ];
     
-    (useSearch as any).mockReturnValue({ results: mockResults, loading: false });
+    (useCommunityPostSearch as any).mockReturnValue({ results: mockResults, loading: false });
     
     render(<SearchBar />);
     
@@ -115,7 +115,7 @@ describe('SearchBar', () => {
   });
 
   it('shows loading state', async () => {
-    (useSearch as any).mockReturnValue({ results: [], loading: true });
+    (useCommunityPostSearch as any).mockReturnValue({ results: [], loading: true });
     
     render(<SearchBar />);
     
@@ -141,7 +141,7 @@ describe('SearchBar', () => {
       },
     ];
     
-    (useSearch as any).mockReturnValue({ results: mockResults, loading: false });
+    (useCommunityPostSearch as any).mockReturnValue({ results: mockResults, loading: false });
     
     const mockPushState = vi.spyOn(window.history, 'pushState').mockImplementation(() => {});
     const mockDispatchEvent = vi.spyOn(window, 'dispatchEvent').mockImplementation(() => true);

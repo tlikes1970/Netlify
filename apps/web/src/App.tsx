@@ -1086,10 +1086,7 @@ export default function App() {
                       </div>
                     }
                   >
-                    <DiscoveryPage
-                      query={search.q}
-                      genreId={search.genre || null}
-                    />
+                    <DiscoveryPage />
                   </Suspense>
                 )}
               </>

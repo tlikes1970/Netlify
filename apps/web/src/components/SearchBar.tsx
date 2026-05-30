@@ -1,13 +1,10 @@
 /**
- * Process: Search Bar
- * Purpose: Debounced search input with live results and highlight matching text
- * Data Source: useSearch hook queries Firestore posts collection
- * Update Path: User types → debounced query → results update
- * Dependencies: useSearch hook, react-router for navigation
+ * COMMUNITY-ONLY — orphan UI (not mounted in App). Scheduled for removal with Community.
+ * Debounced search over Firestore `posts`; navigates to `/posts/:slug`.
  */
 
 import { useState, useEffect, useRef } from "react";
-import { useSearch } from "../hooks/useSearch";
+import { useCommunityPostSearch } from "../hooks/useCommunityPostSearch";
 
 interface SearchBarProps {
   placeholder?: string;
@@ -25,7 +22,7 @@ export function SearchBar({
   const [showResults, setShowResults] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  const { results, loading } = useSearch({
+  const { results, loading } = useCommunityPostSearch({
     queryText: debouncedQuery,
     limitResults: 10,
   });

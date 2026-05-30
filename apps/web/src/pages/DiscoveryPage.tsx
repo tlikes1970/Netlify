@@ -1,20 +1,16 @@
 import { useMemo, useState, useEffect } from "react";
-import { useSearch } from "@/hooks/useSearch";
 import { useSmartDiscovery } from "@/hooks/useSmartDiscovery";
 import { useAuth } from "@/hooks/useAuth";
 import CardV2 from "@/components/cards/CardV2";
-import type { MediaItem } from "@/components/cards/card.types";
+import type { MediaItem, MediaType } from "@/components/cards/card.types";
 import { Library } from "@/lib/storage";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
-export default function DiscoveryPage({
-  query,
-  genreId,
-}: {
-  query: string;
-  genreId: number | null;
-}) {
-  const searchResults = useSearch({ queryText: query });
+/**
+ * Personalized discovery (recommendations). TMDB title search uses SearchResults
+ * in App when the header search is active — this page never queries Firestore posts.
+ */
+export default function DiscoveryPage() {
   const {
     recommendations,
     isLoading: discoveryLoading,
@@ -22,7 +18,6 @@ export default function DiscoveryPage({
   } = useSmartDiscovery();
   const { isAuthenticated } = useAuth();
 
-  // Track library changes to filter items immediately
   const [libraryVersion, setLibraryVersion] = useState(0);
 
   useEffect(() => {
@@ -36,31 +31,10 @@ export default function DiscoveryPage({
   }, []);
 
   const items = useMemo(() => {
-    // If user is searching, use search results
-    if (query.trim()) {
-      const all = searchResults.results ?? [];
-      const filtered = !genreId
-        ? all
-        : all.filter(
-            (it: any) =>
-              Array.isArray(it.genre_ids) && it.genre_ids.includes(genreId)
-          );
-
-      // Filter out items already in library
-      return filtered.filter((it: any) => {
-        const mediaType = it.kind || it.mediaType;
-        const id = it.id;
-        return !Library.has(id, mediaType);
-      });
-    }
-
-    // For discovery without search, only show recommendations if authenticated
     if (!isAuthenticated) {
       return [];
     }
 
-    // For authenticated users, use smart recommendations
-    // Filter out items already in library (backfill happens in getSmartRecommendations)
     return recommendations
       .map((rec) => ({
         id: rec.item.id,
@@ -68,31 +42,23 @@ export default function DiscoveryPage({
         title: rec.item.title,
         posterUrl: rec.item.poster,
         year: rec.item.year?.toString(),
-        genre_ids: [], // Will be populated by TMDB data
+        genre_ids: [],
         score: rec.score,
         reasons: rec.reasons,
       }))
-      .filter((it: any) => {
-        return !Library.has(it.id, it.mediaType);
+      .filter((it: { id: string; mediaType: string }) => {
+        const kind = (it.mediaType === "tv" ? "tv" : "movie") as MediaType;
+        return !Library.has(it.id, kind);
       });
-  }, [
-    query,
-    genreId,
-    searchResults.results,
-    recommendations,
-    isAuthenticated,
-    libraryVersion,
-  ]);
+  }, [recommendations, isAuthenticated, libraryVersion]);
 
-  const isLoading = query.trim() ? searchResults.loading : discoveryLoading;
-  const hasError = query.trim() ? searchResults.error : discoveryError;
+  const isLoading = discoveryLoading;
+  const hasError = discoveryError;
 
-  // Action handlers using Library.upsert
   const actions = {
     onWant: (item: MediaItem) => {
       console.log("🎬 Discovery onWant called:", item);
       if (item.id && item.mediaType) {
-        // Get existing entry to preserve rating if it exists
         const existing = Library.getEntry(item.id, item.mediaType);
         Library.upsert(
           {
@@ -105,11 +71,10 @@ export default function DiscoveryPage({
             showStatus: item.showStatus,
             lastAirDate: item.lastAirDate,
             synopsis: item.synopsis,
-            userRating: existing?.userRating || item.userRating, // Preserve existing rating
+            userRating: existing?.userRating || item.userRating,
           },
           "wishlist"
         );
-        // Trigger library change to update UI immediately
         setLibraryVersion((prev) => prev + 1);
         console.log("✅ Item added to wishlist, libraryVersion updated");
       } else {
@@ -118,7 +83,6 @@ export default function DiscoveryPage({
     },
     onWatching: (item: MediaItem) => {
       if (item.id && item.mediaType) {
-        // Get existing entry to preserve rating if it exists
         const existing = Library.getEntry(item.id, item.mediaType);
         Library.upsert(
           {
@@ -131,18 +95,16 @@ export default function DiscoveryPage({
             showStatus: item.showStatus,
             lastAirDate: item.lastAirDate,
             synopsis: item.synopsis,
-            userRating: existing?.userRating || item.userRating, // Preserve existing rating
+            userRating: existing?.userRating || item.userRating,
           },
           "watching"
         );
-        // Trigger library change to update UI immediately
         setLibraryVersion((prev) => prev + 1);
       }
     },
     onWatched: (item: MediaItem) => {
       console.log("🎬 Discovery onWatched called:", item);
       if (item.id && item.mediaType) {
-        // Get existing entry to preserve rating if it exists
         const existing = Library.getEntry(item.id, item.mediaType);
         Library.upsert(
           {
@@ -155,11 +117,10 @@ export default function DiscoveryPage({
             showStatus: item.showStatus,
             lastAirDate: item.lastAirDate,
             synopsis: item.synopsis,
-            userRating: existing?.userRating || item.userRating, // Preserve existing rating
+            userRating: existing?.userRating || item.userRating,
           },
           "watched"
         );
-        // Trigger library change to update UI immediately
         setLibraryVersion((prev) => prev + 1);
         console.log("✅ Item added to watched, libraryVersion updated");
       } else {
@@ -168,7 +129,6 @@ export default function DiscoveryPage({
     },
     onNotInterested: (item: MediaItem) => {
       if (item.id && item.mediaType) {
-        // Get existing entry to preserve rating if it exists
         const existing = Library.getEntry(item.id, item.mediaType);
         Library.upsert(
           {
@@ -181,11 +141,10 @@ export default function DiscoveryPage({
             showStatus: item.showStatus,
             lastAirDate: item.lastAirDate,
             synopsis: item.synopsis,
-            userRating: existing?.userRating || item.userRating, // Preserve existing rating
+            userRating: existing?.userRating || item.userRating,
           },
           "not"
         );
-        // Trigger library change to update UI immediately
         setLibraryVersion((prev) => prev + 1);
       }
     },
@@ -194,18 +153,17 @@ export default function DiscoveryPage({
   return (
     <section className="px-4 py-4">
       <div className="max-w-screen-2xl mx-auto">
-        {!query && (
-          <div className="mb-4">
-            <h2 className="text-lg font-semibold text-neutral-200 mb-2">
-              🎯 Personalized Recommendations
-            </h2>
-            <p className="text-sm text-neutral-400">
-              Based on your ratings and preferences
-            </p>
-          </div>
-        )}
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-neutral-200 mb-2">
+            🎯 Personalized Recommendations
+          </h2>
+          <p className="text-sm text-neutral-400">
+            Based on your ratings and preferences. Use the search bar for movies
+            and TV shows.
+          </p>
+        </div>
 
-        {!query && !items.length && !isLoading && !isAuthenticated && (
+        {!items.length && !isLoading && !isAuthenticated && (
           <div className="text-center py-8">
             <div className="text-4xl mb-4">🔐</div>
             <h3 className="text-lg font-medium text-neutral-200 mb-2">
@@ -218,7 +176,7 @@ export default function DiscoveryPage({
           </div>
         )}
 
-        {!query && !items.length && !isLoading && isAuthenticated && (
+        {!items.length && !isLoading && isAuthenticated && (
           <div className="text-center py-8">
             <div className="text-4xl mb-4">🎬</div>
             <h3 className="text-lg font-medium text-neutral-200 mb-2">
@@ -231,16 +189,9 @@ export default function DiscoveryPage({
           </div>
         )}
 
-        {query && !query.trim() && (
-          <div className="text-xs text-neutral-500 mb-3">
-            Type a search above.
-          </div>
-        )}
         {isLoading && (
           <div className="text-xs text-neutral-500 mb-3">
-            {query.trim()
-              ? "Loading search results..."
-              : "Loading personalized recommendations..."}
+            Loading personalized recommendations...
           </div>
         )}
 
@@ -248,7 +199,7 @@ export default function DiscoveryPage({
           <div className="text-center py-8">
             <div className="text-4xl mb-4">❌</div>
             <h3 className="text-lg font-medium text-neutral-200 mb-2">
-              Failed to Load Search Results
+              Failed to Load Recommendations
             </h3>
             <p className="text-sm text-neutral-400">Please try again later.</p>
           </div>
@@ -258,35 +209,24 @@ export default function DiscoveryPage({
           <ErrorBoundary
             name="DiscoveryResults"
             onReset={() => {
-              // Refetch search results if searching, otherwise discovery will auto-refetch
-              if (query.trim()) {
-                // Search results update automatically via Firestore listener
-              }
+              /* useSmartDiscovery refetches on its own */
             }}
           >
             <div className="grid grid-cols-[repeat(auto-fill,154px)] gap-3">
-              {items.map((it: any, index: number) => {
-                // Normalize mediaType - ensure it's 'movie' or 'tv'
+              {items.map((it: Record<string, unknown>, index: number) => {
                 const mediaType = (it.kind || it.mediaType || "movie") as
                   | "movie"
                   | "tv";
                 const normalizedMediaType = mediaType === "tv" ? "tv" : "movie";
 
                 const mediaItem: MediaItem = {
-                  id: String(it.id), // Ensure id is string
+                  id: String(it.id),
                   mediaType: normalizedMediaType,
-                  title: it.title || "Untitled",
-                  posterUrl: it.posterUrl || it.poster, // Use posterUrl if available, fallback to poster
-                  year: it.year,
-                  voteAverage: it.voteAverage,
+                  title: (it.title as string) || "Untitled",
+                  posterUrl: (it.posterUrl || it.poster) as string | undefined,
+                  year: it.year as string | undefined,
+                  voteAverage: it.voteAverage as number | undefined,
                 };
-
-                console.log("🎬 Rendering discovery card:", {
-                  id: mediaItem.id,
-                  mediaType: mediaItem.mediaType,
-                  title: mediaItem.title,
-                  hasActions: !!actions,
-                });
 
                 return (
                   <div
