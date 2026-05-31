@@ -19,13 +19,17 @@ The app no longer uses Express, Postgres, Prisma, or Docker. Local dev runs thro
 npm install --legacy-peer-deps
 ```
 
-2. Create a repo-root `.env` (or set in the Netlify dashboard for deploy) with at least:
+2. Copy env templates and add your values (never commit `.env`):
 
 ```bash
-TMDB_KEY=your_tmdb_api_key
+cp .env.example .env
+# Optional: frontend-only overrides when running Vite without Netlify CLI
+cp apps/web/.env.example apps/web/.env
 ```
 
-Firebase client keys (`VITE_FIREBASE_*`) are configured via Netlify env for production; set locally if testing auth/sync.
+Required in repo-root `.env` for local dev: `TMDB_TOKEN`, `VITE_FIREBASE_*`. See [docs/ENV.md](docs/ENV.md).
+
+Production: set the same keys in the Netlify dashboard (not in git).
 
 ### Run locally
 

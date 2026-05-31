@@ -23,11 +23,13 @@ Open http://localhost:8888
 
 ## Environment variables
 
-Set in repo-root `.env` or Netlify dashboard:
+Use repo-root `.env` (from `.env.example`) for `npx netlify dev`. Optional `apps/web/.env` is **VITE_* only** for bare Vite.
 
-- `TMDB_KEY` — required for search/discovery/posters
+- `TMDB_TOKEN` — required for search/discovery/posters (TMDB proxy)
 - `VITE_FIREBASE_*` — required for auth/sync when testing signed-in flows
 - Billing/goofs/feedback function secrets — only when testing those features
+
+Details: [ENV.md](ENV.md)
 
 ## Removed runtime (community backend)
 
@@ -46,6 +48,6 @@ The following are **gone** and not needed locally:
 
 ## Troubleshooting
 
-- **Search returns nothing** — check `TMDB_KEY` is set and `npx netlify dev` is running (not plain `vite` alone).
+- **Search returns nothing** — check `TMDB_TOKEN` is set in repo-root `.env` and `npx netlify dev` is running (not plain `vite` alone).
 - **Billing validate fails locally** — billing functions must be present under `apps/web/netlify/functions/billing/`.
 - **Auth works but sync fails** — verify Firebase env vars and signed-in user.
