@@ -1,24 +1,4 @@
 {
-  "indexes": [
-    {
-      "collectionGroup": "posts",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "title",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "excerpt",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "tagSlugs",
-          "order": "ASCENDING"
-        }
-      ]
-    }
-  ],
+  "indexes": [],
   "fieldOverrides": []
 }
-

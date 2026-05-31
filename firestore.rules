@@ -2,11 +2,10 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper functions
     function isAuthenticated() {
       return request.auth != null;
     }
-    
+
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
@@ -17,94 +16,54 @@ service cloud.firestore {
         && request.auth.token.role == 'admin';
     }
 
-    // Rule for reading public channel/config data
-    match /channels/{channelId} {
-        allow read: if isAuthenticated();
-    }
-
-    // App configuration - community channels config
-    // Allows all users to read (public config), admins to write
-    match /appConfig/{configId} {
-        allow read: if true;
-        allow write: if isAdmin();
-    }
-
-    // Posts collection - read for all, write for authenticated users
-    match /posts/{postId} {
-      allow read: if true;
-      allow create: if isAuthenticated() 
-        && request.resource.data.authorId == request.auth.uid;
-        // ... validation rules
-      allow update: if (isOwner(resource.data.authorId) || isAdmin());
-      allow delete: if isOwner(resource.data.authorId) || isAdmin();
-      
-      // Votes sub-collection
-      match /votes/{userId} {
-        allow read: if true;
-        allow write: if isAuthenticated() 
-          && userId == request.auth.uid
-          && request.resource.data.value is int
-          && (request.resource.data.value == 1 || request.resource.data.value == -1);
-      }
-
-      // Comments sub-collection
-      match /comments/{commentId} {
-        allow read: if true;
-        allow create: if isAuthenticated()
-          && request.resource.data.authorId == request.auth.uid;
-          // ... validation rules
-        allow update, delete: if isAuthenticated()
-          && (resource.data.authorId == request.auth.uid);
-        
-        // Replies sub-collection
-        match /replies/{replyId} {
-          allow read: if true;
-          allow create: if isAuthenticated()
-            && request.resource.data.authorId == request.auth.uid;
-            // ... validation rules
-          allow update, delete: if isAuthenticated()
-            && request.auth.uid == resource.data.authorId;
-        }
-      }
-    }
-
-    // Users collection
+    // Users and per-user subcollections (library sync, settings, tabs, notifications, billing)
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated()
-        && userId == request.auth.uid
+      allow create: if isOwner(userId)
         && request.resource.data.uid == request.auth.uid;
-      allow update: if isAuthenticated()
-        && userId == request.auth.uid
+      allow update: if isOwner(userId)
         && request.resource.data.uid == resource.data.uid;
-      allow delete: if isAuthenticated()
-        && userId == request.auth.uid;
+      allow delete: if isOwner(userId);
+
+      match /settings/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /tabState/{tabKey} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /notificationSettings/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /episodeProgress/{showId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /billing/{docId} {
+        allow read: if isOwner(userId);
+        allow write: if isAdmin();
+      }
     }
 
-    // Reports collection
-    match /reports/{reportId} {
-      allow create: if isAuthenticated()
-        && request.resource.data.reportedBy == request.auth.uid;
-        // ... validation rules
-      allow read, update: if isAdmin();
-      allow delete: if false;
-    }
-
-    // Username claiming rules
+    // Username claiming
     match /usernames/{handle} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null
-                    && request.resource.data.uid == request.auth.uid
-                    && !exists(/databases/$(database)/documents/usernames/$(handle));
-      allow delete: if request.auth != null
-                    && resource.data.uid == request.auth.uid;
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated()
+        && request.resource.data.uid == request.auth.uid
+        && !exists(/databases/$(database)/documents/usernames/$(handle));
+      allow delete: if isAuthenticated()
+        && resource.data.uid == request.auth.uid;
     }
 
-    match /users/{userId}/settings/{doc=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    // Goofs / insights (client read for signed-in users; writes via admin/functions)
+    match /insights/{tmdbId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
 
-    // Admin rules (fallback)
+    // Admin access to remaining collections (e.g. titles, diagnostics)
     match /{document=**} {
       allow read, write: if isAdmin();
     }
