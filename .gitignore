@@ -2,7 +2,27 @@
 android/app/build/
 ios/build/
 dist/
+apps/web/dist/
 .DS_Store
+
+# Vite / local caches
+apps/web/node_modules/.vite/
+
+# Lighthouse CI output (regenerate via npm run lh:*)
+.lighthouseci/
+Lighthouse Reports/
+
+# Firebase / local debug logs
+firestore-debug.log
+firebase-debug.log
+firestore-debug.*.log
+
+# Accidental shell pager captures (do not commit)
+tatus
+tash
+tatus --porcelain
+h origin main
+; npm run build
 
 # Playwright
 /test-results/
