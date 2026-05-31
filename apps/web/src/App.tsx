@@ -59,6 +59,7 @@ import AuthConfigError from "@/components/AuthConfigError";
 import { isAuthInFlightInOtherTab } from "@/lib/authBroadcast";
 import { getOnboardingCompleted } from "@/lib/onboarding";
 import { backfillShowStatus } from "@/utils/backfillShowStatus";
+import { backfillSynopsis } from "@/utils/backfillSynopsis";
 import DebugAuthHUD from "@/components/DebugAuthHUD";
 import { useReturningShows } from "@/state/selectors/useReturningShows";
 import { trackTabOpenedReturning } from "@/lib/analytics";
@@ -542,6 +543,7 @@ export default function App() {
     const backfillTimer = setTimeout(() => {
       // ⚠️ REMOVED: debugGate diagnostics disabled
       backfillShowStatus();
+      backfillSynopsis();
     }, 3000); // Wait 3 seconds after app loads
 
     return () => {

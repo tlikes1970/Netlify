@@ -17,7 +17,7 @@ export function getToastCallback(): ((message: string, type: 'success' | 'error'
 }
 
 // Helper function to fetch title and year from TMDB API
-async function fetchMediaDataFromTMDB(id: string, mediaType: MediaType): Promise<{ title: string; year?: string; showStatus?: string; lastAirDate?: string }> {
+async function fetchMediaDataFromTMDB(id: string, mediaType: MediaType): Promise<{ title: string; year?: string; showStatus?: string; lastAirDate?: string; synopsis?: string }> {
   try {
     const endpoint = mediaType === 'movie' ? `/movie/${id}` : `/tv/${id}`;
     const data = await get(endpoint);
@@ -27,12 +27,16 @@ async function fetchMediaDataFromTMDB(id: string, mediaType: MediaType): Promise
     // Extract year from release_date (movies) or first_air_date (TV shows)
     const dateString = mediaType === 'movie' ? data.release_date : data.first_air_date;
     const year = dateString ? String(dateString).slice(0, 4) : undefined;
+    const synopsis = typeof data.overview === 'string' && data.overview.trim()
+      ? data.overview.trim()
+      : undefined;
     
     return { 
       title, 
       year,
       showStatus: mediaType === 'tv' ? data.status : undefined,
-      lastAirDate: mediaType === 'tv' ? data.last_air_date : undefined
+      lastAirDate: mediaType === 'tv' ? data.last_air_date : undefined,
+      synopsis,
     };
   } catch (error) {
     console.warn(`Failed to fetch media data for ${mediaType}:${id}:`, error);
@@ -51,6 +55,7 @@ export function mountActionBridge() {
       mediaType: mediaType as MediaType, 
       title: mediaData.title,
       year: mediaData.year,
+      synopsis: mediaData.synopsis,
       showStatus: mediaData.showStatus as 'Ended' | 'Returning Series' | 'In Production' | 'Canceled' | 'Planned' | undefined,
       lastAirDate: mediaData.lastAirDate
     }, 'wishlist');
@@ -72,6 +77,7 @@ export function mountActionBridge() {
       mediaType: mediaType as MediaType, 
       title: mediaData.title,
       year: mediaData.year,
+      synopsis: mediaData.synopsis,
       showStatus: mediaData.showStatus as 'Ended' | 'Returning Series' | 'In Production' | 'Canceled' | 'Planned' | undefined,
       lastAirDate: mediaData.lastAirDate
     }, 'watched');
@@ -93,6 +99,7 @@ export function mountActionBridge() {
       mediaType: mediaType as MediaType, 
       title: mediaData.title,
       year: mediaData.year,
+      synopsis: mediaData.synopsis,
       showStatus: mediaData.showStatus as 'Ended' | 'Returning Series' | 'In Production' | 'Canceled' | 'Planned' | undefined,
       lastAirDate: mediaData.lastAirDate
     }, 'not');
@@ -122,6 +129,7 @@ export function mountActionBridge() {
       title: mediaData.title,
       year: mediaData.year,
       nextAirDate,
+      synopsis: mediaData.synopsis,
       showStatus: mediaData.showStatus as 'Ended' | 'Returning Series' | 'In Production' | 'Canceled' | 'Planned' | undefined,
       lastAirDate: mediaData.lastAirDate
     }, 'watching');

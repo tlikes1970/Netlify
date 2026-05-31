@@ -8,6 +8,7 @@ import { ProviderBadges } from '../ProviderBadge';
 import { DragHandle } from '../DragHandle';
 import MyListToggle from '../../MyListToggle';
 import { Library } from '../../../lib/storage';
+import { getItemSynopsis } from '../../../lib/itemSynopsis';
 
 // neutral 112x168 poster placeholder (SVG data URI)
 const POSTER_PLACEHOLDER = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
@@ -49,7 +50,8 @@ export interface MovieCardMobileProps {
 
 export function MovieCardMobile({ item, actions, tabKey = 'watching', index = 0, onDragStart, onDragEnd, onKeyboardReorder, isDragging }: MovieCardMobileProps) {
   const [enrichedItem, setEnrichedItem] = React.useState(item);
-  const { title, year, posterUrl, synopsis } = enrichedItem;
+  const synopsis = getItemSynopsis(enrichedItem);
+  const { title, year, posterUrl } = enrichedItem;
   
   // Subscribe to library changes to update rating/notes
   React.useEffect(() => {
@@ -58,6 +60,7 @@ export function MovieCardMobile({ item, actions, tabKey = 'watching', index = 0,
       if (latestEntry) {
         setEnrichedItem({
           ...item,
+          synopsis: latestEntry.synopsis,
           userRating: latestEntry.userRating,
           userNotes: latestEntry.userNotes,
           tags: latestEntry.tags,

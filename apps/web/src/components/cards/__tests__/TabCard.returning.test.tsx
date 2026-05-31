@@ -137,4 +137,36 @@ describe('TabCard returning labels', () => {
 
     expect(screen.getByText('Date TBA')).toBeInTheDocument();
   });
+
+  it('renders synopsis text when present on library items', () => {
+    render(
+      <TabCard
+        item={{
+          ...baseItem,
+          synopsis: 'A test show about returning seasons.',
+        }}
+        tabType="watching"
+      />
+    );
+
+    expect(
+      screen.getByText('A test show about returning seasons.')
+    ).toBeInTheDocument();
+  });
+
+  it('falls back to overview when synopsis is absent', () => {
+    render(
+      <TabCard
+        item={{
+          ...baseItem,
+          overview: 'Legacy overview field from older stored data.',
+        } as MediaItem & { overview?: string }}
+        tabType="want"
+      />
+    );
+
+    expect(
+      screen.getByText('Legacy overview field from older stored data.')
+    ).toBeInTheDocument();
+  });
 });

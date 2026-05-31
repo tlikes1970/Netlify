@@ -225,7 +225,7 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
 
 .card-desktop .info-col header .meta {
   font-size: 0.8125rem; /* Slightly smaller */
-  color: rgba(255, 255, 255, 0.5); /* More muted */
+  color: var(--muted);
   margin-bottom: 0.375rem; /* Reduced from 0.5rem - tighter meta to next section */
 }
 
@@ -269,7 +269,7 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
 .card-desktop .synopsis {
   font-size: var(--font-sm, 13px);
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.75); /* Lighter than pure gray */
+  color: var(--muted);
   margin: 0;
   padding: 0;
   display: -webkit-box;

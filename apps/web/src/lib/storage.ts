@@ -287,6 +287,10 @@ export const Library = {
       if (oldEntry.nextAirDate && !filteredItem.nextAirDate) {
         preservedUserData.nextAirDate = oldEntry.nextAirDate;
       }
+      // Preserve synopsis when refresh sends an empty string or omits it
+      if (oldEntry.synopsis && !filteredItem.synopsis) {
+        preservedUserData.synopsis = oldEntry.synopsis;
+      }
     }
 
     // Merge: new metadata first, then preserved user data, then always-set fields

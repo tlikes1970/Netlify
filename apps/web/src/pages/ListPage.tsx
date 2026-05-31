@@ -1,5 +1,7 @@
 import TabCard from "@/components/cards/TabCard";
 import type { MediaItem } from "@/components/cards/card.types";
+import { getItemSynopsis } from "@/lib/itemSynopsis";
+import { backfillSynopsisForItems } from "@/utils/backfillSynopsis";
 import { Library, LibraryEntry } from "@/lib/storage";
 import { useSettings, getPersonalityText, DEFAULT_PERSONALITY } from "@/lib/settings";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
@@ -328,6 +330,23 @@ export default function ListPage({
 
     return result;
   }, [items, filters, selectedTag, sortByTag, sortMode, stableSort, mode]);
+
+  // Fetch missing TMDB overviews for Want/Watched items (common gap vs search adds)
+  useEffect(() => {
+    if (mode !== "want" && mode !== "watched") return;
+    if (processedItems.length === 0) return;
+
+    let cancelled = false;
+
+    (async () => {
+      if (cancelled) return;
+      await backfillSynopsisForItems(processedItems);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [mode, processedItems]);
 
   // Map mode to Library list name
   const getListName = (
@@ -974,7 +993,7 @@ export default function ListPage({
                     year: item.year,
                     voteAverage: item.voteAverage,
                     userRating: item.userRating,
-                    synopsis: item.synopsis,
+                    synopsis: getItemSynopsis(item),
                     nextAirDate: item.nextAirDate,
                     showStatus: item.showStatus, // ✅ ADD THIS
                     lastAirDate: item.lastAirDate, // ✅ ADD THIS
@@ -1207,7 +1226,7 @@ export default function ListPage({
                     year: item.year,
                     voteAverage: item.voteAverage,
                     userRating: item.userRating,
-                    synopsis: item.synopsis,
+                    synopsis: getItemSynopsis(item),
                     nextAirDate: item.nextAirDate,
                     showStatus: item.showStatus,
                     lastAirDate: item.lastAirDate,

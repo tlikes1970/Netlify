@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import type { CardActionHandlers, MediaItem } from "./card.types";
+import { getItemSynopsis } from "@/lib/itemSynopsis";
 import { useTranslations } from "../../lib/language";
 import { useSettings } from "../../lib/settings";
 import { Library } from "../../lib/storage";
@@ -95,7 +96,8 @@ export default function TabCard({
     };
   }, [item.id, item.mediaType]);
 
-  const { title, year, posterUrl, voteAverage, synopsis, mediaType } = item;
+  const { title, year, posterUrl, voteAverage, mediaType } = item;
+  const synopsis = getItemSynopsis(item);
   const userRating = currentRating; // Use the latest rating
   const rating =
     typeof voteAverage === "number"
