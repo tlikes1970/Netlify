@@ -66,11 +66,6 @@ export interface Settings {
       extrasAccess: boolean;
     };
   };
-  
-  // Community
-  community: {
-    followedTopics: string[]; // Array of topic slugs user follows
-  };
 }
 
 // Default settings
@@ -104,11 +99,43 @@ const DEFAULT_SETTINGS: Settings = {
       extrasAccess: false,
     },
   },
-  
-  community: {
-    followedTopics: [],
-  },
 };
+
+/** Legacy community settings may still exist in localStorage/Firestore until rewritten. */
+type SettingsPayload = Omit<Partial<Settings>, 'layout' | 'community'> & {
+  community?: { followedTopics?: string[] };
+  layout?: Partial<Settings['layout']>;
+};
+
+/** Remove retired community fields from stored or remote settings payloads. */
+export function stripLegacySettingsFields<T extends SettingsPayload>(raw: T): Omit<T, 'community'> {
+  const { community: _removed, ...rest } = raw;
+  return rest;
+}
+
+export function mergeSettingsFromPayload(source: SettingsPayload): Settings {
+  const cleaned = stripLegacySettingsFields(source);
+  return {
+    ...DEFAULT_SETTINGS,
+    ...cleaned,
+    notifications: {
+      ...DEFAULT_SETTINGS.notifications,
+      ...(cleaned.notifications || {}),
+    },
+    layout: {
+      ...DEFAULT_SETTINGS.layout,
+      ...(cleaned.layout || {}),
+    },
+    pro: {
+      ...DEFAULT_SETTINGS.pro,
+      ...(cleaned.pro || {}),
+      features: {
+        ...DEFAULT_SETTINGS.pro.features,
+        ...(cleaned.pro?.features || {}),
+      },
+    },
+  };
+}
 
 type FirebaseUserSettings = UserSettings & Partial<{
   displayName: string;
@@ -116,9 +143,10 @@ type FirebaseUserSettings = UserSettings & Partial<{
   notifications: Settings['notifications'];
   layout: Settings['layout'];
   pro: Settings['pro'];
-  community: Settings['community'];
   fullSettings: Settings;
   theme: Theme;
+  /** @deprecated Removed with community feature; stripped on load */
+  community?: SettingsPayload['community'];
 }>;
 
 // Storage key
@@ -140,9 +168,8 @@ class SettingsManager {
     try {
       const stored = localStorage.getItem(KEY);
       if (stored) {
-        const parsed = JSON.parse(stored);
-        // Merge with defaults to handle new settings
-        return { ...DEFAULT_SETTINGS, ...parsed };
+        const parsed = JSON.parse(stored) as SettingsPayload;
+        return mergeSettingsFromPayload(parsed);
       }
     } catch (error) {
       console.warn('Failed to load settings:', error);
@@ -198,8 +225,6 @@ class SettingsManager {
           notifications: this.settings.notifications,
           layout: this.settings.layout,
           pro: this.settings.pro,
-          community: this.settings.community,
-          // Store full settings as JSON for easy retrieval
           fullSettings: this.settings,
         };
 
@@ -232,64 +257,27 @@ class SettingsManager {
       let firebaseFullSettings: Settings;
       
       if (firebaseSettings.fullSettings) {
-        // New format: full settings object stored
-        firebaseFullSettings = firebaseSettings.fullSettings;
+        firebaseFullSettings = mergeSettingsFromPayload(firebaseSettings.fullSettings);
       } else {
-        // Legacy format: individual fields, convert to Settings format
-        // This handles backward compatibility with existing Firebase data
-        firebaseFullSettings = {
-          ...DEFAULT_SETTINGS,
-          displayName: firebaseSettings.displayName || DEFAULT_SETTINGS.displayName,
-          personalityLevel: (firebaseSettings.personalityLevel as PersonalityLevel) || DEFAULT_SETTINGS.personalityLevel,
-          layout: {
-            ...DEFAULT_SETTINGS.layout,
-            theme: (firebaseSettings.theme as Theme) || DEFAULT_SETTINGS.layout.theme,
-            ...(firebaseSettings.layout || {}),
-          },
-          notifications: {
-            ...DEFAULT_SETTINGS.notifications,
-            ...(firebaseSettings.notifications || {}),
-          },
-          pro: {
-            ...DEFAULT_SETTINGS.pro,
-            ...(firebaseSettings.pro || {}),
-          },
-          community: {
-            ...DEFAULT_SETTINGS.community,
-            ...(firebaseSettings.community || {}),
-          },
+        const legacyPayload: SettingsPayload = {
+          displayName: firebaseSettings.displayName,
+          personalityLevel: firebaseSettings.personalityLevel as PersonalityLevel | undefined,
+          notifications: firebaseSettings.notifications,
+          pro: firebaseSettings.pro,
+          community: firebaseSettings.community,
         };
+        if (firebaseSettings.layout || firebaseSettings.theme) {
+          legacyPayload.layout = {
+            ...(firebaseSettings.layout || {}),
+            ...(firebaseSettings.theme
+              ? { theme: firebaseSettings.theme as Theme }
+              : {}),
+          };
+        }
+        firebaseFullSettings = mergeSettingsFromPayload(legacyPayload);
       }
 
-      // Merge Firebase settings with local settings
-      // Firebase wins for conflict resolution
-      
-      // Merge with defaults to handle new settings fields
-      const mergedSettings: Settings = {
-        ...DEFAULT_SETTINGS,
-        ...firebaseFullSettings,
-        // Deep merge nested objects
-        notifications: {
-          ...DEFAULT_SETTINGS.notifications,
-          ...firebaseFullSettings.notifications,
-        },
-        layout: {
-          ...DEFAULT_SETTINGS.layout,
-          ...firebaseFullSettings.layout,
-        },
-        pro: {
-          ...DEFAULT_SETTINGS.pro,
-          ...firebaseFullSettings.pro,
-          features: {
-            ...DEFAULT_SETTINGS.pro.features,
-            ...firebaseFullSettings.pro.features,
-          },
-        },
-        community: {
-          ...DEFAULT_SETTINGS.community,
-          ...firebaseFullSettings.community,
-        },
-      };
+      const mergedSettings = firebaseFullSettings;
 
       // Update local settings
       this.settings = mergedSettings;
@@ -362,21 +350,6 @@ class SettingsManager {
 
   updateDiscoveryLimit(limit: 25 | 50 | 75 | 100): void {
     this.settings.layout.discoveryLimit = limit;
-    this.saveSettings();
-  }
-
-  updateFollowedTopics(topics: string[]): void {
-    this.settings.community.followedTopics = topics;
-    this.saveSettings();
-  }
-
-  toggleFollowTopic(topicSlug: string): void {
-    const current = this.settings.community.followedTopics;
-    if (current.includes(topicSlug)) {
-      this.settings.community.followedTopics = current.filter(t => t !== topicSlug);
-    } else {
-      this.settings.community.followedTopics = [...current, topicSlug];
-    }
     this.saveSettings();
   }
 
