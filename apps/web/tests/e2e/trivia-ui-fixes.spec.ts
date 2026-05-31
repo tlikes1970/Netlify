@@ -10,7 +10,7 @@ test.describe('Trivia Game UI Fixes', () => {
     // Navigate to home page
     await page.goto('/');
     
-    // Wait for home shell (Community rail removed; games no longer on home)
+    // Wait for home shell (games are not on home)
     await page.waitForSelector('#home-content-anchor', { timeout: 10000 });
 
     // Skip if Daily Trivia entry point is not on home

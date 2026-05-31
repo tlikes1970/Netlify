@@ -4,6 +4,8 @@
 **Project:** flicklet-71dff  
 **Purpose:** Complete current-state capability map for PM/O&M documentation
 
+> **Superseded sections (May 2026):** Community, email digest, unsubscribe, and Express/Prisma backend entries in this report are historical. See [docs/LOCAL_DEV.md](LOCAL_DEV.md) and [docs/ARCHIVE_NOTE_2026-05-30.md](ARCHIVE_NOTE_2026-05-30.md) for the simplified stack.
+
 ---
 
 ## 1. Core Features

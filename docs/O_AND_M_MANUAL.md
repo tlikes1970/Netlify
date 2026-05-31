@@ -5,6 +5,8 @@
 **Last Updated:** January 2025  
 **Maintainer:** Flicklet Development Team
 
+> **Superseded sections (May 2026):** Community hub, Express/Prisma backend, `weeklyDigest`, `unsubscribe`, and community push/reply functions are removed. References below to those features are historical only. Current runtime: Netlify Functions + Firebase (see [docs/LOCAL_DEV.md](LOCAL_DEV.md)).
+
 ---
 
 ## Table of Contents

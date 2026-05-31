@@ -58,7 +58,7 @@ This archive preserves the **exact codebase state** before any simplification, d
 
 ### Tooling & reference
 
-- `FLICKLET_CURRENT_STATE_REPORT.md` — read-only architecture audit (same date)
+- Pre-simplification architecture audits (removed in May 2026 doc cleanup; this note is the canonical archive summary)
 - Tests: Vitest, Playwright, server Jest
 
 ## Architecture summary (snapshot)

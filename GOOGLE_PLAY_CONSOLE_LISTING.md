@@ -49,10 +49,9 @@ Track your favorite TV shows and movies with Flicklet. Discover new content, man
 • Search - Find movies and TV shows instantly
 • In Theaters - Discover movies playing near you with realistic theater showtimes
 
-🎮 DAILY GAMES & COMMUNITY
+🎮 DAILY GAMES
 • FlickWord - Daily word-guessing game with statistics tracking
 • Daily Trivia - Test your movie and TV knowledge (first 10 questions free)
-• Community Player - Watch curated entertainment videos
 
 ✨ KEY FEATURES
 • Always Free Core Features - No paywalls for basic tracking

@@ -41,13 +41,9 @@ npx netlify dev
 
 See [docs/LOCAL_DEV.md](docs/LOCAL_DEV.md) for runtime details.
 
-### No longer required
+### Removed stack (historical)
 
-These processes are **not** needed for local development:
-
-- `docker compose up postgres`
-- Express server on port 4000 (`server/`)
-- Prisma migrations or seed
+Express, Postgres/Prisma, Docker, and the community `/api/v1` backend are gone. See [docs/LOCAL_DEV.md](docs/LOCAL_DEV.md) and [docs/ARCHIVE_NOTE_2026-05-30.md](docs/ARCHIVE_NOTE_2026-05-30.md).
 
 ### Optional: Firebase Functions
 

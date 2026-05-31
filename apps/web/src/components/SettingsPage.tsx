@@ -525,8 +525,6 @@ export default function SettingsPage({
 // - NotificationsTab (replaced by NotificationsSection)
 // - LayoutTab (replaced by DisplaySection)
 // - DataTab (replaced by DataSection)
-// - SocialTab (removed - placeholder content)
-// - CommunityTab (removed - placeholder content)
 // - ProTab (replaced by ProSection)
 // - AboutTab (replaced by AboutSection)
 
