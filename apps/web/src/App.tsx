@@ -35,7 +35,6 @@ const ListPage = lazy(() => import("@/pages/ListPage"));
 const MyListsPage = lazy(() => import("@/pages/MyListsPage"));
 const DiscoveryPage = lazy(() => import("@/pages/DiscoveryPage"));
 const AuthDebugPage = lazy(() => import("@/debug/AuthDebugPage"));
-const UnsubscribePage = lazy(() => import("@/pages/UnsubscribePage"));
 import PullToRefreshWrapper from "@/components/PullToRefreshWrapper";
 import { useForYouRows } from "@/hooks/useForYouRows";
 import { useForYouContent } from "@/hooks/useGenreContent";
@@ -95,13 +94,13 @@ export default function App() {
     typeof window !== "undefined" ? window.location.pathname : "/"
   );
   const isDebugAuth = currentPath === "/debug/auth";
-  const isUnsubscribe = currentPath === "/unsubscribe";
 
   // Legacy community URLs → home
   useEffect(() => {
     if (
       /^\/posts\/[^/]+$/.test(currentPath) ||
-      currentPath === "/admin"
+      currentPath === "/admin" ||
+      currentPath === "/unsubscribe"
     ) {
       window.history.replaceState({}, "", "/");
       setCurrentPath("/");
@@ -1365,31 +1364,6 @@ export default function App() {
           }
         >
           <AuthDebugPage />
-        </Suspense>
-      </PersonalityErrorBoundary>
-    );
-  }
-
-  // Render unsubscribe page if on /unsubscribe route
-  if (isUnsubscribe) {
-    return (
-      <PersonalityErrorBoundary>
-        <Suspense
-          fallback={
-            <div
-              className="min-h-screen flex items-center justify-center"
-              style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}
-            >
-              <div className="text-center">
-                <div className="w-8 h-8 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-sm" style={{ color: "var(--muted)" }}>
-                  Loading...
-                </p>
-              </div>
-            </div>
-          }
-        >
-          <UnsubscribePage />
         </Suspense>
       </PersonalityErrorBoundary>
     );

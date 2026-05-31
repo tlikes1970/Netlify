@@ -207,59 +207,6 @@
         }
       ]
     },
-    "unsubscribe-email": {
-      "title": "How to Unsubscribe from Email",
-      "content": [
-        {
-          "type": "heading",
-          "text": "Method 1: Email Link"
-        },
-        {
-          "type": "list",
-          "items": [
-            "Open your weekly digest email",
-            "Scroll to the bottom",
-            "Click the 'Unsubscribe' link",
-            "You'll be redirected to the unsubscribe page",
-            "Your subscription will be cancelled immediately"
-          ]
-        },
-        {
-          "type": "screenshot",
-          "description": "Weekly digest email → bottom → 'Unsubscribe' link"
-        },
-        {
-          "type": "heading",
-          "text": "Method 2: Settings (Coming Soon)"
-        },
-        {
-          "type": "list",
-          "items": [
-            "Go to Settings → Notifications",
-            "Find the 'Email Digest' toggle",
-            "Turn it off to unsubscribe",
-            "Turn it back on to resubscribe"
-          ]
-        },
-        {
-          "type": "heading",
-          "text": "What You'll Miss"
-        },
-        {
-          "type": "list",
-          "items": [
-            "Weekly summary of top posts",
-            "Notifications when someone mentions you",
-            "New comment highlights",
-            "You'll still receive push notifications if enabled"
-          ]
-        },
-        {
-          "type": "note",
-          "text": "Unsubscribe tokens expire after 30 days. If the link doesn't work, contact support."
-        }
-      ]
-    },
     "keyboard-shortcuts": {
       "title": "Keyboard Shortcuts",
       "content": [
@@ -302,11 +249,6 @@
           "type": "qa",
           "question": "How do I become an admin?",
           "answer": "Admin roles are granted manually by the development team. Contact support with your email address to request admin access. You'll need to sign out and sign back in after the role is granted."
-        },
-        {
-          "type": "qa",
-          "question": "Why aren't my emails arriving?",
-          "answer": "Check your spam folder first. Make sure your email address is verified in Firebase Auth. You also need to have 'emailSubscriber=true' in your user profile. Contact support if issues persist."
         },
         {
           "type": "qa",
