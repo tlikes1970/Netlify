@@ -37,13 +37,14 @@ From the repo root:
 
 ```bash
 npx netlify dev
+# or: npm run dev
 ```
 
 - App: http://localhost:8888
 - Netlify functions: `/.netlify/functions/*` and `/api/*` redirects (TMDB proxy, billing, feedback, etc.)
 - Vite dev server runs behind Netlify on port 4173 (configured in `netlify.toml`)
 
-See [docs/LOCAL_DEV.md](docs/LOCAL_DEV.md) for runtime details.
+See [docs/LOCAL_DEV.md](docs/LOCAL_DEV.md) and [docs/RUNTIME.md](docs/RUNTIME.md) for runtime details.
 
 ### Removed stack (historical)
 

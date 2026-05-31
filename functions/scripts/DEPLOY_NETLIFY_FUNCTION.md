@@ -3,11 +3,9 @@
 ## Problem Identified ✅
 The test script confirmed: **404 Error - Function not deployed to Netlify**
 
-**Root Cause:** The function was in the wrong location!
-- ❌ Was at: `netlify/functions/goofs-fetch.cjs` (repo root)
-- ✅ Should be at: `apps/web/netlify/functions/goofs-fetch.cjs` (inside build base)
+**Runtime (current):** Netlify Functions live at repo-root `netlify/functions/` per `netlify.toml` (`directory = "netlify/functions"`). The duplicate `apps/web/netlify/functions/` tree was removed in simplification cleanup.
 
-Since `netlify.toml` has `base = "apps/web"`, Netlify looks for functions in `apps/web/netlify/functions/`, not the repo root.
+`build.base = "apps/web"` affects the SPA build only, not the functions directory path in root `netlify.toml`.
 
 ## Solution: Deploy to Netlify
 

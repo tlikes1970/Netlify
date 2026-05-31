@@ -6,7 +6,7 @@
 |-------|---------|
 | **Netlify CLI** (`npx netlify dev`) | Single local entry point — SPA + function proxies |
 | **Vite** (`apps/web`) | Frontend dev/build (proxied by Netlify on port 4173) |
-| **Netlify Functions** (`apps/web/netlify/functions/`) | TMDB proxy, billing, feedback, goofs, dict, send-email |
+| **Netlify Functions** (`netlify/functions/` at repo root) | TMDB proxy, billing, feedback, goofs, dict, send-email |
 | **Firebase** (client SDK) | Auth, Firestore sync for signed-in users |
 | **Firebase Functions** (`functions/`) | Admin role, Pro status, goofs ingest (deployed separately) |
 | **localStorage** | Offline-first library and settings |
@@ -16,8 +16,10 @@
 ```bash
 # From repo root
 npm install --legacy-peer-deps
-npx netlify dev
+npx netlify dev   # same as npm run dev
 ```
+
+See [RUNTIME.md](RUNTIME.md) for the full post-simplification map.
 
 Open http://localhost:8888
 
@@ -49,5 +51,5 @@ The following are **gone** and not needed locally:
 ## Troubleshooting
 
 - **Search returns nothing** — check `TMDB_TOKEN` is set in repo-root `.env` and `npx netlify dev` is running (not plain `vite` alone).
-- **Billing validate fails locally** — billing functions must be present under `apps/web/netlify/functions/billing/`.
+- **Billing validate fails locally** — billing handlers must be under `netlify/functions/billing/`.
 - **Auth works but sync fails** — verify Firebase env vars and signed-in user.
