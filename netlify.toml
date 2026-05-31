@@ -62,16 +62,6 @@
   status = 200
   force = true
 
-# Backend API proxy
-# In production: uses Netlify function (requires BACKEND_API_URL env var)
-# In development (netlify dev): redirects to localhost:4000
-# Must be before SPA fallback to work correctly
-[[redirects]]
-  from = "/api/v1/*"
-  to   = "/.netlify/functions/backend-proxy/api/v1/:splat"
-  status = 200
-  force = true
-
 # Hide a path
 [[redirects]]
   from = "/emails"

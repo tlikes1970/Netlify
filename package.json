@@ -31,8 +31,7 @@
     "// NOTE: mobile builds use --mode mobile so API_BASE points at production backend.": "",
     "mobile:build": "npm run build --prefix apps/web -- --mode mobile",
     "mobile:sync": "npm run mobile:build && npx cap copy && npx cap sync",
-    "mobile:android": "npm run mobile:sync && npx cap open android",
-    "functions:add-mock-posts": "npm run add:mock-posts --prefix functions"
+    "mobile:android": "npm run mobile:sync && npx cap open android"
   },
   "dependencies": {
     "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
