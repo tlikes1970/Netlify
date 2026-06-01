@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from './useAuth';
 import { useProStatus } from '../lib/proStatus';
-import { auth } from '../lib/firebaseBootstrap';
 import {
   ensureTrialStartMs,
   resolveEntitlements,
@@ -21,8 +20,7 @@ export function useEntitlements(): EntitlementState {
       setTrialStartMs(null);
       return;
     }
-    const creationTime = auth.currentUser?.metadata?.creationTime;
-    const start = ensureTrialStartMs(user.uid, creationTime);
+    const start = ensureTrialStartMs(user.uid);
     setTrialStartMs(start);
   }, [user?.uid]);
 

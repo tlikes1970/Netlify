@@ -61,18 +61,25 @@ describe('entitlements', () => {
     expect(isTrialActive(start, NOW)).toBe(true);
   });
 
-  it('legacy user without stored trial uses auth creation time when recent', () => {
-    const creation = '2026-05-20T00:00:00.000Z';
-    const start = ensureTrialStartMs('user-ent-test-recent', creation);
-    expect(start).toBe(Date.parse(creation));
-    expect(isTrialExpired(start, false, true, NOW)).toBe(false);
-  });
-
-  it('migration fallback starts trial at now when no creation time', () => {
+  it('first sign-in starts a fresh trial at now', () => {
     const before = Date.now();
-    const start = ensureTrialStartMs('user-ent-test-new', undefined);
+    const start = ensureTrialStartMs('user-ent-test-new');
     expect(start).toBeGreaterThanOrEqual(before);
     expect(isTrialActive(start, Date.now())).toBe(true);
+  });
+
+  it('resets expired legacy v1 trial record to a new 21-day window', () => {
+    const userId = 'user-ent-test-migrate';
+    const expiredStart = NOW - (TRIAL_LENGTH_DAYS + 5) * DAY;
+    localStorage.setItem(
+      'flicklet.trial.v1',
+      JSON.stringify({ userId, startMs: expiredStart, version: 1 })
+    );
+    const before = Date.now();
+    const start = ensureTrialStartMs(userId);
+    expect(start).toBeGreaterThanOrEqual(before);
+    expect(isTrialActive(start, Date.now())).toBe(true);
+    localStorage.removeItem('flicklet.trial.v1');
   });
 
   it('anonymous user is not read-only', () => {

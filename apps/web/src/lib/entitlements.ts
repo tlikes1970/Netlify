@@ -8,6 +8,8 @@ import type { ProStatus } from './proStatus';
 export const TRIAL_LENGTH_DAYS = 21;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 export const TRIAL_STORAGE_KEY = 'flicklet.trial.v1';
+/** Bump when trial start rules change so expired legacy backfills can reset once. */
+export const TRIAL_RECORD_VERSION = 2;
 
 export type EntitlementPhase =
   | 'anonymous'
@@ -18,6 +20,7 @@ export type EntitlementPhase =
 export interface TrialRecord {
   userId: string;
   startMs: number;
+  version?: number;
 }
 
 export interface EntitlementInput {
@@ -72,18 +75,41 @@ export function parseAuthCreationTimeMs(
   return Number.isFinite(ms) ? ms : null;
 }
 
-/** Resolve or create trial start for a signed-in user (persisted per user). */
-export function ensureTrialStartMs(
-  userId: string,
-  creationTime: string | undefined
-): number {
+/**
+ * Resolve or create trial start for a signed-in user (persisted per user).
+ * New users always start a fresh 21-day window at first sign-in on this device.
+ * Legacy v1 records that used account creation time and already expired get one reset.
+ */
+export function ensureTrialStartMs(userId: string): number {
+  const nowMs = Date.now();
   const existing = loadTrialRecord(userId);
-  if (existing) return existing.startMs;
 
-  const creationMs = parseAuthCreationTimeMs(creationTime);
-  const startMs = creationMs ?? Date.now();
-  saveTrialRecord({ userId, startMs });
-  return startMs;
+  if (existing) {
+    const version = existing.version ?? 1;
+    if (version < TRIAL_RECORD_VERSION) {
+      if (!isTrialActive(existing.startMs, nowMs)) {
+        const record: TrialRecord = {
+          userId,
+          startMs: nowMs,
+          version: TRIAL_RECORD_VERSION,
+        };
+        saveTrialRecord(record);
+        return nowMs;
+      }
+      const bumped: TrialRecord = { ...existing, version: TRIAL_RECORD_VERSION };
+      saveTrialRecord(bumped);
+      return existing.startMs;
+    }
+    return existing.startMs;
+  }
+
+  const record: TrialRecord = {
+    userId,
+    startMs: nowMs,
+    version: TRIAL_RECORD_VERSION,
+  };
+  saveTrialRecord(record);
+  return nowMs;
 }
 
 export function getTrialDaysRemaining(
