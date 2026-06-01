@@ -15,7 +15,8 @@ import {
   DEFAULT_PERSONALITY,
 } from "../lib/settings";
 // PersonalityName type used implicitly through PERSONALITY_LIST
-import { useProStatus } from "../lib/proStatus";
+import { useEntitlements } from "../hooks/useEntitlements";
+import { getTrialStatusLabel } from "../lib/entitlements";
 import { useTranslations, useLanguage, changeLanguage } from "../lib/language";
 import { PRO_FEATURES_AVAILABLE, PRO_FEATURES_COMING_SOON } from "./settingsProConfig";
 import { UpgradeToProCTA } from "./UpgradeToProCTA";
@@ -383,8 +384,8 @@ function NotificationsSection({
 }: SettingsSectionProps) {
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
-  const proStatus = useProStatus();
-  const isProUser = proStatus.isPro;
+  const entitlements = useEntitlements();
+  const isProUser = entitlements.hasFullAccess;
   const translations = useTranslations();
 
   const handleOpenSettings = () => {
@@ -482,7 +483,7 @@ function NotificationsSection({
               </span>
               <span style={{ color: "var(--text)" }}>
                 {isProUser
-                  ? translations.timingCustomPro
+                  ? translations.timingCustomLeadTime
                   : translations.timing24HoursBefore}
               </span>
             </div>
@@ -491,16 +492,15 @@ function NotificationsSection({
                 {translations.notificationMethods}:
               </span>
               <span style={{ color: "var(--text)" }}>
-                {isProUser
-                  ? translations.methodsInAppPushEmail
-                  : translations.methodsInAppPush}
+                {translations.methodsDeviceNotifications}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Pro Upgrade Banner - Small note only */}
-        <UpgradeToProCTA variant="banner" />
+        {entitlements.isReadOnlyMode && (
+          <UpgradeToProCTA variant="banner" />
+        )}
       </div>
 
       {/* Modals */}
@@ -527,7 +527,7 @@ function NotificationsSection({
 function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
   const settings = useSettings();
   const translations = useTranslations();
-  const { isPro } = useProStatus();
+  const { hasFullAccess: isPro } = useEntitlements();
   const userLists = useCustomLists();
   const [editingListId, setEditingListId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -990,12 +990,11 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
 }
 
 function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
-  const proStatus = useProStatus();
-  const isProUser = proStatus.isPro;
+  const entitlements = useEntitlements();
+  const trialLabel = getTrialStatusLabel(entitlements);
 
   return (
     <div className="space-y-6">
-      {/* Pro Status */}
       <div
         className="text-center p-6 rounded-lg"
         style={{ backgroundColor: "var(--btn)" }}
@@ -1005,25 +1004,50 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
           className="text-xl font-semibold mb-2"
           style={{ color: "var(--text)" }}
         >
-          {isProUser ? "You're a Pro" : "Upgrade to Flicklet Pro"}
+          {entitlements.paidPro
+            ? "Thanks for supporting Flicklet"
+            : entitlements.trialActive
+              ? "Flicklet is fully unlocked for your trial"
+              : entitlements.isReadOnlyMode
+                ? "Trial ended — read-only mode"
+                : "Support Flicklet"}
         </h3>
-        <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
-          {isProUser
-            ? "Thanks for going Pro! All features are unlocked."
-            : "Get more out of Flicklet with Pro features."}
+        <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
+          {entitlements.paidPro
+            ? "Your one-time purchase keeps full access and helps cover hosting."
+            : entitlements.trialActive
+              ? `${trialLabel ?? "21-day full access active"}. Explore everything — reminders, Goofs, Extras, and your full library.`
+              : entitlements.isReadOnlyMode
+                ? "Your library stays available to view and export. Upgrade to add, edit, or move items again."
+                : "Sign in to start a 21-day full access trial, or upgrade anytime."}
         </p>
-        {!isProUser && (
-          <UpgradeToProCTA variant="button" />
+        {!entitlements.paidPro && (
+          <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
+            After the trial, the app becomes read-only unless you upgrade. Export is always
+            available. The ~$5 one-time purchase helps cover hosting, TMDB/API usage, Firebase,
+            and ongoing development — no subscriptions, no ads, and your data stays yours.
+          </p>
+        )}
+        {(entitlements.isReadOnlyMode || (!entitlements.paidPro && !entitlements.trialActive)) && (
+          <div className="mt-3">
+            <UpgradeToProCTA variant="button" />
+          </div>
+        )}
+        {entitlements.trialActive && !entitlements.paidPro && (
+          <p className="text-xs mt-3" style={{ color: "var(--muted)" }}>
+            Upgrade anytime if you want to keep full access after your trial ends.
+          </p>
         )}
       </div>
 
-      {/* Pro Features */}
       <div>
         <h4
           className="text-lg font-medium mb-4"
           style={{ color: "var(--text)" }}
         >
-          Pro Features
+          {entitlements.trialActive && !entitlements.paidPro
+            ? "Included during your trial"
+            : "What full access includes"}
         </h4>
 
         <div className="mb-6">

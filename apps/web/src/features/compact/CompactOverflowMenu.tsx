@@ -6,7 +6,7 @@ import type {
 } from "../../components/cards/card.types";
 import { Portal } from "../../components/overlay/Portal";
 import { useSettings } from "../../lib/settings";
-import { useProStatus } from "../../lib/proStatus";
+import { useEntitlements } from "../../hooks/useEntitlements";
 import { shareShowWithFallback } from "../../lib/shareLinks";
 import { useToast } from "../../components/Toast";
 
@@ -38,7 +38,7 @@ export function CompactOverflowMenu({
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const settings = useSettings();
-  const proStatus = useProStatus();
+  const { hasFullAccess, isReadOnlyMode } = useEntitlements();
   const { addToast } = useToast();
 
   // Calculate menu position
@@ -169,8 +169,13 @@ export function CompactOverflowMenu({
 
   const handleActionClick = (action: any) => {
     // If Pro-only and user is not Pro, show upgrade prompt
-    if (action.proOnly && !proStatus.isPro) {
-      // Import startProUpgrade dynamically to avoid circular deps
+    if (action.proOnly && !hasFullAccess) {
+      if (isReadOnlyMode) {
+        import("../../lib/readOnlyGuard").then(({ notifyReadOnlyBlocked }) => {
+          notifyReadOnlyBlocked();
+        });
+        return;
+      }
       import("../../lib/proUpgrade").then(({ startProUpgrade }) => {
         startProUpgrade();
       });
@@ -198,7 +203,7 @@ export function CompactOverflowMenu({
     const isTVShow = (_item as any)?.mediaType === "tv";
     // Only show episode tracking if enabled in settings OR if user is Pro
     const episodeTrackingEnabled =
-      settings.layout.episodeTracking || proStatus.isPro;
+      settings.layout.episodeTracking || hasFullAccess;
 
     // Share handler for shows
     const handleShareShow = async (showItem: MediaItem) => {
@@ -272,21 +277,20 @@ export function CompactOverflowMenu({
             id: "goofs",
             label: "Goofs",
             onClick: handlers.onGoofsOpen,
-            proOnly: !proStatus.isPro,
+            proOnly: !hasFullAccess,
           });
         if (handlers.onExtrasOpen)
           menuItems.push({
             id: "extras",
             label: "Extras",
             onClick: handlers.onExtrasOpen,
-            proOnly: !proStatus.isPro,
+            proOnly: !hasFullAccess,
           });
         if (handlers.onNotificationToggle)
           menuItems.push({
             id: "notifications",
-            label: "Advanced Notifications",
+            label: "Watch Reminders",
             onClick: handlers.onNotificationToggle,
-            proOnly: !proStatus.isPro,
           });
         if (handlers.onDelete)
           menuItems.push({
@@ -346,21 +350,20 @@ export function CompactOverflowMenu({
             id: "goofs",
             label: "Goofs",
             onClick: handlers.onGoofsOpen,
-            proOnly: !proStatus.isPro,
+            proOnly: !hasFullAccess,
           });
         if (handlers.onExtrasOpen)
           menuItems.push({
             id: "extras",
             label: "Extras",
             onClick: handlers.onExtrasOpen,
-            proOnly: !proStatus.isPro,
+            proOnly: !hasFullAccess,
           });
         if (handlers.onNotificationToggle)
           menuItems.push({
             id: "notifications",
-            label: "Advanced Notifications",
+            label: "Watch Reminders",
             onClick: handlers.onNotificationToggle,
-            proOnly: !proStatus.isPro,
           });
         if (handlers.onDelete)
           menuItems.push({
@@ -420,21 +423,20 @@ export function CompactOverflowMenu({
             id: "goofs",
             label: "Goofs",
             onClick: handlers.onGoofsOpen,
-            proOnly: !proStatus.isPro,
+            proOnly: !hasFullAccess,
           });
         if (handlers.onExtrasOpen)
           menuItems.push({
             id: "extras",
             label: "Extras",
             onClick: handlers.onExtrasOpen,
-            proOnly: !proStatus.isPro,
+            proOnly: !hasFullAccess,
           });
         if (handlers.onNotificationToggle)
           menuItems.push({
             id: "notifications",
-            label: "Advanced Notifications",
+            label: "Watch Reminders",
             onClick: handlers.onNotificationToggle,
-            proOnly: !proStatus.isPro,
           });
         if (handlers.onDelete)
           menuItems.push({
@@ -503,21 +505,20 @@ export function CompactOverflowMenu({
             id: "goofs",
             label: "Goofs",
             onClick: handlers.onGoofsOpen,
-            proOnly: !proStatus.isPro,
+            proOnly: !hasFullAccess,
           });
         if (handlers.onExtrasOpen)
           menuItems.push({
             id: "extras",
             label: "Extras",
             onClick: handlers.onExtrasOpen,
-            proOnly: !proStatus.isPro,
+            proOnly: !hasFullAccess,
           });
         if (handlers.onNotificationToggle)
           menuItems.push({
             id: "notifications",
-            label: "Advanced Notifications",
+            label: "Watch Reminders",
             onClick: handlers.onNotificationToggle,
-            proOnly: !proStatus.isPro,
           });
         break;
 
@@ -651,21 +652,21 @@ export function CompactOverflowMenu({
                   padding: "var(--space-2, 8px) var(--space-3, 12px)",
                   border: 0,
                   background: "transparent",
-                  color: action.proOnly && !proStatus.isPro 
+                  color: action.proOnly && !hasFullAccess 
                     ? "var(--muted, rgba(255, 255, 255, 0.5))" 
                     : "var(--text, #ffffff)",
                   fontSize: "var(--font-sm, 13px)",
                   textAlign: "left",
-                  cursor: action.proOnly && !proStatus.isPro ? "not-allowed" : "pointer",
+                  cursor: action.proOnly && !hasFullAccess ? "not-allowed" : "pointer",
                   borderBottom:
                     index < menuActions.length - 1
                       ? "1px solid var(--line, rgba(255, 255, 255, 0.1))"
                       : "none",
                   transition: "background-color 0.2s ease",
-                  opacity: action.proOnly && !proStatus.isPro ? 0.6 : 1,
+                  opacity: action.proOnly && !hasFullAccess ? 0.6 : 1,
                 }}
                 onMouseEnter={(e) => {
-                  if (!(action.proOnly && !proStatus.isPro)) {
+                  if (!(action.proOnly && !hasFullAccess)) {
                     e.currentTarget.style.backgroundColor =
                       "var(--muted, rgba(255, 255, 255, 0.1))";
                   }
@@ -675,7 +676,7 @@ export function CompactOverflowMenu({
                 }}
               >
                 {action.label}
-                {action.proOnly && !proStatus.isPro && (
+                {action.proOnly && !hasFullAccess && (
                   <span style={{ 
                     marginLeft: "auto", 
                     fontSize: "10px", 

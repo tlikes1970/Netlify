@@ -1,4 +1,5 @@
-import { getProStatusSync } from './proStatus';
+import { getEntitlementsSync } from './entitlements';
+import { guardMutation } from './readOnlyGuard';
 import { API_BASE } from './apiConfig';
 
 export interface NotificationSettings {
@@ -135,6 +136,7 @@ class NotificationManager {
    * Config: proStatus.ts - getProStatus(), settingsProConfig.ts - PRO_FEATURES_AVAILABLE
    */
   updateSettings(updates: Partial<NotificationSettings>): void {
+    if (!guardMutation()) return;
     // Validate Pro-only features
     const isPro = this.isProUser();
     
@@ -398,8 +400,7 @@ class NotificationManager {
     // Use cached billing status synchronously
     // This is a synchronous method, so we use the cache
     // For React components, use useProStatus() hook instead
-    const proStatus = getProStatusSync();
-    return proStatus.isPro;
+    return getEntitlementsSync().hasFullAccess;
   }
 
   getAvailableTimingOptions(): Array<{ value: string; label: string; proOnly?: boolean }> {

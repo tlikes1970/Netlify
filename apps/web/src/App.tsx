@@ -64,6 +64,8 @@ import { useReturningShows } from "@/state/selectors/useReturningShows";
 import { trackTabOpenedReturning } from "@/lib/analytics";
 import { googleLogin } from "@/lib/authLogin";
 import { isCapacitorNative } from "@/lib/capacitorEnv";
+import { TrialStatusBanner } from "@/components/TrialStatusBanner";
+import { useEntitlements } from "@/hooks/useEntitlements";
 
 type View =
   | "home"
@@ -82,6 +84,8 @@ type SearchState = {
 };
 
 export default function App() {
+  useEntitlements();
+
   // Content anchor ref for Home down-arrow scroll target
   // This marks where the main content starts (first rail / main feed)
   // Config: Home down-arrow - scroll target anchor
@@ -908,6 +912,7 @@ export default function App() {
               setView("home");
             }}
           />
+          <TrialStatusBanner />
 
           {/* Desktop Tabs - tablet and above */}
           <div className="hidden md:block">
@@ -1391,6 +1396,7 @@ export default function App() {
             setView("home");
           }}
         />
+        <TrialStatusBanner />
 
         {/* Desktop Tabs - tablet and above */}
         <div className="hidden md:block">

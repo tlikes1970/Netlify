@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { notificationManager } from '../../lib/notifications';
-import { useProStatus } from '../../lib/proStatus';
+import { useEntitlements } from '../../hooks/useEntitlements';
 
 interface ShowNotificationSettingsModalProps {
   isOpen: boolean;
@@ -13,28 +13,19 @@ interface ShowNotificationSettingsModalProps {
 }
 
 export function ShowNotificationSettingsModal({ isOpen, onClose, show }: ShowNotificationSettingsModalProps) {
-  console.log('🔔 ShowNotificationSettingsModal render:', { isOpen, show: show?.title });
-  
-  if (!isOpen) {
-    console.log('🔔 Modal not open, returning null');
-    return null;
-  }
+  if (!isOpen) return null;
   
   const [showSettings, setShowSettings] = useState(notificationManager.getShowSettings(show.id));
   const [globalSettings, setGlobalSettings] = useState(notificationManager.getSettings());
   const [pushPermission, setPushPermission] = useState<NotificationPermission>('default');
-  // Pro gating: Use centralized Pro status helper
-  // Config: proStatus.ts - useProStatus()
-  const proStatus = useProStatus();
-  const isProUser = proStatus.isPro;
+  const { hasFullAccess } = useEntitlements();
+  const isProUser = hasFullAccess;
 
   useEffect(() => {
     if (isOpen) {
-      // Load current settings
       setShowSettings(notificationManager.getShowSettings(show.id));
       setGlobalSettings(notificationManager.getSettings());
       
-      // Check push notification permission
       if ('Notification' in window) {
         setPushPermission(Notification.permission);
       }
@@ -59,39 +50,22 @@ export function ShowNotificationSettingsModal({ isOpen, onClose, show }: ShowNot
     setPushPermission(permission ? 'granted' : 'denied');
   };
 
-  const sendTestNotification = async () => {
-    // Get user email from settings or prompt
-    const userEmail = prompt('Enter your email address to receive a test notification:');
-    if (!userEmail) return;
-
-    try {
-      await notificationManager.sendTestNotification(userEmail);
-      alert('✅ Test notification sent! Check your email.');
-    } catch (error) {
-      console.error('Test notification failed:', error);
-      alert('❌ Test notification failed. Please try again.');
-    }
-  };
-
   return (
     <div className="fixed inset-0 z-modal flex items-center justify-center">
-      {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black bg-opacity-50"
         onClick={onClose}
       />
       
-      {/* Modal */}
       <div 
         className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden"
         style={{ backgroundColor: 'var(--card)', color: 'var(--text)' }}
       >
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: 'var(--line)' }}>
           <div>
-            <h2 className="text-xl font-bold">🔔 Notification Settings</h2>
+            <h2 className="text-xl font-bold">🔔 Watch Reminders</h2>
             <p className="text-sm" style={{ color: 'var(--muted)' }}>
-              Manage notifications for <strong>{show.title}</strong>
+              Episode alerts for <strong>{show.title}</strong>
             </p>
           </div>
           <button
@@ -103,12 +77,10 @@ export function ShowNotificationSettingsModal({ isOpen, onClose, show }: ShowNot
           </button>
         </div>
 
-        {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] space-y-6">
           
-          {/* Show-specific Enable/Disable */}
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold">Episode Notifications</h3>
+            <h3 className="text-lg font-semibold">Episode Alerts</h3>
             <label className="flex items-center space-x-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -117,18 +89,17 @@ export function ShowNotificationSettingsModal({ isOpen, onClose, show }: ShowNot
                 className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
               />
               <div>
-                <span>Enable notifications for this show</span>
+                <span>Enable reminders for this show</span>
                 <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                  You will receive notifications for new episodes of {show.title}
+                  Get release alerts when new episodes of {show.title} are coming up
                 </p>
               </div>
             </label>
           </div>
 
-          {/* Show-specific Timing (Pro only) */}
           {isProUser && showSettings.enabled && (
             <div className="space-y-3">
-              <h3 className="text-lg font-semibold">Custom Timing</h3>
+              <h3 className="text-lg font-semibold">Reminder Timing</h3>
               <div className="space-y-2">
                 <label className="block text-sm font-medium">Hours before episode airs:</label>
                 <select
@@ -144,21 +115,19 @@ export function ShowNotificationSettingsModal({ isOpen, onClose, show }: ShowNot
                   ))}
                 </select>
                 <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                  Override global timing for this show only
+                  Overrides your global reminder timing for this show only
                 </p>
               </div>
             </div>
           )}
 
-          {/* Show-specific Notification Methods */}
           {showSettings.enabled && (
             <div className="space-y-3">
-              <h3 className="text-lg font-semibold">Notification Methods</h3>
+              <h3 className="text-lg font-semibold">Device Notifications</h3>
               <p className="text-sm" style={{ color: 'var(--muted)' }}>
-                Choose how you want to be notified for this show. These settings override your global preferences.
+                Choose how this show reaches you. These override your global device settings.
               </p>
               
-              {/* In-App Notifications */}
               <label className="flex items-center space-x-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -167,14 +136,13 @@ export function ShowNotificationSettingsModal({ isOpen, onClose, show }: ShowNot
                   className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                 />
                 <div>
-                  <span>In-app notifications</span>
+                  <span>In-app alerts</span>
                   <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                    Show notifications within the app
+                    Show reminders while you are using Flicklet
                   </p>
                 </div>
               </label>
 
-              {/* Push Notifications */}
               <label className="flex items-center space-x-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -186,84 +154,40 @@ export function ShowNotificationSettingsModal({ isOpen, onClose, show }: ShowNot
                 <div className="flex-1">
                   <span>Push notifications</span>
                   <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                    Browser notifications (works when app is closed)
+                    Device alerts when the app is in the background
                   </p>
                   {pushPermission === 'default' && (
                     <button
                       onClick={requestPushPermission}
                       className="text-xs text-blue-500 hover:underline mt-1"
                     >
-                      Grant permission
+                      Enable device notifications
                     </button>
                   )}
                   {pushPermission === 'denied' && (
                     <p className="text-xs text-red-500 mt-1">
-                      Permission denied. Enable in browser settings.
+                      Notifications are blocked. Turn them on in your browser or device settings.
                     </p>
                   )}
                 </div>
               </label>
-
-              {/* Email Notifications (Pro only) */}
-              <label className={`flex items-center space-x-3 ${!isProUser ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
-                <input
-                  type="checkbox"
-                  checked={showSettings.methods?.email !== false}
-                  onChange={(e) => handleMethodChange('email', e.target.checked)}
-                  disabled={!isProUser}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                />
-                <div>
-                  <span>Email notifications</span>
-                  <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                    {isProUser 
-                      ? 'Receive episode notifications via email' 
-                      : 'Pro feature - upgrade to enable email notifications'
-                    }
-                  </p>
-                  {!isProUser && (
-                    <span className="inline-block px-2 py-1 text-xs rounded-full mt-1" 
-                          style={{ backgroundColor: 'var(--accent)', color: 'white' }}>
-                      PRO
-                    </span>
-                  )}
-                </div>
-              </label>
             </div>
           )}
 
-          {/* Test Notification */}
-          {showSettings.enabled && (
-            <div className="space-y-3">
-              <h3 className="text-lg font-semibold">Test Email Notification</h3>
-              <button
-                onClick={sendTestNotification}
-                className="w-full px-4 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
-                style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-              >
-                📧 Send Test Email
-              </button>
-              <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                Send a test email to verify your email notification settings are working correctly
-              </p>
-            </div>
-          )}
-
-          {/* Global Settings Link */}
           <div className="p-4 rounded-lg border" style={{ backgroundColor: 'var(--btn)', borderColor: 'var(--line)' }}>
-            <h4 className="font-semibold mb-2">Global Notification Settings</h4>
+            <h4 className="font-semibold mb-2">Global Reminder Settings</h4>
             <p className="text-sm mb-3" style={{ color: 'var(--muted)' }}>
-              These settings apply to all shows unless overridden above.
+              Defaults for all shows unless overridden above. Open Settings → Watch Reminders to change.
             </p>
             <div className="space-y-1 text-sm">
               <div className="flex justify-between">
-                <span style={{ color: 'var(--muted)' }}>Global Notifications:</span>
+                <span style={{ color: 'var(--muted)' }}>Reminders:</span>
                 <span style={{ color: 'var(--text)' }}>
                   {globalSettings.globalEnabled ? 'Enabled' : 'Disabled'}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span style={{ color: 'var(--muted)' }}>Default Timing:</span>
+                <span style={{ color: 'var(--muted)' }}>Default timing:</span>
                 <span style={{ color: 'var(--text)' }}>
                   {isProUser 
                     ? `${globalSettings.proTierTiming} hours before`
@@ -277,7 +201,6 @@ export function ShowNotificationSettingsModal({ isOpen, onClose, show }: ShowNot
           </div>
         </div>
 
-        {/* Footer */}
         <div className="flex justify-end gap-3 p-6 border-t" style={{ borderColor: 'var(--line)' }}>
           <button
             onClick={onClose}

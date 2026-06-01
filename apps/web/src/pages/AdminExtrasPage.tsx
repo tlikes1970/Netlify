@@ -1226,7 +1226,7 @@ export default function AdminExtrasPage({
                       className="list-disc list-inside space-y-1 text-sm text-green-700"
                       style={{ color: "var(--text)" }}
                     >
-                      <li>Advanced Notifications</li>
+                      <li>Watch Reminders</li>
                       <li>Theme Packs</li>
                       <li>Bloopers Access</li>
                       <li>Extras Access</li>
@@ -1256,7 +1256,7 @@ export default function AdminExtrasPage({
                     >
                       <li>1 FlickWord game per day</li>
                       <li>10 Trivia questions per day</li>
-                      <li>No advanced notifications</li>
+                      <li>No watch reminders</li>
                       <li>No theme packs</li>
                       <li>No bloopers/extras access</li>
                     </ul>

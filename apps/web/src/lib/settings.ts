@@ -13,6 +13,7 @@
 
 import React from 'react';
 import { authManager } from './auth';
+import { guardMutation } from './readOnlyGuard';
 import type { UserSettings } from './auth.types';
 
 // Settings data model based on design document
@@ -178,6 +179,7 @@ class SettingsManager {
   }
 
   private saveSettings(): void {
+    if (!guardMutation()) return;
     try {
       localStorage.setItem(KEY, JSON.stringify(this.settings));
       this.notifySubscribers();

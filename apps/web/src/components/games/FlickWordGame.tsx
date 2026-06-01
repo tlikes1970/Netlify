@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useProStatus } from "../../lib/proStatus";
+import { useEntitlements } from "../../hooks/useEntitlements";
 import { getTodaysWord } from "../../lib/dailyWordApi";
 import { validateWord } from "../../lib/words/validateWord";
 import { getDailySeedDate } from "../../lib/dailySeed";
@@ -206,7 +206,7 @@ export default function FlickWordGame({
   onShowStats,
   onShowReview,
 }: FlickWordGameProps) {
-  const { isPro } = useProStatus();
+  const { hasFullAccess: isPro } = useEntitlements();
   const [game, setGame] = useState<GameState>({
     target: "",
     guesses: [],

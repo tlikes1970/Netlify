@@ -6,7 +6,7 @@
  * Dependencies: proUpgrade.ts, proStatus.ts
  */
 
-import { useProStatus } from "../lib/proStatus";
+import { useEntitlements } from "../hooks/useEntitlements";
 import { startProUpgrade } from "../lib/proUpgrade";
 
 export type UpgradeCTAVariant = 'banner' | 'panel' | 'inline' | 'button';
@@ -33,19 +33,22 @@ export function UpgradeToProCTA({
   showIcon,
   className = '',
 }: UpgradeToProCTAProps) {
-  const proStatus = useProStatus();
-  const isProUser = proStatus.isPro;
+  const entitlements = useEntitlements();
 
-  // Don't show upgrade CTA to Pro users
-  if (isProUser) {
+  // Paid Pro or active full-access trial — no upgrade nag
+  if (entitlements.paidPro || entitlements.hasFullAccess) {
     return null;
   }
 
   const defaultMessages = {
-    banner: 'Upgrade to Pro for precise timing control, email notifications, and more.',
-    panel: 'Get precise timing control, email notifications, bloopers access, and other advanced features',
-    inline: 'Upgrade to Pro',
-    button: 'Upgrade to Pro',
+    banner: entitlements.isReadOnlyMode
+      ? 'Your trial has ended. Upgrade to keep editing, or export your library anytime.'
+      : 'Start your 21-day full access trial, or upgrade to keep access after trial.',
+    panel: entitlements.isReadOnlyMode
+      ? 'Trial ended — upgrade for full access or export your data from Settings.'
+      : '21-day full access trial — explore the complete app before deciding to support Flicklet.',
+    inline: entitlements.isReadOnlyMode ? 'Upgrade to keep editing' : 'Upgrade to Pro',
+    button: entitlements.isReadOnlyMode ? 'Upgrade to keep full access' : 'Upgrade to Pro',
   };
 
   const displayMessage = message || defaultMessages[variant];

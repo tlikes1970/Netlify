@@ -6,7 +6,7 @@ import { emit } from '../lib/events';
 import type { MediaItem } from '../components/cards/card.types';
 import { useTranslations } from '../lib/language';
 import { UpgradeToProCTA } from './UpgradeToProCTA';
-import { useProStatus } from '../lib/proStatus';
+import { useEntitlements } from '../hooks/useEntitlements';
 
 interface ListSelectorModalProps {
   isOpen: boolean;
@@ -20,7 +20,7 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
   const [existingListName, setExistingListName] = useState<string>('');
   const userLists = useCustomLists();
   const translations = useTranslations();
-  const proStatus = useProStatus();
+  const { hasFullAccess } = useEntitlements();
 
   if (!isOpen) return null;
 
@@ -202,7 +202,7 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
           </div>
         )}
 
-        {!proStatus.isPro && userLists.customLists.length >= userLists.maxLists && (
+        {!hasFullAccess && userLists.customLists.length >= userLists.maxLists && (
           <div className="mb-4">
             <UpgradeToProCTA 
               variant="panel" 

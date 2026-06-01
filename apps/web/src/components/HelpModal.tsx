@@ -270,8 +270,8 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   behind-the-scenes clips from verified sources.
                 </li>
                 <li>
-                  ⏰ <strong>Advanced Notifications:</strong> detailed timing
-                  control and per-show alerts.
+                  ⏰ <strong>Watch Reminders:</strong> episode alerts and timing
+                  on your device, per show.
                 </li>
                 <li>
                   🧩 <strong>Theme Packs:</strong> change how Flicklet looks for
@@ -370,8 +370,8 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   totals.
                 </li>
                 <li>
-                  <strong>Custom Reminders:</strong> set alerts ahead of time
-                  (Pro feature: precise timing control and email notifications).
+                  <strong>Watch Reminders:</strong> set episode alerts ahead of time
+                  on your device (in-app and push).
                 </li>
               </ul>
             </div>
@@ -380,7 +380,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
               <h4 className="font-semibold mb-2">How to Manage</h4>
               <ol className="list-decimal list-inside space-y-2 ml-4">
                 <li>
-                  Go to <strong>Settings → Notifications</strong>.
+                  Go to <strong>Settings → Watch Reminders</strong>.
                 </li>
                 <li>Toggle each alert on or off.</li>
                 <li>

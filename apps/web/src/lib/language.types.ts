@@ -40,8 +40,10 @@ export interface LanguageStrings {
   disabled: string;
   timing24HoursBefore: string;
   timingCustomPro: string;
+  timingCustomLeadTime: string;
   methodsInAppPush: string;
   methodsInAppPushEmail: string;
+  methodsDeviceNotifications: string;
   layout: string;
   data: string;
   pro: string;

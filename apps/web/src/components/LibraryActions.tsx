@@ -6,7 +6,8 @@ import { Library } from "../lib/storage";
 import { useTranslations } from "../lib/language";
 import { useSettings } from "../lib/settings";
 import StarRating from "./cards/StarRating";
-import { useProStatus } from "../lib/proStatus";
+import { useEntitlements } from "../hooks/useEntitlements";
+import { notifyReadOnlyBlocked } from "../lib/readOnlyGuard";
 import { startProUpgrade } from "../lib/proUpgrade";
 
 export type LibraryActionsMode = "list" | "search-inline" | "search-sheet";
@@ -37,8 +38,8 @@ export default function LibraryActions({
 }: LibraryActionsProps) {
   const translations = useTranslations();
   const settings = useSettings();
-  const proStatus = useProStatus();
-  const isPro = proStatus.isPro;
+  const { hasFullAccess, isReadOnlyMode } = useEntitlements();
+  const canUseProFeatures = hasFullAccess;
   const { mediaType } = item;
 
   // Determine current list from libraryEntry or Library
@@ -315,13 +316,13 @@ export default function LibraryActions({
             className={buttonClass}
             style={{
               backgroundColor: "var(--btn)",
-              color: settings.layout.episodeTracking || settings.pro.isPro ? "var(--text)" : "var(--muted)",
+              color: settings.layout.episodeTracking || canUseProFeatures ? "var(--text)" : "var(--muted)",
               borderColor: "var(--line)",
               border: "1px solid",
-              opacity: settings.layout.episodeTracking || settings.pro.isPro ? 1 : 0.6,
+              opacity: settings.layout.episodeTracking || canUseProFeatures ? 1 : 0.6,
             }}
-            disabled={!settings.layout.episodeTracking && !settings.pro.isPro}
-            title={settings.layout.episodeTracking || settings.pro.isPro ? "Track episode progress" : "Enable episode tracking in settings"}
+            disabled={!settings.layout.episodeTracking && !canUseProFeatures}
+            title={settings.layout.episodeTracking || canUseProFeatures ? "Track episode progress" : "Enable episode tracking in settings"}
           >
             Episode Progress
           </button>
@@ -406,12 +407,12 @@ export default function LibraryActions({
             className="w-full px-4 py-3 rounded-lg text-sm text-left"
             style={{
               backgroundColor: "var(--btn)",
-              color: settings.layout.episodeTracking || settings.pro.isPro ? "var(--text)" : "var(--muted)",
+              color: settings.layout.episodeTracking || canUseProFeatures ? "var(--text)" : "var(--muted)",
               borderColor: "var(--line)",
               border: "1px solid",
-              opacity: settings.layout.episodeTracking || settings.pro.isPro ? 1 : 0.6,
+              opacity: settings.layout.episodeTracking || canUseProFeatures ? 1 : 0.6,
             }}
-            disabled={!settings.layout.episodeTracking && !settings.pro.isPro}
+            disabled={!settings.layout.episodeTracking && !canUseProFeatures}
           >
             Episode Progress
           </button>
@@ -422,8 +423,10 @@ export default function LibraryActions({
           <div className="space-y-2 pt-2 border-t" style={{ borderColor: "var(--line)" }}>
             <button
               onClick={() => {
-                if (isPro && settings.pro.features.bloopersAccess) {
+                if (canUseProFeatures) {
                   actions?.onGoofsOpen?.(item);
+                } else if (isReadOnlyMode) {
+                  notifyReadOnlyBlocked();
                 } else {
                   startProUpgrade();
                 }
@@ -434,15 +437,17 @@ export default function LibraryActions({
                 color: "var(--text)",
                 borderColor: "var(--line)",
                 border: "1px solid",
-                opacity: isPro && settings.pro.features.bloopersAccess ? 1 : 0.65,
+                opacity: canUseProFeatures ? 1 : 0.65,
               }}
             >
-              Goofs {!isPro && "🔒"}
+              Goofs {!canUseProFeatures && "🔒"}
             </button>
             <button
               onClick={() => {
-                if (isPro && settings.pro.features.extrasAccess) {
+                if (canUseProFeatures) {
                   actions?.onExtrasOpen?.(item);
+                } else if (isReadOnlyMode) {
+                  notifyReadOnlyBlocked();
                 } else {
                   startProUpgrade();
                 }
@@ -453,17 +458,17 @@ export default function LibraryActions({
                 color: "var(--text)",
                 borderColor: "var(--line)",
                 border: "1px solid",
-                opacity: isPro && settings.pro.features.extrasAccess ? 1 : 0.65,
+                opacity: canUseProFeatures ? 1 : 0.65,
               }}
             >
-              Extras {!isPro && "🔒"}
+              Extras {!canUseProFeatures && "🔒"}
             </button>
             <button
               onClick={() => {
-                if (isPro) {
-                  actions?.onNotificationToggle?.(item);
+                if (isReadOnlyMode) {
+                  notifyReadOnlyBlocked();
                 } else {
-                  startProUpgrade();
+                  actions?.onNotificationToggle?.(item);
                 }
               }}
               className="w-full px-4 py-3 rounded-lg text-sm text-left"
@@ -472,10 +477,9 @@ export default function LibraryActions({
                 color: "var(--text)",
                 borderColor: "var(--line)",
                 border: "1px solid",
-                opacity: isPro ? 1 : 0.65,
               }}
             >
-              Advanced Notifications {!isPro && "🔒"}
+              Watch Reminders
             </button>
           </div>
         )}

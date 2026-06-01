@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ExtrasVideo } from "../../lib/extras/types";
 import { YouTubePlayer } from "./YouTubePlayer";
-import { useProStatus } from "../../lib/proStatus";
+import { useEntitlements } from "../../hooks/useEntitlements";
 import { startProUpgrade } from "../../lib/proUpgrade";
 
 interface ExtrasModalProps {
@@ -29,8 +29,7 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
 }) => {
   console.log("🎭 ExtrasModal render:", { isOpen, showId, showTitle });
 
-  const proStatus = useProStatus();
-  const isPro = proStatus.isPro;
+  const { hasFullAccess } = useEntitlements();
 
   const [extrasVideos, setExtrasVideos] = useState<ExtrasVideo[]>([]);
   const [loading, setLoading] = useState(false);
@@ -44,15 +43,14 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
 
   // Pro gating: Don't fetch content if not Pro
   useEffect(() => {
-    if (isOpen && !isPro) {
-      // Don't load extras if not Pro
+    if (isOpen && !hasFullAccess) {
       return;
     }
-    if (isOpen && isPro) {
+    if (isOpen && hasFullAccess) {
       loadExtras();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, showId, isPro]);
+  }, [isOpen, showId, hasFullAccess]);
 
   // Focus management
   useEffect(() => {
@@ -293,7 +291,7 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
             id="extras-modal-description"
             className="p-4 overflow-y-auto max-h-96"
           >
-            {!isPro ? (
+            {!hasFullAccess ? (
               <div className="text-center py-12">
                 <div className="text-4xl mb-4">💎</div>
                 <h3

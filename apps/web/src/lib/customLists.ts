@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import * as React from "react";
 import type { CustomList, UserLists, ListName } from "../state/library.types";
 import { getMaxCustomLists } from "./proConfig";
+import { guardMutation } from "./readOnlyGuard";
 
 const CUSTOM_LISTS_KEY = "flicklet.customLists.v2";
 
@@ -112,6 +113,9 @@ class CustomListManager {
    * Config: proConfig.ts - getMaxCustomLists()
    */
   createList(name: string, description?: string, color?: string): CustomList {
+    if (!guardMutation()) {
+      throw new Error('Your trial has ended. Upgrade or export your library to keep editing.');
+    }
     // Update maxLists to ensure we have the latest Pro status
     this.updateMaxLists();
     
@@ -139,6 +143,7 @@ class CustomListManager {
     id: string,
     updates: Partial<Pick<CustomList, "name" | "description" | "color">>
   ): CustomList | null {
+    if (!guardMutation()) return null;
     const listIndex = this.userLists.customLists.findIndex(
       (list) => list.id === id
     );
@@ -157,6 +162,7 @@ class CustomListManager {
   }
 
   deleteList(id: string): boolean {
+    if (!guardMutation()) return false;
     const listIndex = this.userLists.customLists.findIndex(
       (list) => list.id === id
     );

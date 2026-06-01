@@ -18,7 +18,8 @@ import { TvCardMobile } from "./mobile/TvCardMobile";
 import { MovieCardMobile } from "./mobile/MovieCardMobile";
 import { ProviderBadges } from "./ProviderBadge";
 import { startProUpgrade } from "../../lib/proUpgrade";
-import { useProStatus } from "../../lib/proStatus";
+import { useEntitlements } from "../../hooks/useEntitlements";
+import { notifyReadOnlyBlocked } from "../../lib/readOnlyGuard";
 import { useBackdropCallbacks } from "../WatchingListWithBackdrop";
 
 export type TabCardProps = {
@@ -63,8 +64,8 @@ export default function TabCard({
   onDrop,
   onKeyboardReorder,
 }: TabCardProps) {
-  const proStatus = useProStatus();
-  const isPro = proStatus.isPro;
+  const { hasFullAccess, isReadOnlyMode } = useEntitlements();
+  const canUseProFeatures = hasFullAccess;
   const backdropCallbacks = useBackdropCallbacks();
 
   dlog("🔔 TabCard render:", {
@@ -794,18 +795,18 @@ export default function TabCard({
                 style={{
                   backgroundColor: "var(--btn)",
                   color:
-                    settings.layout.episodeTracking || settings.pro.isPro
+                    settings.layout.episodeTracking || canUseProFeatures
                       ? "var(--text)"
                       : "var(--muted)",
                   borderColor: "var(--line)",
                   border: "1px solid",
                   opacity:
-                    settings.layout.episodeTracking || settings.pro.isPro
+                    settings.layout.episodeTracking || canUseProFeatures
                       ? 1
                       : 0.6,
                 }}
                 disabled={
-                  !settings.layout.episodeTracking && !settings.pro.isPro
+                  !settings.layout.episodeTracking && !canUseProFeatures
                 }
                 title={
                   settings.layout.episodeTracking || settings.pro.isPro
@@ -823,16 +824,20 @@ export default function TabCard({
             <div className="pro-buttons-row">
               <button
                 onClick={() => {
-                  if (isPro && settings.pro.features.bloopersAccess) {
+                  if (canUseProFeatures) {
                     actions?.onGoofsOpen?.(item);
+                  } else if (isReadOnlyMode) {
+                    notifyReadOnlyBlocked();
                   } else {
                     startProUpgrade();
                   }
                 }}
                 title={
-                  isPro && settings.pro.features.bloopersAccess
+                  canUseProFeatures
                     ? "View goofs and slip-ups"
-                    : "Pro feature - upgrade to unlock"
+                    : isReadOnlyMode
+                      ? "Trial ended — upgrade to unlock"
+                      : "Included in your full access trial"
                 }
                 className={buttonClass}
                 style={{
@@ -840,8 +845,7 @@ export default function TabCard({
                   color: "var(--text)",
                   borderColor: "var(--line)",
                   border: "1px solid",
-                  opacity:
-                    isPro && settings.pro.features.bloopersAccess ? 1 : 0.65,
+                  opacity: canUseProFeatures ? 1 : 0.65,
                   cursor: "pointer",
                 }}
               >
@@ -849,16 +853,20 @@ export default function TabCard({
               </button>
               <button
                 onClick={() => {
-                  if (isPro && settings.pro.features.extrasAccess) {
+                  if (canUseProFeatures) {
                     actions?.onExtrasOpen?.(item);
+                  } else if (isReadOnlyMode) {
+                    notifyReadOnlyBlocked();
                   } else {
                     startProUpgrade();
                   }
                 }}
                 title={
-                  isPro && settings.pro.features.extrasAccess
+                  canUseProFeatures
                     ? "View behind-the-scenes content"
-                    : "Pro feature - upgrade to unlock"
+                    : isReadOnlyMode
+                      ? "Trial ended — upgrade to unlock"
+                      : "Included in your full access trial"
                 }
                 className={buttonClass}
                 style={{
@@ -866,8 +874,7 @@ export default function TabCard({
                   color: "var(--text)",
                   borderColor: "var(--line)",
                   border: "1px solid",
-                  opacity:
-                    isPro && settings.pro.features.extrasAccess ? 1 : 0.65,
+                  opacity: canUseProFeatures ? 1 : 0.65,
                   cursor: "pointer",
                 }}
               >
@@ -875,16 +882,16 @@ export default function TabCard({
               </button>
               <button
                 onClick={() => {
-                  if (isPro) {
-                    actions?.onNotificationToggle?.(item);
+                  if (isReadOnlyMode) {
+                    notifyReadOnlyBlocked();
                   } else {
-                    startProUpgrade();
+                    actions?.onNotificationToggle?.(item);
                   }
                 }}
                 title={
-                  isPro
-                    ? "Advanced notifications with custom timing"
-                    : "Pro feature - upgrade to unlock"
+                  isReadOnlyMode
+                    ? "Trial ended — view-only mode"
+                    : "Watch reminders and episode alerts for this show"
                 }
                 className={buttonClass}
                 style={{
@@ -892,11 +899,10 @@ export default function TabCard({
                   color: "var(--text)",
                   borderColor: "var(--line)",
                   border: "1px solid",
-                  opacity: isPro ? 1 : 0.65,
                   cursor: "pointer",
                 }}
               >
-                Advanced Notifications
+                Watch Reminders
               </button>
             </div>
           )}

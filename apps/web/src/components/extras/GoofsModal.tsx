@@ -4,7 +4,7 @@ import {
   subscribeToGoofs,
   GoofSet,
 } from "../../lib/goofs/goofsStore";
-import { useProStatus } from "../../lib/proStatus";
+import { useEntitlements } from "../../hooks/useEntitlements";
 import { UpgradeToProCTA } from "../UpgradeToProCTA";
 
 interface GoofsModalProps {
@@ -33,8 +33,7 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
 }) => {
   console.log("🎭 GoofsModal render:", { isOpen, tmdbId, title });
 
-  const proStatus = useProStatus();
-  const isPro = proStatus.isPro;
+  const { hasFullAccess } = useEntitlements();
 
   const [goofs, setGoofs] = useState<GoofSet | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,11 +47,7 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
       return;
     }
 
-    if (!isPro) {
-      // Don't load if not Pro
-      if (import.meta.env.DEV) {
-        console.log("🎭 GoofsModal: User is not Pro, skipping load");
-      }
+    if (!hasFullAccess) {
       return;
     }
 
@@ -91,7 +86,7 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
     return () => {
       unsubscribe();
     };
-  }, [isOpen, tmdbId, isPro]);
+  }, [isOpen, tmdbId, hasFullAccess]);
 
   // Focus management
   useEffect(() => {
@@ -279,8 +274,8 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
             id="goofs-modal-description"
             className="p-4 overflow-y-auto max-h-96"
           >
-            {!isPro ? (
-              <UpgradeToProCTA variant="panel" message="Unlock insights and easter eggs for this title" />
+            {!hasFullAccess ? (
+              <UpgradeToProCTA variant="panel" message="Unlock insights and easter eggs for this title after your trial, or upgrade now to keep access" />
             ) : (
               renderGoofsContent()
             )}

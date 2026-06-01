@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useProStatus } from "../../lib/proStatus";
+import { useEntitlements } from "../../hooks/useEntitlements";
 import { getCachedTrivia } from "../../lib/triviaApi";
 import { getDailySeedDate } from "../../lib/dailySeed";
 import { SAMPLE_TRIVIA_QUESTIONS, type TriviaQuestion } from "../../lib/triviaQuestions";
@@ -31,7 +31,7 @@ export default function TriviaGame({
   onGameComplete,
   onShowReview,
 }: TriviaGameProps) {
-  const { isPro } = useProStatus();
+  const { hasFullAccess: isPro } = useEntitlements();
   const [questions, setQuestions] = useState<TriviaQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);

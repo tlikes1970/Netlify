@@ -4,7 +4,7 @@ import { BloopersSearchAssist } from '../../lib/extras/bloopersSearchAssist';
 import { EXTRAS_COPY } from '../../lib/copy/extras';
 import { flag } from '../../lib/flags';
 import { YouTubePlayer } from './YouTubePlayer';
-import { useProStatus } from '../../lib/proStatus';
+import { useEntitlements } from '../../hooks/useEntitlements';
 import { startProUpgrade } from '../../lib/proUpgrade';
 
 interface BloopersModalProps {
@@ -30,8 +30,7 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
 }) => {
   console.log('🎬 BloopersModal render:', { isOpen, showId, showTitle });
   
-  const proStatus = useProStatus();
-  const isPro = proStatus.isPro;
+  const { hasFullAccess } = useEntitlements();
   
   const [officialVideos, setOfficialVideos] = useState<ExtrasVideo[]>([]);
   const [searchResults, setSearchResults] = useState<BloopersSearchResult[]>([]);
@@ -144,7 +143,7 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
   // Pro gating: Load bloopers only if Pro
   useEffect(() => {
     if (!isOpen) return;
-    if (!isPro) {
+    if (!hasFullAccess) {
       // Don't load bloopers if not Pro
       setOfficialVideos([]);
       setSearchResults([]);
@@ -154,7 +153,7 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
     // Load bloopers if Pro
     loadBloopers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, showId, isPro]);
+  }, [isOpen, showId, hasFullAccess]);
 
   const handleSearchResultClick = (result: BloopersSearchResult) => {
     if (result.embeddable) {
@@ -266,7 +265,7 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
             id="bloopers-modal-description"
             className="p-4 overflow-y-auto max-h-96"
           >
-            {!isPro ? (
+            {!hasFullAccess ? (
               <div className="text-center py-12">
                 <div className="text-4xl mb-4">💎</div>
                 <h3 className="text-xl font-semibold mb-2" style={{ color: "var(--text)" }}>

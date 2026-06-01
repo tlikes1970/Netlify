@@ -4,6 +4,7 @@ import type { ListName } from "../state/library.types";
 import { customListManager } from "./customLists";
 import { authManager } from "./auth";
 import { debounce } from "./debounce";
+import { guardMutation } from "./readOnlyGuard";
 
 const KEY = "flicklet.library.v2";
 const OLD_KEY = "flicklet:v2:saved";
@@ -257,6 +258,7 @@ export const Library = {
     return Object.values(state);
   },
   upsert(item: MediaItem, list: ListName) {
+    if (!guardMutation()) return;
     const key = k(item.id, item.mediaType);
     const oldEntry = state[key];
 
@@ -350,6 +352,7 @@ export const Library = {
     }
   },
   move(id: string | number, mediaType: MediaType, list: ListName) {
+    if (!guardMutation()) return;
     const key = k(id, mediaType);
     const curr = state[key];
     if (!curr) return;
@@ -387,6 +390,7 @@ export const Library = {
     }
   },
   reorder(list: ListName, fromIndex: number, toIndex: number) {
+    if (!guardMutation()) return;
     const items = Library.getByList(list);
     if (
       fromIndex < 0 ||
@@ -470,6 +474,7 @@ export const Library = {
     }
   },
   remove(id: string | number, mediaType: MediaType) {
+    if (!guardMutation()) return;
     const key = k(id, mediaType);
     const entry = state[key];
     if (entry) {
@@ -545,6 +550,7 @@ export const Library = {
     rating: number,
     origin: "user" | "sync" | "discovery" = "user"
   ) {
+    if (origin === "user" && !guardMutation()) return;
     const key = k(id, mediaType);
     const entry = state[key];
     if (!entry) return;
