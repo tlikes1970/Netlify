@@ -5,6 +5,7 @@ import {
   getSmartRecommendations,
   analyzeUserPreferences,
   analyzeGenrePreferences,
+  buildLibraryMembershipSignature,
 } from "@/lib/smartDiscovery";
 import { get } from "@/lib/tmdb";
 import { useSettings } from "@/lib/settings";
@@ -46,11 +47,11 @@ export function useSmartDiscovery() {
   const watched = Library.getByList("watched");
   const notInterested = Library.getByList("not");
 
-  // Create stable hash of library contents to detect actual changes
+  // Stable hash: list membership + not-interested + ratings (for scoring refresh)
   const libraryHash = useMemo(() => {
     const allItems = [...watching, ...wishlist, ...watched, ...notInterested];
     return JSON.stringify({
-      count: allItems.length,
+      membership: buildLibraryMembershipSignature(allItems),
       ratings: allItems
         .filter((item) => item.userRating !== undefined)
         .map((item) => `${item.id}:${item.mediaType}:${item.userRating}`)

@@ -212,6 +212,91 @@ describe('Discovery cache — TTL behavior', () => {
     // Should have called API again due to library change
     expect(mockTmdbApi.mock.calls.length).toBe(12);
   });
+
+  it('invalidates cache when not-interested set changes', async () => {
+    const userId = 'test-user-not-interested';
+
+    vi.mocked(storage.Library.getAll).mockReturnValue([
+      {
+        id: '1',
+        mediaType: 'movie',
+        title: 'Blocked',
+        list: 'not',
+        addedAt: 1,
+      },
+    ] as storage.LibraryEntry[]);
+
+    const prefsWithNot: UserPreferences = {
+      ...basePreferences,
+      notInterestedIds: new Set(['movie:1']),
+    };
+
+    await getSmartRecommendations(
+      prefsWithNot,
+      10,
+      mockTmdbApi,
+      userId
+    );
+    expect(mockTmdbApi.mock.calls.length).toBe(6);
+
+    const prefsCleared: UserPreferences = {
+      ...basePreferences,
+      notInterestedIds: new Set(),
+    };
+
+    await getSmartRecommendations(
+      prefsCleared,
+      10,
+      mockTmdbApi,
+      userId
+    );
+    expect(mockTmdbApi.mock.calls.length).toBe(12);
+  });
+
+  it('invalidates cache when list membership changes with same library ids', async () => {
+    const userId = 'test-user-list-membership';
+
+    vi.mocked(storage.Library.getAll).mockReturnValue([
+      {
+        id: '5',
+        mediaType: 'tv',
+        title: 'Show',
+        list: 'wishlist',
+        addedAt: 1,
+      },
+    ] as storage.LibraryEntry[]);
+
+    await getSmartRecommendations(
+      basePreferences,
+      10,
+      mockTmdbApi,
+      userId
+    );
+    expect(mockTmdbApi.mock.calls.length).toBe(6);
+
+    vi.mocked(storage.Library.getAll).mockReturnValue([
+      {
+        id: '5',
+        mediaType: 'tv',
+        title: 'Show',
+        list: 'not',
+        addedAt: 1,
+      },
+    ] as storage.LibraryEntry[]);
+
+    const prefsAfterNot: UserPreferences = {
+      ...basePreferences,
+      notInterestedIds: new Set(['tv:5']),
+    };
+
+    await getSmartRecommendations(
+      prefsAfterNot,
+      10,
+      mockTmdbApi,
+      userId
+    );
+    expect(mockTmdbApi.mock.calls.length).toBe(12);
+  });
 });
 
 

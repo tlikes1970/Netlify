@@ -3,7 +3,12 @@ import { fetchGenreContent, CardData } from '@/lib/tmdb';
 // import { useSettings, getPersonalityText } from '@/lib/settings'; // Unused
 import { ForYouRow } from '@/components/GenreRowConfig';
 import { Library } from '@/lib/storage';
+import { buildLibraryMembershipSignature } from '@/lib/smartDiscovery';
 import { useState, useEffect, useRef } from 'react';
+
+function libraryMembershipSignature(): string {
+  return buildLibraryMembershipSignature(Library.getAll());
+}
 
 export function useGenreContent(mainGenre: string, subGenre: string) {
   // const settings = useSettings(); // Unused
@@ -29,19 +34,15 @@ export function useForYouContent(forYouRows: ForYouRow[]) {
   
   // State to trigger re-renders when library changes
   const [libraryVersion, setLibraryVersion] = useState(0);
-  const prevLibrarySizeRef = useRef(Library.getAll().length);
-  
-  // Subscribe to library changes - only update if library size actually changed
-  // This prevents unnecessary re-renders when library updates don't affect filtering
+  const prevMembershipRef = useRef(libraryMembershipSignature());
+
+  // Re-filter rails on list moves / not-interested — not on rating-only metadata
   useEffect(() => {
     const unsubscribe = Library.subscribe(() => {
-      const currentSize = Library.getAll().length;
-      // Only update if library size changed (items added/removed)
-      // This is a simple heuristic - could be improved to check specific items
-      if (currentSize !== prevLibrarySizeRef.current) {
-        console.log('🔄 Library changed, updating For You filtering');
-        prevLibrarySizeRef.current = currentSize;
-        setLibraryVersion(prev => prev + 1);
+      const signature = libraryMembershipSignature();
+      if (signature !== prevMembershipRef.current) {
+        prevMembershipRef.current = signature;
+        setLibraryVersion((prev) => prev + 1);
       }
     });
     return () => {
@@ -54,6 +55,9 @@ export function useForYouContent(forYouRows: ForYouRow[]) {
   );
   
   return queries.map((query, index) => {
+    // libraryVersion forces re-filter after membership changes (no TMDB refetch)
+    void libraryVersion;
+
     // Filter out items that are already in the library
     const filteredData = query.data?.filter(item => {
       const isInLibrary = Library.has(item.id, item.kind);

@@ -1506,8 +1506,8 @@ export default function App() {
                           color: "var(--muted)",
                           border: "1px solid var(--line)"
                         }}
-                        aria-label="Personalize recommendations"
-                        title="Personalize recommendations"
+                        aria-label="Personalize For You genres"
+                        title="Personalize For You genres"
                       >
                         {/* Gear/settings icon */}
                         <svg 
@@ -1529,7 +1529,7 @@ export default function App() {
                             d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" 
                           />
                         </svg>
-                        <span>Personalize</span>
+                        <span>Genres</span>
                       </button>
                     }
                   >
@@ -1561,7 +1561,7 @@ export default function App() {
                   )}
                   
                   {/* Scroll to top arrow - appears when scrolled down */}
-                  <ScrollToTopArrow threshold={400} />
+                  <ScrollToTopArrow />
                 </div>
               )}
 

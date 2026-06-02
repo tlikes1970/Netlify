@@ -158,8 +158,8 @@ export default function DiscoveryPage() {
             🎯 Personalized Recommendations
           </h2>
           <p className="text-sm text-neutral-400">
-            Based on your ratings and preferences. Use the search bar for movies
-            and TV shows.
+            Personalized by your tastes and tracking activity. Use the search bar
+            for specific titles.
           </p>
         </div>
 
@@ -170,8 +170,8 @@ export default function DiscoveryPage() {
               Sign In to Discover Content
             </h3>
             <p className="text-sm text-neutral-400 mb-4">
-              Sign in to get personalized recommendations based on your ratings
-              and preferences.
+              Sign in for recommendations personalized by your tastes and
+              tracking activity.
             </p>
           </div>
         )}
@@ -183,15 +183,15 @@ export default function DiscoveryPage() {
               Building Your Recommendations
             </h3>
             <p className="text-sm text-neutral-400 mb-4">
-              Rate some movies and TV shows to get personalized recommendations,
-              or use the search bar to find specific content.
+              Rate a few titles so we can personalize Discovery from your tastes
+              and tracking activity, or search for something specific.
             </p>
           </div>
         )}
 
         {isLoading && (
           <div className="text-xs text-neutral-500 mb-3">
-            Loading personalized recommendations...
+            Loading recommendations…
           </div>
         )}
 

@@ -140,10 +140,10 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     failedToSetDefaultList: "Failed to set default list",
     forYouSectionConfiguration: "For You Section Configuration",
     forYouSectionDescription:
-      'Customize the three "For You" rows on your home page. Each row combines a main genre with a subgenre for personalized recommendations.',
+      'Choose up to three genre rows for your home page. Each row pairs a main genre with a subgenre. Titles already on your lists are hidden automatically.',
     forYouAddAnotherRow: "+ Add Another Row",
     forYouTipText:
-      "💡 Tip: Your For You section will show personalized recommendations based on these genre combinations. The titles will automatically update as you make selections.",
+      "💡 Tip: For You updates as your lists change. Pick genres you enjoy — we personalize what shows up using your tastes and tracking activity.",
 
     // Notifications
     notificationTypes: "Notification Types",
@@ -500,10 +500,10 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
       "No se pudo establecer la lista como predeterminada",
     forYouSectionConfiguration: "Configuración de la sección Para ti",
     forYouSectionDescription:
-      'Personaliza las tres filas "Para ti" de tu página principal. Cada fila combina un género principal con un subgénero para recomendaciones personalizadas.',
+      'Elige hasta tres filas de género para tu página principal. Cada fila combina un género principal con un subgénero. Los títulos que ya están en tus listas no se muestran.',
     forYouAddAnotherRow: "+ Agregar otra fila",
     forYouTipText:
-      "💡 Consejo: Tu sección Para ti mostrará recomendaciones personalizadas según estas combinaciones de géneros. Los títulos se actualizarán automáticamente conforme hagas selecciones.",
+      "💡 Consejo: Para ti se actualiza cuando cambian tus listas. Elige géneros que te gusten; personalizamos lo que ves según tus gustos y tu actividad.",
 
     // Notifications
     notificationTypes: "Tipos de Notificación",

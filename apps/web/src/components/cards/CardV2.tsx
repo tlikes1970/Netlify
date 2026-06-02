@@ -10,6 +10,10 @@ import { CompactPrimaryAction } from '../../features/compact/CompactPrimaryActio
 import { CompactOverflowMenu } from '../../features/compact/CompactOverflowMenu';
 import { EpisodeProgressDisplay } from '../EpisodeProgressDisplay';
 import { ListMembershipBadge } from '../ListMembershipBadge';
+import {
+  POSTER_PLACEHOLDER,
+  resolvePosterUrl,
+} from '../../lib/posterPlaceholder';
 
 export type CardV2Props = {
   item: MediaItem;
@@ -70,7 +74,8 @@ function getListContextFromCardContext(context: CardContext): ListName | undefin
 }
 
 export default function CardV2({ item, context, actions, compact, showRating = true, disableSwipe = false, disableOverflow = false, currentListContext: propCurrentListContext }: CardV2Props) {
-  const { title, year, posterUrl, voteAverage } = item;
+  const { title, year, voteAverage } = item;
+  const displayPosterUrl = resolvePosterUrl(item.posterUrl);
   const rating = typeof voteAverage === 'number' ? Math.round(voteAverage * 10) / 10 : undefined;
   const translations = useTranslations();
   const isDesktop = useIsDesktop(); // Device detection for conditional swipe
@@ -101,22 +106,14 @@ export default function CardV2({ item, context, actions, compact, showRating = t
             }
           }}
         >
-          {posterUrl ? (
-            <OptimizedImage
-              src={posterUrl}
-              alt={title}
-              context="poster"
-              className="h-full w-full"
-              loading="lazy"
-            />
-          ) : (
-            <div 
-              className="flex h-full w-full items-center justify-center text-xs"
-              style={{ color: 'var(--muted)' }}
-            >
-              {translations.noPoster}
-            </div>
-          )}
+          <OptimizedImage
+            src={displayPosterUrl}
+            alt={title}
+            context="poster"
+            className="h-full w-full"
+            loading="lazy"
+            fallbackSrc={POSTER_PLACEHOLDER}
+          />
 
           {/* My List + */}
           {showMyListBtn && (

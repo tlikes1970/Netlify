@@ -229,7 +229,18 @@ function hashPreferences(prefs: UserPreferences): string {
     genres: Object.keys(prefs.favoriteGenres).sort().join(","),
     mediaTypes: `${prefs.preferredMediaTypes.movie.toFixed(2)}:${prefs.preferredMediaTypes.tv.toFixed(2)}`,
     favorites: Array.from(prefs.favoriteIds).sort().join(","),
+    notInterested: Array.from(prefs.notInterestedIds).sort().join(","),
   });
+}
+
+/** Membership-only signature for library change detection (excludes ratings). */
+export function buildLibraryMembershipSignature(
+  items: Array<{ id: string | number; mediaType: string; list: string }>
+): string {
+  return items
+    .map((item) => `${item.mediaType}:${item.id}:${item.list}`)
+    .sort()
+    .join("|");
 }
 
 export async function getSmartRecommendations(
