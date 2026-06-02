@@ -77,7 +77,6 @@ export default function CardV2({ item, context, actions, compact, showRating = t
   const { title, year, voteAverage } = item;
   const displayPosterUrl = resolvePosterUrl(item.posterUrl);
   const rating = typeof voteAverage === 'number' ? Math.round(voteAverage * 10) / 10 : undefined;
-  const translations = useTranslations();
   const isDesktop = useIsDesktop(); // Device detection for conditional swipe
 
   const showMyListBtn = context === 'tab-foryou' || context === 'search' || context === 'home' || context === 'tab-watching' || context === 'holiday';
