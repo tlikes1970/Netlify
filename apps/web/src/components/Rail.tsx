@@ -110,7 +110,7 @@ export default function Rail({ id, title, enabled = true, skeletonCount = 0, ite
         role="list"
         tabIndex={0}
         onKeyDown={onKeyDown}
-        className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2"
+        className="flex gap-3 overflow-x-auto snap-x snap-proximity pb-2 rail-scroll"
       >
         {list.map((it, i) => {
           // Convert Item to MediaItem format with proper title validation
@@ -133,7 +133,7 @@ export default function Rail({ id, title, enabled = true, skeletonCount = 0, ite
           };
 
           return (
-            <div key={it.id ?? i} role="listitem" className="snap-start">
+            <div key={it.id ?? i} role="listitem" className="snap-start flex-shrink-0">
               <CardV2
                 item={mediaItem}
                 context={context}

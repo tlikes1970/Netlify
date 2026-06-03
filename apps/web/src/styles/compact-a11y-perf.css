@@ -97,9 +97,10 @@ html[data-compact-mobile-v1="true"] {
     border: 1px solid var(--line, #e0e0e0);
   }
   
-  /* Add containment for card rows */
-  [data-rail] [data-cards] {
-    contain: layout paint;
+  /* Layout containment only — paint containment clipped horizontal rail scroll */
+  [data-rail] [data-cards],
+  [data-cards].rail-scroll {
+    contain: layout;
   }
   
   /* Optimize compact actions container */

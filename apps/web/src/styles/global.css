@@ -132,9 +132,61 @@ body,
 [data-cards]::-webkit-scrollbar {
   height: 8px;
 }
+[data-cards]::-webkit-scrollbar-track {
+  background: transparent;
+}
 [data-cards]::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.22);
   border-radius: 9999px;
+}
+[data-cards]::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+/* Horizontal home / For You rails — touch-friendly scroll, end gutter, no paint clip */
+.rail-scroll {
+  touch-action: pan-x pan-y;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: var(--space-4, 16px);
+  padding-inline-end: var(--space-4, 16px);
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+/* Light theme: scroll affordance + lane contrast (dark mode unchanged above) */
+[data-theme="light"] [data-cards]::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.2);
+}
+[data-theme="light"] [data-cards]::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.32);
+}
+[data-theme="light"] .rail-scroll {
+  background: color-mix(in srgb, var(--line) 50%, var(--card));
+  border-radius: var(--radius, 12px);
+  scrollbar-color: rgba(15, 23, 42, 0.22) transparent;
+}
+[data-theme="light"] [data-rail] [data-cards] .curated-card.v2 > div:first-child {
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    0 0 0 1px color-mix(in srgb, var(--line) 85%, transparent);
+}
+
+/* Discovery grid: column width matches CardV2 poster width tokens */
+.discovery-results-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(var(--poster-w, 160px), 1fr)
+  );
+}
+
+@media (min-width: 769px) {
+  .discovery-results-grid {
+    grid-template-columns: repeat(
+      auto-fill,
+      minmax(var(--poster-w-desktop, 225px), 1fr)
+    );
+  }
 }
 
 /* Focus styles for menu elements - WCAG AA compliant */

@@ -212,7 +212,7 @@ export default function DiscoveryPage() {
               /* useSmartDiscovery refetches on its own */
             }}
           >
-            <div className="grid grid-cols-[repeat(auto-fill,154px)] gap-3">
+            <div className="discovery-results-grid gap-3">
               {items.map((it: Record<string, unknown>, index: number) => {
                 const mediaType = (it.kind || it.mediaType || "movie") as
                   | "movie"
