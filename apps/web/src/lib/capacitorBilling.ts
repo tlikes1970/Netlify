@@ -1,4 +1,8 @@
 import { apiUrl } from './apiConfig';
+import {
+  FULL_ACCESS_PRODUCT_ID,
+  FULL_ACCESS_PRODUCT_TYPE,
+} from './billingProducts';
 
 /**
  * Process: Capacitor Billing Bridge
@@ -45,7 +49,7 @@ interface Purchase {
 export async function initializeBilling(): Promise<boolean> {
   const Capacitor = getCapacitor();
   if (!Capacitor || Capacitor.getPlatform() !== 'android') {
-    console.log('[Billing] Not Android platform, billing not available');
+    console.log('[Full Access] Not Android platform, billing not available');
     return false;
   }
 
@@ -54,13 +58,13 @@ export async function initializeBilling(): Promise<boolean> {
     if (typeof (window as any).Capacitor !== 'undefined') {
       // Plugin will be registered here when created
       // For now, return false to use backend API approach
-      console.log('[Billing] Native plugin not yet implemented, using backend API');
+      console.log('[Full Access] Use Billing plugin via startProUpgrade() on Android');
       return false;
     }
     
     return false;
   } catch (error) {
-    console.error('[Billing] Error initializing billing:', error);
+    console.error('[Full Access] Error initializing billing:', error);
     return false;
   }
 }
@@ -88,7 +92,7 @@ export async function getProducts(productIds: string[]): Promise<Product[]> {
       return data.products || [];
     }
   } catch (error) {
-    console.error('[Billing] Error fetching products:', error);
+    console.error('[Full Access] Error fetching products:', error);
   }
 
   return [];
@@ -97,10 +101,13 @@ export async function getProducts(productIds: string[]): Promise<Product[]> {
 /**
  * Launch purchase flow
  */
-export async function launchPurchase(productId: string, productType: 'subscription' = 'subscription'): Promise<PurchaseResult | null> {
+export async function launchPurchase(
+  productId: string = FULL_ACCESS_PRODUCT_ID,
+  productType: typeof FULL_ACCESS_PRODUCT_TYPE = FULL_ACCESS_PRODUCT_TYPE
+): Promise<PurchaseResult | null> {
   const Capacitor = getCapacitor();
   if (!Capacitor || Capacitor.getPlatform() !== 'android') {
-    console.log('[Billing] Not Android platform, purchase not available');
+    console.log('[Full Access] Not Android platform, purchase not available');
     return null;
   }
 
@@ -122,11 +129,11 @@ export async function launchPurchase(productId: string, productType: 'subscripti
       };
     } else {
       const error = await response.json();
-      console.error('[Billing] Purchase failed:', error);
+      console.error('[Full Access] Purchase failed:', error);
       throw new Error(error.message || 'Purchase failed');
     }
   } catch (error) {
-    console.error('[Billing] Error launching purchase:', error);
+    console.error('[Full Access] Error launching purchase:', error);
     throw error;
   }
 }
@@ -151,7 +158,7 @@ export async function restorePurchases(): Promise<Purchase[]> {
       return data.purchases || [];
     }
   } catch (error) {
-    console.error('[Billing] Error restoring purchases:', error);
+    console.error('[Full Access] Error restoring purchases:', error);
   }
 
   return [];

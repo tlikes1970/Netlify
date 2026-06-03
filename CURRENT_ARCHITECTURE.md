@@ -1,16 +1,22 @@
 # Current Architecture — Flicklet TV Tracker
 
-Last updated: 2026-06-02
+Last updated: 2026-06-03
 
-This document is the **source of truth for how the repo is organized and deployed today**. Update it when folders, deploy branches, or service boundaries change.
+This document is the **source of truth for how the repo is organized and deployed today**. Update it when folders, deploy branches, service boundaries, or runtime behavior (especially Capacitor / env) change.
 
 ---
 
-## AI workflow (standing instruction)
+## Standing documentation rule
 
-**AI assistants working on this repo must act as mentors, reviewers, coaches, and goalkeepers.** Do not blindly implement the user’s requested solution if there is a safer, simpler, more standard, or more scalable approach. Push back with evidence. Prefer globally accepted app-development best practices over one-off hacks. Explain risks in plain language. Keep the app focused, stable, low-support, and ready for Play Store testing.
+**Before any scoped Cursor/AI change**, review:
 
-When proposing changes, cite what you verified in the repo (paths, configs, runtime behavior) rather than assumptions.
+1. [CURRENT_TASK.md](./CURRENT_TASK.md)
+2. [KNOWN_ISSUES.md](./KNOWN_ISSUES.md)
+3. [CURRENT_ARCHITECTURE.md](./CURRENT_ARCHITECTURE.md)
+
+Update the affected doc(s) after changes that impact product direction, architecture, priorities, known issues, env/runtime behavior, or release status.
+
+**AI behavior:** Act as mentor, reviewer, coach, and goalkeeper. Cite verified paths and runtime behavior; avoid assumptions.
 
 ---
 
@@ -18,15 +24,42 @@ When proposing changes, cite what you verified in the repo (paths, configs, runt
 
 | Term | Meaning |
 |------|---------|
-| **Trial** | 21-day full access trial |
-| **Read-Only** | After trial: browse/export; limited write actions |
-| **Full Access** | Paid unlock (Google Play Billing on Android) |
+| **Trial** | 21-day full access (e.g. “Flicklet starts fully unlocked for your first 21 days”) |
+| **Read-Only** | After trial: browse, export, restore; limited writes |
+| **Full Access** | One-time paid unlock (Google Play Billing on Android) — not “Pro” / “Premium” / subscription wording in user copy |
 
-**Deprecated:** “Pro” — do not introduce new Pro labels; migrate remnants to Trial / Read-Only / Full Access.
+**Deprecated in user-facing copy:** Pro, Premium, Subscription, monthly/yearly pricing language, premium themes, Coming Soon monetization blocks.
 
-**Billing:** Google Play Billing for Android is planned/active path. Apple billing deferred until iOS is revived.
+**Expired trial copy (canonical):** Library still yours; export/restore anytime; Full Access one-time purchase for tracking/reminders/editing; no subscriptions, ads, or selling user data (`apps/web/src/lib/copy/access.ts`).
 
-**Auth (Android-first):** Google login only for now. Apple login should be removed for Android-first release. Username is optional forever; **full legal names must not appear anywhere in the UI**.
+**Billing:** Google Play Billing for Android — **end-to-end validation still required**. Apple deferred.
+
+**Auth (Android-first):** Google native sign-in on Capacitor (`googleAuthNative.ts`, `VITE_GOOGLE_WEB_CLIENT_ID`). Apple login should not ship on Android-first release. Username optional; **legal full names must not appear in UI**.
+
+---
+
+## Product architecture / direction (core, not optional polish)
+
+### WTForecast-style rotating personality
+
+- **Role:** Core product differentiator — makes Flicklet screenshot- and discussion-worthy beyond table-stakes tracking.
+- **Model:** Curated/static rotating pools per surface and personality mode — **not** runtime AI generation.
+- **Surfaces (target):** Home headers, recommendation intros, empty states, toasts, confirmations, reminders, errors, fake motivational/context cards.
+- **Settings:** Personality intensity / mode selection.
+- **Tone:** Witty, short, memorable, app-store safe — not cruel, repetitive, or generic.
+- **Implementation status:** Not built yet; see [KNOWN_ISSUES.md](./KNOWN_ISSUES.md).
+
+### Unified Library (mobile)
+
+- **Role:** Core mobile UX — reduce tab clutter (Currently Watching / Want To Watch / Watched).
+- **Goal:** One Library-style experience with quick status moves and custom lists preserved; avoid cluttered mega-dashboard.
+- **Status:** Direction only; not implemented.
+
+### Confirmation + action feedback
+
+- **Role:** Trust UX — no silent destructive or meaningful state changes.
+- **Target:** Confirm dialogs before destructive actions; confirmation toasts/snackbars after meaningful success paths.
+- **Status:** Not implemented.
 
 ---
 
@@ -34,49 +67,25 @@ When proposing changes, cite what you verified in the repo (paths, configs, runt
 
 | Path | Role |
 |------|------|
-| `apps/web/` | **Active frontend** — React + Vite SPA, primary app code |
-| `apps/web/.env` | **Local dev env source of truth** for Vite/`import.meta.env` (not committed) |
-| `netlify/functions/` | **Production serverless functions** deployed with the site |
+| `apps/web/` | **Active frontend** — React + Vite SPA |
+| `apps/web/src/` | **Active UI and client logic** — do not implement features in archive/legacy trees |
+| `apps/web/.env` | **Local dev** Vite env (not committed) |
+| `apps/web/.env.mobile` | Optional mobile build env (`VITE_API_BASE_URL`, `VITE_GOOGLE_WEB_CLIENT_ID`, etc.) |
+| `netlify/functions/` | **Production serverless functions** |
 | `netlify.toml` | Netlify build, dev, redirects, function directory |
 | `android/` | Capacitor Android shell (`com.TravisL.tvtracker`) |
-| `capacitor.config.json` | Capacitor app id, `webDir`: `apps/web/dist` |
-| `docs/` | Maintainer docs (env, local dev, runtime) |
-| `package.json` (repo root) | Root scripts; `npx netlify dev` entry |
+| `capacitor.config.json` | Capacitor `webDir`: `apps/web/dist` |
+| `docs/` | Maintainer docs |
+| `package.json` (repo root) | Root scripts; **`npx netlify dev` from repo root** |
 
-### `apps/web` internals (high level)
+### Do not treat as active without audit
 
-- `src/` — pages, components, hooks, lib (Firebase, TMDB client, discovery, billing UI)
-- `public/` — static assets, FlickWord shards, SW
-- `tests/` — Playwright / unit tests
-- Build output: `apps/web/dist` → published as `dist` per `netlify.toml`
-
-### `netlify/functions` (production)
-
-| Function | Purpose |
-|----------|---------|
-| `tmdb-proxy.cjs` | TMDB API proxy (live) |
-| `dict-proxy.cjs` | Dictionary / FlickWord support |
-| `goofs-fetch.cjs` | Goofs/extras fetch |
-| `feedback.cjs` | User feedback → **SendGrid email** |
-| `send-email.cjs` | Legacy/alternate email path (audit if duplicate) |
-| `billing/*` | Google Play products, purchase, validate |
-| `origin-validation.cjs` | Request origin checks |
-
-API routes are wired in `netlify.toml` (e.g. `/api/tmdb-proxy` → `tmdb-proxy`).
-
----
-
-## Uncertain / legacy folders (do not treat as active without audit)
-
-| Path | Status | Notes |
-|------|--------|-------|
-| `functions/` | **Needs audit before deletion** | Separate tree; README references Firebase Functions for admin, Pro, goofs ingestion. May overlap with or predate `netlify/functions`. |
-| `_legacy_v1/` | Legacy | Old vanilla/www implementation |
-| `legacy/` | Legacy | mobile-compact-v1-vanilla experiments |
-| `ios/` | Deferred | iOS/Capacitor present but not current release target |
-| `migration/`, `migration-pack/` | Historical | Migration artifacts |
-| `SUBMISSION/`, `tools/`, `scripts/` (root) | Mixed | May contain one-off scripts; verify before use |
-| `_repo_cleanup_archive/` | Quarantine | Archived docs/scripts moved during cleanup — not runtime |
+| Path | Notes |
+|------|-------|
+| `_legacy_v1/`, `legacy/`, `archive/` | Old implementations |
+| `_repo_cleanup_archive/` | Quarantined docs/scripts — not runtime truth |
+| `functions/` | Separate Firebase/admin tree — **not** production Netlify deploy path |
+| `ios/` | Deferred |
 
 ---
 
@@ -85,33 +94,35 @@ API routes are wired in `netlify.toml` (e.g. `/api/tmdb-proxy` → `tmdb-proxy`)
 | Environment | Branch | Build | Publish |
 |-------------|--------|-------|---------|
 | **Netlify production** | `simplify/try-before-buy-v1` | `npm run build` in `apps/web` | `apps/web/dist` |
-| Functions | Same deploy | `netlify/functions` | Bundled via Netlify (esbuild) |
+| **Functions** | Same deploy | `netlify/functions` | Netlify esbuild bundle |
 
-- **Firebase** is live (auth, Firestore, etc.).
-- **TMDB** is live via `tmdb-proxy` (not direct browser keys in production).
-- **SendGrid** is used for feedback email (`feedback.cjs`); requires `SENDGRID_API_KEY`, `FEEDBACK_EMAIL`, `FROM_EMAIL` (or `SENDGRID_FROM`) in Netlify dashboard. Netlify Forms is **not** the primary feedback path (SPA catch-all breaks form POST reliability).
+- **Firebase:** Auth (Google), Firestore, user settings sync (`fullSettings` — does **not** yet include For You genre rows).
+- **TMDB:** Live via `tmdb-proxy` (server token); client uses `/api/tmdb-proxy` redirect.
+- **SendGrid:** Feedback via `feedback.cjs` — production send still needs verification.
 
 ---
 
 ## Local development model
 
-**Always run from repo root:**
+**Run from repo root:**
 
 ```bash
 npx netlify dev
-# or: npm run dev
 ```
 
 | Item | Value |
 |------|-------|
 | App URL | http://localhost:8888 |
-| Vite (behind Netlify) | port 4173 (`netlify.toml` `[dev]`) |
-| Functions locally | `netlify/functions` |
-| Proxies | Same `/api/*` redirects as production |
+| Vite (behind Netlify) | port 4173 |
+| Functions | `netlify/functions` |
+| API routes | Same `/api/*` redirects as production |
 
-**Do not** assume Express/Postgres/Docker — removed stack (see `docs/ARCHIVE_NOTE_2026-05-30.md`).
+**Android / Capacitor build:**
 
-Optional: Firebase Functions in `functions/` require separate `npm install --prefix functions` and deploy — not required for typical web/Android dev loop.
+```bash
+npm run mobile:build   # apps/web --mode mobile (optional env)
+npm run mobile:sync    # build + cap copy/sync
+```
 
 ---
 
@@ -120,15 +131,94 @@ Optional: Firebase Functions in `functions/` require separate `npm install --pre
 | Context | Source of truth |
 |---------|-----------------|
 | **Local frontend (Vite)** | `apps/web/.env` |
-| **Local Netlify CLI / functions** | Repo-root `.env` (for `TMDB_TOKEN`, function secrets) — align with `docs/ENV.md` |
-| **Production** | **Netlify dashboard only** — never commit production `.env` |
+| **Mobile build overrides** | `apps/web/.env.mobile` (optional) |
+| **Local Netlify CLI / functions** | Repo-root `.env` (`TMDB_TOKEN`, SendGrid, etc.) |
+| **Production** | **Netlify dashboard only** |
 
-Rules:
+Important `VITE_*` examples:
 
-1. Never commit real secrets (`.env`, service account JSON, API keys).
-2. `VITE_*` vars are baked at build time; changing them in Netlify requires a **redeploy**.
-3. Function env vars (`SENDGRID_*`, `TMDB_TOKEN`, billing secrets) live in Netlify **Functions** env scope.
-4. If local behavior differs from production, compare `apps/web/.env` + root `.env` against Netlify dashboard — document fixes here rather than one-off hacks.
+| Variable | Purpose |
+|----------|---------|
+| `VITE_GOOGLE_WEB_CLIENT_ID` | Native Google Sign-In on Android/iOS |
+| `VITE_API_BASE_URL` | Absolute Netlify origin for `/api/*` on mobile builds |
+| `VITE_TMDB_PROXY_BASE` | Full TMDB proxy URL (optional; derived from API base) |
+| `VITE_PUBLIC_BASE_URL` | Canonical site origin; fallback for native API base in `apiConfig` |
+
+`VITE_*` are baked at build time — Netlify/dashboard changes require rebuild/redeploy.
+
+---
+
+## Android / Capacitor runtime
+
+### WebView origin
+
+- App assets load from **`capacitor://localhost`** (or `https://localhost` on some configs) — **no same-origin Netlify server** in the WebView.
+
+### API routing (`apps/web/src/lib/apiConfig.ts`)
+
+| Runtime | `API_BASE` / `TMDB_PROXY_BASE` behavior |
+|---------|----------------------------------------|
+| **Browser + `npx netlify dev`** | Empty base → relative `/api/tmdb-proxy` (same host as dev server) |
+| **Production Netlify site** | Relative `/api/*` on `flicklet.netlify.app` |
+| **Capacitor native** (env unset) | Runtime fallback to `https://flicklet.netlify.app` + `/api/tmdb-proxy` via `isCapacitorNative()` |
+| **Capacitor / mobile build** (env set) | `VITE_API_BASE_URL` / `VITE_TMDB_PROXY_BASE` override fallback |
+
+Helpers: `apiUrl('/api/...')` for billing and other Netlify routes; TMDB modules import `TMDB_PROXY_BASE`.
+
+**Verified (2026-06-03):** Search, posters, and TMDB-backed rails work on Android after this fix.
+
+### Auth
+
+- Native Google Sign-In → Firebase `signInWithCredential`; requires correct Web OAuth client ID in env.
+
+### Billing (one-time Full Access)
+
+| Layer | Detail |
+|-------|--------|
+| **Product** | `flicklet_full_access` — INAPP non-consumable (`billingProducts.ts`) |
+| **Client flow** | `startProUpgrade()` → `proUpgrade.ts` → Capacitor `Billing` plugin → `POST /api/billing/validate` |
+| **Android native** | `BillingPlugin.java` — query/purchase/restore **INAPP** (not SUBS) |
+| **Server** | `netlify/functions/billing/products.cjs`, `validate.cjs` — `purchaseType: one_time`, long-lived `currentPeriodEnd` |
+| **Entitlement** | Firestore `users/{uid}/billing/status` → `useProStatus` (`isPro` internal name) → `useEntitlements`; trial/read-only unchanged |
+| **Validation** | **Stub** — real `purchases.products.get` TODO in `validate.cjs` |
+| **Success UX** | Toast: “Purchase confirmed. Full Access unlocked.” (`pro-upgrade-success` → `App.tsx`) |
+
+Legacy subscription product IDs are not used by the current app build.
+
+---
+
+## For You genre row storage (Home rails)
+
+**Not Firebase-synced today.**
+
+| Item | Detail |
+|------|--------|
+| **Consumer** | `useForYouRows` → `useForYouContent` → `Rail` in `App.tsx` |
+| **Settings editor** | `ForYouGenreConfig` in Display settings |
+| **Storage module** | `apps/web/src/lib/forYouRowsStorage.ts` |
+| **Keys** | `flicklet:forYouRows:v2:{uid}` per account; `flicklet:forYouRows:v2:guest` for signed-out |
+| **Legacy** | `flicklet:forYouRows` — read once, migrated or discarded, then removed |
+| **Format** | `{ version: 2, rows: ForYouRow[] }` — validated against `FOR_YOU_AVAILABLE_GENRES` |
+| **Sign-out** | `clearForYouRowsOnSignOut()` clears guest + legacy only; **uid keys preserved** for same-device re-login |
+| **Cross-device** | Not implemented; `settings.layout.forYouGenres` exists but is **not** wired to Home rails |
+
+**Future improvement:** Sync For You rows through `settingsManager` / Firebase `fullSettings` if product requires cross-device parity.
+
+---
+
+## `netlify/functions` (production)
+
+| Function | Purpose |
+|----------|---------|
+| `tmdb-proxy.cjs` | TMDB API proxy |
+| `dict-proxy.cjs` | Dictionary / FlickWord |
+| `goofs-fetch.cjs` | Shows Like This / extras fetch |
+| `feedback.cjs` | User feedback → SendGrid |
+| `send-email.cjs` | Legacy/alternate email (audit duplicate) |
+| `billing/*` | Google Play products, purchase, validate |
+| `origin-validation.cjs` | Origin checks (includes Capacitor / mobile UA allowances) |
+
+Redirects: `/api/tmdb-proxy` → `tmdb-proxy`, etc. (`netlify.toml`).
 
 ---
 
@@ -136,32 +226,21 @@ Rules:
 
 | Service | Status | Integration |
 |---------|--------|-------------|
-| Firebase | Live | Auth (Google), Firestore, hosting auth paths `__/auth/*` |
-| TMDB | Live | `netlify/functions/tmdb-proxy.cjs` |
-| SendGrid | Live (feedback) | `netlify/functions/feedback.cjs` → inbox (e.g. Travis via `FEEDBACK_EMAIL`) |
-| Google Play Billing | Planned / in progress | `netlify/functions/billing/*` + Android app |
-| Apple Sign-In / IAP | Deferred | Remove from Android-first UX |
-
----
-
-## Android / Capacitor notes
-
-- Capacitor wraps the built web app: `webDir` = `apps/web/dist`.
-- Package: `com.TravisL.tvtracker` (`capacitor.config.json`, `android/`).
-- Build flow: build web (`apps/web`) → `npx cap sync` / Android Studio as per project scripts.
-- **Google login only** for Play Store testing target.
-- Billing validation goes through Netlify billing functions, not client-only checks.
+| Firebase | Live | Auth, Firestore, settings sync |
+| TMDB | Live | `tmdb-proxy.cjs` |
+| SendGrid | Live (code path) | `feedback.cjs` — prod verification pending |
+| Google Play Billing | One-time INAPP wired; stub validate | `billing/*` + `BillingPlugin` — **internal testing E2E pending** |
+| Apple Sign-In / IAP | Deferred | Not Android-first |
 
 ---
 
 ## Known path confusion risks
 
-1. **Two function trees:** `netlify/functions` (production) vs `functions/` (Firebase / admin — audit before delete).
-2. **Two env locations:** `apps/web/.env` vs repo-root `.env` — frontend vs Netlify CLI/functions.
-3. **Legacy roots:** `_legacy_v1/www`, `legacy/` — easy to edit wrong file; always confirm path under `apps/web/src`.
-4. **`netlify.toml` `[functions].directory`:** Uses relative path from `apps/web` build context (`../../netlify/functions`); dev section uses `netlify/functions` from repo root — both intentional but confusing.
-5. **README vs this doc:** README may mention root `.env.example`; **local Vite truth is `apps/web/.env`** per current policy.
-6. **Archived docs:** Moved under `_repo_cleanup_archive/` — not authoritative for current behavior.
+1. **Two function trees:** `netlify/functions` (production) vs `functions/` (Firebase/admin — audit before delete).
+2. **Two env locations:** `apps/web/.env` vs repo-root `.env`.
+3. **Legacy roots:** `_legacy_v1`, `legacy/`, `_repo_cleanup_archive/` — easy to edit wrong files; use `apps/web/src` only for active UI.
+4. **Capacitor vs web API base:** Relative `/api/*` only works with a real HTTP origin; native needs `apiConfig` fallback or mobile env.
+5. **For You storage vs settings:** Home rails use `forYouRowsStorage`; not `settings.layout.forYouGenres`.
 
 ---
 
@@ -169,24 +248,18 @@ Rules:
 
 | Question | Answer |
 |----------|--------|
-| Where is the app UI? | `apps/web/src` |
+| Where is the active app UI? | `apps/web/src` |
 | Where do I run dev? | Repo root → `npx netlify dev` |
 | Where are production functions? | `netlify/functions` |
 | Where are prod env vars? | Netlify dashboard |
 | Where are local frontend env vars? | `apps/web/.env` |
 | What branch is production? | `simplify/try-before-buy-v1` |
-| What terms do we use? | Trial / Read-Only / Full Access (not Pro) |
+| What terms do we use? | Trial / Read-Only / Full Access |
+| How does Android call APIs? | `apiConfig` → production Netlify when native |
+| Where are For You genres stored? | `flicklet:forYouRows:v2:{uid}` locally |
 
 ---
 
-## App direction
+## Near-term milestone
 
-Lightweight TV/movie tracking utility with strong personality, minimal friction, low support burden. Near-term milestone: **Play Store testing within ~one week**.
-
-Areas requiring architectural audit (not blocking doc accuracy):
-
-- **For You / Discovery** — ratings, Not Interested, genres/subgenres, watch history, list membership
-- **TMDB/caching** — reduce runtime fragility (posters, rate limits)
-- **Admin** — likely removable unless proven necessary
-- **Coming Soon** — should be removed
-- **Goofs** → rename concept to “Shows Like This”; keep **Extras** separate
+**Play Store internal testing** with working Android install, Google login, TMDB/search/posters, on-device For You persistence, and validated billing/feedback paths. Core product build-out: **personality layer**, **Unified Library**, **confirmation/feedback UX**.

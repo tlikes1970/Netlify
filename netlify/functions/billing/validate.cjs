@@ -1,22 +1,27 @@
 /**
  * Process: Purchase Validation
- * Purpose: Validate Google Play purchase token and update Firestore billing status
- * Data Source: Google Play Developer API, Firestore
- * Update Path: Called after successful purchase
- * Dependencies: Firebase Admin, Google Play Developer API credentials
+ * Purpose: Validate Google Play one-time purchase token and grant Full Access in Firestore
+ * Data Source: Google Play Developer API (TODO), Firestore
+ *
+ * Real validation plug-in point:
+ *   GET .../purchases/products/{productId}/tokens/{token}
+ *   See: https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.products/get
  */
 
 const { validateOrigin } = require('../origin-validation.cjs');
 
-// Initialize Firebase Admin (lazy load)
+/** Must match Play Console and apps/web/src/lib/billingProducts.ts */
+const FULL_ACCESS_PRODUCT_ID = 'flicklet_full_access';
+
+/** Far-future end for one-time unlock (client treats isPro + periodEnd > now as Full Access). */
+const PERMANENT_PERIOD_END_MS = new Date('2099-12-31T23:59:59.999Z').getTime();
+
 let admin = null;
 function getAdmin() {
   if (!admin) {
     try {
       admin = require('firebase-admin');
       if (!admin.apps.length) {
-        // Initialize with service account or default credentials
-        // For Netlify, use environment variables or service account JSON
         const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
           ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
           : null;
@@ -26,7 +31,6 @@ function getAdmin() {
             credential: admin.credential.cert(serviceAccount),
           });
         } else {
-          // Use default credentials (GCP/Netlify environment)
           admin.initializeApp();
         }
       }
@@ -46,42 +50,34 @@ const cors = () => ({
 });
 
 /**
- * Validate Google Play purchase token
- * TODO: Implement actual Google Play Developer API validation
- * See: https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.subscriptions/get
+ * Placeholder until Google Play Developer API is wired.
+ * Must be replaced before production — do not ship fraud-sensitive unlock on stub alone.
  */
-async function validateGooglePlayPurchase(purchaseToken, productId, packageName) {
-  // TODO: Implement real validation using Google Play Developer API
-  // For now, return true (will be implemented with service account credentials)
-  
-  // Real implementation would:
-  // 1. Use Google Auth Library to get access token
-  // 2. Call Google Play Developer API: GET https://androidpublisher.googleapis.com/androidpublisher/v3/applications/{packageName}/purchases/subscriptions/{productId}/tokens/{token}
-  // 3. Check purchaseState, expiryTimeMillis, etc.
-  // 4. Return validation result
-  
-  console.log('[Billing Validate] Purchase validation (placeholder):', {
+async function validateGooglePlayProductPurchase(purchaseToken, productId, packageName) {
+  if (productId !== FULL_ACCESS_PRODUCT_ID) {
+    console.warn('[Billing Validate] Unexpected productId:', productId);
+    return { isValid: false, purchaseState: 1 };
+  }
+
+  console.log('[Billing Validate] Product purchase validation (placeholder):', {
     purchaseToken: purchaseToken.substring(0, 20) + '...',
     productId,
     packageName,
   });
-  
-  // Placeholder: return true for now
-  // TODO: Replace with actual Google Play API validation
+
+  // TODO: Call androidpublisher purchases.products.get and verify purchaseState === 0
   return {
     isValid: true,
-    expiryTimeMillis: Date.now() + 30 * 24 * 60 * 60 * 1000, // 30 days from now
-    purchaseState: 0, // 0 = purchased
+    purchaseState: 0,
+    purchaseType: 'one_time',
   };
 }
 
 exports.handler = async function handler(event) {
-  // Handle CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: cors(), body: '' };
   }
 
-  // Validate origin
   const originCheck = validateOrigin(event);
   if (!originCheck.allowed) {
     return {
@@ -124,9 +120,12 @@ exports.handler = async function handler(event) {
       };
     }
 
-    // Validate purchase with Google Play
-    const packageName = 'com.TravisL.tvtracker'; // From AndroidManifest.xml
-    const validation = await validateGooglePlayPurchase(purchaseToken, productId, packageName);
+    const packageName = 'com.TravisL.tvtracker';
+    const validation = await validateGooglePlayProductPurchase(
+      purchaseToken,
+      productId,
+      packageName
+    );
 
     if (!validation.isValid) {
       return {
@@ -139,18 +138,8 @@ exports.handler = async function handler(event) {
       };
     }
 
-    // Update Firestore billing status
-    const admin = getAdmin();
-    const db = admin.firestore();
-    
-    // Calculate period end based on product type
-    let periodEndMillis = validation.expiryTimeMillis;
-    if (!periodEndMillis) {
-      // Fallback: calculate from product ID
-      const isYearly = productId.includes('yearly');
-      const periodDays = isYearly ? 365 : 30;
-      periodEndMillis = Date.now() + periodDays * 24 * 60 * 60 * 1000;
-    }
+    const adminInstance = getAdmin();
+    const db = adminInstance.firestore();
 
     await db
       .collection('users')
@@ -161,16 +150,19 @@ exports.handler = async function handler(event) {
         {
           isPro: true,
           source: 'android',
-          currentPeriodEnd: admin.firestore.Timestamp.fromMillis(periodEndMillis),
+          purchaseType: 'one_time',
+          currentPeriodEnd: adminInstance.firestore.Timestamp.fromMillis(
+            PERMANENT_PERIOD_END_MS
+          ),
           cancelAtPeriodEnd: false,
           productId,
           purchaseToken,
-          validatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          validatedAt: adminInstance.firestore.FieldValue.serverTimestamp(),
         },
         { merge: true }
       );
 
-    console.log('[Billing Validate] Purchase validated and activated for user:', userId);
+    console.log('[Billing Validate] One-time Full Access activated for user:', userId);
 
     return {
       statusCode: 200,
@@ -179,6 +171,7 @@ exports.handler = async function handler(event) {
         isValid: true,
         userId,
         productId,
+        purchaseType: 'one_time',
       }),
     };
   } catch (error) {
@@ -193,5 +186,3 @@ exports.handler = async function handler(event) {
     };
   }
 };
-
-

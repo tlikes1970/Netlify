@@ -143,7 +143,7 @@ public class BillingPlugin extends Plugin implements PurchasesUpdatedListener, B
         
         billingClient.queryPurchasesAsync(
             QueryPurchasesParams.newBuilder()
-                .setProductType(BillingClient.ProductType.SUBS)
+                .setProductType(BillingClient.ProductType.INAPP)
                 .build(),
             (billingResult, purchases) -> {
                 if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {

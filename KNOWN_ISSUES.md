@@ -1,28 +1,79 @@
 # Known Issues — Flicklet TV Tracker
 
-Last updated: 2026-06-02 (For You rail scroll issue added)
+Last updated: 2026-06-02
 
 Tracked problems, uncertainties, and tech debt. **Do not modify app code from this file alone** — use it to prioritize fixes. See [CURRENT_TASK.md](./CURRENT_TASK.md) for sprint actions.
 
 ---
 
+## Resolved (keep for context)
+
+### Android TMDB / search / posters — API base routing (2026-06-03)
+
+- **Was:** Capacitor loads from `capacitor://localhost`; relative `/api/tmdb-proxy` hit local WebView, not Netlify — search empty, posters broken.
+- **Fix:** `apps/web/src/lib/apiConfig.ts` — native Capacitor uses production Netlify origin fallback; build-time `VITE_API_BASE_URL` / `VITE_TMDB_PROXY_BASE` still override.
+- **Status:** ✅ Resolved on device testing. **Not** the same as TMDB caching/fallback fragility below.
+
+### For You stale / orphan row labels (2026-06-03)
+
+- **Was:** Home used legacy global `flicklet:forYouRows`; sign-out cleared all keys; drama choices lost after re-login.
+- **Fix:** `apps/web/src/lib/forYouRowsStorage.ts` — version 2, validated rows, `flicklet:forYouRows:v2:{uid}`, guest key separate, legacy key migrated/removed, per-user keys preserved on sign-out.
+- **Status:** ✅ Same-account sign-out/sign-in on same device retains rows. **Still open:** cross-device sync (see below).
+
+### Google native sign-in on Android (2026-06-03)
+
+- **Was:** Missing/wrong OAuth client config for WebView native flow.
+- **Fix:** `VITE_GOOGLE_WEB_CLIENT_ID` (e.g. `apps/web/.env.mobile`) + Firebase/Google auth alignment.
+- **Status:** ✅ Verified on device/debug build.
+
+---
+
 ## Runtime / data
 
-### TMDB and poster fragility
+### TMDB and poster fragility (still open)
 
-- Posters and metadata sometimes fail or load inconsistently (proxy errors, missing paths, cache misses).
-- **Impact:** Broken or blank cards, Discovery/For You feels unreliable.
-- **Direction:** Stronger caching and fallbacks via `tmdb-proxy`; reduce client assumptions about always-fresh TMDB.
+- Posters and metadata can still fail on proxy errors, missing paths, or cache misses — **separate from** resolved Android API-base routing.
+- **Impact:** Broken or blank cards, Discovery/For You feels unreliable under bad network or TMDB errors.
+- **Direction:** Stronger caching and fallbacks via `tmdb-proxy`; client fallbacks for missing `poster_path`.
 
 ### Caching strategy needed
 
 - No single documented caching policy for TMDB, show metadata, and images.
-- **Risk:** Rate limits, cold-start slowness, and fragile retries under Play Store test traffic.
+- **Risk:** Rate limits, cold-start slowness, fragile retries under Play Store test traffic.
 
-### For You / Discovery logic unclear
+### For You row persistence — cross-device not implemented
 
-- Uncertain whether scoring correctly uses: ratings, Not Interested, genres/subgenres, watch history, list membership.
-- **Needs:** Audit of `discoveryScoring`, For You rails, and related hooks — document expected behavior then fix gaps.
+- **Current:** Local `flicklet:forYouRows:v2:{uid}` (validated, version 2); guest `...:guest`; legacy `flicklet:forYouRows` migrated then removed.
+- **Works:** Same Google account on same device after sign-out/sign-in.
+- **Does not work:** Genre choices on phone ≠ choices on web/other device (not in Firebase `fullSettings` yet; `layout.forYouGenres` in settings is legacy/unwired for Home rails).
+- **Future:** Optional sync through settings/Firebase if product requires cross-device For You.
+
+### For You / Discovery scoring logic unclear
+
+- Uncertain whether scoring fully uses: ratings, Not Interested, genres/subgenres, watch history, list membership.
+- **Needs:** Audit of `discoveryScoring`, smart discovery hooks — document expected behavior then fix gaps.
+
+---
+
+## Core product gaps (not yet implemented)
+
+### WTForecast-style rotating personality system
+
+- **Status:** Not implemented. **Core product differentiator** — not cosmetic.
+- **Intent:** Curated/static rotating copy pools (not runtime AI). Surfaces: headers, recommendation intros, empty states, toasts, confirmations, reminders, errors, motivational/context cards. Personality intensity in settings.
+- **Tone:** Witty, short, memorable, app-store safe; avoid cruel, repetitive, or generic voice.
+- **Risk:** App feels like “another tracker” without this layer.
+
+### Unified Library / mobile tab consolidation
+
+- **Status:** Not implemented. **Core mobile UX direction.**
+- **Intent:** One Library-style surface for Currently Watching / Want To Watch / Watched; less tab clutter; room for personality surfaces; keep quick status changes and custom lists without a mega-dashboard.
+
+### Confirmation and action feedback layer
+
+- **Status:** Not implemented. **High priority for trust.**
+- **Missing:** Destructive “Are you sure?” prompts (delete, remove, clear, reset, delete list, reminder removal). Post-action confirmation toasts (add, move, delete, reminder save/remove, import/export, restore, Full Access changes).
+- **Risk:** Silent state changes confuse testers and increase support burden.
 
 ---
 
@@ -30,46 +81,44 @@ Tracked problems, uncertainties, and tech debt. **Do not modify app code from th
 
 ### Env source confusion (mostly resolved — must stay documented)
 
-- **Resolved policy:** Local frontend → `apps/web/.env`; production → Netlify dashboard only.
-- **Residual risk:** Root `.env` vs `apps/web/.env` vs README/`docs/ENV.md` may still disagree; developers set wrong vars locally.
-- **Mitigation:** [CURRENT_ARCHITECTURE.md](./CURRENT_ARCHITECTURE.md) is source of truth; align README when touched.
+- **Resolved policy:** Local frontend → `apps/web/.env`; production → Netlify dashboard only. Mobile: `apps/web/.env.mobile` or runtime `apiConfig` Capacitor fallback.
+- **Residual risk:** Root `.env` vs `apps/web/.env` vs README/`docs/ENV.md` may still disagree.
+- **Mitigation:** [CURRENT_ARCHITECTURE.md](./CURRENT_ARCHITECTURE.md) is source of truth.
 
 ### Repo cleanup in progress
 
-- Large doc/script trees moved to `_repo_cleanup_archive/` (quarantine).
-- **Risk:** Accidentally restoring or referencing archived forensic docs as current truth.
+- Large doc/script trees under `_repo_cleanup_archive/` (quarantine).
+- **Risk:** Treating archived forensic docs as current truth.
 - **Do not delete** archive until cleanup is signed off.
 
 ### Separate `functions/` tree
 
-- `functions/` (Firebase / admin / goofs ingestion) exists alongside `netlify/functions` (production Netlify).
-- **Status:** **Needs audit before deletion** — may still power admin or batch jobs.
-- **Risk:** Deleting wrong tree breaks admin or ingestion.
+- `functions/` (Firebase / admin / goofs ingestion) alongside `netlify/functions` (production Netlify).
+- **Status:** **Needs audit before deletion.**
 
 ---
 
 ## Product / terminology
 
-### Pro terminology remnants
+### Pro terminology remnants (code / docs)
 
-- “Pro” is deprecated; use **Trial**, **Read-Only**, **Full Access**.
-- Remnants may exist in UI strings, settings keys, scripts (`set-pro-status`), and archived docs.
-- **Risk:** Confusing testers and violating new product model.
+- User-facing copy largely migrated to Trial / Read-Only / Full Access (`lib/copy/access.ts`, settings, help).
+- Remnants may remain in internal keys (`isPro`, `UpgradeToProCTA`), archived docs, admin scripts.
+- **Risk:** Confusing testers if new “Pro” strings appear in UI.
 
-### Billing / Full Access implementation needs validation
+### Billing / Full Access — code migrated; E2E validation still open
 
-- Google Play Billing path exists under `netlify/functions/billing/*`.
-- **Uncertain:** Trial countdown, read-only enforcement, purchase restore, and edge cases on Android WebView/Capacitor.
+- **Migrated (2026-06-02):** Subscription SKUs removed from active path. Single INAPP `flicklet_full_access` (`apps/web/src/lib/billingProducts.ts`); Android `BillingPlugin` uses INAPP; `validate.cjs` writes `purchaseType: one_time` to Firestore `users/{uid}/billing/status` (internal `isPro` unchanged).
+- **Stub validation:** `validate.cjs` does **not** call Google Play Developer API yet — not fraud-safe for production.
+- **Uncertain on device:** Trial countdown, read-only enforcement, internal-testing purchase, reinstall entitlement, second-account isolation.
+- **No Settings “Restore purchases” button** — reinstall + Firestore read is v1 recovery; native `restorePurchases` exists in plugin only.
+- **Manual test doc:** `tests/manual/PLAY_BILLING_ONE_TIME.md`
+- **Status:** **Critical open** for Play Store internal testing (Play Console INAPP product + signed track required).
 - Apple billing intentionally deferred.
 
 ---
 
 ## Auth / identity
-
-### Android Google login flow history
-
-- Past mobile auth loops and token gate issues (see archived `MOBILE_AUTH_LOOP_*` reports).
-- **Watch:** Release builds vs `localhost:8888` behavior; native Google auth bridge (`googleAuthNative.ts`).
 
 ### Apple login should be removed (Android-first)
 
@@ -78,8 +127,8 @@ Tracked problems, uncertainties, and tech debt. **Do not modify app code from th
 
 ### Username / full-name display risk
 
-- Username is optional forever.
-- **Requirement:** Full legal names must **not** appear anywhere in the UI (profile, cards, settings, share).
+- Username optional forever.
+- **Requirement:** Full legal names must **not** appear in UI.
 - **Needs:** Audit display name sources (Google profile, Firestore user doc).
 
 ---
@@ -88,68 +137,48 @@ Tracked problems, uncertainties, and tech debt. **Do not modify app code from th
 
 ### Scroll-to-top arrow — not working (2026-06-02 attempt failed)
 
-- **Symptom:** Scroll-to-top control does not behave correctly in manual testing despite viewport-based threshold + opacity fade change in `ScrollToTopArrow.tsx`.
-- **Attempted (2026-06-02):** ~1× / ~1.25× viewport `clientHeight` threshold, fade transition; placement unchanged above theme FAB.
-- **Needs:** Debug scroll container detection (`body` vs `documentElement` on mobile), threshold tuning, and verify `scroll` listeners fire on the actual scrolling element.
-- **Likely touchpoints:** `apps/web/src/components/ScrollToTopArrow.tsx`, `App.tsx`, mobile body-scroll CSS.
-- **Status:** **Open — fix did not land.**
+- **Status:** Open.
 
 ### Scroll-to-bottom arrow — useless timing
 
-- **Symptom:** Down arrow briefly appears when the user **already reached the bottom** — intended to jump to list end without scrolling, but it only shows once you're there.
-- **Expected:** Show scroll-to-bottom while user is **above** the bottom (with scroll-to-top stacked above theme FAB), hide at bottom.
-- **Likely touchpoints:** `ScrollToTopArrow.tsx` — `showDownArrow` / `isAtBottom` logic (`shouldShowDown = !isAtBottom && !isAtTop` may be inverted or threshold too strict).
-- **Status:** Logged; **not fixed yet.**
+- **Status:** Open.
 
-### Discovery cards lack Not Interested action (blocks manual QA)
+### Discovery cards lack Not Interested action
 
-- **Symptom:** Discovery tab cards do not expose **Not Interested** (no button, no overflow menu entry).
-- **Impact:** Cannot manually validate Discovery cache invalidation when marking titles Not Interested (P0.3); automated tests pass but in-app path is untested.
-- **Note:** `DiscoveryPage.tsx` defines `actions.onNotInterested`, but `CardV2` with `context="tab-foryou"` may not surface the control — verify overflow/compact action map for Discovery vs For You rails.
-- **Needs:** Add Not Interested to Discovery card UI (primary, overflow, or long-press) wired to existing handler.
-- **Likely touchpoints:** `apps/web/src/pages/DiscoveryPage.tsx`, `apps/web/src/components/cards/CardV2.tsx`, `apps/web/src/features/compact/CompactOverflowMenu.tsx`, `apps/web/src/features/compact/actionsMap.ts`.
-- **Status:** Logged; **not fixed yet**.
+- **Status:** Open — blocks manual Discovery QA.
 
-### For You / horizontal rails not scrollable; posters clipped at row ends
+### For You / horizontal rails not scrollable; posters clipped
 
-- **Symptom:** Individual For You (and possibly other horizontal) rails cannot be scrolled; poster cards are cut off at the left/right edges of each row.
-- **Surfaces:** Home For You section (`App.tsx` → `Rail.tsx`), mobile and desktop.
-- **Needs:** Mobile/desktop rail overflow review — horizontal scroll container, padding/snap, `overflow-x`, card width vs viewport, and any parent `overflow: hidden` clipping.
-- **Likely touchpoints:** `apps/web/src/components/Rail.tsx`, home section layout CSS, compact/mobile card styles.
-- **Status:** Logged; **not fixed yet**.
+- **Status:** Open.
 
 ### Flicklet banner disappears after returning home
 
-- Repro: navigate away from home and return — banner no longer shows.
-- **Needs:** Repro steps + fix in home/marquee boot path.
+- **Status:** Open.
 
 ### Reminders need redesign
 
-- Current reminder UX is insufficient for low-support burden.
-- **Status:** Design + implementation TBD.
+- **Status:** Open.
 
 ### Not Interested needs restore/return action
 
-- Users can mark Not Interested but lack a clear way to undo or review dismissed titles.
+- **Status:** Open.
 
-### Goofs → Shows Like This; Extras stays
+### Goofs / Extras labeling
 
-- “Goofs” should become **Shows Like This** in product language.
-- **Extras** remains a separate concept (`AdminExtrasPage`, extras providers).
+- User-facing copy largely updated to **Shows Like This** / **Extras**; sweep any stale “bloopers” / “goofs” labels if still visible.
 
-### Coming Soon should be removed
+### Games / community (removed from product scope)
 
-- Feature/surfaces still present or referenced; conflicts with focused utility direction.
+- Feature removed from user-facing scope; stale UI/routes may remain — sweep if visible to testers.
 
 ### Spanish localization incomplete
 
-- i18n gaps leave mixed English/Spanish in settings and core flows.
-- **Risk:** Play Store listing locale vs in-app strings mismatch.
+- **Status:** Open.
 
-### Settings cleanup needed
+### Settings cleanup (ongoing)
 
-- Dead toggles, legacy Pro flags, and pre-try-before-buy options likely remain.
-- Align with Trial / Read-Only / Full Access only.
+- Premium themes / Coming Soon marketing blocks removed from Full Access settings.
+- Dead toggles or legacy flags may remain — align with Trial / Read-Only / Full Access only.
 
 ---
 
@@ -157,26 +186,25 @@ Tracked problems, uncertainties, and tech debt. **Do not modify app code from th
 
 ### Admin likely removable
 
-- Admin UI (`useAdminRole`, `AdminExtrasPage`) and `functions/` admin scripts may be unnecessary for consumer Play Store build.
-- **Prove necessity** (e.g. content moderation) or remove from Android release.
+- Admin UI and `functions/` admin scripts may be unnecessary for consumer Play Store build.
+- **Prove necessity** or remove from Android release.
 
 ---
 
 ## Feedback / email
 
-### Feedback email path — **confirmed with caveat**
+### Feedback email path — production verification open
 
 | Path | Status |
 |------|--------|
-| **Netlify Forms** | Not primary — SPA `/*` catch-all can swallow POST `/` |
-| **SendGrid** | **Yes** — `netlify/functions/feedback.cjs` |
+| **SendGrid** | `netlify/functions/feedback.cjs` |
 | **Client** | `FeedbackPanel.tsx` → `POST /api/feedback` |
 
-**Production requirements:** `SENDGRID_API_KEY`, `FEEDBACK_EMAIL` (Travis inbox), `FROM_EMAIL` or `SENDGRID_FROM` in Netlify dashboard.
+**Production requirements:** `SENDGRID_API_KEY`, `FEEDBACK_EMAIL`, `FROM_EMAIL` (or `SENDGRID_FROM`) in Netlify dashboard.
 
-**Caveat:** `send-email.cjs` may duplicate `feedback.cjs` — audit and deprecate one.
+**Status:** Path confirmed in code; **end-to-end production send not yet verified** after deploy.
 
-**Verify:** Send test submission on production deploy after env check.
+**Note:** Audit `send-email.cjs` vs `feedback.cjs` for duplication.
 
 ---
 
@@ -184,17 +212,17 @@ Tracked problems, uncertainties, and tech debt. **Do not modify app code from th
 
 ### iOS dormant
 
-- `ios/` and Apple billing/login not in near-term scope.
+- Not in near-term scope.
 
 ### Play Store readiness unknowns
 
-- Data safety form, billing disclosure copy, and internal testing track setup may lag code.
-- Track in [CURRENT_TASK.md](./CURRENT_TASK.md) critical list.
+- Signed release / internal testing track validation in progress.
+- Data safety form, billing disclosure copy may lag code.
 
 ---
 
 ## How to use this file
 
-1. Pick an item in [CURRENT_TASK.md](./CURRENT_TASK.md) by priority.
-2. Reproduce on `npx netlify dev` or Android build as appropriate.
-3. Fix with minimal diff; update this file when resolved (date + one-line resolution note).
+1. Review [CURRENT_TASK.md](./CURRENT_TASK.md) + [CURRENT_ARCHITECTURE.md](./CURRENT_ARCHITECTURE.md) before scoped work.
+2. Pick an item by priority; reproduce on `npx netlify dev` or Android build as appropriate.
+3. Fix with minimal diff; update this file when status changes (date + one-line note).

@@ -14,6 +14,8 @@ export interface BillingStatus {
   source: 'alpha' | 'gift' | 'stripe' | 'ios' | 'android' | 'manual' | null;
   currentPeriodEnd: Timestamp | null;
   cancelAtPeriodEnd: boolean;
+  /** `one_time` = Play INAPP Full Access unlock (no subscription renewal). */
+  purchaseType?: 'one_time' | 'subscription';
   productId?: string;
   purchaseToken?: string;
 }
@@ -44,6 +46,7 @@ export async function getBillingStatus(uid?: string): Promise<BillingStatus> {
         source: data.source || null,
         currentPeriodEnd: data.currentPeriodEnd || null,
         cancelAtPeriodEnd: data.cancelAtPeriodEnd || false,
+        purchaseType: data.purchaseType,
         productId: data.productId,
         purchaseToken: data.purchaseToken,
       };

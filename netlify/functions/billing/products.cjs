@@ -1,12 +1,13 @@
 /**
  * Process: Billing Products API
- * Purpose: Return available subscription products for Google Play
- * Data Source: Static product configuration (matches Play Console)
- * Update Path: Update product IDs/prices when changed in Play Console
- * Dependencies: None (static data)
+ * Purpose: Return available one-time Full Access product metadata
+ * Data Source: Static product configuration (must match Play Console INAPP product)
  */
 
 const { validateOrigin } = require('../origin-validation.cjs');
+
+/** Must match apps/web/src/lib/billingProducts.ts and Play Console */
+const FULL_ACCESS_PRODUCT_ID = 'flicklet_full_access';
 
 const cors = () => ({
   'Access-Control-Allow-Origin': '*',
@@ -15,38 +16,23 @@ const cors = () => ({
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 });
 
-// Product configuration (should match Play Console)
-// NOTE: Actual prices come from Google Play Console - these are reference prices only
 const PRODUCTS = {
-  pro_subscription_monthly: {
-    productId: 'pro_subscription_monthly',
-    title: 'Flicklet Pro Monthly',
-    description: 'Unlock advanced notifications, unlimited lists, bloopers & extras, and more',
-    price: '$2.99', // Regular pricing: $2.99/month
+  [FULL_ACCESS_PRODUCT_ID]: {
+    productId: FULL_ACCESS_PRODUCT_ID,
+    title: 'Flicklet Full Access',
+    description:
+      'One-time unlock for tracking, reminders, editing, Shows Like This, and Extras. No subscription.',
+    price: '$4.99',
     currency: 'USD',
-    billingPeriod: 'monthly',
+    purchaseType: 'one_time',
   },
-  pro_subscription_yearly: {
-    productId: 'pro_subscription_yearly',
-    title: 'Flicklet Pro Yearly',
-    description: 'Unlock advanced notifications, unlimited lists, bloopers & extras, and more',
-    price: '$19.99', // Regular pricing: $19.99/year
-    currency: 'USD',
-    billingPeriod: 'yearly',
-  },
-  // Founders pricing (optional limited-time offer)
-  // If implementing founders pricing, create separate products in Play Console:
-  // - pro_subscription_monthly_founders: $1.99/month
-  // - pro_subscription_yearly_founders: $14.99/year
 };
 
 exports.handler = async function handler(event) {
-  // Handle CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers: cors(), body: '' };
   }
 
-  // Validate origin
   const originCheck = validateOrigin(event);
   if (!originCheck.allowed) {
     return {
@@ -68,7 +54,7 @@ exports.handler = async function handler(event) {
   }
 
   try {
-    const { productIds, productType } = JSON.parse(event.body || '{}');
+    const { productIds } = JSON.parse(event.body || '{}');
 
     if (!productIds || !Array.isArray(productIds)) {
       return {
@@ -78,10 +64,7 @@ exports.handler = async function handler(event) {
       };
     }
 
-    // Filter products by requested IDs
-    const requestedProducts = productIds
-      .map((id) => PRODUCTS[id])
-      .filter(Boolean);
+    const requestedProducts = productIds.map((id) => PRODUCTS[id]).filter(Boolean);
 
     return {
       statusCode: 200,
@@ -102,5 +85,3 @@ exports.handler = async function handler(event) {
     };
   }
 };
-
-

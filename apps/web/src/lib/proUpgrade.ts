@@ -1,108 +1,85 @@
 /**
- * Process: Pro Upgrade Entrypoint
- * Purpose: Centralized entrypoint for Pro upgrade flow
- * Data Source: Settings navigation, payment providers
- * Update Path: User clicks "Upgrade to Pro" buttons
- * Dependencies: Settings navigation, payment providers, Capacitor
+ * Full Access purchase entrypoint (Google Play one-time INAPP on Android).
  */
 
 import { auth } from './firebaseBootstrap';
 import { apiUrl } from './apiConfig';
 import { clearBillingCache } from './proStatus';
+import {
+  FULL_ACCESS_PRODUCT_ID,
+  FULL_ACCESS_PRODUCT_TYPE,
+  FULL_ACCESS_PURCHASE_SUCCESS_MESSAGE,
+} from './billingProducts';
 
-// Capacitor is only available in mobile builds - use conditional access
 function getCapacitor(): any {
   if (typeof window === 'undefined') return null;
-  // Check if Capacitor is available via window (mobile builds)
   if ((window as any).Capacitor) {
     return (window as any).Capacitor;
   }
   return null;
 }
 
-/**
- * Start Pro upgrade flow
- * 
- * Platform-specific:
- * - Android: Google Play Billing API (via backend)
- * - iOS: App Store in-app purchases (future)
- * - Web: Stripe checkout (future)
- * - Fallback: Alpha/testing toggle in Settings
- */
+/** Start Full Access purchase flow (Android: Play Billing one-time product). */
 export async function startProUpgrade(): Promise<void> {
-  console.log('[Pro Upgrade] startProUpgrade() called');
-  
+  console.log('[Full Access] startProUpgrade() called');
+
   const Capacitor = getCapacitor();
   const platform = Capacitor?.getPlatform() || 'web';
-  
-  // Check if user is authenticated (required for purchases)
+
   if (!auth.currentUser) {
-    console.log('[Pro Upgrade] User not authenticated, opening auth flow');
-    // Trigger auth flow - you may want to show a message or open auth modal
-    const authEvent = new CustomEvent('auth:sign-in-required');
-    window.dispatchEvent(authEvent);
+    console.log('[Full Access] User not authenticated, opening auth flow');
+    window.dispatchEvent(new CustomEvent('auth:sign-in-required'));
     return;
   }
-  
-  // Launch purchase flow based on platform
+
   if (platform === 'android') {
     await startAndroidPurchase();
   } else if (platform === 'ios') {
     await startIOSPurchase();
   } else {
-    // Web/Desktop - Stripe checkout (future)
     await startWebPurchase();
   }
 }
 
-/**
- * Android: Google Play Billing purchase flow
- * Uses Capacitor plugin to access native BillingClient
- */
 async function startAndroidPurchase(): Promise<void> {
   try {
-    console.log('[Pro Upgrade] Starting Android purchase flow');
-    
-    // Access Capacitor plugin via window.Capacitor
+    console.log('[Full Access] Starting Android one-time purchase');
+
     const CapacitorGlobal = (window as any).Capacitor;
-    if (!CapacitorGlobal || !CapacitorGlobal.Plugins) {
-      throw new Error('Capacitor plugins not available. Make sure the native plugin is installed.');
+    if (!CapacitorGlobal?.Plugins?.Billing) {
+      throw new Error(
+        'Billing plugin not available. Rebuild the Android app after cap sync.'
+      );
     }
-    
+
     const Billing = CapacitorGlobal.Plugins.Billing;
-    if (!Billing) {
-      throw new Error('Billing plugin not available. Make sure the native plugin is installed.');
-    }
-    
-    // Initialize billing
+
     await Billing.initialize();
-    
-    // Get available products
+
     const productsResult = await Billing.getProducts({
-      productIds: ['pro_subscription_monthly', 'pro_subscription_yearly'],
-      productType: 'subscription',
+      productIds: [FULL_ACCESS_PRODUCT_ID],
+      productType: FULL_ACCESS_PRODUCT_TYPE,
     });
-    
-    if (!productsResult.products || productsResult.products.length === 0) {
-      throw new Error('No products available');
+
+    if (!productsResult.products?.length) {
+      throw new Error(
+        `Product "${FULL_ACCESS_PRODUCT_ID}" not found. Create the INAPP product in Play Console.`
+      );
     }
-    
-    // For now, default to monthly subscription
-    // TODO: Show product selection UI
-    const selectedProduct = productsResult.products.find(
-      (p: any) => p.productId === 'pro_subscription_monthly'
-    ) || productsResult.products[0];
-    
-    console.log('[Pro Upgrade] Launching purchase for:', selectedProduct.productId);
-    
-    // Launch purchase flow
+
+    const selectedProduct =
+      productsResult.products.find(
+        (p: { productId: string }) => p.productId === FULL_ACCESS_PRODUCT_ID
+      ) || productsResult.products[0];
+
+    console.log('[Full Access] Launching purchase for:', selectedProduct.productId);
+
     const purchaseResult = await Billing.purchase({
       productId: selectedProduct.productId,
-      productType: 'subscription',
+      productType: FULL_ACCESS_PRODUCT_TYPE,
     });
-    
+
     if (purchaseResult.purchaseToken) {
-      // Purchase successful - validate and activate
       await validateAndActivatePurchase(
         purchaseResult.purchaseToken,
         'android',
@@ -111,50 +88,36 @@ async function startAndroidPurchase(): Promise<void> {
     } else {
       throw new Error('Purchase failed: No purchase token returned');
     }
-    
   } catch (error) {
-    console.error('[Pro Upgrade] Android purchase failed:', error);
-    
-    // Show error to user
-    const errorEvent = new CustomEvent('pro-upgrade-error', {
-      detail: { 
-        message: error instanceof Error ? error.message : 'Purchase failed',
-        error: error instanceof Error ? error.stack : String(error),
-      },
-    });
-    window.dispatchEvent(errorEvent);
-    
-    // Re-throw so caller can handle
+    console.error('[Full Access] Android purchase failed:', error);
+
+    window.dispatchEvent(
+      new CustomEvent('pro-upgrade-error', {
+        detail: {
+          message: error instanceof Error ? error.message : 'Purchase failed',
+          error: error instanceof Error ? error.stack : String(error),
+        },
+      })
+    );
+
     throw error;
   }
 }
 
-/**
- * iOS: App Store purchase flow
- */
 async function startIOSPurchase(): Promise<void> {
-  // TODO: Implement iOS purchase flow when iOS app is ready
-  console.log('[Pro Upgrade] iOS purchase (not implemented yet)');
+  console.log('[Full Access] iOS purchase (not implemented yet)');
   window.dispatchEvent(
     new CustomEvent('settings:open-page', { detail: { section: 'pro' as const } })
   );
 }
 
-/**
- * Web: Stripe checkout flow
- */
 async function startWebPurchase(): Promise<void> {
-  // TODO: Implement Stripe checkout flow
-  console.log('[Pro Upgrade] Web purchase (not implemented yet)');
+  console.log('[Full Access] Web purchase (not implemented yet)');
   window.dispatchEvent(
     new CustomEvent('settings:open-page', { detail: { section: 'pro' as const } })
   );
 }
 
-/**
- * Validate purchase receipt and activate Pro status
- * Calls backend to validate, then updates Firestore
- */
 async function validateAndActivatePurchase(
   purchaseToken: string,
   platform: 'android' | 'ios',
@@ -164,45 +127,41 @@ async function validateAndActivatePurchase(
   if (!userId) {
     throw new Error('User not authenticated');
   }
-  
-  try {
-    // Call backend to validate purchase
-    const response = await fetch(apiUrl('/api/billing/validate'), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        purchaseToken,
-        platform,
-        productId,
-        userId,
-      }),
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Validation failed');
-    }
-    
-    const validationData = await response.json();
-    
-    if (validationData.isValid) {
-      // Backend has updated Firestore billing status
-      // Clear cache to force refresh
-      clearBillingCache();
-      
-      // Trigger Pro status refresh event
-      const successEvent = new CustomEvent('pro-upgrade-success', {
-        detail: { productId, platform },
-      });
-      window.dispatchEvent(successEvent);
-      
-      console.log('[Pro Upgrade] Purchase validated and activated');
-    } else {
-      throw new Error('Purchase validation failed');
-    }
-  } catch (error) {
-    console.error('[Pro Upgrade] Purchase validation error:', error);
-    throw error;
+
+  const response = await fetch(apiUrl('/api/billing/validate'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      purchaseToken,
+      platform,
+      productId,
+      userId,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || error.error || 'Validation failed');
+  }
+
+  const validationData = await response.json();
+
+  if (validationData.isValid) {
+    clearBillingCache();
+
+    window.dispatchEvent(
+      new CustomEvent('pro-upgrade-success', {
+        detail: {
+          productId,
+          platform,
+          purchaseType: 'one_time',
+          message: FULL_ACCESS_PURCHASE_SUCCESS_MESSAGE,
+        },
+      })
+    );
+
+    console.log(`[Full Access] ${FULL_ACCESS_PURCHASE_SUCCESS_MESSAGE}`);
+  } else {
+    throw new Error('Purchase validation failed');
   }
 }
-

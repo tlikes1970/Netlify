@@ -1,6 +1,6 @@
 /**
  * Process: Purchase Initiation
- * Purpose: Handle purchase initiation (placeholder - actual purchase happens on Android)
+ * Purpose: Placeholder — one-time INAPP purchase is initiated on-device via BillingClient
  * Data Source: Android BillingClient (native)
  * Update Path: Called by Android app to initiate purchase
  * Dependencies: Android native BillingClient

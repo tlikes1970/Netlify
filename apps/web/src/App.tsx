@@ -555,6 +555,29 @@ export default function App() {
     };
   }, [addToast]);
 
+  // Full Access purchase feedback + entitlement refresh (proUpgrade dispatches events)
+  useEffect(() => {
+    const onPurchaseSuccess = (event: Event) => {
+      const detail = (event as CustomEvent<{ message?: string }>).detail;
+      addToast(
+        detail?.message ?? "Purchase confirmed. Full Access unlocked.",
+        "success"
+      );
+    };
+    const onPurchaseError = (event: Event) => {
+      const detail = (event as CustomEvent<{ message?: string }>).detail;
+      if (detail?.message) {
+        addToast(detail.message, "error");
+      }
+    };
+    window.addEventListener("pro-upgrade-success", onPurchaseSuccess);
+    window.addEventListener("pro-upgrade-error", onPurchaseError);
+    return () => {
+      window.removeEventListener("pro-upgrade-success", onPurchaseSuccess);
+      window.removeEventListener("pro-upgrade-error", onPurchaseError);
+    };
+  }, [addToast]);
+
   // Handle deep links for settings sheet and shared list/show URLs
   useEffect(() => {
     const handleHashChange = () => {

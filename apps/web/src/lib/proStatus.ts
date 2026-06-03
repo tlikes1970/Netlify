@@ -44,22 +44,29 @@ export async function getProStatus(): Promise<ProStatus> {
     expiresAt: now + CACHE_DURATION,
   };
   
-  // Check if subscription is still valid
-  if (billing.isPro && billing.currentPeriodEnd) {
-    const periodEnd = billing.currentPeriodEnd.toDate();
-    if (periodEnd > new Date()) {
-      // Subscription is valid
+  if (billing.isPro) {
+    // One-time Full Access (Play INAPP) — not subject to subscription period expiry
+    if (billing.purchaseType === 'one_time') {
       return {
         isPro: true,
         source: (billing.source as ProStatus['source']) || 'android',
       };
     }
+
+    if (billing.currentPeriodEnd) {
+      const periodEnd = billing.currentPeriodEnd.toDate();
+      if (periodEnd > new Date()) {
+        return {
+          isPro: true,
+          source: (billing.source as ProStatus['source']) || 'android',
+        };
+      }
+    }
   }
-  
-  // Only billing-based Pro status (alpha toggle removed)
+
   return {
-    isPro: billing.isPro,
-    source: (billing.source as ProStatus['source']) || null,
+    isPro: false,
+    source: null,
   };
 }
 
@@ -105,16 +112,21 @@ export function useProStatus(): ProStatus {
       }
     });
     
+    const refreshStatus = () => {
+      if (!mounted) return;
+      clearBillingCache();
+      getProStatus().then((status) => {
+        if (mounted) {
+          setProStatus(status);
+        }
+      });
+    };
+
     // Subscribe to settings changes
-    const unsubscribe = settingsManager.subscribe(() => {
-      if (mounted) {
-        getProStatus().then((status) => {
-          if (mounted) {
-            setProStatus(status);
-          }
-        });
-      }
-    });
+    const unsubscribe = settingsManager.subscribe(refreshStatus);
+
+    const onPurchaseSuccess = () => refreshStatus();
+    window.addEventListener('pro-upgrade-success', onPurchaseSuccess);
     
     // Refresh billing status periodically
     const interval = setInterval(() => {
@@ -131,6 +143,7 @@ export function useProStatus(): ProStatus {
     return () => {
       mounted = false;
       unsubscribe();
+      window.removeEventListener('pro-upgrade-success', onPurchaseSuccess);
       clearInterval(interval);
     };
   }, []);
