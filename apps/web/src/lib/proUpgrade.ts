@@ -7,6 +7,7 @@
  */
 
 import { auth } from './firebaseBootstrap';
+import { apiUrl } from './apiConfig';
 import { clearBillingCache } from './proStatus';
 
 // Capacitor is only available in mobile builds - use conditional access
@@ -166,8 +167,7 @@ async function validateAndActivatePurchase(
   
   try {
     // Call backend to validate purchase
-    const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').trim() || '';
-    const response = await fetch(`${API_BASE}/api/billing/validate`, {
+    const response = await fetch(apiUrl('/api/billing/validate'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

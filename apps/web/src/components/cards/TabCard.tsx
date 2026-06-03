@@ -834,10 +834,10 @@ export default function TabCard({
                 }}
                 title={
                   canUseProFeatures
-                    ? "View goofs and slip-ups"
+                    ? "View Shows Like This"
                     : isReadOnlyMode
-                      ? "Trial ended — upgrade to unlock"
-                      : "Included in your full access trial"
+                      ? "Read-Only — unlock Full Access"
+                      : "Included in your Full Access trial"
                 }
                 className={buttonClass}
                 style={{
@@ -849,7 +849,7 @@ export default function TabCard({
                   cursor: "pointer",
                 }}
               >
-                Goofs
+                Shows Like This
               </button>
               <button
                 onClick={() => {
@@ -863,10 +863,10 @@ export default function TabCard({
                 }}
                 title={
                   canUseProFeatures
-                    ? "View behind-the-scenes content"
+                    ? "View Extras"
                     : isReadOnlyMode
-                      ? "Trial ended — upgrade to unlock"
-                      : "Included in your full access trial"
+                      ? "Read-Only — unlock Full Access"
+                      : "Included in your Full Access trial"
                 }
                 className={buttonClass}
                 style={{
@@ -890,7 +890,7 @@ export default function TabCard({
                 }}
                 title={
                   isReadOnlyMode
-                    ? "Trial ended — view-only mode"
+                    ? "Read-Only — unlock Full Access"
                     : "Watch reminders and episode alerts for this show"
                 }
                 className={buttonClass}

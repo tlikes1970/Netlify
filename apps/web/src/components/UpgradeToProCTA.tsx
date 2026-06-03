@@ -7,6 +7,10 @@
  */
 
 import { useEntitlements } from "../hooks/useEntitlements";
+import {
+  READ_ONLY_FULL_ACCESS_EXPLAINER,
+  READ_ONLY_PRIMARY,
+} from "../lib/copy/access";
 import { startProUpgrade } from "../lib/proUpgrade";
 
 export type UpgradeCTAVariant = 'banner' | 'panel' | 'inline' | 'button';
@@ -42,13 +46,13 @@ export function UpgradeToProCTA({
 
   const defaultMessages = {
     banner: entitlements.isReadOnlyMode
-      ? 'Your trial has ended. Upgrade to keep editing, or export your library anytime.'
-      : 'Start your 21-day full access trial, or upgrade to keep access after trial.',
+      ? READ_ONLY_PRIMARY
+      : 'Start your 21-day Full Access trial, or unlock Full Access to keep editing after trial.',
     panel: entitlements.isReadOnlyMode
-      ? 'Trial ended — upgrade for full access or export your data from Settings.'
-      : '21-day full access trial — explore the complete app before deciding to support Flicklet.',
-    inline: entitlements.isReadOnlyMode ? 'Upgrade to keep editing' : 'Upgrade to Pro',
-    button: entitlements.isReadOnlyMode ? 'Upgrade to keep full access' : 'Upgrade to Pro',
+      ? `${READ_ONLY_PRIMARY} ${READ_ONLY_FULL_ACCESS_EXPLAINER}`
+      : '21-day Full Access trial — explore everything. A one-time unlock helps support the app and continued development.',
+    inline: 'Unlock Full Access',
+    button: 'Unlock Full Access',
   };
 
   const displayMessage = message || defaultMessages[variant];
@@ -86,7 +90,7 @@ export function UpgradeToProCTA({
           <div className="flex items-center gap-3">
             {shouldShowIcon && <div className="text-2xl">💎</div>}
             <div className="flex-1">
-              <h4 className="font-semibold">Upgrade to Pro</h4>
+              <h4 className="font-semibold">Unlock Full Access</h4>
               <p className="text-sm" style={{ color: 'var(--muted)' }}>
                 {displayMessage}
               </p>
@@ -95,7 +99,7 @@ export function UpgradeToProCTA({
               onClick={startProUpgrade}
               className="px-4 py-2 rounded text-sm font-medium transition-colors"
               style={{ backgroundColor: 'var(--accent)', color: 'white' }}>
-              Upgrade
+              Unlock
             </button>
           </div>
         </div>

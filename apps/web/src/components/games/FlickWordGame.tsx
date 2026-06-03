@@ -1490,11 +1490,11 @@ export default function FlickWordGame({
         {/* Pro Chip - Purple, shows only after game ends */}
         {showProChip && game.done && (
           <div className="fw-pro-chip">
-            <p><strong>Unlock 2 more rounds</strong> – Go Pro</p>
+            <p><strong>Unlock 2 more rounds</strong> with Full Access</p>
             <button
               className="fw-pro-chip-dismiss"
               onClick={() => setShowProChip(false)}
-              aria-label="Dismiss Pro upgrade message"
+              aria-label="Dismiss Full Access message"
             >
               ×
             </button>
@@ -1523,7 +1523,7 @@ export default function FlickWordGame({
               </p>
               {!isPro && (
                 <p className="fw-pro-upsell">
-                  Pro members get 3 games per day.
+                  Full Access includes 3 games per day.
                 </p>
               )}
             </div>

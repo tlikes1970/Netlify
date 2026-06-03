@@ -83,7 +83,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
       title: "Settings & Customization",
       icon: "⚙️",
     },
-    { id: "pro-features", title: "Pro Features", icon: "⭐" },
+    { id: "pro-features", title: "Full Access", icon: "⭐" },
     { id: "troubleshooting", title: "Troubleshooting", icon: "🔧" },
     {
       id: "keyboard-shortcuts",
@@ -163,7 +163,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 </li>
                 <li>
                   <strong>Settings (⚙️):</strong> your preferences, data, and
-                  Pro options
+                  Full Access & support
                 </li>
               </ul>
             </div>
@@ -227,7 +227,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 </li>
                 <li>
                   Tap the <strong>⋯ (More)</strong> button on any card to see
-                  all actions: rate, tag, add notes, view bloopers, etc.
+                  all actions: rate, tag, add notes, Shows Like This, Extras, etc.
                 </li>
                 <li>
                   Add notes for your own reminders (e.g., "stopped at episode
@@ -260,26 +260,41 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
           <div className="space-y-4 text-gray-700 dark:text-gray-300">
             <div>
               <p className="mb-3">
-                Free covers the basics. Pro adds more ways to enjoy your watchlist.
+                <strong>Flicklet starts fully unlocked for your first 21 days.</strong> After
+                that, your library enters <strong>Read-Only</strong> until you unlock Full Access.
+              </p>
+              <h4 className="font-semibold mb-2">Read-Only mode</h4>
+              <p className="mb-3">
+                Your trial has ended, but your library is still yours. You can continue browsing,
+                exporting, and restoring your data anytime.
+              </p>
+              <p className="mb-3">
+                Full Access is a one-time purchase that keeps tracking, reminders, and editing
+                available while helping support the app and continued development. No
+                subscriptions, no ads, and no selling your data.
               </p>
 
-              <h4 className="font-semibold mb-2">What you get with Pro:</h4>
+              <h4 className="font-semibold mb-2">Included with trial or Full Access:</h4>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li>
-                  🎬 <strong>Bloopers & Outtakes:</strong> watch
-                  behind-the-scenes clips from verified sources.
+                  🎭 <strong>Shows Like This:</strong> insights and easter eggs from verified
+                  sources.
                 </li>
                 <li>
-                  ⏰ <strong>Watch Reminders:</strong> episode alerts and timing
-                  on your device, per show.
+                  🎬 <strong>Extras:</strong> additional videos and related content on title
+                  cards.
                 </li>
                 <li>
-                  🧩 <strong>Theme Packs:</strong> change how Flicklet looks for
-                  holidays or genres.
+                  ⏰ <strong>Watch Reminders:</strong> episode alerts and timing on your device,
+                  per show.
                 </li>
                 <li>
-                  📺 <strong>Extended Episode Tracking:</strong> detailed season
-                  progress for multiple shows.
+                  📺 <strong>Episode Tracking:</strong> detailed season progress across your
+                  library.
+                </li>
+                <li>
+                  🎮 <strong>Extra daily games:</strong> more FlickWord and trivia rounds with
+                  Full Access.
                 </li>
               </ul>
             </div>
@@ -288,13 +303,11 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
               <h4 className="font-semibold mb-2">How It Works</h4>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li>
-                  Look for the gold <strong>PRO</strong> badge on features that
-                  need Pro.
+                  Locked features show a <strong>Full Access</strong> hint in menus.
                 </li>
                 <li>
-                  Upgrade in <strong>Settings → Pro</strong>.
+                  Open <strong>Settings → Full Access</strong> to start your trial or unlock.
                 </li>
-                <li>You can preview what Pro offers before paying.</li>
               </ul>
             </div>
 
@@ -303,9 +316,9 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 Legal & Content Notes
               </h4>
               <p className="text-blue-800 dark:text-blue-200 text-sm">
-                All extra videos or bloopers link directly from verified
-                providers. Flicklet doesn't re-upload or host any copyrighted
-                material—everything plays from its original source.
+                Shows Like This and Extras link directly from verified providers. Flicklet
+                doesn&apos;t re-upload or host copyrighted material — everything plays from its
+                original source.
               </p>
             </div>
           </div>
@@ -384,9 +397,8 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                 </li>
                 <li>Toggle each alert on or off.</li>
                 <li>
-                  Adjust timing for episode reminders (e.g., 1 hour before). Pro
-                  users can set custom lead times and choose which list receives
-                  alerts.
+                  Adjust timing for episode reminders (e.g., 1 hour before). Full Access
+                  (including during your trial) includes custom lead times per show.
                 </li>
                 <li>
                   Make sure your browser or device allows notifications from
@@ -550,7 +562,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                     </tr>
                     <tr className="bg-gray-50 dark:bg-gray-800">
                       <td className="border border-gray-300 dark:border-gray-600 px-4 py-2">
-                        Bloopers/Extras not playing
+                        Shows Like This / Extras not playing
                       </td>
                       <td className="border border-gray-300 dark:border-gray-600 px-4 py-2">
                         Some videos open externally if embedding is blocked

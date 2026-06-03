@@ -1266,7 +1266,7 @@ export default function ListPage({
       )}
 
       {/* Scroll to top arrow - appears when scrolled down */}
-      <ScrollToTopArrow threshold={300} />
+      <ScrollToTopArrow />
 
       {/* Episode Tracking Modal */}
       {selectedShow && (

@@ -797,7 +797,7 @@ export default function TriviaGame({
                 Nice work! That's your daily game. Come back tomorrow.
               </p>
               <p>
-                Pro members get 3 games per day (10 questions each).
+                Full Access includes 3 games per day (10 questions each).
               </p>
             </div>
           )}

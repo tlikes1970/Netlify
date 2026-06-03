@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "1034923556763-ka44q9tsnetqbqi884usc6mibjfq7k5j.apps.googleusercontent.com",
+          "client_id": "1034923556763-g723oml0d2jtodjcrt4jj2m306sjve3a.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.TravisL.tvtracker",
-            "certificate_hash": "b3329ad5c7160ca1df94555b259188bcffb36657"
+            "certificate_hash": "eab26ecc610e7c165d4bb84ca1e8abae8c559403"
           }
         },
         {

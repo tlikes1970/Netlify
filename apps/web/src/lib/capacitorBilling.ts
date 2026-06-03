@@ -1,3 +1,5 @@
+import { apiUrl } from './apiConfig';
+
 /**
  * Process: Capacitor Billing Bridge
  * Purpose: Bridge interface for Google Play Billing API via Capacitor
@@ -75,8 +77,7 @@ export async function getProducts(productIds: string[]): Promise<Product[]> {
   // For now, use backend API to get products
   // This will be replaced with native plugin when available
   try {
-    const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').trim() || '';
-    const response = await fetch(`${API_BASE}/api/billing/products`, {
+    const response = await fetch(apiUrl('/api/billing/products'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ productIds }),
@@ -106,8 +107,7 @@ export async function launchPurchase(productId: string, productType: 'subscripti
   try {
     // Use backend API to initiate purchase
     // Backend will handle Google Play Billing API calls
-    const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').trim() || '';
-    const response = await fetch(`${API_BASE}/api/billing/purchase`, {
+    const response = await fetch(apiUrl('/api/billing/purchase'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ productId, productType }),
@@ -141,8 +141,7 @@ export async function restorePurchases(): Promise<Purchase[]> {
   }
 
   try {
-    const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').trim() || '';
-    const response = await fetch(`${API_BASE}/api/billing/restore`, {
+    const response = await fetch(apiUrl('/api/billing/restore'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
     });

@@ -440,7 +440,7 @@ export default function LibraryActions({
                 opacity: canUseProFeatures ? 1 : 0.65,
               }}
             >
-              Goofs {!canUseProFeatures && "🔒"}
+              Shows Like This {!canUseProFeatures && "🔒"}
             </button>
             <button
               onClick={() => {

@@ -22,6 +22,7 @@ import { authLogManager } from './authLog';
 import { isAuthDebug, logAuth, safeOrigin, getAuthMode } from './authDebug';
 import { clearRedirectGuard, hasRedirectStarted } from './authGuard';
 import { isCapacitorNative } from './capacitorEnv';
+import { clearForYouRowsOnSignOut } from './forYouRowsStorage';
 
 // Removed: isBlockedOAuthContext function (unused after removing signInWithGoogle method)
 
@@ -808,6 +809,8 @@ class AuthManager {
 
   private clearLocalData(): void {
     try {
+      clearForYouRowsOnSignOut();
+
       // Clear all Flicklet data from localStorage
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {

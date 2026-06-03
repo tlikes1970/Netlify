@@ -3,11 +3,47 @@ import { render, screen, cleanup } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import SettingsSheet from "@/components/settings/SettingsSheet";
-import { settingsManager } from "@/lib/settings";
 
 const mockUseAuth = vi.fn();
 const mockUseProStatus = vi.fn();
 const mockUseAdminRole = vi.fn();
+const mockUseEntitlements = vi.fn();
+
+const guestEntitlements = {
+  phase: "guest" as const,
+  paidPro: false,
+  proSource: null,
+  trialActive: false,
+  trialExpired: false,
+  hasFullAccess: false,
+  isReadOnlyMode: false,
+  trialStartMs: null,
+  trialDaysRemaining: null,
+};
+
+const expiredReadOnlyEntitlements = {
+  phase: "expiredReadOnly" as const,
+  paidPro: false,
+  proSource: null,
+  trialActive: false,
+  trialExpired: true,
+  hasFullAccess: false,
+  isReadOnlyMode: true,
+  trialStartMs: Date.now() - 30 * 24 * 60 * 60 * 1000,
+  trialDaysRemaining: 0,
+};
+
+const paidEntitlements = {
+  phase: "paidPro" as const,
+  paidPro: true,
+  proSource: "alpha" as const,
+  trialActive: false,
+  trialExpired: false,
+  hasFullAccess: true,
+  isReadOnlyMode: false,
+  trialStartMs: null,
+  trialDaysRemaining: null,
+};
 
 vi.mock("@/hooks/useAuth", () => ({
   useAuth: () => mockUseAuth(),
@@ -26,6 +62,10 @@ vi.mock("@/lib/proStatus", async () => {
     useProStatus: () => mockUseProStatus(),
   };
 });
+
+vi.mock("@/hooks/useEntitlements", () => ({
+  useEntitlements: () => mockUseEntitlements(),
+}));
 
 describe("Settings approval paths", () => {
   beforeEach(() => {
@@ -47,6 +87,7 @@ describe("Settings approval paths", () => {
     });
     mockUseProStatus.mockReturnValue({ isPro: false, source: null });
     mockUseAdminRole.mockReturnValue({ isAdmin: false, loading: false });
+    mockUseEntitlements.mockReturnValue(guestEntitlements);
   });
 
   afterEach(() => {
@@ -81,16 +122,13 @@ describe("Settings approval paths", () => {
     expect(screen.queryByRole("button", { name: "Admin" })).toBeNull();
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "Pro" }));
+    await user.click(screen.getByRole("button", { name: "Full Access" }));
     expect(
-      screen.getByRole("heading", { name: "Upgrade to Flicklet Pro" })
+      screen.getByRole("heading", { name: "Support Flicklet" })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Upgrade to Pro" })
+      screen.getByRole("button", { name: "Unlock Full Access" })
     ).toBeInTheDocument();
-    expect(
-      screen.queryByText("Treat this device as Pro (Alpha / Testing)")
-    ).toBeNull();
   });
 
   it("lets a signed-in free user browse settings sections and still sees upgrade messaging", async () => {
@@ -107,18 +145,25 @@ describe("Settings approval paths", () => {
     });
     mockUseProStatus.mockReturnValue({ isPro: false, source: null });
     mockUseAdminRole.mockReturnValue({ isAdmin: false, loading: false });
+    mockUseEntitlements.mockReturnValue(expiredReadOnlyEntitlements);
 
     render(<SettingsSheet />);
     expect(screen.queryByRole("button", { name: "Community" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Admin" })).toBeNull();
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "Pro" }));
+    await user.click(screen.getByRole("button", { name: "Full Access" }));
     expect(
-      screen.getByRole("heading", { name: "Upgrade to Flicklet Pro" })
+      screen.getByRole("heading", { name: "Trial ended — Read-Only" })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Upgrade to Pro" })
+      screen.getByText(/Your trial has ended, but your library is still yours/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Full Access is a one-time purchase/i)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Unlock Full Access" })
     ).toBeInTheDocument();
   });
 
@@ -136,17 +181,18 @@ describe("Settings approval paths", () => {
     });
     mockUseProStatus.mockReturnValue({ isPro: true, source: "alpha" });
     mockUseAdminRole.mockReturnValue({ isAdmin: false, loading: false });
+    mockUseEntitlements.mockReturnValue(paidEntitlements);
 
     render(<SettingsSheet />);
     expect(screen.queryByRole("button", { name: "Admin" })).toBeNull();
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "Pro" }));
+    await user.click(screen.getByRole("button", { name: "Full Access" }));
     expect(
-      screen.getByRole("heading", { name: "You are a Pro User!" })
+      screen.getByRole("heading", { name: "Thanks for supporting Flicklet" })
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Upgrade to Pro" })
+      screen.queryByRole("button", { name: "Unlock Full Access" })
     ).toBeNull();
   });
 
@@ -164,22 +210,19 @@ describe("Settings approval paths", () => {
     });
     mockUseProStatus.mockReturnValue({ isPro: true, source: "alpha" });
     mockUseAdminRole.mockReturnValue({ isAdmin: true, loading: false });
+    mockUseEntitlements.mockReturnValue(paidEntitlements);
 
     render(<SettingsSheet />);
     expect(screen.getByRole("button", { name: "Admin" })).toBeInTheDocument();
 
     const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: "Pro" }));
+    await user.click(screen.getByRole("button", { name: "Full Access" }));
     expect(
-      screen.getByText("Treat this device as Pro (Alpha / Testing)")
+      screen.getByRole("heading", { name: "Thanks for supporting Flicklet" })
     ).toBeInTheDocument();
-
-    const toggle = screen.getByRole("checkbox");
-    const updateSpy = vi.spyOn(settingsManager, "updateProStatus");
-    expect(updateSpy).not.toHaveBeenCalled();
-    await user.click(toggle);
-    expect(updateSpy).toHaveBeenCalledWith(false);
-    updateSpy.mockRestore();
+    expect(
+      screen.queryByRole("button", { name: "Unlock Full Access" })
+    ).toBeNull();
   });
 });
 

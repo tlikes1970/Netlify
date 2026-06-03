@@ -161,7 +161,7 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
       const video: ExtrasVideo = {
         id: `bloopers_${result.title.replace(/\s+/g, '_')}`,
         title: result.title,
-        description: `Bloopers from ${result.channel}`,
+        description: `Extras from ${result.channel}`,
         thumbnail: result.thumbUrl,
         duration: result.duration || 'Unknown',
         publishedAt: result.publishedAt || new Date().toISOString(),
@@ -249,7 +249,7 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
             <h2 id="bloopers-modal-title" className="text-xl font-semibold text-gray-900 dark:text-white">
-              {showTitle} - Bloopers
+              {showTitle} - Extras
             </h2>
             <button
               onClick={onClose}
@@ -269,10 +269,10 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
               <div className="text-center py-12">
                 <div className="text-4xl mb-4">💎</div>
                 <h3 className="text-xl font-semibold mb-2" style={{ color: "var(--text)" }}>
-                  Bloopers are a Pro feature
+                  Extras need Full Access
                 </h3>
                 <p className="text-sm mb-6" style={{ color: "var(--muted)" }}>
-                  Upgrade to Pro in Settings to unlock bloopers, behind-the-scenes content, and other exclusive features.
+                  Start your 21-day Full Access trial or unlock in Settings to view Extras for this title.
                 </p>
                 <button
                   onClick={() => {
@@ -282,13 +282,13 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
                   className="px-6 py-3 rounded-lg font-medium transition-colors"
                   style={{ backgroundColor: "var(--accent)", color: "white" }}
                 >
-                  Go to Pro settings
+                  Open Full Access settings
                 </button>
               </div>
             ) : loading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-2 text-gray-600 dark:text-gray-400">Loading bloopers...</span>
+                <span className="ml-2 text-gray-600 dark:text-gray-400">Loading extras...</span>
               </div>
             ) : officialVideos.length === 0 && searchResults.length === 0 ? (
               <div className="text-center py-8">
@@ -311,7 +311,7 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
                 {officialVideos.length > 0 && (
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      Official Bloopers
+                      Official Extras
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {officialVideos.map((video, index) => (

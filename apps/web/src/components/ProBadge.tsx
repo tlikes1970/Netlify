@@ -21,9 +21,9 @@ export default function ProBadge({ isPro, compact: _compact = false }: ProBadgeP
         backgroundColor: '#fbbf24',
         color: '#1f2937',
       }}
-      title="Pro User"
+      title="Full Access"
     >
-      PRO
+      FULL ACCESS
     </span>
   );
 }

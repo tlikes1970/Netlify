@@ -26,7 +26,7 @@ export const SETTINGS_SECTIONS: SettingsSectionConfig[] = [
   { id: 'account', label: 'Account & Profile' },
   { id: 'notifications', label: 'Notifications' },
   { id: 'display', label: 'Display & Layout' },
-  { id: 'pro', label: 'Pro' },
+  { id: 'pro', label: 'Full Access' },
   { id: 'data', label: 'Data & Backups' },
   { id: 'about', label: 'About' },
   { id: 'admin', label: 'Admin', isAdminOnly: true },

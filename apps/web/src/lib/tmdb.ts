@@ -1,6 +1,4 @@
-// NOTE: API_BASE lets mobile builds hit the production backend instead of localhost/capacitor://localhost.
-// When VITE_API_BASE_URL is set (e.g., in .env.mobile), API calls will use that base URL.
-// When empty (dev mode), relative URLs work with netlify dev proxy.
+// TMDB calls use TMDB_PROXY_BASE from apiConfig (relative on web; absolute on Capacitor).
 
 import { getOptimalImageSize } from "../hooks/useImageOptimization";
 import { makeGeoResolver } from "../utils/geoClient";

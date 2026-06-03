@@ -22,7 +22,7 @@ interface GenreRowConfigProps {
 }
 
 // Available genres with their subgenres
-const AVAILABLE_GENRES: GenreConfig[] = [
+export const FOR_YOU_AVAILABLE_GENRES: GenreConfig[] = [
   {
     id: 'anime',
     name: 'Anime',
@@ -163,11 +163,11 @@ const AVAILABLE_GENRES: GenreConfig[] = [
 export default function GenreRowConfig({ row, onUpdate, onRemove, canRemove }: GenreRowConfigProps) {
   // const translations = useTranslations(); // Unused
   
-  const selectedGenre = AVAILABLE_GENRES.find(g => g.id === row.mainGenre);
+  const selectedGenre = FOR_YOU_AVAILABLE_GENRES.find(g => g.id === row.mainGenre);
   const availableSubgenres = selectedGenre?.subgenres || [];
 
   const handleMainGenreChange = (genreId: string) => {
-    const genre = AVAILABLE_GENRES.find(g => g.id === genreId);
+    const genre = FOR_YOU_AVAILABLE_GENRES.find(g => g.id === genreId);
     const newRow: ForYouRow = {
       ...row,
       mainGenre: genreId,
@@ -179,7 +179,7 @@ export default function GenreRowConfig({ row, onUpdate, onRemove, canRemove }: G
 
   const handleSubGenreChange = (subGenreId: string) => {
     const subGenre = availableSubgenres.find(sg => sg.id === subGenreId);
-    const mainGenre = AVAILABLE_GENRES.find(g => g.id === row.mainGenre);
+    const mainGenre = FOR_YOU_AVAILABLE_GENRES.find(g => g.id === row.mainGenre);
     const newRow: ForYouRow = {
       ...row,
       subGenre: subGenreId,
@@ -233,7 +233,7 @@ export default function GenreRowConfig({ row, onUpdate, onRemove, canRemove }: G
             }}
           >
             <option value="">Select Genre</option>
-            {AVAILABLE_GENRES.map(genre => (
+            {FOR_YOU_AVAILABLE_GENRES.map(genre => (
               <option key={genre.id} value={genre.id}>
                 {genre.name}
               </option>

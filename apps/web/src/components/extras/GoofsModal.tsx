@@ -187,7 +187,7 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
             <h3 className="text-lg font-medium mb-2">No insights found</h3>
             <p className="text-sm">
               We don&apos;t have any insights for this one yet. They&apos;ll
-              appear here as we expand Flicklet Pro extras.
+              appear here as we expand Full Access extras.
             </p>
           </div>
         </div>
@@ -256,9 +256,7 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
               id="goofs-modal-title"
               className="text-xl font-semibold text-gray-900 dark:text-white"
             >
-              {title
-                ? `${title} - Insights & Easter Eggs`
-                : "Insights & Easter Eggs"}
+              {title ? `${title} - Shows Like This` : "Shows Like This"}
             </h2>
             <button
               onClick={onClose}
@@ -275,7 +273,7 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
             className="p-4 overflow-y-auto max-h-96"
           >
             {!hasFullAccess ? (
-              <UpgradeToProCTA variant="panel" message="Unlock insights and easter eggs for this title after your trial, or upgrade now to keep access" />
+              <UpgradeToProCTA variant="panel" message="Shows Like This is included during your trial. Unlock Full Access to keep it after your trial ends." />
             ) : (
               renderGoofsContent()
             )}

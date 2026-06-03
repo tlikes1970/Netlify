@@ -275,7 +275,7 @@ export function CompactOverflowMenu({
         if (handlers.onGoofsOpen)
           menuItems.push({
             id: "goofs",
-            label: "Goofs",
+            label: "Shows Like This",
             onClick: handlers.onGoofsOpen,
             proOnly: !hasFullAccess,
           });
@@ -348,7 +348,7 @@ export function CompactOverflowMenu({
         if (handlers.onGoofsOpen)
           menuItems.push({
             id: "goofs",
-            label: "Goofs",
+            label: "Shows Like This",
             onClick: handlers.onGoofsOpen,
             proOnly: !hasFullAccess,
           });
@@ -421,7 +421,7 @@ export function CompactOverflowMenu({
         if (handlers.onGoofsOpen)
           menuItems.push({
             id: "goofs",
-            label: "Goofs",
+            label: "Shows Like This",
             onClick: handlers.onGoofsOpen,
             proOnly: !hasFullAccess,
           });
@@ -503,7 +503,7 @@ export function CompactOverflowMenu({
         if (handlers.onGoofsOpen)
           menuItems.push({
             id: "goofs",
-            label: "Goofs",
+            label: "Shows Like This",
             onClick: handlers.onGoofsOpen,
             proOnly: !hasFullAccess,
           });
@@ -683,7 +683,7 @@ export function CompactOverflowMenu({
                     color: "var(--accent, #4da3ff)",
                     fontWeight: "600"
                   }}>
-                    PRO
+                    FULL ACCESS
                   </span>
                 )}
               </button>

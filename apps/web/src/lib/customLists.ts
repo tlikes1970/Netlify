@@ -114,13 +114,15 @@ class CustomListManager {
    */
   createList(name: string, description?: string, color?: string): CustomList {
     if (!guardMutation()) {
-      throw new Error('Your trial has ended. Upgrade or export your library to keep editing.');
+      throw new Error(
+        'Your trial has ended. Export or restore your library anytime, or unlock Full Access to keep editing.'
+      );
     }
     // Update maxLists to ensure we have the latest Pro status
     this.updateMaxLists();
     
     if (this.userLists.maxLists !== Infinity && this.userLists.customLists.length >= this.userLists.maxLists) {
-      throw new Error(`Maximum ${this.userLists.maxLists} custom lists allowed for free accounts. To upgrade to Pro and create unlimited lists, open Settings → Pro from the main menu.`);
+      throw new Error(`Maximum ${this.userLists.maxLists} custom lists allowed without Full Access. Unlock Full Access for unlimited lists in Settings → Full Access.`);
     }
 
     const id = `list_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

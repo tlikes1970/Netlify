@@ -32,12 +32,12 @@ export function TrialStatusBanner() {
             className="underline font-semibold ml-1"
             onClick={() => void startProUpgrade()}
           >
-            Upgrade
+            Unlock Full Access
           </button>
         </>
       )}
       {entitlements.phase === 'activeTrial' && (
-        <span className="opacity-90 ml-1">· Upgrade anytime to keep full access</span>
+        <span className="opacity-90 ml-1">· Unlock anytime to keep full access after trial</span>
       )}
     </div>
   );

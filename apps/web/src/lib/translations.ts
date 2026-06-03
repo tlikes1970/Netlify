@@ -46,7 +46,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     methodsDeviceNotifications: "In-app and push on this device",
     layout: "Layout",
     data: "Data",
-    pro: "Pro",
+    pro: "Full Access",
     about: "About",
     accountAndProfile: "Account & Profile",
     resetSettingsToDefaults: "Reset Settings to Defaults",
@@ -87,11 +87,11 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
       "Show more items per screen with smaller cards and shorter button labels. Hides episode tracking and detailed features.",
     enableEpisodeTracking: "Enable Episode Tracking",
     episodeTrackingCondensedProRequired:
-      "Episode tracking is disabled in condensed view. Upgrade to Pro to enable it.",
+      "Episode tracking requires Full Access.",
     episodeTrackingCondensedProAllowed:
-      "Pro users can enable episode tracking even in condensed view",
-    proFeatures: "Pro Features",
-    themePacksComingSoon: "Theme packs coming soon...",
+      "Full Access includes episode tracking",
+    proFeatures: "Full Access features",
+    themePacksComingSoon: "",
 
     // My Lists
     myLists: "My Lists",
@@ -126,9 +126,9 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     createListsToOrganize:
       "Create lists to organize your favorite shows and movies",
     maxListsReached: "Maximum lists reached",
-    upgradeForMoreLists: "Upgrade to Pro for more lists",
-    upgradeToPro: "Upgrade to Pro",
-    proUpgradeComingSoon: "Pro upgrade coming soon!",
+    upgradeForMoreLists: "Unlock Full Access for more lists",
+    upgradeToPro: "Unlock Full Access",
+    proUpgradeComingSoon: "Unlock Full Access in Settings",
     itemAlreadyExists: "Item Already Exists",
     alreadyInList: "is already in",
     confirmMoveToList: "Do you want to move it to the selected list?",
@@ -150,7 +150,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     upcomingEpisodeAlerts: "Upcoming episode alerts",
     weeklyDiscover: "Weekly discover",
     monthlyStatsDigest: "Monthly stats digest",
-    alertConfiguration: "Alert Configuration (Pro)",
+    alertConfiguration: "Alert Configuration (Full Access)",
     advancedNotificationByLeadTime:
       "Watch reminder lead time in hours",
     pickTheList: "Pick the list (currently watching or want to watch)",
@@ -169,20 +169,20 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     restoreSystemToDefaults: "Restore system to defaults",
     advancedSharingOptions: "Advanced sharing options",
 
-    // Pro Features
-    proManagement: "Pro Management",
+    // Full Access
+    proManagement: "Full Access",
     unlockProFeatures:
-      "Unlock pro features button (payment prompt - not implemented)",
-    paymentPromptNotImplemented: "Payment prompt - not implemented",
-    proFeatureList: "Pro feature list and descriptions",
+      "Unlock Full Access button (one-time purchase)",
+    paymentPromptNotImplemented: "Purchase flow - not implemented on this platform",
+    proFeatureList: "Full Access feature list and descriptions",
     alertConfigurationDetails: "Alert configuration details (hourly config)",
     hourlyConfig: "Hourly config",
-    themePacks: "Theme packs (holiday and movie themes - not implemented)",
-    holidayAndMovieThemes: "Holiday and movie themes - not implemented",
+    themePacks: "",
+    holidayAndMovieThemes: "",
     socialFeatures: "Community features and shared watchlists among friends",
     flickwordTriviaSharedWatchlists: "Shared watchlists among friends",
     bloopersBehindTheScenes:
-      "Bloopers/Behind the scenes (activates button on show cards)",
+      "Shows Like This and Extras (activates buttons on show cards)",
     activatesButtonOnShowCards: "Activates button on show cards",
     additionalFeaturesTBD: "Additional features TBD",
 
@@ -221,7 +221,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     close: "Close",
     confirm: "Confirm",
     areYouSure: "Are you sure?",
-    comingSoon: "Coming soon...",
+    comingSoon: "",
     notImplemented: "Not implemented",
 
     // Home Rails
@@ -334,7 +334,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     curatesChaosLikeAPro: "Curates chaos like a pro",
 
     // Data Management
-    dataManagementComingSoon: "Data management features coming soon",
+    dataManagementComingSoon: "",
 
     // Search
     searchPlaceholder: "Search movies, shows, people…",
@@ -402,7 +402,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     methodsDeviceNotifications: "En la app y push en este dispositivo",
     layout: "Diseño",
     data: "Datos",
-    pro: "Pro",
+    pro: "Full Access",
     about: "Acerca De",
     accountAndProfile: "Cuenta y perfil",
     resetSettingsToDefaults:
@@ -445,11 +445,11 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
       "Muestra más elementos por pantalla con tarjetas más pequeñas y etiquetas de botones más cortas. Oculta seguimiento de episodios y funciones detalladas.",
     enableEpisodeTracking: "Habilitar Seguimiento de Episodios",
     episodeTrackingCondensedProRequired:
-      "El seguimiento de episodios está desactivado en la vista condensada. Actualiza a Pro para activarlo.",
+      "El seguimiento de episodios requiere Acceso completo.",
     episodeTrackingCondensedProAllowed:
-      "Los usuarios Pro pueden activar el seguimiento de episodios incluso en vista condensada",
-    proFeatures: "Características Pro",
-    themePacksComingSoon: "Paquetes de temas próximamente...",
+      "Acceso completo incluye seguimiento de episodios",
+    proFeatures: "Funciones de Acceso completo",
+    themePacksComingSoon: "",
 
     // My Lists
     myLists: "Mis Listas",
@@ -485,9 +485,9 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     createListsToOrganize:
       "Crea listas para organizar tus programas y películas favoritas",
     maxListsReached: "Máximo de listas alcanzado",
-    upgradeForMoreLists: "Actualiza a Pro para más listas",
-    upgradeToPro: "Actualizar a Pro",
-    proUpgradeComingSoon: "¡Actualización a Pro próximamente!",
+    upgradeForMoreLists: "Desbloquea Acceso completo para más listas",
+    upgradeToPro: "Desbloquear Acceso completo",
+    proUpgradeComingSoon: "Desbloquea Acceso completo en Ajustes",
     itemAlreadyExists: "El Elemento Ya Existe",
     alreadyInList: "ya está en",
     confirmMoveToList: "¿Quieres moverlo a la lista seleccionada?",
@@ -510,7 +510,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     upcomingEpisodeAlerts: "Alertas de episodios próximos",
     weeklyDiscover: "Descubrimiento semanal",
     monthlyStatsDigest: "Resumen de estadísticas mensuales",
-    alertConfiguration: "Configuración de Alertas (Pro)",
+    alertConfiguration: "Configuración de Alertas (Acceso completo)",
     advancedNotificationByLeadTime:
       "Antelación del recordatorio en horas",
     pickTheList: "Elige la lista (viendo ahora o quiero ver)",
@@ -529,23 +529,22 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     restoreSystemToDefaults: "Restaurar sistema a valores predeterminados",
     advancedSharingOptions: "Opciones de compartir avanzadas",
 
-    // Pro Features
-    proManagement: "Gestión Pro",
+    // Acceso completo
+    proManagement: "Acceso completo",
     unlockProFeatures:
-      "Botón de desbloquear características pro (prompt de pago - no implementado)",
-    paymentPromptNotImplemented: "Prompt de pago - no implementado",
-    proFeatureList: "Lista de características pro y descripciones",
+      "Botón de desbloquear Acceso completo (compra única)",
+    paymentPromptNotImplemented: "Flujo de compra — no disponible en esta plataforma",
+    proFeatureList: "Lista de funciones de Acceso completo y descripciones",
     alertConfigurationDetails:
       "Detalles de configuración de alertas (configuración por horas)",
     hourlyConfig: "Configuración por horas",
-    themePacks:
-      "Paquetes de temas (temas de fiestas y películas - no implementado)",
-    holidayAndMovieThemes: "Temas de fiestas y películas - no implementado",
+    themePacks: "",
+    holidayAndMovieThemes: "",
     socialFeatures:
       "Funciones de comunidad y listas compartidas entre amigos",
     flickwordTriviaSharedWatchlists: "Listas compartidas entre amigos",
     bloopersBehindTheScenes:
-      "Bloopers/Detrás de escena (activa botón en tarjetas de programas)",
+      "Shows Like This y Extras (activa botones en tarjetas)",
     activatesButtonOnShowCards: "Activa botón en tarjetas de programas",
     additionalFeaturesTBD: "Características adicionales por determinar",
 
@@ -585,7 +584,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     close: "Cerrar",
     confirm: "Confirmar",
     areYouSure: "¿Estás seguro?",
-    comingSoon: "Próximamente...",
+    comingSoon: "",
     notImplemented: "No implementado",
 
     // Home Rails
@@ -694,7 +693,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     curatesChaosLikeAPro: "Curaduría del caos como profesional",
 
     // Data Management
-    dataManagementComingSoon: "Funciones de gestión de datos próximamente",
+    dataManagementComingSoon: "",
 
     // Rail Titles
     drama: "Drama",

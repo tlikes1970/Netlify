@@ -298,10 +298,10 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
                   className="text-xl font-semibold mb-2"
                   style={{ color: "var(--text)" }}
                 >
-                  Extras are a Pro feature
+                  Extras need Full Access
                 </h3>
                 <p className="text-sm mb-6" style={{ color: "var(--muted)" }}>
-                  Upgrade in Settings → Pro to unlock behind-the-scenes content.
+                  Start your 21-day trial or unlock Full Access in Settings for behind-the-scenes content.
                 </p>
                 <button
                   onClick={() => {
@@ -311,7 +311,7 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
                   className="px-6 py-3 rounded-lg font-medium transition-colors"
                   style={{ backgroundColor: "var(--accent)", color: "white" }}
                 >
-                  Go to Pro settings
+                  Open Full Access settings
                 </button>
               </div>
             ) : loading ? (

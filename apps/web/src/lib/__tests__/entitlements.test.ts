@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import { READ_ONLY_PRIMARY } from '../copy/access';
 import {
   TRIAL_LENGTH_DAYS,
   ensureTrialStartMs,
   getTrialDaysRemaining,
+  getTrialStatusLabel,
   isTrialActive,
   isTrialExpired,
   resolveEntitlements,
@@ -53,6 +55,7 @@ describe('entitlements', () => {
     expect(state.hasFullAccess).toBe(false);
     expect(state.isReadOnlyMode).toBe(true);
     expect(state.trialDaysRemaining).toBe(0);
+    expect(getTrialStatusLabel(state)).toBe(READ_ONLY_PRIMARY);
   });
 
   it('trial ends today shows zero days remaining', () => {

@@ -17,8 +17,13 @@ import {
 // PersonalityName type used implicitly through PERSONALITY_LIST
 import { useEntitlements } from "../hooks/useEntitlements";
 import { getTrialStatusLabel } from "../lib/entitlements";
+import {
+  READ_ONLY_FULL_ACCESS_EXPLAINER,
+  READ_ONLY_HEADING,
+  READ_ONLY_PRIMARY,
+} from "../lib/copy/access";
 import { useTranslations, useLanguage, changeLanguage } from "../lib/language";
-import { PRO_FEATURES_AVAILABLE, PRO_FEATURES_COMING_SOON } from "./settingsProConfig";
+import { PRO_FEATURES_AVAILABLE } from "./settingsProConfig";
 import { UpgradeToProCTA } from "./UpgradeToProCTA";
 import { useCustomLists, customListManager } from "../lib/customLists";
 import { useUsername } from "../hooks/useUsername";
@@ -969,22 +974,6 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
         <ForYouGenreConfig />
       </div>
 
-      {/* Pro Features - Theme Packs */}
-      {/* Pro gating: Theme packs are Pro-only (future feature) */}
-      {/* Config: settings.pro.features.themePacks, settingsProConfig.ts - PRO_FEATURES_COMING_SOON */}
-      {settings.pro.isPro && (
-        <div>
-          <h4
-            className="text-lg font-medium mb-3"
-            style={{ color: "var(--text)" }}
-          >
-            {translations.proFeatures}
-          </h4>
-          <p style={{ color: "var(--muted)" }}>
-            {translations.themePacksComingSoon}
-          </p>
-        </div>
-      )}
     </div>
   );
 }
@@ -1009,23 +998,21 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
             : entitlements.trialActive
               ? "Flicklet is fully unlocked for your trial"
               : entitlements.isReadOnlyMode
-                ? "Trial ended — read-only mode"
+                ? READ_ONLY_HEADING
                 : "Support Flicklet"}
         </h3>
-        <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
-          {entitlements.paidPro
-            ? "Your one-time purchase keeps full access and helps cover hosting."
-            : entitlements.trialActive
-              ? `${trialLabel ?? "21-day full access active"}. Explore everything — reminders, Goofs, Extras, and your full library.`
-              : entitlements.isReadOnlyMode
-                ? "Your library stays available to view and export. Upgrade to add, edit, or move items again."
-                : "Sign in to start a 21-day full access trial, or upgrade anytime."}
-        </p>
-        {!entitlements.paidPro && (
-          <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
-            After the trial, the app becomes read-only unless you upgrade. Export is always
-            available. The ~$5 one-time purchase helps cover hosting, TMDB/API usage, Firebase,
-            and ongoing development — no subscriptions, no ads, and your data stays yours.
+        {entitlements.isReadOnlyMode ? (
+          <div className="text-sm mb-3 space-y-3" style={{ color: "var(--muted)" }}>
+            <p>{READ_ONLY_PRIMARY}</p>
+            <p>{READ_ONLY_FULL_ACCESS_EXPLAINER}</p>
+          </div>
+        ) : (
+          <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
+            {entitlements.paidPro
+              ? "Your one-time unlock keeps full access and helps support the app and continued development."
+              : entitlements.trialActive
+                ? `${trialLabel ?? "21-day Full Access trial active"}. Explore everything — reminders, Shows Like This, Extras, and your full library.`
+                : "Sign in to start a 21-day Full Access trial, or unlock Full Access anytime."}
           </p>
         )}
         {(entitlements.isReadOnlyMode || (!entitlements.paidPro && !entitlements.trialActive)) && (
@@ -1035,7 +1022,7 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
         )}
         {entitlements.trialActive && !entitlements.paidPro && (
           <p className="text-xs mt-3" style={{ color: "var(--muted)" }}>
-            Upgrade anytime if you want to keep full access after your trial ends.
+            Unlock Full Access anytime to keep editing after your trial ends.
           </p>
         )}
       </div>
@@ -1088,7 +1075,7 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
                           color: "white",
                         }}
                       >
-                        PRO
+                        INCLUDED
                       </span>
                       <span className="text-xs" style={{ color: "var(--muted)" }}>
                         Available Now
@@ -1101,58 +1088,6 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
           </div>
         </div>
 
-        {/* Coming Soon Section */}
-        {PRO_FEATURES_COMING_SOON.length > 0 && (
-          <div className="mt-8">
-            <h5
-              className="text-sm font-medium mb-3"
-              style={{ color: "var(--text)" }}
-            >
-              Coming Soon
-            </h5>
-            <div className="space-y-4">
-              {PRO_FEATURES_COMING_SOON.map((feature) => (
-                <div
-                  key={feature.id}
-                  className="p-4 rounded-lg border"
-                  style={{
-                    backgroundColor: "var(--bg)",
-                    borderColor: "var(--line)",
-                  }}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="text-2xl">{feature.icon}</div>
-                    <div className="flex-1">
-                      <h5
-                        className="font-medium mb-1"
-                        style={{ color: "var(--text)" }}
-                      >
-                        {feature.title}
-                      </h5>
-                      <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
-                        {feature.description}
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <span
-                          className="px-2 py-1 text-xs rounded-full"
-                          style={{
-                            backgroundColor: "var(--accent)",
-                            color: "white",
-                          }}
-                        >
-                          PRO
-                        </span>
-                        <span className="text-xs" style={{ color: "var(--muted)" }}>
-                          Coming Soon
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

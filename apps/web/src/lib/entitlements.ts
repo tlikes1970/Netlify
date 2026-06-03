@@ -1,7 +1,9 @@
 /**
- * Central trial / Pro / read-only entitlement resolution.
- * paidPro and activeTrial both grant full access; expired unpaid users are read-only.
+ * Central trial / Full Access / Read-Only entitlement resolution.
+ * paidPro and activeTrial both grant full access; expired unpaid users are Read-Only.
  */
+
+import { READ_ONLY_PRIMARY } from './copy/access';
 
 import type { ProStatus } from './proStatus';
 
@@ -252,12 +254,12 @@ export function getTrialStatusLabel(state: EntitlementState): string | null {
   if (state.phase === 'activeTrial') {
     const days = state.trialDaysRemaining;
     if (days == null) return 'Full access trial active';
-    if (days <= 0) return 'Trial ends today — upgrade to keep editing';
+    if (days <= 0) return 'Trial ends today — unlock Full Access to keep editing';
     if (days === 1) return 'Full access trial: 1 day left';
     return `Full access trial: ${days} days left`;
   }
   if (state.phase === 'expiredReadOnly') {
-    return 'Trial ended — your library is read-only. Export anytime or upgrade to keep editing.';
+    return READ_ONLY_PRIMARY;
   }
   return null;
 }

@@ -206,7 +206,7 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
           <div className="mb-4">
             <UpgradeToProCTA 
               variant="panel" 
-              message="Upgrade to Pro for unlimited custom lists"
+              message="Unlock Full Access for unlimited custom lists"
             />
           </div>
         )}

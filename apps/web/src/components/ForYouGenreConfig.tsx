@@ -1,38 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import GenreRowConfig, { ForYouRow } from './GenreRowConfig';
 import { useTranslations } from '../lib/language';
+import { useAuth } from '../hooks/useAuth';
+import { loadForYouRows, saveForYouRows } from '../lib/forYouRowsStorage';
 
 // For You Genre Configuration Component
 export default function ForYouGenreConfig() {
   const translations = useTranslations();
-  const [forYouRows, setForYouRows] = useState<ForYouRow[]>(() => {
-    // Load from localStorage or use defaults
-    try {
-      const saved = localStorage.getItem('flicklet:forYouRows');
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (e) {
-      console.error('Failed to load For You rows:', e);
-    }
-    
-    // Default configuration
-    return [
-      { id: '1', mainGenre: 'anime', subGenre: 'shonen', title: 'Anime/Shōnen' },
-      { id: '2', mainGenre: 'horror', subGenre: 'psychological', title: 'Horror/Psychological' },
-      { id: '3', mainGenre: 'comedy', subGenre: 'romantic', title: 'Comedy/Romantic' }
-    ];
-  });
+  const { user } = useAuth();
+  const uid = user?.uid ?? null;
+
+  const [forYouRows, setForYouRows] = useState<ForYouRow[]>(() =>
+    loadForYouRows(uid)
+  );
+
+  useEffect(() => {
+    setForYouRows(loadForYouRows(uid));
+  }, [uid]);
 
   const saveRows = (rows: ForYouRow[]) => {
-    setForYouRows(rows);
-    localStorage.setItem('flicklet:forYouRows', JSON.stringify(rows));
-    // Dispatch event to notify other components
-    window.dispatchEvent(new CustomEvent('forYouRows:updated', { detail: rows }));
+    const saved = saveForYouRows(rows, uid);
+    setForYouRows(saved);
+    window.dispatchEvent(new CustomEvent('forYouRows:updated', { detail: saved }));
   };
 
   const handleRowUpdate = (updatedRow: ForYouRow) => {
-    const newRows = forYouRows.map(row => 
+    const newRows = forYouRows.map(row =>
       row.id === updatedRow.id ? updatedRow : row
     );
     saveRows(newRows);
@@ -40,14 +33,15 @@ export default function ForYouGenreConfig() {
 
   const handleAddRow = () => {
     if (forYouRows.length >= 3) return;
-    
+
     const newRow: ForYouRow = {
       id: String(forYouRows.length + 1),
       mainGenre: '',
       subGenre: '',
       title: ''
     };
-    saveRows([...forYouRows, newRow]);
+    // Keep in UI only until genres are chosen (invalid rows must not hit storage)
+    setForYouRows([...forYouRows, newRow]);
   };
 
   const handleRemoveRow = (rowId: string) => {
@@ -66,12 +60,12 @@ export default function ForYouGenreConfig() {
           canRemove={forYouRows.length > 1}
         />
       ))}
-      
+
       {forYouRows.length < 3 && (
       <button
         onClick={handleAddRow}
         className="w-full p-4 rounded-lg border-2 border-dashed transition-colors"
-        style={{ 
+        style={{
           borderColor: 'var(--line)',
           color: 'var(--muted)',
           backgroundColor: 'transparent'
@@ -80,8 +74,8 @@ export default function ForYouGenreConfig() {
         {translations.forYouAddAnotherRow} ({forYouRows.length}/3)
       </button>
       )}
-      
-      <div className="p-3 rounded-lg text-sm" style={{ 
+
+      <div className="p-3 rounded-lg text-sm" style={{
         backgroundColor: 'var(--btn)',
         color: 'var(--muted)'
       }}>
@@ -90,4 +84,3 @@ export default function ForYouGenreConfig() {
     </div>
   );
 }
-

@@ -1,87 +1,73 @@
 /**
- * Process: Pro Features Configuration
- * Purpose: Single source of truth for Pro feature tiles and support messaging
+ * Process: Full Access features configuration
+ * Purpose: Single source of truth for Full Access feature tiles and support messaging
  * Data Source: Static configuration
- * Update Path: Modify this file to add/remove/update Pro features
- * Dependencies: ProSection, UpgradeToProCTA, any Pro feature listings
+ * Update Path: Modify this file to add/remove/update feature listings
+ * Dependencies: ProSection, UpgradeToProCTA
  */
+
+import { FULL_ACCESS_TRIAL_INTRO } from '../lib/copy/access';
 
 export interface ProFeature {
   id: string;
   title: string;
   description: string;
   icon: string; // emoji or icon identifier
-  comingSoon?: boolean;
 }
 
 /**
- * Features included with full access (trial or paid Pro)
+ * Features included with Full Access (trial or one-time unlock)
  */
 export const PRO_FEATURES_AVAILABLE: ProFeature[] = [
   {
     id: 'full-access-trial',
     title: '21-Day Full Access Trial',
-    description:
-      'Every signed-in account gets the complete app for 21 days — library editing, Goofs, Extras, watch reminders, and more.',
+    description: `${FULL_ACCESS_TRIAL_INTRO} Library editing, Shows Like This, Extras, watch reminders, and more.`,
     icon: '🎁',
-    comingSoon: false,
   },
   {
-    id: 'bloopers-extras',
-    title: 'Bloopers & Behind-the-Scenes',
+    id: 'shows-like-this',
+    title: 'Shows Like This',
     description:
-      'Bloopers, extras, and behind-the-scenes content on movie and TV cards during your trial or with Pro.',
+      'Insights and easter eggs on movie and TV cards during your trial or with Full Access.',
+    icon: '🎭',
+  },
+  {
+    id: 'extras',
+    title: 'Extras',
+    description:
+      'Additional behind-the-scenes and related videos on movie and TV cards during your trial or with Full Access.',
     icon: '🎬',
-    comingSoon: false,
   },
   {
     id: 'watch-reminders',
     title: 'Watch Reminders',
     description:
-      'Episode alerts on your device with per-show timing — in-app and push reminders, no email digests.',
+      'Episode alerts on your device with per-show timing — in-app and push reminders.',
     icon: '🔔',
-    comingSoon: false,
   },
   {
-    id: 'episode-tracking-condensed',
-    title: 'Episode Tracking in Condensed View',
-    description: 'Track episode progress even when using condensed view mode.',
+    id: 'episode-tracking',
+    title: 'Episode Tracking',
+    description: 'Track episode progress across your shows and movies.',
     icon: '📺',
-    comingSoon: false,
   },
   {
     id: 'continued-access',
     title: 'Continued Full Access',
     description:
-      'After trial, a one-time purchase keeps editing, reminders, and extras working — your library never held hostage.',
+      'After trial, a one-time unlock keeps editing, reminders, Shows Like This, and Extras available. Helps support hosting, licensing, and maintenance.',
     icon: '💎',
-    comingSoon: false,
   },
 ];
 
-/**
- * Pro features coming soon
- */
-export const PRO_FEATURES_COMING_SOON: ProFeature[] = [
-  {
-    id: 'premium-themes',
-    title: 'Premium Themes',
-    description: 'Additional theme packs and customization options.',
-    icon: '🎨',
-    comingSoon: true,
-  },
-];
+/** Reserved for future tiles; keep empty until features ship. */
+export const PRO_FEATURES_COMING_SOON: ProFeature[] = [];
 
-/**
- * Get all Pro features (available + coming soon)
- */
 export function getAllProFeatures(): ProFeature[] {
   return [...PRO_FEATURES_AVAILABLE, ...PRO_FEATURES_COMING_SOON];
 }
 
-/**
- * Get Pro features by availability status
- */
 export function getProFeaturesByStatus(comingSoon: boolean): ProFeature[] {
   return comingSoon ? PRO_FEATURES_COMING_SOON : PRO_FEATURES_AVAILABLE;
 }
