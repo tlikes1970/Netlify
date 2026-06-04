@@ -5,6 +5,7 @@ import { cachedSearchMulti } from "./cache";
 import { smartSearch } from "./smartSearch";
 import { discoverByGenre } from "./api";
 import { emit } from "../lib/events";
+import { removeMediaItemWithConfirmation } from "../lib/confirmRemoveShow";
 import { addToListWithConfirmation, Library } from "../lib/storage";
 import { fetchFullMediaMetadata, fetchNetworkInfo } from "./api";
 import { fetchNextAirDate, fetchShowStatus } from "../tmdb/tv";
@@ -75,9 +76,7 @@ export default function SearchResults({
       }
     },
     onDelete: (item: MediaItem) => {
-      if (item.id && item.mediaType) {
-        Library.remove(item.id, item.mediaType);
-      }
+      removeMediaItemWithConfirmation(item);
     },
     onRatingChange: (item: MediaItem, rating: number) => {
       if (item.id && item.mediaType) {

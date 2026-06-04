@@ -2,6 +2,7 @@ import TabCard from "@/components/cards/TabCard";
 import type { MediaItem } from "@/components/cards/card.types";
 import { getItemSynopsis } from "@/lib/itemSynopsis";
 import { backfillSynopsisForItems } from "@/utils/backfillSynopsis";
+import { removeMediaItemWithConfirmation } from "@/lib/confirmRemoveShow";
 import { Library, LibraryEntry } from "@/lib/storage";
 import { useSettings, getPersonalityText, DEFAULT_PERSONALITY } from "@/lib/settings";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
@@ -753,9 +754,7 @@ export default function ListPage({
       }
     },
     onDelete: (item: MediaItem) => {
-      if (item.id && item.mediaType) {
-        Library.remove(item.id, item.mediaType);
-      }
+      removeMediaItemWithConfirmation(item);
     },
     onRatingChange: (item: MediaItem, rating: number) => {
       if (item.id && item.mediaType) {

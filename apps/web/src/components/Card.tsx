@@ -2,6 +2,7 @@ import { useState } from 'react';
 import HolidayModal from '@/components/HolidayModal';
 import { getHolidays, assignToHoliday } from '@/lib/holidays';
 import { Library } from '@/lib/storage';
+import { removeShowWithConfirmation } from '@/lib/confirmRemoveShow';
 
 type Base = { id?: string; kind?: 'movie'|'tv'; title?: string; poster?: string };
 type Props = Base & {
@@ -28,7 +29,7 @@ export default function Card({ id, kind, title, poster, mode = 'catalog', showHo
   }
   function toDelete() {
     if (!safe.id || !safe.kind) return;
-    Library.remove(safe.id, safe.kind as 'movie'|'tv');
+    removeShowWithConfirmation(safe.id, safe.kind as 'movie' | 'tv');
   }
 
   function onPickHoliday(hid: string) {

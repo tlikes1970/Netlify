@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import CardV2 from '../components/cards/CardV2';
 import { useCustomLists, customListManager } from '../lib/customLists';
+import { removeMediaItemWithConfirmation } from '../lib/confirmRemoveShow';
 import { Library } from '../lib/storage';
 import { useTranslations } from '../lib/language';
 import { useSettings, getPersonalityText, DEFAULT_PERSONALITY } from '../lib/settings';
@@ -188,9 +189,7 @@ export default function MyListsPage() {
       }
     },
     onDelete: (item: any) => {
-      if (item.id && item.mediaType) {
-        Library.remove(item.id, item.mediaType);
-      }
+      removeMediaItemWithConfirmation(item);
     },
   };
 

@@ -1,5 +1,6 @@
 import CardV2 from './cards/CardV2';
 import type { MediaItem } from './cards/card.types';
+import { removeMediaItemWithConfirmation } from '@/lib/confirmRemoveShow';
 import { Library } from '@/lib/storage';
 import { useRailImagePreload } from '../hooks/useImagePreload';
 
@@ -74,11 +75,7 @@ export default function Rail({ id, title, enabled = true, skeletonCount = 0, ite
       }
     },
     onDelete: (item: MediaItem) => {
-      console.log('🎬 For You Delete button clicked:', item);
-      if (item.id && item.mediaType) {
-        Library.remove(item.id, item.mediaType);
-        console.log('✅ Item deleted:', item.title);
-      }
+      removeMediaItemWithConfirmation(item);
     },
   };
 

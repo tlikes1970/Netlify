@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useLibrary, Library } from '@/lib/storage';
+import { useLibrary } from '@/lib/storage';
+import { removeMediaItemWithConfirmation } from '@/lib/confirmRemoveShow';
 import ErrorBoundary from '../ErrorBoundary';
 
 interface NotInterestedModalProps {
@@ -18,7 +19,7 @@ export default function NotInterestedModal({ isOpen, onClose }: NotInterestedMod
     
     setIsRemoving(item.id);
     try {
-      Library.remove(item.id, item.mediaType);
+      removeMediaItemWithConfirmation(item);
     } catch (error) {
       console.error('Error removing item:', error);
     } finally {

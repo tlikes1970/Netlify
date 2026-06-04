@@ -1,6 +1,7 @@
 // import { useMemo } from 'react'; // Unused
 import CardV2 from '../cards/CardV2';
 import { useLibrary, Library } from '../../lib/storage';
+import { removeMediaItemWithConfirmation } from '../../lib/confirmRemoveShow';
 import { useTranslations } from '../../lib/language';
 import { useSettings, getPersonalityText, DEFAULT_PERSONALITY } from '../../lib/settings';
 
@@ -28,7 +29,7 @@ export default function HomeYourShowsRail() {
                   onWant: i => Library.move(i.id, i.mediaType, 'wishlist'),
                   onWatched: i => Library.move(i.id, i.mediaType, 'watched'),
                   onNotInterested: i => Library.move(i.id, i.mediaType, 'not'),
-                  onDelete: i => Library.remove(i.id, i.mediaType),
+                  onDelete: (i) => removeMediaItemWithConfirmation(i),
                 }}
               />
             </div>
