@@ -46,6 +46,7 @@ import { mountActionBridge, setToastCallback } from "@/state/actions";
 import { useSettings, settingsManager } from "@/lib/settings";
 import { useTranslations } from "@/lib/language";
 import Toast, { useToast } from "@/components/Toast";
+import ConfirmHost from "@/components/ConfirmHost";
 import PersonalityErrorBoundary from "@/components/PersonalityErrorBoundary";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -1329,6 +1330,8 @@ export default function App() {
             onClose={() => removeToast(toast.id)}
           />
         ))}
+
+        <ConfirmHost />
       </>
     );
   }
@@ -1648,6 +1651,8 @@ export default function App() {
             onClose={() => removeToast(toast.id)}
           />
         ))}
+
+        <ConfirmHost />
 
         {/* Auth Modal */}
         <AuthModal

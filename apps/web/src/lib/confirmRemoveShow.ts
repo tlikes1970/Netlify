@@ -1,18 +1,28 @@
 /**
- * Confirm-before-remove for library shows (Phase 1 action feedback).
- * Uses window.confirm — lowest-risk pattern aligned with existing settings confirms.
+ * Confirm-before-remove for library shows (Phase 1 / 1.5 action feedback).
  */
 
 import type { MediaType } from '@/components/cards/card.types';
+import { confirmAction } from '@/state/confirm';
 import { guardMutation, isMutationBlocked } from './readOnlyGuard';
 import { Library } from './storage';
 
-export const CONFIRM_REMOVE_SHOW_MESSAGE =
-  'Remove this show from your library? You can add it again later.';
+export const REMOVE_SHOW_CONFIRM = {
+  title: 'Remove this show?',
+  body: 'This will remove it from your library. You can add it again later if you change your mind.',
+  confirmLabel: 'Remove',
+  cancelLabel: 'Cancel',
+} as const;
+
+/** @deprecated Use REMOVE_SHOW_CONFIRM — kept for tests referencing message text */
+export const CONFIRM_REMOVE_SHOW_MESSAGE = `${REMOVE_SHOW_CONFIRM.title} ${REMOVE_SHOW_CONFIRM.body}`;
 
 /** @returns true if the user chose to remove */
-export function confirmRemoveShow(): boolean {
-  return window.confirm(CONFIRM_REMOVE_SHOW_MESSAGE);
+export async function confirmRemoveShow(): Promise<boolean> {
+  return confirmAction({
+    ...REMOVE_SHOW_CONFIRM,
+    destructive: true,
+  });
 }
 
 /**
@@ -26,10 +36,11 @@ export function removeShowWithConfirmation(
     guardMutation();
     return;
   }
-  if (!confirmRemoveShow()) {
-    return;
-  }
-  Library.remove(id, mediaType);
+  void confirmRemoveShow().then((confirmed) => {
+    if (confirmed) {
+      Library.remove(id, mediaType);
+    }
+  });
 }
 
 export function removeMediaItemWithConfirmation(item: {
