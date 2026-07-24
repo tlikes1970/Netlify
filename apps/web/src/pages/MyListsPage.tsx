@@ -4,7 +4,7 @@ import { useCustomLists, customListManager } from '../lib/customLists';
 import { removeMediaItemWithConfirmation } from '../lib/confirmRemoveShow';
 import { Library } from '../lib/storage';
 import { useTranslations } from '../lib/language';
-import { useSettings, resolveFlickletLine } from '../lib/settings';
+import { useSettings, getPersonalityText, DEFAULT_PERSONALITY } from '../lib/settings';
 import type { ListName } from '../state/library.types';
 import { shareListWithFallback } from '../lib/shareLinks';
 import { getToastCallback } from '../state/actions';
@@ -284,9 +284,7 @@ export default function MyListsPage() {
           ) : (
             <div className="text-center py-12">
               <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
-                {resolveFlickletLine('empty.customList', settings.personalityLevel, {
-                  listName: selectedList?.name ?? 'This list',
-                }) || 'This list has no shows yet.'}
+                {getPersonalityText(settings.personality || DEFAULT_PERSONALITY, 'emptyWishlist')}
               </p>
               <p className="text-xs" style={{ color: 'var(--muted)' }}>
                 {translations.addItemsFromSearchOrDiscovery || 'Add items from search or discovery'}

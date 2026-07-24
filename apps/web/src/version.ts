@@ -1,5 +1,6 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.177: Fix Netlify build — My Lists empty state uses committed settings API
 // ⚠️ VERSION 0.1.176: My Lists share as pasteable text with Flicklet stamp
 // - Share button copies list titles + shows for SMS/messaging (not deep-link-only)
 // - Branded footer: Track your shows with Flicklet + app URL
@@ -398,4 +399,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.176";
+export const APP_VERSION = "0.1.177";
