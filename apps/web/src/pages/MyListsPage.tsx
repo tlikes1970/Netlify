@@ -4,7 +4,7 @@ import { useCustomLists, customListManager } from '../lib/customLists';
 import { removeMediaItemWithConfirmation } from '../lib/confirmRemoveShow';
 import { Library } from '../lib/storage';
 import { useTranslations } from '../lib/language';
-import { useSettings, getPersonalityText, DEFAULT_PERSONALITY } from '../lib/settings';
+import { useSettings, resolveFlickletLine } from '../lib/settings';
 import type { ListName } from '../state/library.types';
 import { shareListWithFallback } from '../lib/shareLinks';
 import { getToastCallback } from '../state/actions';
@@ -116,58 +116,37 @@ export default function MyListsPage() {
   };
 
 
-  // List share entry point – uses shareListWithFallback
+  // List share — pasteable text with Flicklet stamp
   const handleShareList = async (listId: string) => {
-    console.log("[MyListsPage] handleShareList called with listId:", listId);
     const list = customListManager.getListById(listId);
-    if (!list) {
-      console.warn("[MyListsPage] List not found for listId:", listId);
-      return;
-    }
+    if (!list) return;
 
-    console.log("[MyListsPage] Sharing list:", list.name, list.id);
-    
-    // Check toast availability upfront for debugging
-    const toastCheck = getToastCallback();
-    console.log("[MyListsPage] Toast callback available:", !!toastCheck, typeof toastCheck);
+    const shareListName = `custom:${listId}` as ListName;
+    const listItems = Library.getByList(shareListName);
 
     try {
       await shareListWithFallback(
-        { id: list.id, name: list.name },
+        { name: list.name },
+        listItems.map((item) => ({
+          title: item.title,
+          mediaType: item.mediaType,
+          voteAverage: item.voteAverage,
+          userRating: item.userRating,
+        })),
         {
           onSuccess: () => {
-            console.log("[MyListsPage] Share successful - entering onSuccess callback");
-            // Get global toast callback (set by App.tsx) - retrieve fresh each time
             const toast = getToastCallback();
-            console.log("[MyListsPage] Toast callback in onSuccess:", !!toast, typeof toast);
-            if (toast) {
-              console.log("[MyListsPage] Calling toast callback with message:", "Share link copied to clipboard!");
-              try {
-                toast("Share link copied to clipboard!", "success");
-                console.log("[MyListsPage] Toast callback executed successfully");
-              } catch (toastError) {
-                console.error("[MyListsPage] Error calling toast:", toastError);
-              }
-            } else {
-              console.warn("[MyListsPage] Toast callback not available - toasts won't show");
-            }
+            toast?.("List copied — paste into your message!", "success");
           },
-          onError: (error) => {
-            console.error("[MyListsPage] Share failed:", error);
-            // Get global toast callback (set by App.tsx) - retrieve fresh each time
+          onError: () => {
             const toast = getToastCallback();
-            if (toast) {
-              toast("Unable to share – link copied instead", "error");
-            }
+            toast?.("Could not copy list — try again", "error");
           },
         }
       );
-    } catch (error) {
-      console.error("[MyListsPage] Unexpected error in handleShareList:", error);
+    } catch {
       const toast = getToastCallback();
-      if (toast) {
-        toast("Failed to share list", "error");
-      }
+      toast?.("Failed to share list", "error");
     }
   };
 
@@ -305,7 +284,9 @@ export default function MyListsPage() {
           ) : (
             <div className="text-center py-12">
               <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
-                {getPersonalityText(settings.personality || DEFAULT_PERSONALITY, 'emptyWishlist')}
+                {resolveFlickletLine('empty.customList', settings.personalityLevel, {
+                  listName: selectedList?.name ?? 'This list',
+                }) || 'This list has no shows yet.'}
               </p>
               <p className="text-xs" style={{ color: 'var(--muted)' }}>
                 {translations.addItemsFromSearchOrDiscovery || 'Add items from search or discovery'}

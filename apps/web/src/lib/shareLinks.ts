@@ -1,10 +1,17 @@
 /**
  * Process: Share Link Generation
- * Purpose: Centralized functions to generate shareable URLs for lists and shows
- * Data Source: List IDs, show IDs (tmdbId/titleId)
- * Update Path: Modify this file to change share URL patterns
- * Dependencies: App.tsx (for deep link handling)
+ * Purpose: Centralized share helpers for lists (text snapshots) and shows (deep links)
+ * Data Source: List items, show IDs (tmdbId/titleId)
+ * Update Path: Modify this file to change share text/URL patterns
+ * Dependencies: App.tsx (for show deep link handling)
  */
+
+export type ShareListItem = {
+  title: string;
+  mediaType?: string;
+  voteAverage?: number;
+  userRating?: number;
+};
 
 /**
  * Get the app origin URL for building share links
@@ -46,23 +53,46 @@ function isLikelyMobile(): boolean {
   return /android|iphone|ipad|ipod/i.test(ua);
 }
 
+/** Branded footer appended to pasted list text. */
+export function getFlickletShareStamp(): string {
+  const origin = getAppOrigin();
+  return (
+    `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+    `📱 Track your shows and movies with Flicklet!\n` +
+    `🔗 ${origin}\n`
+  );
+}
+
 /**
- * Build a shareable URL for a custom list
- * @param listId - The unique identifier for the list
- * @returns Shareable URL with deep-link params, or null if listId is invalid
+ * Format a custom list as plain text for SMS / messaging apps.
  */
-export function buildListShareUrl(listId: string): string | null {
-  if (!listId || listId.trim() === "") {
-    return null;
+export function formatListShareText(
+  listName: string,
+  items: ShareListItem[],
+  options?: { includeRatings?: boolean }
+): string {
+  const includeRatings = options?.includeRatings ?? true;
+  const title = listName.trim() || "My Flicklet list";
+
+  let text = `📋 ${title}\n`;
+  text += `${"─".repeat(30)}\n`;
+
+  if (items.length === 0) {
+    text += `(No shows yet)\n\n`;
+  } else {
+    items.forEach((item) => {
+      const icon = item.mediaType === "movie" ? "🎬" : "📺";
+      const ratingValue =
+        includeRatings && (item.userRating ?? item.voteAverage);
+      const rating =
+        ratingValue != null ? ` ⭐ ${Number(ratingValue).toFixed(1)}` : "";
+      text += `${icon} ${item.title}${rating}\n`;
+    });
+    text += "\n";
   }
 
-  const origin = getAppOrigin();
-  const params = new URLSearchParams({
-    view: "list",
-    listId: listId.trim(),
-  });
-
-  return `${origin}/?${params.toString()}`;
+  text += getFlickletShareStamp();
+  return text;
 }
 
 /**
@@ -179,38 +209,67 @@ export async function handleShare(
 }
 
 /**
- * Share a list with native share sheet (mobile only), clipboard fallback, or alert
- * Uses the unified shareWithFallback helper for consistent behavior.
- * 
- * @param list - List object with id and optional name
- * @param callbacks - Optional success and error callbacks
+ * Share plain text (no separate URL field) — used for list snapshots in messages.
+ */
+export async function shareTextWithFallback(
+  payload: {
+    title: string;
+    text: string;
+    onSuccess?: () => void;
+    onError?: (err: unknown) => void;
+  }
+): Promise<void> {
+  const { title, text, onSuccess, onError } = payload;
+  const canNativeShare =
+    typeof navigator !== "undefined" &&
+    "share" in navigator &&
+    isLikelyMobile();
+
+  if (canNativeShare) {
+    try {
+      await navigator.share({ title, text });
+      onSuccess?.();
+      return;
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        return;
+      }
+      console.warn("Native text share failed, falling back to clipboard:", err);
+      onError?.(err);
+    }
+  }
+
+  if (typeof navigator !== "undefined" && "clipboard" in navigator) {
+    try {
+      await navigator.clipboard.writeText(text);
+      onSuccess?.();
+      return;
+    } catch (err) {
+      console.warn("Clipboard write failed, falling back to alert:", err);
+      onError?.(err);
+    }
+  }
+
+  if (typeof window !== "undefined") {
+    alert(text);
+  }
+  onError?.(new Error("Share and clipboard both failed"));
+}
+
+/**
+ * Share a list as pasteable text (shows + Flicklet stamp at the bottom).
  */
 export async function shareListWithFallback(
-  list: { id: string; name?: string | null },
+  list: { name?: string | null },
+  items: ShareListItem[],
   callbacks?: { onSuccess?: () => void; onError?: (err: unknown) => void }
 ): Promise<void> {
-  // Validate listId
-  if (!list.id || list.id.trim() === "") {
-    console.warn("shareListWithFallback: list.id is missing or empty");
-    callbacks?.onError?.(new Error("List ID is required"));
-    return;
-  }
-
-  const url = buildListShareUrl(list.id);
-  if (!url) {
-    console.warn("shareListWithFallback: failed to build share URL");
-    callbacks?.onError?.(new Error("Failed to build share URL"));
-    return;
-  }
-
   const title = list.name?.trim() || "My Flicklet list";
-  // Text should NOT include URL - it will be added by shareWithFallback
-  const text = `Check out my Flicklet list: ${title}`;
+  const text = formatListShareText(title, items);
 
-  return shareWithFallback({
+  return shareTextWithFallback({
     title,
     text,
-    url,
     onSuccess: callbacks?.onSuccess,
     onError: callbacks?.onError,
   });

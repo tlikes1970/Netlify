@@ -1,5 +1,12 @@
 // Single source of truth for the app version.
 // Bump using semantic versioning: major.minor.tweak
+// ⚠️ VERSION 0.1.176: My Lists share as pasteable text with Flicklet stamp
+// - Share button copies list titles + shows for SMS/messaging (not deep-link-only)
+// - Branded footer: Track your shows with Flicklet + app URL
+// ⚠️ VERSION 0.1.175: Unified Library tab — mobile nav Home / Library / Discover
+// - Bottom nav: three top-level tabs (no More menu, no clipped list tabs)
+// - Library shell: Watching, Want, Watched, Returning, My Lists segments
+// - Legacy setView(list) routes map to Library + segment for deep links and events
 // ⚠️ VERSION 0.1.174: Publication fixes for Google Play launch
 // - Home CW rail: single "Go to Currently Watching" nav button (home-cw-preview context)
 // - Pro propagation: manageProStatus now writes to billing/status for getProStatus
@@ -391,4 +398,4 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "0.1.174";
+export const APP_VERSION = "0.1.176";
