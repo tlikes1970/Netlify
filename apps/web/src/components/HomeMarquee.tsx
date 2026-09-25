@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
+import { useIsMobileScreen } from '../hooks/useDeviceDetection';
 
 interface HomeMarqueeProps {
   messages: string[];
@@ -22,6 +23,7 @@ export default function HomeMarquee({
   const [currentIndex, setCurrentIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
+  const isMobile = useIsMobileScreen();
 
   // Reset index when messages change
   useEffect(() => {
@@ -33,7 +35,7 @@ export default function HomeMarquee({
   // JS-driven ticker animation using requestAnimationFrame
   // Measures actual pixel widths and animates deterministically
   useEffect(() => {
-    if (!autoRotate || messages.length === 0) return;
+    if (isMobile || !autoRotate || messages.length === 0) return;
 
     const container = containerRef.current;
     const track = trackRef.current;
@@ -99,7 +101,7 @@ export default function HomeMarquee({
       clearTimeout(timeoutId);
       if (frameId !== null) cancelAnimationFrame(frameId);
     };
-  }, [autoRotate, currentIndex, messages.length, speedPxPerSecond]);
+  }, [autoRotate, currentIndex, isMobile, messages.length, speedPxPerSecond]);
 
   // Don't render if no messages
   if (messages.length === 0) {
@@ -114,7 +116,7 @@ export default function HomeMarquee({
         <div
           ref={trackRef}
           key={currentIndex}
-          className="flicklet-marquee-track"
+          className={`flicklet-marquee-track${isMobile ? ' flicklet-marquee-track--static' : ''}`}
           style={{ 
             color: "var(--text)", 
             fontSize: "0.875rem"

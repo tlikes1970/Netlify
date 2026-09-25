@@ -46,7 +46,7 @@ Authorized order. Do not skip ahead.
 | # | Phase | Status |
 |---|--------|--------|
 | 1 | Known Android defects | Complete through Fix 5 (`04fbc38`) |
-| 2 | Device stress testing | **PAUSED FOR AUTHORIZED DEFECT CORRECTION** — DST-05 through DST-01; missing API/device images still outstanding |
+| 2 | Device stress testing | **IN PROGRESS** — Pixel 9/API 35 defects DST-01 through DST-06 corrected; missing API/device images still outstanding |
 | 3 | AI black-box usability testing | Not started |
 | 4 | Visual/design acceptance | Not started |
 | 5 | Maestro automated user journeys | Not started — do not install/configure until this phase |
@@ -176,22 +176,35 @@ Authorized order. Do not skip ahead.
   - Three-button portrait, Library: the Settings control and tabs remain above the 48px system inset; scrollable content has no fixed control floating over it.
   - Font scale 1.0 and 2.0: Home, Library, and Discovery labels remain complete; the reserved Settings slot does not collide with labels.
   - Theme remains available in Settings; the desktop theme FAB is unchanged.
+- **Commit:** `ce2acf91ad6bed36e06ab9f88ede59d1c07bb0c5` — `Dock mobile Settings control in navigation`
+- **Final status:** FIXED.
+
+#### DST-01 — Home personality line clips at default size
+
+- **Original reproduction:** Pixel 9 / API 35 / gesture / portrait / font 1.0. Home screenshots repeatedly captured the personality message beginning or ending mid-sentence.
+- **Root cause:** HomeMarquee always translated its single-line track from completely off-screen right to completely off-screen left. Mobile therefore displayed only a moving fragment for nearly the entire animation, even when the complete message fit the viewport.
+- **Correction:** At the canonical mobile breakpoint, the message is static, centered, and allowed to wrap. Desktop retains the existing scrolling ticker behavior.
+- **Verification (Pixel 9 / API 35):**
+  - Gesture portrait, font 1.0: full “Flicklet tracks habits, not hype.” is visible at once and remains stable.
+  - Gesture portrait, font 2.0: the full message remains readable without clipping or horizontal overflow.
+  - Focused HomeMarquee test 1/1; TypeScript check; mobile production build; Capacitor sync; Android debug build/install/launch.
 - **Final status:** FIXED.
 
 ### AUTHORIZED IN THIS CORRECTION BATCH
 
-Order: DST-05 (done) → DST-03 (done) → DST-06 (done) → DST-04 (done) → DST-02 (done) → DST-01.
+Order: DST-05 (done) → DST-03 (done) → DST-06 (done) → DST-04 (done) → DST-02 (done) → DST-01 (done).
 
 Do not resume missing-device stress testing, UX testing, or Maestro during this pause.
 
 ### CONFIRMED NEXT
 
-DST-01 — Home personality line clips at default size.
+Resume the remaining device/configuration matrix. Do not begin black-box UX testing yet.
 
 ### DEVICE STRESS TESTING — NEW DEFECTS (do not fix this phase)
 
 #### DST-01 — Home personality line clips at default size
 
+- **Status:** FIXED — see §3 FIXED. Original history retained.
 - **Severity:** MEDIUM
 - **Class:** component-specific / visual density
 - **Configuration:** Pixel 9 / API 35 / gesture / portrait / font 1.0

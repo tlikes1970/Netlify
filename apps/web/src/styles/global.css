@@ -1223,6 +1223,15 @@ input:focus-visible {
   /* No extra padding/background - text sits directly on page bg */
 }
 
+/* Phone copy must be readable as a complete message rather than mid-ticker. */
+.flicklet-marquee-track--static {
+  display: block;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+  transform: none !important;
+}
+
 /* Reduced motion: no movement, just show text left-aligned */
 @media (prefers-reduced-motion: reduce) {
   .flicklet-marquee-track {
