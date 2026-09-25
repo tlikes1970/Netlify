@@ -45,8 +45,8 @@ Authorized order. Do not skip ahead.
 
 | # | Phase | Status |
 |---|--------|--------|
-| 1 | Known Android defects | **In progress** — Fixes 1–5 complete; next authorized phase is device stress testing (not started) |
-| 2 | Device stress testing | Not started |
+| 1 | Known Android defects | Complete through Fix 5 (`04fbc38`) |
+| 2 | Device stress testing | **In progress** — Pixel 9 / API 35 exercised; other API images not installed |
 | 3 | AI black-box usability testing | Not started |
 | 4 | Visual/design acceptance | Not started |
 | 5 | Maestro automated user journeys | Not started — do not install/configure until this phase |
@@ -112,7 +112,83 @@ Authorized order. Do not skip ahead.
 
 ### CONFIRMED NEXT
 
-_(none — Fix 5 complete. Do not start device stress testing until phase 2 is authorized.)_
+_(none authorized to fix. Device stress testing is diagnostic only.)_
+
+### DEVICE STRESS TESTING — NEW DEFECTS (do not fix this phase)
+
+#### DST-01 — Home personality line clips at default size
+
+- **Severity:** MEDIUM
+- **Class:** component-specific / visual density
+- **Configuration:** Pixel 9 / API 35 / gesture / portrait / font 1.0
+- **Repro:** Cold launch Home.
+- **Expected:** Full sentence readable.
+- **Actual:** Line starts mid-word (`lore hours than several completed series` / earlier `Browsing has consumed more h`).
+- **Comparison:** Settings body copy at default size is readable.
+- **Reproduced:** Yes (multiple Home screenshots).
+- **Evidence:** `smoke-home-p.png`, `restore2.png` (local TEMP `flicklet-stress`, not committed).
+
+#### DST-02 — Settings cog overlaps Library posters
+
+- **Severity:** MEDIUM
+- **Class:** shared layout / FAB
+- **Configuration:** Pixel 9 / API 35 / gesture and three-button / portrait
+- **Repro:** Open Library → Currently Watching list.
+- **Expected:** Cog does not cover titles or artwork.
+- **Actual:** Cog sits on The Office poster / list row; theme FAB also crowds the row.
+- **Comparison:** Home rails keep FABs in the bottom inset more clearly.
+- **Reproduced:** Yes.
+- **Evidence:** `p3-library-settled.png`, `p4-library-p.png`.
+
+#### DST-03 — Font scale 1.3–2.0 clips primary chrome
+
+- **Severity:** HIGH at 1.5× and 2.0×; MEDIUM at 1.3×
+- **Class:** accessibility/font scaling
+- **Configuration:** Pixel 9 / API 35 / `font_scale` 1.15, 1.3, 1.5, 2.0 (cold launch each)
+- **Repro:** `settings put system font_scale <n>` → relaunch → Home / Library / Settings.
+- **Expected:** Logo, search, nav labels, and card actions remain usable.
+- **Actual:**
+  - 1.15: minor wrapping; still usable.
+  - 1.3: search placeholder clips (`Search movies, shows,`); Manage Currently Watching wraps.
+  - 1.5: logo reads `Flickle`; search `Search movies, sh`; Manage buttons clip (`Watchingq`).
+  - 2.0: logo `Flick`; search `Search mo`; FABs overlap Manage Currently Watching; card title `Slow Hor...`.
+- **Nav labels** Home/Library/Discovery remain readable at 2.0.
+- **Settings** at 2.0 remains readable (header + fields).
+- **Reproduced:** Yes.
+- **Evidence:** `font-1.3-home.png`, `font-1.5-home.png`, `font-2.0-home.png`, `font-2.0-library.png`, `font-2.0-settings.png`.
+
+#### DST-04 — Filters overlay + Back/rotation leaves unusable chrome
+
+- **Severity:** MEDIUM
+- **Class:** component-specific / overlay
+- **Configuration:** Pixel 9 / API 35 / gesture
+- **Repro:** Open Filters menu; rotate to landscape; or Back while overlay open.
+- **Expected:** Overlay dismisses or follows the new stage size.
+- **Actual:** Filters panel can remain while Home paints a portrait-width column in landscape; extra Back can leave the app (launcher).
+- **Comparison:** Settings landscape (no Filters) settles to a full desktop modal.
+- **Reproduced:** Yes for overlay+rotate (`p3-kb-landscape.png`). App-exit via double-Back is Android-typical, recorded as observation.
+
+#### DST-05 — Settings body can sit under three-button nav in portrait
+
+- **Severity:** MEDIUM
+- **Class:** Android/WebView inset
+- **Configuration:** Pixel 9 / API 35 / three-button / portrait Settings
+- **Repro:** Enable three-button nav; open Settings; scroll to Personality.
+- **Expected:** Last controls clear `--safe-bottom` (48px).
+- **Actual:** Personality copy sits under the system nav pills.
+- **Comparison:** Gesture portrait Settings clears the gesture handle more cleanly.
+- **Reproduced:** Yes (`p4-settings-p.png`).
+
+#### DST-06 — Exact 768px JS vs Tailwind disagreement is user-visible in Settings
+
+- **Severity:** MEDIUM
+- **Class:** responsive/breakpoint
+- **Configuration:** API 35 viewport simulation `wm size 2016x2424` density 420 → `innerWidth=768`
+- **Repro:** Force CSS width 768; open Settings.
+- **Expected:** One consistent mobile or desktop Settings shell.
+- **Actual:** `matchMedia('(max-width: 768px)')` **and** `min-width: 768px` both true. Settings shows **mobile header** (`Select section` / Account & Profile ▾) **and** **desktop two-column** TV/Movies stats.
+- **Not fixed** (unauthorized this phase).
+- **Evidence:** `w768.json` (`mq768: true`, `mdMin768: true`); `w768-settings.png`.
 
 ### INVESTIGATE / DO NOT AUTOMATICALLY FIX
 
@@ -121,7 +197,8 @@ _(none — Fix 5 complete. Do not start device stress testing until phase 2 is a
 - JavaScript `isMobileNow()` uses `max-width: 768px`.
 - Tailwind `md` is `min-width: 768px`, so **exactly 768px** is mobile in JS and desktop in Tailwind.
 - Settings shell selection in `App.tsx` / `settingsNavigation.ts` uses **744px**, a third number.
-- **Fix 5 finding:** Pixel 9 portrait 412px and landscape 924px never sit on exactly 768px, so this mismatch did **not** cause the rotation defect and was **not** unified.
+- **Fix 5 finding:** Pixel 9 portrait 412px and landscape 924px never sit on exactly 768px.
+- **Stress-test finding (DST-06):** Forcing `innerWidth=768` on API 35 makes both JS mobile and Tailwind `md` true, and Settings mixes mobile header with two-column stats. Still **not authorized to unify**.
 - A related **1024px Tailwind `lg`** gate on Settings desktop chrome **did** become user-visible once Settings started reacting at 768px (landscape phone had no Close / no sidebar). That `lg` gate was removed as part of Fix 5. The 768px JS vs `md` disagreement remains unauthorized.
 
 ### TESTING REQUIRED (not complete)
@@ -130,19 +207,19 @@ Track evidence before marking pass:
 
 | Area | Status |
 |------|--------|
-| Android soft keyboard / viewport | Required — not verified this checkpoint |
-| API 23 small-screen | Required — not verified |
-| API 36 | Required — not verified |
-| Font scaling | Required — not verified |
-| Display scaling | Required — not verified |
-| Tablet / large-screen | Required — not verified |
-| Gesture navigation | Partial — Pixel 9 API 35 Fixes 1–5 |
-| Three-button navigation | Partial — Pixel 9 API 35 Fixes 1–5 |
-| Portrait / landscape | Partial — Pixel 9 API 35 Fixes 1–5 (Settings shell) |
-| Cold launch | Partial — debug APK launch on emulator |
-| Warm resume | Required — not systematically verified |
-| Themes (light/dark) | Required — not verified this checkpoint |
-| Major modal/overlay behavior | Partial — Settings rotation (Fix 5); other overlays not re-audited |
+| Android soft keyboard / viewport | Partial — IME appeared after typing on Pixel 9 Search; field stayed visible; suggestions above keyboard. Settings username IME not captured (app already backgrounded). |
+| API 23 small-screen | **NOT AVAILABLE** — no `android-23` system image/AVD on this SDK |
+| API 36 | **NOT AVAILABLE** — only `android-35` image installed |
+| Font scaling | Partial — 1.0/1.15 usable; DST-03 at 1.3–2.0 |
+| Display scaling | Partial — `wm density` 320 → 540 CSS px (DOM ok); 490 → 353 CSS px; several `wm size/density` changes produced blank WebView frames (emulator override, not Play Display size UI) |
+| Tablet / large-screen | Partial — API 35 `wm size` simulation only (P7 800×1280 visible desktop chrome). No tablet AVD |
+| Gesture navigation | Partial pass — Pixel 9 API 35 |
+| Three-button navigation | Partial pass — Pixel 9 API 35; DST-05 Settings bottom |
+| Portrait / landscape | Partial pass — Home/Settings settle; Filters+rotate DST-04 |
+| Cold launch | Pass — Pixel 9 debug APK |
+| Warm resume | Pass — Settings remained open after Home → resume |
+| Themes (light/dark) | Partial — light Settings Full Access readable; light Home not isolated this pass |
+| Major modal/overlay behavior | Partial — Settings ok; Filters overlay DST-04 |
 
 ### RELEASE BLOCKERS TO VALIDATE
 
@@ -168,18 +245,18 @@ See also: `tests/manual/PLAY_BILLING_ONE_TIME.md`, [CURRENT_TASK.md](./CURRENT_T
 
 | Configuration | Status | Evidence |
 |---------------|--------|----------|
-| Android 6 / API 23 small phone | Not tested | |
-| Android 13 / API 33 representative phone | Not tested this checkpoint | Historical 2026-06 physical-device notes exist for install/auth/TMDB; re-verify on this baseline |
-| Android 15 / API 35 Pixel 9 | Active test device | Fixes 1–5 on emulator `emulator-5554` |
-| Android 16 / API 36 | Not tested | |
-| Gesture navigation | Partial pass (API 35) | Fixes 4–5 landscape/portrait |
-| Three-button navigation | Partial pass (API 35) | Fixes 4–5 landscape/portrait |
-| Portrait | Partial pass (API 35) | Fixes 1–5 |
-| Landscape | Partial pass (API 35) | Fixes 4–5 |
-| Font scaling | Not tested | |
-| Display scaling | Not tested | |
-| Keyboard | Not tested this checkpoint | Out of Fix 4 scope |
-| Tablet / large-screen | Not tested | |
+| P1 Android 6 / API 23 ~320×568 three-button | **NOT AVAILABLE** | SDK has only `system-images/android-35/google_apis_playstore`. Did **not** download other images. API 35 `wm size 320x568` density 160 produced DOM 320×568 but a blank screenshot (surface override). |
+| P2 Android 13 / API 33 ~393×873 gesture | **NOT AVAILABLE** | No API 33 image/AVD. |
+| P3 Pixel 9 / API 35 ~412×924 gesture | **PARTIAL PASS** | Smoke + core flows. DST-01, DST-02, DST-03, DST-04. |
+| P4 Pixel 9 / API 35 three-button | **PARTIAL PASS** | Landscape `--safe-right=48`; theme FAB right `860` vs protected `876`. DST-05 Settings bottom. |
+| P5 ~430×930 API 15/16 gesture | **PARTIAL / NOT NATIVE** | No API 36 image. API 35 `wm size` → DOM 431×930; screenshot blank after override. |
+| P6 short landscape ~924×412 | **PARTIAL PASS** | Same Pixel 9 landscape. Settled Home uses desktop header/search. Settings desktop modal OK. DST-04 if Filters open. |
+| P7 7–8" ~800×1280 | **PARTIAL / SIMULATED** | API 35 `wm size 800x1280` density 160. Desktop top tabs + rails. Not a tablet AVD. |
+| P8 10–11" ~1280×800 | **NOT COMPLETE** | Size override did not yield a stable 1280×800 session (JSON stayed 800×1280). Desktop Settings modal captured over posters (`p8sim-settings.png`). |
+| Font scaling | PARTIAL | DST-03 |
+| Display scaling | PARTIAL | density 320/490; blank frames after some overrides |
+| Keyboard | PARTIAL | Search IME + suggestions; username field not verified |
+| Tablet / large-screen | PARTIAL | P7 sim only |
 
 ---
 
@@ -277,7 +354,11 @@ These remain product/tech items from existing control docs. They are **not** the
 - BrowserStack (excluded until cost/use evaluation)
 - Settings FAB remains mounted under SettingsPage (it only self-hides for the sheet flag path)
 - Phone landscape Settings is the desktop modal (768px `isMobileNow`), not a full-screen mobile layout; accepted as current breakpoint behavior
-- Aggressive WebView CDP probing during rotation once surfaced an Android “isn't responding” dialog; treat as test-method load, not a product defect, unless it reproduces in normal use
+- Aggressive WebView CDP probing during rotation once surfaced an Android “isn't responding” dialog; not reproduced in this stress pass under normal taps
+- Home landscape can look like a portrait column for a few seconds during rotation; **settled 8s cold-launch landscape Home passed** (desktop chrome). Not promoted to a standing defect
+- `wm size` / `wm density` emulator overrides often show a blank WebView until process restart — test-method, not classified as a shipping defect
+- Discovery posters sometimes grey placeholders (network/cache), not classified this phase
+- Double-Back from Search IME can leave the app (launcher) — typical Android, observation only
 
 ---
 
@@ -286,12 +367,12 @@ These remain product/tech items from existing control docs. They are **not** the
 | Field | Value |
 |-------|--------|
 | Branch | `codex/establish-baseline` |
-| Verified HEAD | (Fix 5 commit; see git log after this file is committed with the fix) |
+| Verified HEAD | `04fbc38cc3b61785426c263d54c750418bc0964e` |
 | HEAD message | Make Settings follow viewport breakpoint on rotation |
-| Current phase | 1 — Known Android defects **complete through Fix 5** |
-| Current authorized task | **Stop.** Next sequence item is phase 2 device stress testing — not started, not authorized in this commit. |
-| Emulator starting condition | Pixel 9, Android 15 / API 35, gesture navigation, portrait, auto-rotate unlocked, `navigation_mode=2`, `wm user-rotation=free` |
-| Latest test evidence | Fix 5 Settings rotation verified on Pixel 9 emulator (gesture + three-button); 225 automated tests; typecheck; production + mobile builds; debug APK |
+| Current phase | 2 — Device stress testing **in progress (not complete)** |
+| Current authorized task | Record DST findings only. Do **not** fix. Do **not** start black-box UX. |
+| Emulator starting condition | Pixel 9, Android 15 / API 35, gesture, portrait, auto-rotate unlocked, `navigation_mode=2`, `wm user-rotation=free`, font 1.0, density 420 |
+| Latest test evidence | Device stress 2026-09-25 on `emulator-5554`. Native AVDs: only `Pixel_9`. DST-01…DST-06 recorded. API 23/33/36 and real tablet AVDs outstanding. |
 
 ---
 
