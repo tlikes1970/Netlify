@@ -1,0 +1,6 @@
+# Copy these values to %USERPROFILE%/.gradle/gradle.properties or provide them
+# as Gradle -P properties. Never commit real signing credentials or keystores.
+RELEASE_STORE_FILE=C:/absolute/path/to/release.keystore
+RELEASE_STORE_PASSWORD=replace-me
+RELEASE_KEY_ALIAS=replace-me
+RELEASE_KEY_PASSWORD=replace-me

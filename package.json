@@ -21,6 +21,7 @@
     "lint:strict": "eslint . --max-warnings=0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "postinstall": "patch-package",
     "prepare": "husky install"
   },
   "dependencies": {
@@ -52,6 +53,7 @@
     "knip": "^5.66.3",
     "lighthouse": "^13.0.1",
     "lint-staged": "^16.1.6",
+    "patch-package": "^8.0.1",
     "picocolors": "^1.1.1",
     "postcss": "^8.5.6",
     "postcss-safe-parser": "^7.0.1",
