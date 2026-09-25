@@ -136,18 +136,31 @@ Authorized order. Do not skip ahead.
   - 2.0: full “Flicklet”; Search control wraps onto a second row; placeholder may ellipsize but starts with “Search movies”; Manage text complete; nav Home/Library/Discovery readable (`fontv2-2.0-home.png`). Settings at 2.0 still readable.
   - Remaining overlap of FABs on card actions is DST-02 (not this commit).
   - Tests: SearchRow mobile 6/6; capacitorSafeArea 6/6; mobile production build.
+- **Commit:** `c93db0cb460bd54f64aa7ffad791807951055065` — `Let primary chrome grow and wrap with font scale`
+- **Final status:** FIXED.
+
+#### DST-06 — Exact 768px JS vs Tailwind disagreement in Settings
+
+- **Original reproduction:** Forcing `innerWidth=768` made `max-width: 768px` and `min-width: 768px` both true. Settings showed mobile header (`Select section`) plus desktop two-column stats. Evidence: `w768.json`, `w768-settings.png`.
+- **Root cause:** `isMobileQuery` was `(max-width: 768px)` while Tailwind `md` is `(min-width: 768px)`, so exactly 768px was mobile in JS and desktop in CSS. SettingsPage shell follows JS; stats/grid `md`/`sm` follow CSS.
+- **Correction:** Canonical JS query is now `(max-width: 767px)`, so 768px is desktop in both. Did not rewrite other CSS `max-width: 768px` card files or the 744px sheet-flag path.
+- **Verification (Pixel 9 WebView CDP metrics):**
+  - 767: desktop Settings shell (sidebar + “Settings” heading), not mixed mobile header. `dst06-w767.png`.
+  - 768: `mdMin768=true`, `mobileHeader=false`, desktop heading. `dst06-w768.png`.
+  - 769: same coherent desktop shell.
+  - Pixel 9 native 412 remains below 767 (JS mobile). Landscape ~924 remains JS desktop (Fix 5 live switch).
 - **Commit:** recorded after this checkpoint is committed.
 - **Final status:** FIXED.
 
 ### AUTHORIZED IN THIS CORRECTION BATCH
 
-Order: DST-05 (done) → DST-03 (done) → DST-06 → DST-04 → DST-02 → DST-01.
+Order: DST-05 (done) → DST-03 (done) → DST-06 (done) → DST-04 → DST-02 → DST-01.
 
 Do not resume missing-device stress testing, UX testing, or Maestro during this pause.
 
 ### CONFIRMED NEXT
 
-DST-06 — Exact 768px Settings breakpoint conflict.
+DST-04 — Filters overlay rotation/Back state corruption.
 
 ### DEVICE STRESS TESTING — NEW DEFECTS (do not fix this phase)
 
@@ -218,6 +231,8 @@ DST-06 — Exact 768px Settings breakpoint conflict.
 
 #### DST-06 — Exact 768px JS vs Tailwind disagreement is user-visible in Settings
 
+- **Status:** FIXED — see §3 FIXED. Original history retained.
+
 - **Severity:** MEDIUM
 - **Class:** responsive/breakpoint
 - **Configuration:** API 35 viewport simulation `wm size 2016x2424` density 420 → `innerWidth=768`
@@ -231,12 +246,12 @@ DST-06 — Exact 768px Settings breakpoint conflict.
 
 #### 768px JavaScript vs CSS/Tailwind disagreement
 
-- JavaScript `isMobileNow()` uses `max-width: 768px`.
-- Tailwind `md` is `min-width: 768px`, so **exactly 768px** is mobile in JS and desktop in Tailwind.
-- Settings shell selection in `App.tsx` / `settingsNavigation.ts` uses **744px**, a third number.
+- JavaScript `isMobileNow()` now uses `max-width: 767px` (DST-06).
+- Tailwind `md` is `min-width: 768px`, so **exactly 768px** is desktop in both.
+- Settings sheet vs page in `settingsNavigation.ts` still uses **744px** when `settings_mobile_sheet_v1` is on (default off).
 - **Fix 5 finding:** Pixel 9 portrait 412px and landscape 924px never sit on exactly 768px.
-- **Stress-test finding (DST-06):** Forcing `innerWidth=768` on API 35 makes both JS mobile and Tailwind `md` true, and Settings mixes mobile header with two-column stats. Still **not authorized to unify**.
-- A related **1024px Tailwind `lg`** gate on Settings desktop chrome **did** become user-visible once Settings started reacting at 768px (landscape phone had no Close / no sidebar). That `lg` gate was removed as part of Fix 5. The 768px JS vs `md` disagreement remains unauthorized.
+- **Stress-test finding (DST-06):** Forcing `innerWidth=768` on API 35 made both JS mobile and Tailwind `md` true, and Settings mixed mobile header with two-column stats. **Fixed** by moving JS mobile to `max-width: 767px`.
+- A related **1024px Tailwind `lg`** gate on Settings desktop chrome **did** become user-visible once Settings started reacting at 768px (landscape phone had no Close / no sidebar). That `lg` gate was removed as part of Fix 5.
 
 ### TESTING REQUIRED (not complete)
 
@@ -390,7 +405,7 @@ These remain product/tech items from existing control docs. They are **not** the
 - Incomplete Spanish localization
 - BrowserStack (excluded until cost/use evaluation)
 - Settings FAB remains mounted under SettingsPage (it only self-hides for the sheet flag path)
-- Phone landscape Settings is the desktop modal (768px `isMobileNow`), not a full-screen mobile layout; accepted as current breakpoint behavior
+- Phone landscape Settings is the desktop modal (`isMobileNow` false above 767px), not a full-screen mobile layout; accepted as current breakpoint behavior
 - Aggressive WebView CDP probing during rotation once surfaced an Android “isn't responding” dialog; not reproduced in this stress pass under normal taps
 - Home landscape can look like a portrait column for a few seconds during rotation; **settled 8s cold-launch landscape Home passed** (desktop chrome). Not promoted to a standing defect
 - `wm size` / `wm density` emulator overrides often show a blank WebView until process restart — test-method, not classified as a shipping defect
@@ -404,12 +419,11 @@ These remain product/tech items from existing control docs. They are **not** the
 | Field | Value |
 |-------|--------|
 | Branch | `codex/establish-baseline` |
-| Verified HEAD | `ad20f49d85bdd523b7367aa403165de1cf6d4233` |
-| HEAD message | Keep Settings content above Android bottom inset |
+| Verified HEAD | `c93db0cb460bd54f64aa7ffad791807951055065` |
+| HEAD message | Let primary chrome grow and wrap with font scale |
 | Current phase | 2 — **PAUSED FOR AUTHORIZED DEFECT CORRECTION** |
-| Current authorized task | DST-03 in this commit; next DST-06. Do **not** start black-box UX or Maestro. Do **not** install extra API images. |
-| Emulator starting condition | Pixel 9, Android 15 / API 35, gesture, portrait, font 1.0 |
-| Latest test evidence | DST-03 verified 2026-09-25 on `emulator-5554` at font 1.0–2.0. API 23/33/36 and real tablet AVDs outstanding. |
+| Current authorized task | DST-06 in this commit; next DST-04. Do **not** start black-box UX or Maestro. |
+| Latest test evidence | DST-06 CDP 767/768/769 Settings shells coherent. API 23/33/36 and real tablet AVDs outstanding. |
 
 ---
 

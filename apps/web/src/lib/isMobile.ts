@@ -1,13 +1,14 @@
 /**
  * Process: Mobile Detection Normalization
  * Purpose: Single source of truth for mobile device detection using matchMedia
- * Data Source: CSS media query (max-width: 768px)
+ * Data Source: CSS media query (max-width: 767px)
+ * Aligns with Tailwind `md` (`min-width: 768px`) so width=768 is desktop in both.
  * Update Path: isMobileNow() for immediate checks, onMobileChange() for reactive updates
  * Dependencies: All components that check mobile viewport, responsive behavior
  */
 
-// Canonical mobile breakpoint query
-export const isMobileQuery = '(max-width: 768px)';
+// Canonical mobile breakpoint query — exclusive of Tailwind `md` (768px)
+export const isMobileQuery = '(max-width: 767px)';
 
 /**
  * Check if the current viewport is mobile-sized
