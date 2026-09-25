@@ -363,7 +363,7 @@ export default function SettingsSheet() {
       >
         {/* Header */}
         <header
-          className="flex items-center justify-between p-4"
+          className="settings-sheet-header flex items-center justify-between p-4"
           style={{
             backgroundColor: "var(--btn)",
             borderBottomColor: "var(--line)",

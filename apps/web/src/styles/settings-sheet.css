@@ -5,6 +5,11 @@ html[data-compact-mobile-v1="true"][data-settings-sheet="true"] body {
   overflow: hidden;
 }
 
+/* Android edge-to-edge: keep the mobile header content below the shared top inset. */
+html.capacitor-android [role="dialog"][aria-label="Settings"] .settings-sheet-header {
+  padding-top: calc(var(--space-4, 16px) + var(--safe-top, 0px));
+}
+
 /* Settings Sheet Overlay */
 html[data-compact-mobile-v1="true"][data-settings-sheet="true"] .settings-sheet-overlay {
   /* Ensure overlay covers everything */
