@@ -152,15 +152,29 @@ Authorized order. Do not skip ahead.
 - **Commit:** recorded after this checkpoint is committed.
 - **Final status:** FIXED.
 
+#### DST-04 — Filters overlay survives rotation / Android Back exits app
+
+- **Original reproduction:** Pixel 9 / API 35 / gesture / portrait. Open the Filters menu and rotate to landscape: the portrait-anchored menu remained over the newly selected desktop shell. Open Filters and press Android Back: Flicklet exited to the launcher instead of dismissing the menu.
+- **Root cause:** SearchRow sampled the mobile breakpoint only during render and kept the portaled overlay state/anchor alive across orientation changes. It had no Android hardware-Back contract. The inherited WIP attempted to centralize closing and add history handling, but its `closeFilters` callback called itself recursively and generic `resize` listeners would also have mistaken keyboard viewport changes for rotation.
+- **Correction:** SearchRow now follows the reactive mobile query, has one non-recursive dismiss path, closes only on the orientation lifecycle event, and can be reopened after dismissal. Browser/PWA Back uses a temporary same-document history entry. Android MainActivity dispatches a cancelable `flicklet:android-back` event and falls back to normal Back only when web content does not handle it; Filters handles that event while open.
+- **Verification (Pixel 9 / API 35):**
+  - Gesture portrait → landscape and landscape → portrait: Filters closes, responsive chrome settles, content remains interactive, and Filters reopens.
+  - Android Back with Filters open in portrait and landscape: one Back closes Filters and MainActivity remains resumed; Filters reopens afterward.
+  - Three-button portrait/landscape: same rotation, Back, and reopen behavior.
+  - UI dismissal still closes the menu; body scroll lock is released by state cleanup.
+  - SearchRow mobile tests 9/9 (including browser Back, Android Back, rotation, and reopen); typecheck; mobile production build; Capacitor sync; Android debug build/install/launch.
+- **Commit:** recorded after this checkpoint is committed.
+- **Final status:** FIXED.
+
 ### AUTHORIZED IN THIS CORRECTION BATCH
 
-Order: DST-05 (done) → DST-03 (done) → DST-06 (done) → DST-04 → DST-02 → DST-01.
+Order: DST-05 (done) → DST-03 (done) → DST-06 (done) → DST-04 (done) → DST-02 → DST-01.
 
 Do not resume missing-device stress testing, UX testing, or Maestro during this pause.
 
 ### CONFIRMED NEXT
 
-DST-04 — Filters overlay rotation/Back state corruption.
+DST-02 — Settings cog overlaps Library posters.
 
 ### DEVICE STRESS TESTING — NEW DEFECTS (do not fix this phase)
 
@@ -207,6 +221,8 @@ DST-04 — Filters overlay rotation/Back state corruption.
 - **Evidence:** `font-1.3-home.png`, `font-1.5-home.png`, `font-2.0-home.png`, `font-2.0-library.png`, `font-2.0-settings.png`.
 
 #### DST-04 — Filters overlay + Back/rotation leaves unusable chrome
+
+- **Status:** FIXED — see §3 FIXED. Original history retained.
 
 - **Severity:** MEDIUM
 - **Class:** component-specific / overlay

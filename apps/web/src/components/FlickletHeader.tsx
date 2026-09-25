@@ -10,9 +10,9 @@ import { authManager } from "../lib/auth";
 import SearchSuggestions, { addSearchToHistory } from "./SearchSuggestions";
 import VoiceSearch from "./VoiceSearch";
 import Portal from "./Portal";
-import { isMobileNow } from "../lib/isMobile";
-import { isCapacitorNative } from "../lib/capacitorEnv";
+import { isCapacitorAndroid, isCapacitorNative } from "../lib/capacitorEnv";
 import { dispatchKeyboardDismiss } from "../lib/mobileViewportLayout";
+import { useIsMobileScreen } from "../hooks/useDeviceDetection";
 
 // Note: Anime and Animation both use TMDB genre ID 16 (Animation)
 // The distinction is handled in ForYou/Discovery with origin_country filter
@@ -298,7 +298,8 @@ function SearchRow({
   const inputRef = React.useRef<HTMLInputElement>(null);
   const voiceSearchRef = React.useRef<HTMLDivElement>(null);
   const debounceTimerRef = React.useRef<number | null>(null);
-  const isMobile = isMobileNow();
+  const isMobile = useIsMobileScreen();
+  const filtersHistoryPushedRef = React.useRef(false);
 
   // Detect if voice search is actually rendered (for mobile padding calculation)
   React.useEffect(() => {
@@ -333,13 +334,77 @@ function SearchRow({
     };
   }, [isMobile, showFiltersDropdown]);
 
+  const dismissFilters = React.useCallback(() => {
+    setShowFiltersDropdown(false);
+    setShowGenreSubmenu(false);
+    setShowAdvancedSearch(false);
+  }, []);
+
+  const closeFilters = React.useCallback(() => {
+    dismissFilters();
+    if (filtersHistoryPushedRef.current) {
+      filtersHistoryPushedRef.current = false;
+      window.history.back();
+    }
+  }, [dismissFilters]);
+
+  // Rotation changes the responsive shell and invalidates the menu's anchored coordinates.
+  // Do not use generic viewport resize events here: the soft keyboard also resizes WebView.
+  React.useEffect(() => {
+    if (!showFiltersDropdown) return;
+    const onOrientationChange = () => closeFilters();
+    window.addEventListener("orientationchange", onOrientationChange);
+    return () => {
+      window.removeEventListener("orientationchange", onOrientationChange);
+    };
+  }, [showFiltersDropdown, closeFilters]);
+
+  // Android hardware Back is bridged by MainActivity. Browser Back uses a
+  // temporary same-document history entry while Filters is open.
+  React.useEffect(() => {
+    if (!showFiltersDropdown) return;
+
+    if (isCapacitorAndroid()) {
+      const onAndroidBack = (event: Event) => {
+        event.preventDefault();
+        dismissFilters();
+      };
+      window.addEventListener("flicklet:android-back", onAndroidBack);
+      return () => {
+        window.removeEventListener("flicklet:android-back", onAndroidBack);
+      };
+    }
+
+    if (!filtersHistoryPushedRef.current) {
+      const currentState = window.history.state;
+      window.history.pushState(
+        {
+          ...(currentState && typeof currentState === "object"
+            ? currentState
+            : {}),
+          flickletFilters: true,
+        },
+        "",
+      );
+      filtersHistoryPushedRef.current = true;
+    }
+    const onPop = () => {
+      filtersHistoryPushedRef.current = false;
+      dismissFilters();
+    };
+    window.addEventListener("popstate", onPop);
+    return () => {
+      window.removeEventListener("popstate", onPop);
+    };
+  }, [showFiltersDropdown, dismissFilters]);
+
   // Apply filters (mobile sheet)
   const applyFilters = () => {
     setSearchMode(pendingFilters.mode);
     setSearchType(pendingFilters.type);
     setG(pendingFilters.genre);
     setMediaTypeFilter(pendingFilters.mediaType);
-    setShowFiltersDropdown(false);
+    closeFilters();
     // setShowAllGenres(false); // Removed unused state
     setShowAdvancedSearch(false);
   };
@@ -359,17 +424,17 @@ function SearchRow({
     if (type === "tv") {
       setMediaTypeFilter("tv");
       setSearchType("movies-tv");
-      setShowFiltersDropdown(false);
+      closeFilters();
       setShowGenreSubmenu(false);
     } else if (type === "movie") {
       setMediaTypeFilter("movie");
       setSearchType("movies-tv");
-      setShowFiltersDropdown(false);
+      closeFilters();
       setShowGenreSubmenu(false);
     } else if (type === "people") {
       setMediaTypeFilter(null);
       setSearchType("people");
-      setShowFiltersDropdown(false);
+      closeFilters();
       setShowGenreSubmenu(false);
     } else if (type === "genre") {
       setShowGenreSubmenu(true);
@@ -380,7 +445,7 @@ function SearchRow({
   const handleGenreSelect = (genreId: number | null) => {
     setG(genreId);
     setShowGenreSubmenu(false);
-    setShowFiltersDropdown(false);
+    closeFilters();
   };
 
   const submit = () => {
@@ -431,7 +496,7 @@ function SearchRow({
     setSearchType("all");
     setMediaTypeFilter(null);
     setShowSuggestions(false);
-    setShowFiltersDropdown(false);
+    closeFilters();
     setShowGenreSubmenu(false);
     setShowAdvancedSearch(false);
     onClear?.();
@@ -598,7 +663,7 @@ function SearchRow({
         !insideSearchContainer &&
         !insideSuggestions
       ) {
-        setShowFiltersDropdown(false);
+        closeFilters();
         setShowSuggestions(false);
         setShowGenreSubmenu(false);
         setShowAdvancedSearch(false);
@@ -608,7 +673,7 @@ function SearchRow({
     document.addEventListener("pointerdown", handleGlobalPointerDown);
     return () =>
       document.removeEventListener("pointerdown", handleGlobalPointerDown);
-  }, []);
+  }, [closeFilters]);
 
   return (
     <div
@@ -621,7 +686,13 @@ function SearchRow({
       <div className="relative" ref={filtersDropdownRef}>
         <button
           type="button"
-          onClick={() => setShowFiltersDropdown(!showFiltersDropdown)}
+          onClick={() => {
+            if (showFiltersDropdown) {
+              closeFilters();
+            } else {
+              setShowFiltersDropdown(true);
+            }
+          }}
           className={`rounded-l-2xl border-r-0 px-2 py-2 md:px-3 md:py-3 font-semibold hover:bg-accent hover:text-accent-foreground transition-all h-auto min-h-[2.75rem] leading-tight whitespace-normal ${
             isMobile ? "text-sm" : "text-xs"
           }`}
@@ -846,7 +917,7 @@ function SearchRow({
                       className="fixed inset-0 bg-black/50 backdrop-blur-sm"
                       onClick={() => {
                         setShowAdvancedSearch(false);
-                        setShowFiltersDropdown(false);
+                        closeFilters();
                       }}
                       style={{ zIndex: 10000 }}
                     />
@@ -882,7 +953,7 @@ function SearchRow({
                           type="button"
                           onClick={() => {
                             setShowAdvancedSearch(false);
-                            setShowFiltersDropdown(false);
+                            closeFilters();
                           }}
                           className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
                           aria-label="Close filters"
@@ -1180,7 +1251,7 @@ function SearchRow({
                 <div
                   className="fixed inset-0"
                   onClick={() => {
-                    setShowFiltersDropdown(false);
+                    closeFilters();
                     setShowGenreSubmenu(false);
                     setShowAdvancedSearch(false);
                   }}
@@ -1336,7 +1407,7 @@ function SearchRow({
                       className="fixed inset-0 bg-black/50 backdrop-blur-sm"
                       onClick={() => {
                         setShowAdvancedSearch(false);
-                        setShowFiltersDropdown(false);
+                        closeFilters();
                       }}
                       style={{ zIndex: 10000 }}
                     />
@@ -1374,7 +1445,7 @@ function SearchRow({
                           type="button"
                           onClick={() => {
                             setShowAdvancedSearch(false);
-                            setShowFiltersDropdown(false);
+                            closeFilters();
                           }}
                           className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
                           aria-label="Close filters"
@@ -1670,7 +1741,7 @@ function SearchRow({
                 <div
                   className="fixed inset-0"
                   onClick={() => {
-                    setShowFiltersDropdown(false);
+                    closeFilters();
                     setShowGenreSubmenu(false);
                     setShowAdvancedSearch(false);
                   }}

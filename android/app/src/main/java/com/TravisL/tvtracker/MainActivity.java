@@ -71,6 +71,26 @@ public class MainActivity extends BridgeActivity {
         decor.postDelayed(this::syncInsetsNow, 250);
     }
 
+    @Override
+    public void onBackPressed() {
+        WebView webView = getBridge() != null ? getBridge().getWebView() : null;
+        if (webView == null) {
+            super.onBackPressed();
+            return;
+        }
+
+        String js =
+            "(function(){"
+                + "var event=new CustomEvent('flicklet:android-back',{cancelable:true});"
+                + "return window.dispatchEvent(event)===false;"
+                + "})();";
+        webView.evaluateJavascript(js, handled -> {
+            if (!"true".equals(handled)) {
+                MainActivity.super.onBackPressed();
+            }
+        });
+    }
+
     private void ensureInsetsPipeline() {
         if (!insetListenerInstalled) {
             insetListenerInstalled = true;

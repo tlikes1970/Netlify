@@ -16,8 +16,15 @@ import FlickletHeader from "../FlickletHeader";
 
 // Mock isMobileNow to control mobile state
 const mockIsMobileNow = vi.fn(() => false);
+const mockIsCapacitorAndroid = vi.fn(() => false);
 vi.mock("../../lib/isMobile", () => ({
   isMobileNow: () => mockIsMobileNow(),
+  onMobileChange: () => () => undefined,
+}));
+
+vi.mock("../../lib/capacitorEnv", () => ({
+  isCapacitorAndroid: () => mockIsCapacitorAndroid(),
+  isCapacitorNative: () => mockIsCapacitorAndroid(),
 }));
 
 // Mock VoiceSearch to return null (disabled)
@@ -40,6 +47,7 @@ describe("SearchRow Mobile Behavior", () => {
     vi.clearAllMocks();
     // Reset to desktop by default
     mockIsMobileNow.mockReturnValue(false);
+    mockIsCapacitorAndroid.mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -141,6 +149,74 @@ describe("SearchRow Mobile Behavior", () => {
       await waitFor(() => {
         expect(screen.queryByRole("menu")).not.toBeInTheDocument();
       });
+    });
+
+    it("closes Filters on browser Back and can reopen it", async () => {
+      mockIsMobileNow.mockReturnValue(true);
+
+      render(<FlickletHeader onSearch={mockOnSearch} onClear={mockOnClear} />);
+
+      const filterButton = screen.getByRole("button", { name: /filters/i });
+
+      await act(async () => {
+        fireEvent.click(filterButton);
+      });
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+
+      await act(async () => {
+        window.dispatchEvent(new PopStateEvent("popstate"));
+      });
+      expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.click(filterButton);
+      });
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+    });
+
+    it("handles Android Back without leaving the active document", async () => {
+      mockIsMobileNow.mockReturnValue(true);
+      mockIsCapacitorAndroid.mockReturnValue(true);
+
+      render(<FlickletHeader onSearch={mockOnSearch} onClear={mockOnClear} />);
+
+      const filterButton = screen.getByRole("button", { name: /filters/i });
+      await act(async () => {
+        fireEvent.click(filterButton);
+      });
+
+      const backEvent = new CustomEvent("flicklet:android-back", {
+        cancelable: true,
+      });
+      await act(async () => {
+        window.dispatchEvent(backEvent);
+      });
+
+      expect(backEvent.defaultPrevented).toBe(true);
+      expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+    });
+
+    it("closes Filters on rotation and can reopen it", async () => {
+      mockIsMobileNow.mockReturnValue(true);
+
+      render(<FlickletHeader onSearch={mockOnSearch} onClear={mockOnClear} />);
+
+      const filterButton = screen.getByRole("button", { name: /filters/i });
+
+      await act(async () => {
+        fireEvent.click(filterButton);
+      });
+      expect(screen.getByRole("menu")).toBeInTheDocument();
+
+      await act(async () => {
+        window.dispatchEvent(new Event("orientationchange"));
+      });
+      expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.click(filterButton);
+      });
+      expect(screen.getByRole("menu")).toBeInTheDocument();
     });
   });
 
