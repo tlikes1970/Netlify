@@ -4,7 +4,7 @@ import { useInertOutside } from '../../lib/a11y/useInertOutside';
 import { getVisibleSections, type SettingsSectionId } from '../settingsConfig';
 import { renderSettingsSection } from '../settingsSections';
 import { useAdminRole } from '../../hooks/useAdminRole';
-import { isMobileNow } from '../../lib/isMobile';
+import { useIsMobileScreen } from '../../hooks/useDeviceDetection';
 import NotInterestedModal from '../modals/NotInterestedModal';
 
 // Lazy load heavy notification modals
@@ -313,7 +313,7 @@ export default function SettingsSheet() {
     }
   }, [activeSection, open]);
 
-  const isMobile = isMobileNow();
+  const isMobile = useIsMobileScreen();
   
   // Always render the component (even when closed) so event listeners are always active
   // This ensures we can receive the 'settings:open' event even when the sheet is closed

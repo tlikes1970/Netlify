@@ -14,11 +14,9 @@ import OnboardingCoachmarks from "@/components/onboarding/OnboardingCoachmarks";
 import ScrollToTopArrow from "@/components/ScrollToTopArrow";
 import HomeDownArrow from "@/components/HomeDownArrow";
 import { lazy, Suspense } from "react";
-import { openSettingsSheet } from "@/components/settings/SettingsSheet";
+import { openSettingsSheet, closeSettingsSheet } from "@/components/settings/SettingsSheet";
 import SettingsSheet from "@/components/settings/SettingsSheet";
-import { flag } from "@/lib/flags";
-import { isCompactMobileV1 } from "@/lib/mobileFlags";
-import { openSettingsAtSection } from "@/lib/settingsNavigation";
+import { openSettingsAtSection, shouldUseMobileSettings, useShouldUseMobileSettings } from "@/lib/settingsNavigation";
 import type { SettingsSectionId } from "@/components/settingsConfig";
 
 // Lazy load heavy components
@@ -146,6 +144,8 @@ export default function App() {
   /** When opening desktop SettingsPage, which section to show first (e.g. Pro from upgrade CTAs). */
   const [settingsDesktopInitialSection, setSettingsDesktopInitialSection] =
     useState<SettingsSectionId>("account");
+  const useMobileSettingsShell = useShouldUseMobileSettings();
+  const prevMobileSettingsShell = useRef<boolean | null>(null);
   const translations = useTranslations();
 
   // Viewport offset for iOS Safari keyboard handling
@@ -557,34 +557,29 @@ export default function App() {
     }
   }, [view, librarySegment, returning]);
 
-  // Mobile Settings breakpoint - use sheet below this width
-  const MOBILE_SETTINGS_BREAKPOINT = 744;
-
   /**
-   * Helper to determine if mobile SettingsSheet should be used instead of desktop SettingsPage
-   * Checks viewport width, compact mobile gate, and feature flag
+   * Settings shell follows the current viewport. Opening on one side of the
+   * breakpoint then rotating must swap sheet vs page without close/reopen.
    */
-  function shouldUseMobileSettings(): boolean {
-    // Guard for SSR
-    if (typeof window === "undefined") return false;
+  useEffect(() => {
+    const previous = prevMobileSettingsShell.current;
+    prevMobileSettingsShell.current = useMobileSettingsShell;
+    if (previous === null || previous === useMobileSettingsShell) return;
 
-    const width = window.innerWidth;
+    const sheetOpen =
+      document.documentElement.getAttribute("data-settings-sheet") === "true";
 
-    // Check existing gate / flag checks
-    const isCompact = isCompactMobileV1 ? isCompactMobileV1() : false;
-    const flagEnabled = flag ? flag("settings_mobile_sheet_v1") : true;
+    if (useMobileSettingsShell && showSettings) {
+      setShowSettings(false);
+      openSettingsSheet(settingsDesktopInitialSection);
+      return;
+    }
 
-    // If flag is disabled, always use desktop
-    if (!flagEnabled) return false;
-
-    // Use mobile sheet if viewport is narrow OR compact mobile is enabled
-    if (width <= MOBILE_SETTINGS_BREAKPOINT) return true;
-    if (isCompact) return true;
-
-    return false;
-  }
-
-  // Handle settings click - route mobile to SettingsSheet, desktop to SettingsPage
+    if (!useMobileSettingsShell && sheetOpen) {
+      closeSettingsSheet();
+      setShowSettings(true);
+    }
+  }, [useMobileSettingsShell, showSettings, settingsDesktopInitialSection]);
   const handleSettingsClick = () => {
     console.log("handleSettingsClick called");
     if (shouldUseMobileSettings()) {

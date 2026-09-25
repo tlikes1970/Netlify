@@ -5,7 +5,7 @@ import { lockScroll, unlockScroll } from "../utils/scrollLock";
 import NotInterestedModal from "./modals/NotInterestedModal";
 import { getVisibleSections, type SettingsSectionId } from "./settingsConfig";
 import { renderSettingsSection } from "./settingsSections";
-import { isMobileNow } from "../lib/isMobile";
+import { useIsMobileScreen } from "../hooks/useDeviceDetection";
 import { useUsername } from "../hooks/useUsername";
 import { useAuth } from "../hooks/useAuth";
 import { useLibrary } from "../lib/storage";
@@ -44,7 +44,7 @@ export default function SettingsPage({
   const [showMobileSectionMenu, setShowMobileSectionMenu] = useState(false);
   const translations = useTranslations();
   const { isAdmin } = useAdminRole();
-  const isMobile = isMobileNow();
+  const isMobile = useIsMobileScreen();
   const { user } = useAuth();
   
   // Map old tab navigation events to new sections
@@ -197,14 +197,19 @@ export default function SettingsPage({
 
   return (
     <div
-      className={`fixed inset-0 z-modal backdrop-blur-sm flex ${isMobile ? 'items-start' : 'items-start justify-center'} ${isMobile ? '' : 'pt-24 p-4'}`}
+      className={`fixed inset-0 z-modal backdrop-blur-sm flex ${isMobile ? 'items-start' : 'items-start justify-center'}`}
       style={{
         backgroundColor: "rgba(0,0,0,0.8)",
         ...(isMobile ? {
           top: 0,
           left: 0,
           padding: 0,
-        } : {}),
+        } : {
+          paddingTop: "max(6rem, var(--safe-top, 0px))",
+          paddingRight: "max(1rem, var(--safe-right, 0px))",
+          paddingBottom: "max(1rem, var(--safe-bottom, 0px))",
+          paddingLeft: "max(1rem, var(--safe-left, 0px))",
+        }),
       }}
     >
       <div
@@ -227,12 +232,12 @@ export default function SettingsPage({
             borderRadius: 0,
           } : {
             // Desktop: resizable modal
-            width: `min(${modalSize.width}px, 100vw - 32px)`,
+            width: `min(${modalSize.width}px, 100%)`,
             height: `${modalSize.height}px`,
             minWidth: "320px",
-            minHeight: "400px",
-            maxWidth: "min(1024px, 100vw - 32px)",
-            maxHeight: "95vh",
+            minHeight: "0",
+            maxWidth: "min(1024px, 100%)",
+            maxHeight: "100%",
           }),
         }}
       >
@@ -245,6 +250,9 @@ export default function SettingsPage({
                 backgroundColor: "var(--btn)",
                 borderBottomColor: "var(--line)",
                 borderBottom: "1px solid",
+                paddingTop: "calc(16px + var(--safe-top, 0px))",
+                paddingLeft: "calc(16px + var(--safe-left, 0px))",
+                paddingRight: "calc(16px + var(--safe-right, 0px))",
               }}
             >
               <button
@@ -330,7 +338,7 @@ export default function SettingsPage({
         {/* Desktop Header - Title and Close button at top */}
         {!isMobile && (
           <div
-            className="hidden lg:flex absolute top-0 left-0 right-0 h-16 items-center justify-between px-6 flex-shrink-0 z-10"
+            className="flex absolute top-0 left-0 right-0 h-16 items-center justify-between px-6 flex-shrink-0 z-10"
             style={{
               backgroundColor: "var(--card)",
               borderBottomColor: "var(--line)",
@@ -383,7 +391,7 @@ export default function SettingsPage({
         {/* Left sidebar - Sections (desktop only) */}
         {!isMobile && (
           <div
-            className="hidden lg:flex w-48 p-4 flex-shrink-0 flex-col"
+            className="flex w-48 p-4 flex-shrink-0 flex-col"
             style={{
               backgroundColor: "var(--btn)",
               borderRightColor: "var(--line)",

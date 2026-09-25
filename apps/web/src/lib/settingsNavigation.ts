@@ -10,32 +10,46 @@ import { openSettingsSheet } from "@/components/settings/SettingsSheet";
 import type { SettingsSectionId } from "@/components/settingsConfig";
 import { flag } from "@/lib/flags";
 import { isCompactMobileV1 } from "@/lib/mobileFlags";
+import { useEffect, useState } from "react";
 
-// Match the breakpoint used in App.tsx
-const MOBILE_SETTINGS_BREAKPOINT = 744;
+/** Viewport width at or below this uses the mobile Settings sheet when that flag is on. */
+export const MOBILE_SETTINGS_BREAKPOINT = 744;
 
 /**
  * Determines if mobile settings should be used based on viewport and feature flags.
- * Matches the logic in App.tsx shouldUseMobileSettings().
  */
-function shouldUseMobileSettings(): boolean {
-  // Guard for SSR
+export function shouldUseMobileSettings(): boolean {
   if (typeof window === "undefined") return false;
 
   const width = window.innerWidth;
-
-  // Check existing gate / flag checks
   const isCompact = isCompactMobileV1 ? isCompactMobileV1() : false;
   const flagEnabled = flag ? flag("settings_mobile_sheet_v1") : true;
 
-  // If flag is disabled, always use desktop
   if (!flagEnabled) return false;
-
-  // Use mobile sheet if viewport is narrow OR compact mobile is enabled
   if (width <= MOBILE_SETTINGS_BREAKPOINT) return true;
   if (isCompact) return true;
 
   return false;
+}
+
+/** Subscribe to the same Settings-shell breakpoint used at open time. */
+export function useShouldUseMobileSettings(): boolean {
+  const [mobile, setMobile] = useState(shouldUseMobileSettings);
+
+  useEffect(() => {
+    const update = () => setMobile(shouldUseMobileSettings());
+    window.addEventListener("resize", update);
+    window.addEventListener("orientationchange", update);
+    window.visualViewport?.addEventListener("resize", update);
+    update();
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
+      window.visualViewport?.removeEventListener("resize", update);
+    };
+  }, []);
+
+  return mobile;
 }
 
 /**

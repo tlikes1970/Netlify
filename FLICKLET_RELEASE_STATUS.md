@@ -45,7 +45,7 @@ Authorized order. Do not skip ahead.
 
 | # | Phase | Status |
 |---|--------|--------|
-| 1 | Known Android defects | **In progress** — Fixes 1–4 complete; Fix 5 authorized next |
+| 1 | Known Android defects | **In progress** — Fixes 1–5 complete; next authorized phase is device stress testing (not started) |
 | 2 | Device stress testing | Not started |
 | 3 | AI black-box usability testing | Not started |
 | 4 | Visual/design acceptance | Not started |
@@ -92,13 +92,27 @@ Authorized order. Do not skip ahead.
   - Portrait gesture after rotation returned to `left=0, top=54.095, right=0, bottom=24` with no accumulated side values.
   - Tests 222 passing; typecheck; production + mobile production builds; Android debug APK install/launch.
 
+#### Fix 5 — Settings layout shell does not follow rotation
+
+- **Problem:** SettingsPage/SettingsSheet snapshotted `isMobileNow()` once. `App` chose sheet vs page only at open. Rotating across the mobile/desktop breakpoint left a frozen shell (full-screen portrait chrome in landscape, or desktop split leftover in portrait).
+- **Expected:** Open in portrait then rotate landscape, or the reverse, adopts the current layout without close/reopen.
+- **Commit:** recorded in §11 after this checkpoint is committed (`Make Settings follow viewport breakpoint on rotation`).
+- **Correction:**
+  - `useIsMobileScreen()` inside SettingsPage and SettingsSheet.
+  - Shared `useShouldUseMobileSettings()` plus an App effect that swaps sheet ↔ page when that result changes while Settings is open.
+  - Desktop Settings chrome used `hidden lg:flex` (1024px) even after JS treated the view as desktop (`isMobile` false above 768px). On Pixel 9 landscape (~924px) that hid Close and the section list. Removed the extra `lg` gate so the already-selected desktop shell is visible.
+  - SettingsPage overlay/header now consume `--safe-*` so Fix 3/4 insets still apply on the production Settings path (`settings_mobile_sheet_v1` remains off by default).
+- **Evidence (Pixel 9 / API 35, `emulator-5554`, gesture `navigation_mode=2` and three-button `navigation_mode=0`):**
+  - Pre-fix: portrait Settings full-screen; rotate landscape → leftover column / empty region (stale `100vh`/`100vw` snapshot).
+  - Post-fix portrait: mobile header + section control; close `y≈72.9` clears `--safe-top=54.1`.
+  - Post-fix landscape: desktop header + sidebar; card `x=54.1` matches `--safe-left`; three-button close `right=851.4` stays left of `--safe-right=48` (protected from `x=876`).
+  - Portrait ↔ landscape both directions; close/reopen; scroll `scrollTop=400`; three rotation cycles; no extra side inset accumulation (`left/right` return to `0` in portrait).
+  - Tests 225 passing; typecheck; production + mobile production builds; Android debug APK install/launch.
+- **Not changed:** exact-768px JS vs Tailwind `md` disagreement (see below). Settings sheet vs page still uses 744px **and** the sheet flag, which defaults off, so the live Android path is SettingsPage reacting to 768px via `useIsMobileScreen`.
+
 ### CONFIRMED NEXT
 
-#### Fix 5 — Settings does not reactively change layout shell on rotation
-
-- **Problem:** Settings chooses mobile full-screen sheet vs desktop/modal shell from viewport width at render/open time, and does not subscribe to breakpoint changes.
-- **Expected:** Opening Settings in portrait then rotating landscape (or the reverse) must adopt the current layout **without** close/reopen.
-- **Status:** Confirmed by Gate 1B / Fix 4 notes. Authorized after this document is committed. **Not started at document creation.**
+_(none — Fix 5 complete. Do not start device stress testing until phase 2 is authorized.)_
 
 ### INVESTIGATE / DO NOT AUTOMATICALLY FIX
 
@@ -107,7 +121,8 @@ Authorized order. Do not skip ahead.
 - JavaScript `isMobileNow()` uses `max-width: 768px`.
 - Tailwind `md` is `min-width: 768px`, so **exactly 768px** is mobile in JS and desktop in Tailwind.
 - Settings shell selection in `App.tsx` / `settingsNavigation.ts` uses **744px**, a third number.
-- **Not authorized** unless a user-visible defect is demonstrated. Document findings; do not “unify for elegance.”
+- **Fix 5 finding:** Pixel 9 portrait 412px and landscape 924px never sit on exactly 768px, so this mismatch did **not** cause the rotation defect and was **not** unified.
+- A related **1024px Tailwind `lg`** gate on Settings desktop chrome **did** become user-visible once Settings started reacting at 768px (landscape phone had no Close / no sidebar). That `lg` gate was removed as part of Fix 5. The 768px JS vs `md` disagreement remains unauthorized.
 
 ### TESTING REQUIRED (not complete)
 
@@ -121,13 +136,13 @@ Track evidence before marking pass:
 | Font scaling | Required — not verified |
 | Display scaling | Required — not verified |
 | Tablet / large-screen | Required — not verified |
-| Gesture navigation | Partial — Pixel 9 API 35 Fixes 1–4 |
-| Three-button navigation | Partial — Pixel 9 API 35 Fixes 1–4 |
-| Portrait / landscape | Partial — Pixel 9 API 35 Fixes 1–4 |
+| Gesture navigation | Partial — Pixel 9 API 35 Fixes 1–5 |
+| Three-button navigation | Partial — Pixel 9 API 35 Fixes 1–5 |
+| Portrait / landscape | Partial — Pixel 9 API 35 Fixes 1–5 (Settings shell) |
 | Cold launch | Partial — debug APK launch on emulator |
 | Warm resume | Required — not systematically verified |
 | Themes (light/dark) | Required — not verified this checkpoint |
-| Major modal/overlay behavior | Partial — Settings/search overlays during inset work only |
+| Major modal/overlay behavior | Partial — Settings rotation (Fix 5); other overlays not re-audited |
 
 ### RELEASE BLOCKERS TO VALIDATE
 
@@ -155,12 +170,12 @@ See also: `tests/manual/PLAY_BILLING_ONE_TIME.md`, [CURRENT_TASK.md](./CURRENT_T
 |---------------|--------|----------|
 | Android 6 / API 23 small phone | Not tested | |
 | Android 13 / API 33 representative phone | Not tested this checkpoint | Historical 2026-06 physical-device notes exist for install/auth/TMDB; re-verify on this baseline |
-| Android 15 / API 35 Pixel 9 | Active test device | Fixes 1–4 on emulator `emulator-5554` |
+| Android 15 / API 35 Pixel 9 | Active test device | Fixes 1–5 on emulator `emulator-5554` |
 | Android 16 / API 36 | Not tested | |
-| Gesture navigation | Partial pass (API 35) | Fix 4 landscape/portrait |
-| Three-button navigation | Partial pass (API 35) | Fix 4 landscape/portrait |
-| Portrait | Partial pass (API 35) | Fixes 1–4 |
-| Landscape | Partial pass (API 35) | Fix 4 |
+| Gesture navigation | Partial pass (API 35) | Fixes 4–5 landscape/portrait |
+| Three-button navigation | Partial pass (API 35) | Fixes 4–5 landscape/portrait |
+| Portrait | Partial pass (API 35) | Fixes 1–5 |
+| Landscape | Partial pass (API 35) | Fixes 4–5 |
 | Font scaling | Not tested | |
 | Display scaling | Not tested | |
 | Keyboard | Not tested this checkpoint | Out of Fix 4 scope |
@@ -260,6 +275,9 @@ These remain product/tech items from existing control docs. They are **not** the
 - Codetrix → Capgo Google auth migration (after Play/internal sign-in pass)
 - Incomplete Spanish localization
 - BrowserStack (excluded until cost/use evaluation)
+- Settings FAB remains mounted under SettingsPage (it only self-hides for the sheet flag path)
+- Phone landscape Settings is the desktop modal (768px `isMobileNow`), not a full-screen mobile layout; accepted as current breakpoint behavior
+- Aggressive WebView CDP probing during rotation once surfaced an Android “isn't responding” dialog; treat as test-method load, not a product defect, unless it reproduces in normal use
 
 ---
 
@@ -268,12 +286,12 @@ These remain product/tech items from existing control docs. They are **not** the
 | Field | Value |
 |-------|--------|
 | Branch | `codex/establish-baseline` |
-| Verified HEAD | `c89d3c1019bef485302b78e15119ae90c648687f` |
-| HEAD message | Add Android left and right safe-area insets |
-| Current phase | 1 — Known Android defects |
-| Current authorized task | After this document is committed: **Fix 5** (Settings shell on rotation) |
+| Verified HEAD | (Fix 5 commit; see git log after this file is committed with the fix) |
+| HEAD message | Make Settings follow viewport breakpoint on rotation |
+| Current phase | 1 — Known Android defects **complete through Fix 5** |
+| Current authorized task | **Stop.** Next sequence item is phase 2 device stress testing — not started, not authorized in this commit. |
 | Emulator starting condition | Pixel 9, Android 15 / API 35, gesture navigation, portrait, auto-rotate unlocked, `navigation_mode=2`, `wm user-rotation=free` |
-| Latest test evidence | Fix 4 four-sided insets verified on Pixel 9 emulator; 222 automated tests; typecheck; production + mobile builds; debug APK |
+| Latest test evidence | Fix 5 Settings rotation verified on Pixel 9 emulator (gesture + three-button); 225 automated tests; typecheck; production + mobile builds; debug APK |
 
 ---
 
