@@ -141,6 +141,24 @@ public class MainActivity extends BridgeActivity {
     }
 
     private static void injectSafeAreaCss(WebView webView, int safeTop, int safeBottom) {
+        float density = webView.getResources().getDisplayMetrics().density;
+        float safeTopCss = density > 0 ? safeTop / density : safeTop;
+        float safeBottomCss = density > 0 ? safeBottom / density : safeBottom;
+
+        Log.d(
+            TAG,
+            "injectSafeAreaCss density="
+                + density
+                + " physicalTop="
+                + safeTop
+                + " physicalBottom="
+                + safeBottom
+                + " cssTop="
+                + safeTopCss
+                + " cssBottom="
+                + safeBottomCss
+        );
+
         String js =
             "(function(){"
                 + "var r=document.documentElement;"
@@ -148,16 +166,16 @@ public class MainActivity extends BridgeActivity {
                 + "r.classList.add('capacitor-native');"
                 + "r.classList.add('capacitor-android');"
                 + "r.style.setProperty('--safe-top','"
-                + safeTop
+                + safeTopCss
                 + "px');"
                 + "r.style.setProperty('--safe-bottom','"
-                + safeBottom
+                + safeBottomCss
                 + "px');"
                 + "r.setAttribute('data-safe-area-ready','true');"
                 + "r.dispatchEvent(new CustomEvent('capacitor-safe-area',{detail:{top:"
-                + safeTop
+                + safeTopCss
                 + ",bottom:"
-                + safeBottom
+                + safeBottomCss
                 + "}}));"
                 + "})();";
         webView.post(() -> webView.evaluateJavascript(js, null));
