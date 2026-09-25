@@ -9,6 +9,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.WebViewListener;
 
 /**
  * Edge-to-edge WebView with CSS safe areas driven by WindowInsets (all Android versions).
@@ -24,10 +25,26 @@ public class MainActivity extends BridgeActivity {
     private int lastSafeTop = 0;
     private int lastSafeBottom = 0;
 
+    private final WebViewListener safeAreaWebViewListener = new WebViewListener() {
+        @Override
+        public void onPageStarted(WebView webView) {
+            Log.d(TAG, "WebView page started; waiting for document-ready inset sync");
+        }
+
+        @Override
+        public void onPageLoaded(WebView webView) {
+            Log.d(TAG, "WebView page loaded; synchronizing insets to active document");
+            syncInsetsNow();
+        }
+    };
+
     @Override
     protected void onCreate(android.os.Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        if (getBridge() != null) {
+            getBridge().addWebViewListener(safeAreaWebViewListener);
+        }
     }
 
     @Override
