@@ -15,6 +15,12 @@ html.capacitor-android [role="dialog"][aria-label="Settings"] .settings-sheet-he
 html.capacitor-android [role="dialog"][aria-label="Settings"] .settings-sheet-body {
   padding-left: calc(var(--space-4, 16px) + var(--safe-left, 0px));
   padding-right: calc(var(--space-4, 16px) + var(--safe-right, 0px));
+  padding-bottom: calc(var(--space-4, 16px) + var(--safe-bottom, 0px));
+}
+
+/* Production SettingsPage (sheet flag off): keep scrolled content above the nav/gesture inset. */
+html.capacitor-android .settings-page-body {
+  padding-bottom: calc(var(--space-4, 16px) + var(--safe-bottom, 0px));
 }
 
 /* Settings Sheet Overlay */

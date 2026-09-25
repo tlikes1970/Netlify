@@ -46,7 +46,7 @@ Authorized order. Do not skip ahead.
 | # | Phase | Status |
 |---|--------|--------|
 | 1 | Known Android defects | Complete through Fix 5 (`04fbc38`) |
-| 2 | Device stress testing | **In progress** — Pixel 9 / API 35 exercised; other API images not installed |
+| 2 | Device stress testing | **PAUSED FOR AUTHORIZED DEFECT CORRECTION** — DST-05 through DST-01; missing API/device images still outstanding |
 | 3 | AI black-box usability testing | Not started |
 | 4 | Visual/design acceptance | Not started |
 | 5 | Maestro automated user journeys | Not started — do not install/configure until this phase |
@@ -110,9 +110,30 @@ Authorized order. Do not skip ahead.
   - Tests 225 passing; typecheck; production + mobile production builds; Android debug APK install/launch.
 - **Not changed:** exact-768px JS vs Tailwind `md` disagreement (see below). Settings sheet vs page still uses 744px **and** the sheet flag, which defaults off, so the live Android path is SettingsPage reacting to 768px via `useIsMobileScreen`.
 
+#### DST-05 — Settings body under three-button navigation in portrait
+
+- **Original reproduction:** Pixel 9 / API 35 / three-button / portrait Settings. Personality copy and last controls sat under the system nav pills (`--safe-bottom=48px`). Gesture portrait cleared the handle more cleanly. Evidence: `p4-settings-p.png`, `dst05-before.png`.
+- **Root cause:** SettingsPage is a `100vh` overlay. The header consumed `--safe-top`. The scroll body used `p-4` only and never consumed `--safe-bottom`, so the last rows painted into the three-button reserved strip.
+- **Correction:** Mobile `.settings-page-body` padding-bottom `calc(16px + var(--safe-bottom, 0px))` (inline + Capacitor CSS). Sheet body already had the same contract; production path (sheet flag off) now matches. Desktop overlay still uses `max(1rem, var(--safe-bottom))` on the card padding.
+- **Verification (Pixel 9 / API 35, `emulator-5554`):**
+  - Three-button portrait: `--safe-bottom=48`; body `padding-bottom=64px`; scrolled last content `bottom≈859` vs viewport `924` (clears nav starting ~876). Reset Settings fully visible above pills. `dst05-3b-p.png`, `dst05-3b-p2.png`, `dst05-3b-p3.png`.
+  - Three-button landscape: desktop shell; `--safe-right=48`, `--safe-left=54.1`; `padBottom=16px` (`safe-bottom=0`). `dst05-3b-l.png`.
+  - Gesture portrait: `--safe-bottom=24`; `padding-bottom=40px`; last content `bottom≈883` vs viewport `924`. Visually unchanged vs prior gesture inset. `dst05-g-p-ok.png`.
+  - Gesture landscape: desktop shell; `--safe-left=54.1`. `dst05-g-l-ok.png`.
+  - Portrait ↔ landscape both directions with Settings remaining open (Fix 5 preserved).
+  - Tests: `capacitorSafeArea` 6/6; `settingsApprovalPaths` 4/4.
+- **Commit:** recorded after this checkpoint is committed (`Keep Settings content above Android bottom inset`).
+- **Final status:** FIXED.
+
+### AUTHORIZED IN THIS CORRECTION BATCH
+
+Order: DST-05 (done) → DST-03 → DST-06 → DST-04 → DST-02 → DST-01.
+
+Do not resume missing-device stress testing, UX testing, or Maestro during this pause.
+
 ### CONFIRMED NEXT
 
-_(none authorized to fix. Device stress testing is diagnostic only.)_
+DST-03 — Font scale 1.3–2.0 clips primary chrome.
 
 ### DEVICE STRESS TESTING — NEW DEFECTS (do not fix this phase)
 
@@ -170,6 +191,7 @@ _(none authorized to fix. Device stress testing is diagnostic only.)_
 
 #### DST-05 — Settings body can sit under three-button nav in portrait
 
+- **Status:** FIXED — see §3 FIXED. Original history retained.
 - **Severity:** MEDIUM
 - **Class:** Android/WebView inset
 - **Configuration:** Pixel 9 / API 35 / three-button / portrait Settings
@@ -214,7 +236,7 @@ Track evidence before marking pass:
 | Display scaling | Partial — `wm density` 320 → 540 CSS px (DOM ok); 490 → 353 CSS px; several `wm size/density` changes produced blank WebView frames (emulator override, not Play Display size UI) |
 | Tablet / large-screen | Partial — API 35 `wm size` simulation only (P7 800×1280 visible desktop chrome). No tablet AVD |
 | Gesture navigation | Partial pass — Pixel 9 API 35 |
-| Three-button navigation | Partial pass — Pixel 9 API 35; DST-05 Settings bottom |
+| Three-button navigation | Partial pass — Pixel 9 API 35; DST-05 Settings bottom **fixed** |
 | Portrait / landscape | Partial pass — Home/Settings settle; Filters+rotate DST-04 |
 | Cold launch | Pass — Pixel 9 debug APK |
 | Warm resume | Pass — Settings remained open after Home → resume |
@@ -248,7 +270,7 @@ See also: `tests/manual/PLAY_BILLING_ONE_TIME.md`, [CURRENT_TASK.md](./CURRENT_T
 | P1 Android 6 / API 23 ~320×568 three-button | **NOT AVAILABLE** | SDK has only `system-images/android-35/google_apis_playstore`. Did **not** download other images. API 35 `wm size 320x568` density 160 produced DOM 320×568 but a blank screenshot (surface override). |
 | P2 Android 13 / API 33 ~393×873 gesture | **NOT AVAILABLE** | No API 33 image/AVD. |
 | P3 Pixel 9 / API 35 ~412×924 gesture | **PARTIAL PASS** | Smoke + core flows. DST-01, DST-02, DST-03, DST-04. |
-| P4 Pixel 9 / API 35 three-button | **PARTIAL PASS** | Landscape `--safe-right=48`; theme FAB right `860` vs protected `876`. DST-05 Settings bottom. |
+| P4 Pixel 9 / API 35 three-button | **PARTIAL PASS** | Landscape `--safe-right=48`; theme FAB right `860` vs protected `876`. DST-05 Settings bottom **fixed**. |
 | P5 ~430×930 API 15/16 gesture | **PARTIAL / NOT NATIVE** | No API 36 image. API 35 `wm size` → DOM 431×930; screenshot blank after override. |
 | P6 short landscape ~924×412 | **PARTIAL PASS** | Same Pixel 9 landscape. Settled Home uses desktop header/search. Settings desktop modal OK. DST-04 if Filters open. |
 | P7 7–8" ~800×1280 | **PARTIAL / SIMULATED** | API 35 `wm size 800x1280` density 160. Desktop top tabs + rails. Not a tablet AVD. |
@@ -367,12 +389,12 @@ These remain product/tech items from existing control docs. They are **not** the
 | Field | Value |
 |-------|--------|
 | Branch | `codex/establish-baseline` |
-| Verified HEAD | `04fbc38cc3b61785426c263d54c750418bc0964e` |
-| HEAD message | Make Settings follow viewport breakpoint on rotation |
-| Current phase | 2 — Device stress testing **in progress (not complete)** |
-| Current authorized task | Record DST findings only. Do **not** fix. Do **not** start black-box UX. |
-| Emulator starting condition | Pixel 9, Android 15 / API 35, gesture, portrait, auto-rotate unlocked, `navigation_mode=2`, `wm user-rotation=free`, font 1.0, density 420 |
-| Latest test evidence | Device stress 2026-09-25 on `emulator-5554`. Native AVDs: only `Pixel_9`. DST-01…DST-06 recorded. API 23/33/36 and real tablet AVDs outstanding. |
+| Verified HEAD | `f76b3c4b6dca02065ed2b72fea833de8cc0826bc` (pre DST-05 commit) |
+| HEAD message | Record Pixel 9 device-stress findings without product changes |
+| Current phase | 2 — **PAUSED FOR AUTHORIZED DEFECT CORRECTION** |
+| Current authorized task | DST-05 done in working tree; next DST-03 after DST-05 commit. Do **not** start black-box UX or Maestro. Do **not** install extra API images. |
+| Emulator starting condition | Pixel 9, Android 15 / API 35; restore gesture after DST-05 (currently may be three-button). |
+| Latest test evidence | DST-05 verified 2026-09-25 on `emulator-5554`. API 23/33/36 and real tablet AVDs outstanding. |
 
 ---
 

@@ -433,12 +433,14 @@ export default function SettingsPage({
 
         {/* Content area */}
         <div 
-          className={`flex-1 overflow-y-auto ${isMobile ? 'w-full p-4' : 'p-6'}`}
+          className={`settings-page-body flex-1 overflow-y-auto ${isMobile ? 'w-full p-4' : 'p-6'}`}
           style={{
             WebkitOverflowScrolling: isMobile ? 'touch' : 'auto',
-            ...(!isMobile ? {
+            ...(isMobile ? {
+              paddingBottom: "calc(16px + var(--safe-bottom, 0px))",
+            } : {
               paddingTop: "88px", // Account for header height
-            } : {}),
+            }),
           }}
         >
           {renderSettingsSection(activeSection, {
