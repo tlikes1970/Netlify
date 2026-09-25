@@ -161,7 +161,7 @@ export default function CardV2({
           <div className="flex items-start gap-1 min-w-0">
             <h3
               className={[
-                "truncate flex-1 min-w-0",
+                "line-clamp-2 break-words flex-1 min-w-0",
                 compact ? "font-medium" : "text-sm",
                 "font-medium",
               ].join(" ")}
@@ -350,8 +350,8 @@ function CardActions({
       "focus-visible:ring-[var(--accent)] disabled:opacity-60 disabled:cursor-not-allowed";
 
     const variant = isSquare
-      ? "w-[68px] h-[40px] sm:w-[72px] sm:h-[44px] p-1.5 text-[10px] leading-[1.05] text-center"
-      : "w-full h-9 px-3 text-[length:var(--font-sm,12px)] leading-tight font-medium tracking-tight";
+      ? "w-[68px] min-h-[40px] h-auto sm:w-[72px] sm:min-h-[44px] p-1.5 text-[10px] leading-[1.15] text-center"
+      : "w-full min-h-9 h-auto py-1.5 px-3 text-[length:var(--font-sm,0.75rem)] leading-snug font-medium tracking-tight";
 
     const state = isPressed ? "translate-y-0.5 shadow-inner" : "";
 

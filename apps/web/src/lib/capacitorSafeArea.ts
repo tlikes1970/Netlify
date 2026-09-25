@@ -20,7 +20,7 @@ export type NativeSafeAreaInsets = {
   right: number;
 };
 
-/** Tab row height (px) — must match --mobile-nav-base-height in global.css */
+/** Tab row height fallback (px at 16px root) — CSS --mobile-nav-base-height is 3.5rem */
 export const MOBILE_NAV_BASE_HEIGHT = 56;
 
 /** Conservative Android boot fallbacks until MainActivity injects real insets. */

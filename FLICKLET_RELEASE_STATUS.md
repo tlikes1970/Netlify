@@ -122,18 +122,32 @@ Authorized order. Do not skip ahead.
   - Gesture landscape: desktop shell; `--safe-left=54.1`. `dst05-g-l-ok.png`.
   - Portrait ↔ landscape both directions with Settings remaining open (Fix 5 preserved).
   - Tests: `capacitorSafeArea` 6/6; `settingsApprovalPaths` 4/4.
-- **Commit:** recorded after this checkpoint is committed (`Keep Settings content above Android bottom inset`).
+- **Commit:** `ad20f49d85bdd523b7367aa403165de1cf6d4233` — `Keep Settings content above Android bottom inset`
+- **Final status:** FIXED.
+
+#### DST-03 — Font scale 1.3–2.0 clips primary chrome
+
+- **Original reproduction:** Pixel 9 / API 35. 1.15 usable; 1.3 search placeholder clips; 1.5–2.0 logo, Search, Manage, and card actions clip/truncate. Settings body and nav labels stayed readable. Evidence: `font-1.3-home.png` through `font-2.0-settings.png`.
+- **Root cause:** Chrome used fixed pixel heights (`h-9`, `min-h-[44px]`, `--flicklet-sticky-search-row-height: 44px`, `--mobile-nav-base-height: 56px`), a 1/3 header grid that squeezed the wordmark, nowrap/truncate on titles and actions, and a search row that could not wrap when Filters/Search grew with font scale.
+- **Correction:** Content-responsive min-heights (rem), wrapping action labels, two-line card titles, header `auto` center column so the wordmark stays one word, search row wrap with `min-w-[12rem]` field, Library segment labels wrap, nav min-height in rem. Did **not** disable Android font scaling.
+- **Verification:**
+  - 1.0: wordmark/search/Manage unchanged and unclipped (`fontv2-1.0-home.png`).
+  - 1.3: full “Flicklet”; Manage wraps inside the button; search still operable.
+  - 2.0: full “Flicklet”; Search control wraps onto a second row; placeholder may ellipsize but starts with “Search movies”; Manage text complete; nav Home/Library/Discovery readable (`fontv2-2.0-home.png`). Settings at 2.0 still readable.
+  - Remaining overlap of FABs on card actions is DST-02 (not this commit).
+  - Tests: SearchRow mobile 6/6; capacitorSafeArea 6/6; mobile production build.
+- **Commit:** recorded after this checkpoint is committed.
 - **Final status:** FIXED.
 
 ### AUTHORIZED IN THIS CORRECTION BATCH
 
-Order: DST-05 (done) → DST-03 → DST-06 → DST-04 → DST-02 → DST-01.
+Order: DST-05 (done) → DST-03 (done) → DST-06 → DST-04 → DST-02 → DST-01.
 
 Do not resume missing-device stress testing, UX testing, or Maestro during this pause.
 
 ### CONFIRMED NEXT
 
-DST-03 — Font scale 1.3–2.0 clips primary chrome.
+DST-06 — Exact 768px Settings breakpoint conflict.
 
 ### DEVICE STRESS TESTING — NEW DEFECTS (do not fix this phase)
 
@@ -163,6 +177,7 @@ DST-03 — Font scale 1.3–2.0 clips primary chrome.
 
 #### DST-03 — Font scale 1.3–2.0 clips primary chrome
 
+- **Status:** FIXED — see §3 FIXED. Original history retained.
 - **Severity:** HIGH at 1.5× and 2.0×; MEDIUM at 1.3×
 - **Class:** accessibility/font scaling
 - **Configuration:** Pixel 9 / API 35 / `font_scale` 1.15, 1.3, 1.5, 2.0 (cold launch each)
@@ -232,7 +247,7 @@ Track evidence before marking pass:
 | Android soft keyboard / viewport | Partial — IME appeared after typing on Pixel 9 Search; field stayed visible; suggestions above keyboard. Settings username IME not captured (app already backgrounded). |
 | API 23 small-screen | **NOT AVAILABLE** — no `android-23` system image/AVD on this SDK |
 | API 36 | **NOT AVAILABLE** — only `android-35` image installed |
-| Font scaling | Partial — 1.0/1.15 usable; DST-03 at 1.3–2.0 |
+| Font scaling | Partial — DST-03 **fixed** at 1.0–2.0 on Pixel 9; remaining matrix still open |
 | Display scaling | Partial — `wm density` 320 → 540 CSS px (DOM ok); 490 → 353 CSS px; several `wm size/density` changes produced blank WebView frames (emulator override, not Play Display size UI) |
 | Tablet / large-screen | Partial — API 35 `wm size` simulation only (P7 800×1280 visible desktop chrome). No tablet AVD |
 | Gesture navigation | Partial pass — Pixel 9 API 35 |
@@ -389,12 +404,12 @@ These remain product/tech items from existing control docs. They are **not** the
 | Field | Value |
 |-------|--------|
 | Branch | `codex/establish-baseline` |
-| Verified HEAD | `f76b3c4b6dca02065ed2b72fea833de8cc0826bc` (pre DST-05 commit) |
-| HEAD message | Record Pixel 9 device-stress findings without product changes |
+| Verified HEAD | `ad20f49d85bdd523b7367aa403165de1cf6d4233` |
+| HEAD message | Keep Settings content above Android bottom inset |
 | Current phase | 2 — **PAUSED FOR AUTHORIZED DEFECT CORRECTION** |
-| Current authorized task | DST-05 done in working tree; next DST-03 after DST-05 commit. Do **not** start black-box UX or Maestro. Do **not** install extra API images. |
-| Emulator starting condition | Pixel 9, Android 15 / API 35; restore gesture after DST-05 (currently may be three-button). |
-| Latest test evidence | DST-05 verified 2026-09-25 on `emulator-5554`. API 23/33/36 and real tablet AVDs outstanding. |
+| Current authorized task | DST-03 in this commit; next DST-06. Do **not** start black-box UX or Maestro. Do **not** install extra API images. |
+| Emulator starting condition | Pixel 9, Android 15 / API 35, gesture, portrait, font 1.0 |
+| Latest test evidence | DST-03 verified 2026-09-25 on `emulator-5554` at font 1.0–2.0. API 23/33/36 and real tablet AVDs outstanding. |
 
 ---
 

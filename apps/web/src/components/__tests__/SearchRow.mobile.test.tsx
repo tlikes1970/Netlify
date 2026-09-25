@@ -96,9 +96,9 @@ describe("SearchRow Mobile Behavior", () => {
       const filterButton = screen.getByRole("button", { name: /filters/i });
       const searchButton = screen.getByRole("button", { name: /search/i });
 
-      // Check that buttons have min-h-[44px] class
-      expect(filterButton.className).toContain("min-h-[44px]");
-      expect(searchButton.className).toContain("min-h-[44px]");
+      // 2.75rem = 44px at default 16px root; rem lets the row grow with font scale
+      expect(filterButton.className).toContain("min-h-[2.75rem]");
+      expect(searchButton.className).toContain("min-h-[2.75rem]");
     });
   });
 

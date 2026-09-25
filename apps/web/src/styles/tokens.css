@@ -25,7 +25,7 @@
   /* Sticky search row (FlickletHeader) — Library segment bar sticks below this.
      Composed from wrapper padding + SearchRow touch height + border-b. */
   --flicklet-sticky-search-padding-y: 0.375rem; /* py-1.5 on mobile wrapper */
-  --flicklet-sticky-search-row-height: 44px; /* min-h-[44px] filter/search on mobile */
+  --flicklet-sticky-search-row-height: 2.75rem; /* min 44px at 16px root; grows with font scale */
   --flicklet-sticky-search-border: 1px;
   --flicklet-sticky-search-height: calc(
     var(--flicklet-sticky-search-padding-y) * 2 +

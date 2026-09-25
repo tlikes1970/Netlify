@@ -101,10 +101,10 @@ export default function FlickletHeader({
         style={{ backgroundColor: "var(--bg)" }}
       >
         <div className="mx-auto w-full max-w-screen-2xl px-3 py-3 md:px-6 md:py-6">
-          <div className="grid grid-cols-3 items-center gap-2 md:gap-4">
+          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 md:gap-4">
             <div className="min-w-0" aria-hidden="true" />
             {/* Center: title */}
-            <div className="text-center">
+            <div className="min-w-0 text-center">
               <AppTitle text={appName} onClick={onNavigateHome} />
             </div>
             {/* Right: version + help + optional show toggle + auth */}
@@ -179,12 +179,12 @@ function AppTitle({ text, onClick }: { text: string; onClick?: () => void }) {
   return (
     <div data-onboarding-id="home-header">
       <h1
-        className={`min-w-[6rem] select-none text-balance font-extrabold tracking-tight text-3xl sm:text-4xl md:text-5xl lg:text-6xl bg-gradient-to-r from-fuchsia-500 via-pink-500 to-amber-400 bg-clip-text text-transparent drop-shadow-[0_1px_0_rgba(255,255,255,0.35)] ${onClick ? "cursor-pointer" : ""}`}
+        className={`max-w-full select-none text-balance font-extrabold tracking-tight text-2xl leading-tight sm:text-3xl md:text-5xl lg:text-6xl bg-gradient-to-r from-fuchsia-500 via-pink-500 to-amber-400 bg-clip-text text-transparent drop-shadow-[0_1px_0_rgba(255,255,255,0.35)] ${onClick ? "cursor-pointer" : ""}`}
         title={onClick ? `Go to ${text} home` : text}
         data-testid="app-title"
         onClick={onClick ? handleClick : undefined}
       >
-        <span className="inline-block transition-transform duration-300 ease-out hover:scale-[1.02]">
+        <span className="inline-block max-w-full whitespace-nowrap transition-transform duration-300 ease-out hover:scale-[1.02]">
           {text}
         </span>
       </h1>
@@ -612,7 +612,7 @@ function SearchRow({
 
   return (
     <div
-      className="flex items-stretch gap-0 rounded-2xl border bg-background p-0"
+      className="flex flex-wrap items-stretch gap-0 rounded-2xl border bg-background p-0 min-h-[2.75rem]"
       data-testid="search-row"
       data-role="searchbar"
       ref={searchContainerRef}
@@ -622,8 +622,8 @@ function SearchRow({
         <button
           type="button"
           onClick={() => setShowFiltersDropdown(!showFiltersDropdown)}
-          className={`rounded-l-2xl border-r-0 px-2 py-2 md:px-3 md:py-3 font-semibold hover:bg-accent hover:text-accent-foreground transition-all h-full ${
-            isMobile ? "text-sm min-h-[44px]" : "text-xs"
+          className={`rounded-l-2xl border-r-0 px-2 py-2 md:px-3 md:py-3 font-semibold hover:bg-accent hover:text-accent-foreground transition-all h-auto min-h-[2.75rem] leading-tight whitespace-normal ${
+            isMobile ? "text-sm" : "text-xs"
           }`}
           aria-haspopup="menu"
           aria-expanded={showFiltersDropdown}
@@ -1685,7 +1685,7 @@ function SearchRow({
       </div>
 
       {/* Search Input - Takes up most of the space */}
-      <div className="relative flex-1 min-w-0">
+      <div className="relative flex-1 min-w-[12rem]">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -1720,7 +1720,7 @@ function SearchRow({
                 if (!isCapacitorNative()) setIsComposing(true);
               }}
               onCompositionEnd={() => setIsComposing(false)}
-              className={`w-full rounded-none border-l-0 border-r-0 border-y-0 py-2 md:py-3 outline-none ring-0 focus:border-primary touch-manipulation ${
+              className={`w-full min-w-0 min-h-[2.75rem] h-auto rounded-none border-l-0 border-r-0 border-y-0 py-2 md:py-3 outline-none ring-0 focus:border-primary touch-manipulation leading-snug overflow-hidden text-ellipsis ${
                 isMobile
                   ? `px-3 text-base ${q.length > 0 ? (hasVoiceSearch ? "pr-20" : "pr-10") : hasVoiceSearch ? "pr-10" : "pr-3"}`
                   : "px-4 pr-12 text-sm"
@@ -1815,8 +1815,8 @@ function SearchRow({
       <div className="flex">
         <button
           type="submit"
-          className={`rounded-r-2xl rounded-l-none border-l-0 border-r-0 px-3 py-2 md:px-3 md:py-3 font-semibold hover:bg-accent hover:text-accent-foreground transition-all duration-150 ease-out ${
-            isMobile ? "text-sm min-h-[44px]" : "text-xs"
+          className={`rounded-r-2xl rounded-l-none border-l-0 border-r-0 px-3 py-2 md:px-3 md:py-3 font-semibold hover:bg-accent hover:text-accent-foreground transition-all duration-150 ease-out h-auto min-h-[2.75rem] leading-tight whitespace-normal ${
+            isMobile ? "text-sm" : "text-xs"
           }`}
           onClick={submit}
         >

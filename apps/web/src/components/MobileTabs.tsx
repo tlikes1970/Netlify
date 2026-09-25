@@ -271,7 +271,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
         aria-label="Main navigation"
         aria-hidden={keyboardOpen}
       >
-        <div className="grid grid-cols-3 h-full w-full max-w-lg mx-auto gap-1">
+        <div className="grid grid-cols-3 min-h-[3.25rem] w-full max-w-lg mx-auto gap-1">
           {TOP_TABS.map((tabId) => {
             const active = current === tabId;
 
@@ -280,7 +280,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
                 key={tabId}
                 type="button"
                 onClick={() => onChange(tabId)}
-                className="flex flex-col items-center justify-center rounded-lg px-2 min-h-[52px] transition-colors relative touch-manipulation"
+                className="flex flex-col items-center justify-center rounded-lg px-2 min-h-[3.25rem] py-1 transition-colors relative touch-manipulation"
                 style={{
                   color: active ? "var(--accent)" : "var(--muted)",
 
