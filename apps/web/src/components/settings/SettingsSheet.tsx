@@ -406,7 +406,7 @@ export default function SettingsSheet() {
         {/* Scrollable body */}
         <div
           ref={bodyRef}
-          className="overflow-y-auto p-4"
+          className="settings-sheet-body overflow-y-auto p-4"
           style={{
             WebkitOverflowScrolling: "touch",
             flex: 1,

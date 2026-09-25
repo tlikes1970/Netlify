@@ -17,6 +17,8 @@ html {
   --safe-top: env(safe-area-inset-top, 0px);
   /* Mobile browser + iOS Capacitor use env(); Android uses MainActivity-injected vars */
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
   /* Tab row only; system nav inset is padding inside .mobile-nav, counted once in --mobile-nav-height */
   --mobile-nav-base-height: 56px;
   --mobile-nav-height: calc(var(--mobile-nav-base-height) + var(--safe-bottom));
@@ -140,10 +142,18 @@ body,
   }
 
   /*
-   * Capacitor native: injected --safe-top / --safe-bottom (Android) or env() (iOS).
+   * Capacitor native: injected --safe-* (Android) or env() (iOS).
    * Top inset once on header; sticky search sticks below status area when scrolled.
+   * Horizontal insets pad interactive chrome; header/search backgrounds stay edge-to-edge.
    * Android boot: capacitorSafeArea.ts sets interim --safe-top until data-safe-area-ready.
    */
+  html.capacitor-native .flicklet-app-header,
+  html.capacitor-native .flicklet-sticky-search,
+  html.capacitor-native .flicklet-safe-inline {
+    padding-left: var(--safe-left, 0px);
+    padding-right: var(--safe-right, 0px);
+  }
+
   html.capacitor-native .flicklet-app-header {
     padding-top: var(--safe-top, 0px);
   }
@@ -175,6 +185,8 @@ body,
     min-height: var(--mobile-nav-base-height);
     padding-top: 4px;
     padding-bottom: 0;
+    padding-left: var(--safe-left, 0px);
+    padding-right: var(--safe-right, 0px);
     display: flex;
     visibility: visible;
     opacity: 1;

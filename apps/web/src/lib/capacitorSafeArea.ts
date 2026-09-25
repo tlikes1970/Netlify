@@ -1,6 +1,6 @@
 /**
  * Capacitor native shell: document classes + safe-area bootstrap.
- * Android: MainActivity injects --safe-top / --safe-bottom from WindowInsets (not env()).
+ * Android: MainActivity injects --safe-top/bottom/left/right from WindowInsets (not env()).
  * iOS: env(safe-area-inset-*) until/unless a native injector is added.
  */
 
@@ -13,6 +13,13 @@ declare global {
   }
 }
 
+export type NativeSafeAreaInsets = {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+};
+
 /** Tab row height (px) — must match --mobile-nav-base-height in global.css */
 export const MOBILE_NAV_BASE_HEIGHT = 56;
 
@@ -23,6 +30,20 @@ const ANDROID_SAFE_BOTTOM_FALLBACK_PX = 48;
 /** CSS bottom offset for fixed controls above mobile nav + system inset. */
 export function mobileFabBottom(extraPx: number, viewportOffsetPx = 0): string {
   return `calc(var(--mobile-nav-height, ${MOBILE_NAV_BASE_HEIGHT}px) + ${viewportOffsetPx}px + ${extraPx}px)`;
+}
+
+/** CSS inline offset for fixed controls: existing gutter plus --safe-left / --safe-right. */
+export function mobileFabInlineInset(extraPx: number, side: 'left' | 'right'): string {
+  const insetVar = side === 'left' ? '--safe-left' : '--safe-right';
+  return `calc(${extraPx}px + var(${insetVar}, 0px))`;
+}
+
+export function readSafeInsetPx(side: 'top' | 'bottom' | 'left' | 'right'): number {
+  if (typeof document === 'undefined') return 0;
+  const parsed = parseFloat(
+    getComputedStyle(document.documentElement).getPropertyValue(`--safe-${side}`)
+  );
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 /**
@@ -39,8 +60,7 @@ export function readMobileNavClearancePx(): number {
     return parsed;
   }
 
-  const safeBottom = parseFloat(getComputedStyle(root).getPropertyValue('--safe-bottom')) || 0;
-  return MOBILE_NAV_BASE_HEIGHT + safeBottom;
+  return MOBILE_NAV_BASE_HEIGHT + readSafeInsetPx('bottom');
 }
 
 function applyAndroidShellClasses(root: HTMLElement): void {
@@ -57,21 +77,34 @@ function applyAndroidSafeAreaFallbacks(root: HTMLElement): void {
   if (bottomPx <= 0) {
     root.style.setProperty('--safe-bottom', `${ANDROID_SAFE_BOTTOM_FALLBACK_PX}px`);
   }
+  if (!root.style.getPropertyValue('--safe-left')) {
+    root.style.setProperty('--safe-left', '0px');
+  }
+  if (!root.style.getPropertyValue('--safe-right')) {
+    root.style.setProperty('--safe-right', '0px');
+  }
 }
 
-function applySafeAreaFromNative(top: number, bottom: number): void {
+export function applySafeAreaFromNative(insets: NativeSafeAreaInsets): void {
   const root = document.documentElement;
-  root.style.setProperty('--safe-top', `${top}px`);
-  root.style.setProperty('--safe-bottom', `${bottom}px`);
+  root.style.setProperty('--safe-top', `${insets.top}px`);
+  root.style.setProperty('--safe-bottom', `${insets.bottom}px`);
+  root.style.setProperty('--safe-left', `${insets.left}px`);
+  root.style.setProperty('--safe-right', `${insets.right}px`);
   root.setAttribute('data-safe-area-ready', 'true');
 }
 
 function handleCapacitorSafeArea(event: Event): void {
-  const detail = (event as CustomEvent<{ top: number; bottom: number }>).detail;
+  const detail = (event as CustomEvent<Partial<NativeSafeAreaInsets>>).detail;
   if (!detail || typeof detail.top !== 'number' || typeof detail.bottom !== 'number') {
     return;
   }
-  applySafeAreaFromNative(detail.top, detail.bottom);
+  applySafeAreaFromNative({
+    top: detail.top,
+    bottom: detail.bottom,
+    left: typeof detail.left === 'number' ? detail.left : 0,
+    right: typeof detail.right === 'number' ? detail.right : 0,
+  });
 }
 
 function requestAndroidInsetSync(): void {
@@ -103,6 +136,21 @@ function scheduleAndroidInsetSyncRetries(): void {
   tick();
 }
 
+/** Same native bridge as boot: re-sync all four insets after rotate / nav-mode changes. */
+function watchViewportForInsetSync(): void {
+  if (typeof window === 'undefined') return;
+
+  let timer = 0;
+  const kick = () => {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => requestAndroidInsetSync(), 50);
+  };
+
+  window.addEventListener('resize', kick);
+  window.addEventListener('orientationchange', kick);
+  window.visualViewport?.addEventListener('resize', kick);
+}
+
 function applyIosEdgeToEdgeFallbacks(root: HTMLElement): void {
   root.classList.add('capacitor-ios');
   if (!root.style.getPropertyValue('--safe-bottom')) {
@@ -110,6 +158,12 @@ function applyIosEdgeToEdgeFallbacks(root: HTMLElement): void {
   }
   if (!root.style.getPropertyValue('--safe-top')) {
     root.style.setProperty('--safe-top', 'env(safe-area-inset-top, 0px)');
+  }
+  if (!root.style.getPropertyValue('--safe-left')) {
+    root.style.setProperty('--safe-left', 'env(safe-area-inset-left, 0px)');
+  }
+  if (!root.style.getPropertyValue('--safe-right')) {
+    root.style.setProperty('--safe-right', 'env(safe-area-inset-right, 0px)');
   }
 }
 
@@ -126,6 +180,7 @@ export function initCapacitorNativeShell(): void {
     window.addEventListener('capacitor-safe-area', handleCapacitorSafeArea);
     requestAndroidInsetSync();
     scheduleAndroidInsetSyncRetries();
+    watchViewportForInsetSync();
     return;
   }
 

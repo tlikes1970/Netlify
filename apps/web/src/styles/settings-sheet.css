@@ -8,6 +8,13 @@ html[data-compact-mobile-v1="true"][data-settings-sheet="true"] body {
 /* Android edge-to-edge: keep the mobile header content below the shared top inset. */
 html.capacitor-android [role="dialog"][aria-label="Settings"] .settings-sheet-header {
   padding-top: calc(var(--space-4, 16px) + var(--safe-top, 0px));
+  padding-left: calc(var(--space-4, 16px) + var(--safe-left, 0px));
+  padding-right: calc(var(--space-4, 16px) + var(--safe-right, 0px));
+}
+
+html.capacitor-android [role="dialog"][aria-label="Settings"] .settings-sheet-body {
+  padding-left: calc(var(--space-4, 16px) + var(--safe-left, 0px));
+  padding-right: calc(var(--space-4, 16px) + var(--safe-right, 0px));
 }
 
 /* Settings Sheet Overlay */

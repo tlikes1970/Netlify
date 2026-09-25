@@ -14,6 +14,7 @@ export function TrialStatusBanner() {
   const isExpired = entitlements.phase === 'expiredReadOnly';
 
   return (
+    <div className="flicklet-safe-inline">
     <div
       className="w-full px-3 py-2 text-center text-sm font-medium border-b"
       style={{
@@ -39,6 +40,7 @@ export function TrialStatusBanner() {
       {entitlements.phase === 'activeTrial' && (
         <span className="opacity-90 ml-1">· Unlock anytime to keep full access after trial</span>
       )}
+    </div>
     </div>
   );
 }

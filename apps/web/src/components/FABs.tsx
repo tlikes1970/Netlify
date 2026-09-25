@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useViewportOffset } from './MobileTabs';
-import { mobileFabBottom } from '@/lib/capacitorSafeArea';
+import { mobileFabBottom, mobileFabInlineInset } from '@/lib/capacitorSafeArea';
 
 // Settings FAB (COG icon) - Bottom left
 export function SettingsFAB({ onClick }: { onClick: () => void }) {
@@ -65,7 +65,7 @@ export function SettingsFAB({ onClick }: { onClick: () => void }) {
         // Only apply mobile positioning on mobile screens
         ...(window.innerWidth < 1024 && {
           bottom: mobileFabBottom(16, effectiveOffset),
-          left: '16px'
+          left: mobileFabInlineInset(16, 'left'),
         })
       }}
       aria-label="Open Settings"
@@ -159,7 +159,7 @@ export function ThemeToggleFAB({ theme, onToggle }: { theme: 'light' | 'dark'; o
         // Only apply mobile positioning on mobile screens
         ...(window.innerWidth < 1024 && {
           bottom: mobileFabBottom(16, effectiveOffset),
-          right: '16px'
+          right: mobileFabInlineInset(16, 'right'),
         })
       }}
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}

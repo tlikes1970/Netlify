@@ -1,5 +1,5 @@
 import { isMobileNow } from '@/lib/isMobile';
-import { readMobileNavClearancePx } from '@/lib/capacitorSafeArea';
+import { readMobileNavClearancePx, readSafeInsetPx } from '@/lib/capacitorSafeArea';
 
 export type MenuPlacement = {
   top: number;
@@ -36,10 +36,10 @@ export function getMenuViewportBounds(): ViewportBounds {
   }
 
   return {
-    top: offsetTop + EDGE_PADDING,
+    top: offsetTop + EDGE_PADDING + readSafeInsetPx('top'),
     bottom: offsetTop + height - bottomReserve,
-    left: EDGE_PADDING,
-    right: width - EDGE_PADDING,
+    left: EDGE_PADDING + readSafeInsetPx('left'),
+    right: width - EDGE_PADDING - readSafeInsetPx('right'),
   };
 }
 

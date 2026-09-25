@@ -86,12 +86,14 @@ export function CompactOverflowMenu({
 
     window.addEventListener("resize", handleReposition);
     window.addEventListener("scroll", handleReposition, true);
+    window.addEventListener("capacitor-safe-area", handleReposition);
     window.visualViewport?.addEventListener("resize", handleReposition);
     window.visualViewport?.addEventListener("scroll", handleReposition);
 
     return () => {
       window.removeEventListener("resize", handleReposition);
       window.removeEventListener("scroll", handleReposition, true);
+      window.removeEventListener("capacitor-safe-area", handleReposition);
       window.visualViewport?.removeEventListener("resize", handleReposition);
       window.visualViewport?.removeEventListener("scroll", handleReposition);
     };

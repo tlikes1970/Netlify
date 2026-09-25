@@ -24,6 +24,8 @@ public class MainActivity extends BridgeActivity {
     private boolean jsBridgeAttached = false;
     private int lastSafeTop = 0;
     private int lastSafeBottom = 0;
+    private int lastSafeLeft = 0;
+    private int lastSafeRight = 0;
 
     private final WebViewListener safeAreaWebViewListener = new WebViewListener() {
         @Override
@@ -59,6 +61,16 @@ public class MainActivity extends BridgeActivity {
         getWindow().getDecorView().post(this::syncInsetsNow);
     }
 
+    @Override
+    public void onConfigurationChanged(android.content.res.Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        Log.d(TAG, "configuration changed; synchronizing four-sided insets to active document");
+        View decor = getWindow().getDecorView();
+        decor.post(this::syncInsetsNow);
+        decor.postDelayed(this::syncInsetsNow, 50);
+        decor.postDelayed(this::syncInsetsNow, 250);
+    }
+
     private void ensureInsetsPipeline() {
         if (!insetListenerInstalled) {
             insetListenerInstalled = true;
@@ -76,27 +88,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void updateInsetsFrom(WindowInsetsCompat windowInsets) {
-        Insets statusBars = windowInsets.getInsets(WindowInsetsCompat.Type.statusBars());
-        Insets navBars = windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars());
-        Insets cutout = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout());
-
-        lastSafeTop = Math.max(statusBars.top, cutout.top);
-        lastSafeBottom = navBars.bottom;
-
-        Log.d(
-            TAG,
-            "insets statusTop="
-                + statusBars.top
-                + " cutoutTop="
-                + cutout.top
-                + " navBottom="
-                + navBars.bottom
-                + " => safeTop="
-                + lastSafeTop
-                + " safeBottom="
-                + lastSafeBottom
-        );
-
+        captureSafeArea(windowInsets, "insets");
         applyInsetsToWebView();
     }
 
@@ -109,15 +101,7 @@ public class MainActivity extends BridgeActivity {
         View decor = getWindow().getDecorView();
         WindowInsetsCompat current = ViewCompat.getRootWindowInsets(decor);
         if (current != null) {
-            Insets statusBars = current.getInsets(WindowInsetsCompat.Type.statusBars());
-            Insets navBars = current.getInsets(WindowInsetsCompat.Type.navigationBars());
-            Insets cutout = current.getInsets(WindowInsetsCompat.Type.displayCutout());
-            lastSafeTop = Math.max(statusBars.top, cutout.top);
-            lastSafeBottom = navBars.bottom;
-            Log.d(
-                TAG,
-                "syncInsetsNow safeTop=" + lastSafeTop + " safeBottom=" + lastSafeBottom
-            );
+            captureSafeArea(current, "syncInsetsNow");
         } else {
             Log.d(TAG, "syncInsetsNow: root insets null, requesting apply");
             ViewCompat.requestApplyInsets(decor);
@@ -154,25 +138,97 @@ public class MainActivity extends BridgeActivity {
             return;
         }
 
-        injectSafeAreaCss(webView, lastSafeTop, lastSafeBottom);
+        injectSafeAreaCss(webView, lastSafeTop, lastSafeBottom, lastSafeLeft, lastSafeRight);
     }
 
-    private static void injectSafeAreaCss(WebView webView, int safeTop, int safeBottom) {
+    /**
+     * One coherent safe-area state: top/bottom keep the verified Fix 1–3 rules;
+     * left/right take the max of status bars, navigation bars, and display cutout.
+     */
+    private void captureSafeArea(WindowInsetsCompat windowInsets, String source) {
+        Insets statusBars = windowInsets.getInsets(WindowInsetsCompat.Type.statusBars());
+        Insets navBars = windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars());
+        Insets cutout = windowInsets.getInsets(WindowInsetsCompat.Type.displayCutout());
+
+        lastSafeTop = Math.max(statusBars.top, cutout.top);
+        lastSafeBottom = navBars.bottom;
+        lastSafeLeft = Math.max(Math.max(statusBars.left, navBars.left), cutout.left);
+        lastSafeRight = Math.max(Math.max(statusBars.right, navBars.right), cutout.right);
+
+        Log.d(
+            TAG,
+            source
+                + " status="
+                + statusBars.left
+                + ","
+                + statusBars.top
+                + ","
+                + statusBars.right
+                + ","
+                + statusBars.bottom
+                + " nav="
+                + navBars.left
+                + ","
+                + navBars.top
+                + ","
+                + navBars.right
+                + ","
+                + navBars.bottom
+                + " cutout="
+                + cutout.left
+                + ","
+                + cutout.top
+                + ","
+                + cutout.right
+                + ","
+                + cutout.bottom
+                + " => physical LTRB="
+                + lastSafeLeft
+                + ","
+                + lastSafeTop
+                + ","
+                + lastSafeRight
+                + ","
+                + lastSafeBottom
+        );
+    }
+
+    private static float toCssPixels(int physicalPx, float density) {
+        return density > 0 ? physicalPx / density : physicalPx;
+    }
+
+    private static void injectSafeAreaCss(
+        WebView webView,
+        int safeTop,
+        int safeBottom,
+        int safeLeft,
+        int safeRight
+    ) {
         float density = webView.getResources().getDisplayMetrics().density;
-        float safeTopCss = density > 0 ? safeTop / density : safeTop;
-        float safeBottomCss = density > 0 ? safeBottom / density : safeBottom;
+        float safeTopCss = toCssPixels(safeTop, density);
+        float safeBottomCss = toCssPixels(safeBottom, density);
+        float safeLeftCss = toCssPixels(safeLeft, density);
+        float safeRightCss = toCssPixels(safeRight, density);
 
         Log.d(
             TAG,
             "injectSafeAreaCss density="
                 + density
-                + " physicalTop="
+                + " physicalLTRB="
+                + safeLeft
+                + ","
                 + safeTop
-                + " physicalBottom="
+                + ","
+                + safeRight
+                + ","
                 + safeBottom
-                + " cssTop="
+                + " cssLTRB="
+                + safeLeftCss
+                + ","
                 + safeTopCss
-                + " cssBottom="
+                + ","
+                + safeRightCss
+                + ","
                 + safeBottomCss
         );
 
@@ -188,11 +244,21 @@ public class MainActivity extends BridgeActivity {
                 + "r.style.setProperty('--safe-bottom','"
                 + safeBottomCss
                 + "px');"
+                + "r.style.setProperty('--safe-left','"
+                + safeLeftCss
+                + "px');"
+                + "r.style.setProperty('--safe-right','"
+                + safeRightCss
+                + "px');"
                 + "r.setAttribute('data-safe-area-ready','true');"
                 + "r.dispatchEvent(new CustomEvent('capacitor-safe-area',{detail:{top:"
                 + safeTopCss
                 + ",bottom:"
                 + safeBottomCss
+                + ",left:"
+                + safeLeftCss
+                + ",right:"
+                + safeRightCss
                 + "}}));"
                 + "})();";
         webView.post(() -> webView.evaluateJavascript(js, null));
