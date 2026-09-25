@@ -1,0 +1,1 @@
+function n(e){try{if(typeof window=="undefined")return!1;const t=localStorage.getItem(`${e}:off`);return t==="1"||t==="true"}catch{return!1}}function f(){const e=["isw","iauth","ifire","iapiclient","imsg","ircfg","ianalytics","iprefetch","ifonts"],t={};for(const i of e)t[i]=n(i);return t}export{f as getAllSwitchStates,n as isOff};

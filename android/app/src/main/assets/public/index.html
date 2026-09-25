@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="description" content="Track your favorite TV shows and movies with Flicklet. Discover new content, manage your watchlist, and never miss an episode." />
     <meta name="theme-color" content="#3b82f6" />
     <meta name="color-scheme" content="light dark" />
@@ -15,38 +15,56 @@
     <link rel="preconnect" href="https://image.tmdb.org" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <title>Flicklet V2</title>
-    
-    <!-- First-Paint Gate CSS: kills transitions while gated -->
+
+    <!-- Match --bg dark token so native cold start is not a white flash -->
+    <style>
+      html, body {
+        background-color: #0f1115;
+        color: #e6eaf0;
+        margin: 0;
+      }
+    </style>
+
+    <!-- First-Paint Gate CSS: kills transitions while gated (web first visit only) -->
     <style id="fp-gate-css">
       html.fp-gate * { transition: none !important; animation: none !important; }
       html.fp-gate body { visibility: hidden; }
-      /* if you have a splash, you can show it instead of hiding body */
       html.fp-gate .app-splash { visibility: visible; }
     </style>
-    
-    <!-- Mark the page as gated as early as possible -->
+
+    <!-- Native/Capacitor: skip fp-gate, show themed splash immediately while JS loads -->
     <script>
-      try {
-        if (localStorage.getItem('app:primed') !== '1') {
-          document.documentElement.classList.add('fp-gate');
-        }
-      } catch {}
+      (function () {
+        try {
+          var primed = localStorage.getItem('app:primed') === '1';
+          var isCapacitorWebView =
+            location.hostname === 'localhost' &&
+            (location.protocol === 'https:' ||
+              location.protocol === 'http:' ||
+              location.protocol === 'capacitor:');
+          var skipGate = primed || isCapacitorWebView;
+          if (!skipGate) {
+            document.documentElement.classList.add('fp-gate');
+          } else {
+            var splash = document.querySelector('.app-splash');
+            if (splash) splash.style.visibility = 'visible';
+          }
+        } catch (e) {}
+      })();
     </script>
-    <script type="module" crossorigin src="./assets/index-f39bf953.js"></script>
+    <script type="module" crossorigin src="./assets/index-3c50cd49.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/firebase-auth-127d4d11.js">
+    <link rel="modulepreload" crossorigin href="./assets/firebase-firestore-1c18a094.js">
     <link rel="modulepreload" crossorigin href="./assets/react-vendor-55abab24.js">
-    <link rel="modulepreload" crossorigin href="./assets/firebase-auth-b0f60665.js">
-    <link rel="modulepreload" crossorigin href="./assets/firebase-firestore-2123038e.js">
-    <link rel="modulepreload" crossorigin href="./assets/firebase-app-dda3858f.js">
-    <link rel="modulepreload" crossorigin href="./assets/games-5f132812.js">
-    <link rel="modulepreload" crossorigin href="./assets/modals-4a9a590b.js">
-    <link rel="modulepreload" crossorigin href="./assets/pages-12f6c230.js">
-    <link rel="modulepreload" crossorigin href="./assets/settings-dd77e671.js">
-    <link rel="stylesheet" href="./assets/index-8d1ecc9a.css">
+    <link rel="modulepreload" crossorigin href="./assets/firebase-app-eea1fbb7.js">
+    <link rel="modulepreload" crossorigin href="./assets/games-6c3364c7.js">
   </head>
   <body>
-    <!-- Optional: tiny splash so users don't see a blank -->
-    <div class="app-splash" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;visibility:hidden;">
-      <div style="font: 600 14px/1.2 system-ui, sans-serif;opacity:.7;">Loading…</div>
+    <div
+      class="app-splash"
+      style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0f1115;color:#a9b3c1;visibility:hidden;z-index:99990;"
+    >
+      <div style="font:600 14px/1.2 system-ui,sans-serif;opacity:.85;">Loading…</div>
     </div>
     <div id="root"></div>
     
