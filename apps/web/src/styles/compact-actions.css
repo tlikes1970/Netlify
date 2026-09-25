@@ -25,7 +25,7 @@ html[data-compact-mobile-v1="true"][data-actions-split="true"] {
   }
   
   /* Hide compact actions on tab cards */
-  article[data-card-type="tab"] .compact-actions-container {
+  & article[data-card-type="tab"] .compact-actions-container {
     display: none !important;
   }
   

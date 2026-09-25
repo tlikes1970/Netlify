@@ -1,10 +1,8 @@
 /* Settings Sheet - Mobile Compact V1 */
 /* Only active when both compact gate and settings sheet flag are enabled */
-html[data-compact-mobile-v1="true"][data-settings-sheet="true"] {
-  /* Prevent body scroll when sheet is open */
-  body {
-    overflow: hidden;
-  }
+/* Prevent body scroll when sheet is open */
+html[data-compact-mobile-v1="true"][data-settings-sheet="true"] body {
+  overflow: hidden;
 }
 
 /* Settings Sheet Overlay */
