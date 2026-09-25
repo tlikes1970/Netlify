@@ -46,7 +46,7 @@ Authorized order. Do not skip ahead.
 | # | Phase | Status |
 |---|--------|--------|
 | 1 | Known Android defects | Complete through Fix 5 (`04fbc38`) |
-| 2 | Device stress testing | **IN PROGRESS** — Pixel 9/API 35 defects DST-01 through DST-06 corrected; missing API/device images still outstanding |
+| 2 | Device stress testing | **COMPLETE** — real API 23/33/35/36 phone and API 33/36 tablet matrix exercised; DST-07 and DST-08 recorded, not fixed |
 | 3 | AI black-box usability testing | Not started |
 | 4 | Visual/design acceptance | Not started |
 | 5 | Maestro automated user journeys | Not started — do not install/configure until this phase |
@@ -203,6 +203,35 @@ Resume the remaining device/configuration matrix. Do not begin black-box UX test
 
 ### DEVICE STRESS TESTING — NEW DEFECTS (do not fix this phase)
 
+#### DST-07 — Declared API 23 baseline cannot execute the current web bundle
+
+- **Status:** CONFIRMED — not fixed in this diagnostic phase.
+- **Severity:** **RELEASE BLOCKER for the declared `minSdk 23` support claim**; HIGH if API 23 is explicitly removed from release support.
+- **Class:** WebView / JavaScript runtime compatibility.
+- **Configuration:** `Flicklet_P1_API23_Default`, Android 6.0 / API 23, AOSP default x86_64 image, 480×800 physical/logical at 240 dpi, three-button navigation, AOSP WebView `44.0.2403.119`.
+- **Repro:** Cold boot the clean default API 23 image → install the current debug APK → launch Flicklet.
+- **Expected:** Onboarding/Home renders and core navigation is reachable on the declared minimum API.
+- **Actual:** Native activity and inset bridge start, but the WebView remains a blank dark surface. Logcat reports `Uncaught SyntaxError: Unexpected token =>` at `https://localhost/` line 45.
+- **Comparison:** The same APK renders on API 33 WebView 109, API 35 reference WebView, and API 36 WebView 133. The API 23 Google APIs image is even less usable because it contains no WebView provider (`Chromium WebView package does not exist`).
+- **Reproduced:** Yes, across both available API 23 image variants; only the default image had a provider capable of reaching the JavaScript parse failure.
+- **Evidence:** `%TEMP%/flicklet-p1-api23-default-launch.png`, `%TEMP%/flicklet-p1-api23-launch.png`; Logcat parse error above. Evidence remains local and is not committed.
+- **Interpretation limit:** A real API 23 device with a Play-updated WebView may execute the bundle. The clean base OS image—the defensible minimum-runtime baseline—does not.
+
+#### DST-08 — Maximum font scale still clips primary chrome on narrower phones
+
+- **Status:** CONFIRMED — not fixed in this diagnostic phase.
+- **Severity:** HIGH at 2.0×; observation/crowding only at 1.5×.
+- **Class:** accessibility / font scaling / responsive component layout.
+- **Configurations:**
+  - Pixel 5 profile, Android 13 / API 33, 1080×2340 at 440 dpi (effective ~393×851), gesture navigation, WebView `109.0.5414.123`.
+  - Pixel 7 Pro profile, Android 16 / API 36, 1440×3120 at 560 dpi (effective ~411×891), gesture navigation, WebView `133.0.6943.137`.
+- **Repro:** Set Android `font_scale=2.0` → cold launch Home.
+- **Expected:** Wordmark/version, Search controls, and Home/Library/Discovery navigation remain complete and non-overlapping, as they do on the wider Pixel 9 verification case.
+- **Actual:** `Flicklet` overlaps the version string; Search wraps into an abnormally tall two-row control; the rightmost `Discovery` label reaches/clips the viewport edge. API 33 shows the same header/version collision and right-edge navigation loss. At 1.5× the version is crowded but remains readable; 1.3× passes.
+- **Comparison:** Pixel 9/API 35 at 2.0× passed DST-03 verification. API 33 and API 36 at 1.0×/1.3× are usable.
+- **Reproduced:** Yes on two Android versions and two actual phone profiles.
+- **Evidence:** `%TEMP%/flicklet-p2-api33-font2-retry.png`, `%TEMP%/flicklet-p5-api36-font2.0.png`, with 1.3×/1.5× comparison captures. Evidence remains local and is not committed.
+
 #### DST-01 — Home personality line clips at default size
 
 - **Status:** FIXED — see §3 FIXED. Original history retained.
@@ -296,25 +325,25 @@ Resume the remaining device/configuration matrix. Do not begin black-box UX test
 - **Stress-test finding (DST-06):** Forcing `innerWidth=768` on API 35 made both JS mobile and Tailwind `md` true, and Settings mixed mobile header with two-column stats. **Fixed** by moving JS mobile to `max-width: 767px`.
 - A related **1024px Tailwind `lg`** gate on Settings desktop chrome **did** become user-visible once Settings started reacting at 768px (landscape phone had no Close / no sidebar). That `lg` gate was removed as part of Fix 5.
 
-### TESTING REQUIRED (not complete)
+### DEVICE STRESS TESTING COMPLETION EVIDENCE
 
 Track evidence before marking pass:
 
 | Area | Status |
 |------|--------|
-| Android soft keyboard / viewport | Partial — IME appeared after typing on Pixel 9 Search; field stayed visible; suggestions above keyboard. Settings username IME not captured (app already backgrounded). |
-| API 23 small-screen | **NOT AVAILABLE** — no `android-23` system image/AVD on this SDK |
-| API 36 | **NOT AVAILABLE** — only `android-35` image installed |
-| Font scaling | Partial — DST-03 **fixed** at 1.0–2.0 on Pixel 9; remaining matrix still open |
-| Display scaling | Partial — `wm density` 320 → 540 CSS px (DOM ok); 490 → 353 CSS px; several `wm size/density` changes produced blank WebView frames (emulator override, not Play Display size UI) |
-| Tablet / large-screen | Partial — API 35 `wm size` simulation only (P7 800×1280 visible desktop chrome). No tablet AVD |
-| Gesture navigation | Partial pass — Pixel 9 API 35 |
-| Three-button navigation | Partial pass — Pixel 9 API 35; DST-05 Settings bottom **fixed** |
-| Portrait / landscape | Partial pass — Home/Settings settle; Filters+rotate DST-04 |
-| Cold launch | Pass — Pixel 9 debug APK |
-| Warm resume | Pass — Settings remained open after Home → resume |
-| Themes (light/dark) | Partial — light Settings Full Access readable; light Home not isolated this pass |
-| Major modal/overlay behavior | Partial — Settings ok; Filters overlay DST-04 |
+| Android soft keyboard / viewport | PASS on API 33 and API 36 phones — Search input remained visible, live suggestions usable, bottom navigation cleared the IME, and dismissal restored layout. Settings username was exercised visually but not treated as a full data-entry acceptance test. |
+| API 23 small-screen | FAIL — real API 23 AVDs exercised. Google APIs image has no WebView provider; default image reaches DST-07 JavaScript parse failure. |
+| API 36 | PASS with DST-08 — real large/tall phone and Pixel Tablet AVDs exercised with WebView 133. |
+| Font scaling | PASS through 1.5× on API 33/API 36 phone profiles; FAIL at 2.0× on narrower profiles (DST-08). API 23 is blocked before web UI. Tablet 2.0× exercised. |
+| Display scaling | PASS at default plus smaller/larger density on API 33; API 36 default and font/display reconfiguration exercised. `wm density` was used because reliable headless Settings UI automation for named display-size presets was unavailable. |
+| Tablet / large-screen | PASS — real API 33 7-inch WSVGA tablet (1024×600 / 600×1024) and real API 36 Pixel Tablet (2560×1600 at 320 dpi, effective 1280×800) exercised. |
+| Gesture navigation | PASS — API 33, API 35, API 36 phones. |
+| Three-button navigation | PASS where applicable — API 23 baseline and Pixel 9/API 35 reference; live Pixel 9 inset change 24px → 48px verified. |
+| Portrait / landscape | PASS — phone and both tablet profiles; Settings changes shell and four-sided inset values resynchronize. |
+| Cold launch | PASS API 33/35/36; FAIL API 23 per DST-07. |
+| Warm resume | PASS API 33/API 36; Settings state remained open on API 36 phone resume. |
+| Themes (light/dark) | Representative PASS — dark phone/tablet on API 33/36 and light tablet on API 33. API 23 theme UI unreachable because of DST-07. |
+| Major modal/overlay behavior | PASS — onboarding dialog and Settings overlay/sheet on phone/tablet; Filters Back/rotation remains covered by fixed DST-04 evidence. |
 
 ### RELEASE BLOCKERS TO VALIDATE
 
@@ -338,20 +367,29 @@ See also: `tests/manual/PLAY_BILLING_ONE_TIME.md`, [CURRENT_TASK.md](./CURRENT_T
 
 ## 4. Device / configuration matrix
 
+Installed for this gate with Android command-line tools 22.0 (`commandlinetools-win-15859902_latest.zip`, SHA-256 `90AE805D20434428BFFCB699C290860F19BB5F66A67E6B330067E3DE801FB04A`):
+
+- API 23 `default;x86_64` (AOSP WebView 44) and `google_apis;x86_64` (no provider)
+- API 33 `google_apis_playstore;x86_64` (WebView 109)
+- existing API 35 `google_apis_playstore;x86_64`
+- API 36 `google_apis_playstore;x86_64` (WebView 133)
+
+The API 36 headless AVD initially produced black WebView frames with deprecated `-gpu swiftshader_indirect`; relaunching the same AVD with supported `-gpu swiftshader` rendered normally. This was a test-environment graphics-path issue, not recorded as an application defect.
+
 | Configuration | Status | Evidence |
 |---------------|--------|----------|
-| P1 Android 6 / API 23 ~320×568 three-button | **NOT AVAILABLE** | SDK has only `system-images/android-35/google_apis_playstore`. Did **not** download other images. API 35 `wm size 320x568` density 160 produced DOM 320×568 but a blank screenshot (surface override). |
-| P2 Android 13 / API 33 ~393×873 gesture | **NOT AVAILABLE** | No API 33 image/AVD. |
-| P3 Pixel 9 / API 35 ~412×924 gesture | **PARTIAL PASS** | Smoke + core flows. DST-01, DST-02, DST-03, DST-04. |
-| P4 Pixel 9 / API 35 three-button | **PARTIAL PASS** | Landscape `--safe-right=48`; theme FAB right `860` vs protected `876`. DST-05 Settings bottom **fixed**. |
-| P5 ~430×930 API 15/16 gesture | **PARTIAL / NOT NATIVE** | No API 36 image. API 35 `wm size` → DOM 431×930; screenshot blank after override. |
-| P6 short landscape ~924×412 | **PARTIAL PASS** | Same Pixel 9 landscape. Settled Home uses desktop header/search. Settings desktop modal OK. DST-04 if Filters open. |
-| P7 7–8" ~800×1280 | **PARTIAL / SIMULATED** | API 35 `wm size 800x1280` density 160. Desktop top tabs + rails. Not a tablet AVD. |
-| P8 10–11" ~1280×800 | **NOT COMPLETE** | Size override did not yield a stable 1280×800 session (JSON stayed 800×1280). Desktop Settings modal captured over posters (`p8sim-settings.png`). |
-| Font scaling | PARTIAL | DST-03 |
-| Display scaling | PARTIAL | density 320/490; blank frames after some overrides |
-| Keyboard | PARTIAL | Search IME + suggestions; username field not verified |
-| Tablet / large-screen | PARTIAL | P7 sim only |
+| P1 Android 6 / API 23 minimum phone / three-button | **FAIL** | `Flicklet_P1_API23_Default`, default x86_64, 480×800 at 240 dpi, WebView 44: blank app with `Unexpected token =>` (DST-07). Google APIs x86_64 variant has no WebView provider. Target 320×568 could not be represented by an installed real hardware profile without artificial resizing. |
+| P2 Android 13 / API 33 ~393×851 gesture | **PASS with DST-08** | `Flicklet_P2_API33_Pixel5`, Play Store x86_64, 1080×2340 at 440 dpi, WebView 109. Home, Library, Search/IME, Settings, Back, rotation, and resume pass; 2.0× font fails. |
+| P3 Pixel 9 / API 35 ~412×924 gesture | **PASS** | Existing `Pixel_9`, Play Store x86_64, 1080×2424 at 420 dpi. Final reference launch reports CSS insets top 54.095 / bottom 24. |
+| P4 Pixel 9 / API 35 three-button | **PASS** | Live mode switch reports CSS bottom inset 48 (physical 126 / density 2.625), with stable app chrome. |
+| P5 large/tall Android 16 / API 36 phone | **PASS with DST-08** | `Flicklet_P5_API36_Large`, Pixel 7 Pro profile, Play Store x86_64, 1440×3120 at 560 dpi (~411×891), WebView 133. Home, Library, Search/IME, Settings, rotation, and resume pass; 2.0× font fails. |
+| P6 short landscape | **PASS** | Actual API 33 phone landscape (~851×393) plus API 35 reference (~924×412) and API 36 phone rotation. Desktop chrome/Settings settle; Insets re-synchronize. |
+| P7 real 7-inch tablet | **PASS** | `Flicklet_P7_API33_SmallTablet`, actual 7-inch WSVGA tablet profile, API 33 Google Play x86_64, 1024×600 at 160 dpi and portrait 600×1024. Home, Library, Settings, rotation, theme/font checks pass. |
+| P8 real Pixel Tablet | **PASS** | `Flicklet_P8_API36_PixelTablet`, API 36 Play Store x86_64, 2560×1600 at 320 dpi (1280×800 logical), WebView 133. Onboarding, Home, Library, Settings, portrait/landscape, Back and resume pass. |
+| Font scaling | **FAIL at maximum** | 1.0× and 1.3× pass; 1.5× usable with crowding; 2.0× fails on API 33/API 36 narrower phones (DST-08). API 23 unavailable after launch failure. |
+| Display scaling | **PASS / METHOD LIMITED** | API 33 default 440, smaller 400, and larger 480 dpi all rendered after clean relaunch. These were controlled density settings, not manually selected Settings-app labels. |
+| Keyboard | **PASS** | Normal Gboard Search flow with results on API 33 and API 36; dismissal restores viewport/navigation. |
+| Tablet / large-screen | **PASS** | P7 and P8 are real tablet AVD profiles, not resized phones. |
 
 ---
 
@@ -462,11 +500,11 @@ These remain product/tech items from existing control docs. They are **not** the
 | Field | Value |
 |-------|--------|
 | Branch | `codex/establish-baseline` |
-| Verified application-fix commit | `99a3b338aeedbfb8619abb16df8f772fbe206baa` |
-| Application-fix message | Keep mobile personality messages fully readable |
-| Current phase | 2 — **DEVICE STRESS TESTING — IN PROGRESS** |
-| Current authorized task | Authorized DST-01 through DST-06 correction batch complete. Do **not** start black-box UX or Maestro. |
-| Latest test evidence | 231/231 automated tests; TypeScript; production + mobile builds; Firebase functions; Capacitor sync; Android debug build/install/launch. Pixel 9/API 35 gesture + three-button smoke passed Home, Library, Search, Settings, Filters, font 1.0/2.0, portrait/landscape, rotation, and Filters Back. API 23/33/36 and real tablet AVDs remain outstanding. |
+| Verified application checkpoint | `36df1459864d105e8345f1e00e7decc80bfd2918` |
+| Application source changes in this gate | None |
+| Current phase | 2 — **DEVICE STRESS TESTING COMPLETE** |
+| Current authorized task | Complete the matrix and record evidence only. Done. Do **not** start black-box UX, fixes, or Maestro without separate authorization. |
+| Latest test evidence | Real API 23/33/35/36 phone coverage; real API 33/API 36 tablet coverage; Search IME on API 33/API 36; phone font scale 1.0/1.3/1.5/2.0; API 33 density 400/440/480; gesture/three-button; portrait/landscape; cold launch/resume; dark/light representative checks. New findings: DST-07 (API 23 base WebView cannot parse bundle) and DST-08 (2.0× font regression on narrower phones). |
 
 ---
 
