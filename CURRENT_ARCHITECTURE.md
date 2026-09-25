@@ -1,6 +1,6 @@
 # Current Architecture — Flicklet TV Tracker
 
-Last updated: 2026-06-03
+Last updated: 2026-09-24 (reconstructed repository baseline)
 
 This document is the **source of truth for how the repo is organized and deployed today**. Update it when folders, deploy branches, service boundaries, or runtime behavior (especially Capacitor / env) change.
 
@@ -34,7 +34,7 @@ Update the affected doc(s) after changes that impact product direction, architec
 
 **Billing:** Google Play Billing for Android — **end-to-end validation still required**. Apple deferred.
 
-**Auth (Android-first):** Google native sign-in on Capacitor (`googleAuthNative.ts`, `VITE_GOOGLE_WEB_CLIENT_ID`). Apple login should not ship on Android-first release. Username optional; **legal full names must not appear in UI**.
+**Auth (Android-first):** Google native sign-in on Capacitor via **patched** `@codetrix-studio/capacitor-google-auth@3.4.0-rc.4` (`googleAuthNative.ts` → `GoogleAuth` → Firebase `signInWithCredential`; `VITE_GOOGLE_WEB_CLIENT_ID`). Apple login should not ship on Android-first release. Username optional; **legal full names must not appear in UI**. **Planned post-testing:** migrate to `@capgo/capacitor-social-login@7.x` (see § Android native build).
 
 ---
 
@@ -53,7 +53,7 @@ Update the affected doc(s) after changes that impact product direction, architec
 
 - **Role:** Core mobile UX — reduce tab clutter (Currently Watching / Want To Watch / Watched).
 - **Goal:** One Library-style experience with quick status moves and custom lists preserved; avoid cluttered mega-dashboard.
-- **Status:** Direction only; not implemented.
+- **Status:** Implemented since visible version 0.1.175 (`LibraryPage`, `lib/navigation.ts`, three-tab mobile nav); current visible version is **0.1.177**. **Device QA remains open** — see [CURRENT_TASK.md](./CURRENT_TASK.md).
 
 ### Confirmation + action feedback
 
@@ -74,8 +74,10 @@ Update the affected doc(s) after changes that impact product direction, architec
 | `netlify/functions/` | **Production serverless functions** |
 | `netlify.toml` | Netlify build, dev, redirects, function directory |
 | `android/` | Capacitor Android shell (`com.TravisL.tvtracker`) |
+| `patches/` | **`patch-package` diffs** — required after `npm install` for Android build (Codetrix + Capacitor Android) |
+| `scripts/setup-android-jdk.ps1` | Align `JAVA_HOME` / Gradle JDK with Android Studio JBR (Java 21) |
 | `capacitor.config.json` | Capacitor `webDir`: `apps/web/dist` |
-| `docs/` | Maintainer docs |
+| `docs/` | Maintainer docs — **admin/trial ops:** [docs/ADMIN_OPERATIONS.md](./docs/ADMIN_OPERATIONS.md) |
 | `package.json` (repo root) | Root scripts; **`npx netlify dev` from repo root** |
 
 ### Do not treat as active without audit
@@ -124,6 +126,64 @@ npm run mobile:build   # apps/web --mode mobile (optional env)
 npm run mobile:sync    # build + cap copy/sync
 ```
 
+**Gradle JDK (Option A — align Studio + CLI):** Use Android Studio bundled JBR (Java 21). Run once from repo root:
+
+```powershell
+.\scripts\setup-android-jdk.ps1
+```
+
+Then restart terminals and Android Studio. The script sets user `JAVA_HOME` to `C:\Program Files\Android\Android Studio\jbr`, prepends JBR to the user `Path`, and writes `org.gradle.java.home` to `%USERPROFILE%\.gradle\gradle.properties`. It does not put a machine-specific path in the repository. IDE: `.idea/gradle.xml` uses `gradleJvm=#JAVA_HOME`.
+
+---
+
+## Android native build (Capacitor shell)
+
+**Verified 2026-09-24:** the production and mobile Vite builds succeed, and `cd android && .\gradlew.bat :app:assembleDebug` succeeds with JBR 21. `npm run mobile:sync` did not complete on this workstation because its Node 24 runtime is outside the repository's declared `>=18 <21` range; run the complete Capacitor sync on Node 20 before release. Current visible app version: **0.1.177**.
+
+### Toolchain (pinned in repo)
+
+| Component | Version / location |
+|-----------|-------------------|
+| **Gradle** | 9.6.1 (`android/gradle/wrapper/gradle-wrapper.properties`) |
+| **Android Gradle Plugin** | 9.2.1 (`android/build.gradle` buildscript) |
+| **Capacitor** | 7.4.4 (`@capacitor/android`, `@capacitor/core`, CLI — root `package.json`) |
+| **Compile Java** | **21** (Capacitor Android library; app via `capacitor.build.gradle`) |
+| **Java toolchain** | `android/build.gradle` — subproject `JavaCompile` → language version 21 (covers CLI on JDK 17) |
+
+### `patch-package` install contract
+
+Root `package.json`:
+
+```json
+"postinstall": "patch-package"
+```
+
+**After every `npm install`:** patches under `patches/` are applied automatically.
+
+| Patch file | Package | Purpose |
+|------------|---------|---------|
+| `patches/@codetrix-studio+capacitor-google-auth+3.4.0-rc.4.patch` | `@codetrix-studio/capacitor-google-auth@3.4.0-rc.4` | Remove `jcenter()`; `google()` + `mavenCentral()`; pin `play-services-auth:21.2.0`; AGP 9 ProGuard file |
+| `patches/@capacitor+android+7.4.4.patch` | `@capacitor/android@7.4.4` | AGP 9: `proguard-android.txt` → `proguard-android-optimize.txt` in library `release` block |
+
+**Committed app change (not patch):** `android/app/build.gradle` — same ProGuard file swap in app `release` `buildTypes`.
+
+**Rules:**
+
+- **Do not** edit `node_modules` manually — fixes must be reproducible via `patch-package` or by replacing the dependency.
+- **Do not** run `npm install --ignore-scripts` on this repo.
+- Fresh installs may require `npm install --legacy-peer-deps` (Codetrix declares Capacitor 6 peer; project uses Capacitor 7).
+
+### Native Google Sign-In (current)
+
+| Layer | Detail |
+|-------|--------|
+| **NPM** | `@codetrix-studio/capacitor-google-auth@^3.4.0-rc.4` (root + `apps/web/package.json`) |
+| **Android module** | `:codetrix-studio-capacitor-google-auth` (`android/capacitor.settings.gradle`) |
+| **Client** | `apps/web/src/lib/googleAuthNative.ts` — unchanged by Gradle patches |
+| **Env** | `VITE_GOOGLE_WEB_CLIENT_ID` (e.g. `apps/web/.env.mobile`) |
+
+**Long-term (post Play / internal testing):** Replace Codetrix with `@capgo/capacitor-social-login@7.x`; remove Codetrix patch; migrate client + `MainActivity` per Capgo docs. Until then, patched Codetrix is **tactical debt**, not architecture.
+
 ---
 
 ## Environment variable rules
@@ -169,7 +229,7 @@ Helpers: `apiUrl('/api/...')` for billing and other Netlify routes; TMDB modules
 
 ### Auth
 
-- Native Google Sign-In → Firebase `signInWithCredential`; requires correct Web OAuth client ID in env.
+- Native Google Sign-In via **patched Codetrix plugin** → Firebase `signInWithCredential`; requires correct Web OAuth client ID in env. Gradle patches do not change JS/native auth API surface.
 
 ### Billing (one-time Full Access)
 
@@ -179,11 +239,13 @@ Helpers: `apiUrl('/api/...')` for billing and other Netlify routes; TMDB modules
 | **Client flow** | `startProUpgrade()` → `proUpgrade.ts` → Capacitor `Billing` plugin → `POST /api/billing/validate` |
 | **Android native** | `BillingPlugin.java` — query/purchase/restore **INAPP** (not SUBS) |
 | **Server** | `netlify/functions/billing/products.cjs`, `validate.cjs` — `purchaseType: one_time`, long-lived `currentPeriodEnd` |
-| **Entitlement** | Firestore `users/{uid}/billing/status` → `useProStatus` (`isPro` internal name) → `useEntitlements`; trial/read-only unchanged |
+| **Paid entitlement** | Firestore `users/{uid}/billing/status` → `useProStatus` (`isPro` internal name) → `useEntitlements` |
+| **Trial entitlement** | Firestore `users/{uid}/entitlements/trial` → `trialEntitlement.ts` — one lifetime 21-day trial per Firebase account; local `flicklet.trial.v1` is cache only |
+| **Read-only** | After trial expiry without purchase; export + purchase still available; admin reset via `resetTrialEntitlement` (see [docs/ADMIN_OPERATIONS.md](./docs/ADMIN_OPERATIONS.md)) |
 | **Validation** | **Stub** — real `purchases.products.get` TODO in `validate.cjs` |
 | **Success UX** | Toast: “Purchase confirmed. Full Access unlocked.” (`pro-upgrade-success` → `App.tsx`) |
 
-Legacy subscription product IDs are not used by the current app build.
+Legacy subscription product IDs are not used by the current app build. **Guest users do not receive a trial** (sign-in required).
 
 ---
 
@@ -241,6 +303,8 @@ Redirects: `/api/tmdb-proxy` → `tmdb-proxy`, etc. (`netlify.toml`).
 3. **Legacy roots:** `_legacy_v1`, `legacy/`, `_repo_cleanup_archive/` — easy to edit wrong files; use `apps/web/src` only for active UI.
 4. **Capacitor vs web API base:** Relative `/api/*` only works with a real HTTP origin; native needs `apiConfig` fallback or mobile env.
 5. **For You storage vs settings:** Home rails use `forYouRowsStorage`; not `settings.layout.forYouGenres`.
+6. **`node_modules` Android Gradle files:** Upstream Capacitor/Codetrix defaults break under Gradle 9 / AGP 9 — use `patches/` + `postinstall`, not hand-edits.
+7. **Visible app version vs Android `versionName`:** UI uses `apps/web/src/version.ts` (`APP_VERSION`, currently **0.1.177**); Android `VERSION_NAME` in tracked `android/gradle.properties` may differ unless explicitly set for a release build.
 
 ---
 
@@ -255,11 +319,16 @@ Redirects: `/api/tmdb-proxy` → `tmdb-proxy`, etc. (`netlify.toml`).
 | Where are local frontend env vars? | `apps/web/.env` |
 | What branch is production? | `simplify/try-before-buy-v1` |
 | What terms do we use? | Trial / Read-Only / Full Access |
+| Where is trial stored? | Firestore `users/{uid}/entitlements/trial` (authoritative); admin ops → [docs/ADMIN_OPERATIONS.md](./docs/ADMIN_OPERATIONS.md) |
 | How does Android call APIs? | `apiConfig` → production Netlify when native |
 | Where are For You genres stored? | `flicklet:forYouRows:v2:{uid}` locally |
+| Visible app version (UI)? | `apps/web/src/version.ts` → `APP_VERSION` (currently **0.1.177**) |
+| Android debug build command? | `cd android` → `.\gradlew.bat :app:assembleDebug` |
+| Why patch-package? | Codetrix `jcenter()` + AGP 9 ProGuard defaults in dependencies |
+| Native Google auth plugin? | Patched Codetrix; Capgo migration after Play testing |
 
 ---
 
 ## Near-term milestone
 
-**Play Store internal testing** with working Android install, Google login, TMDB/search/posters, on-device For You persistence, and validated billing/feedback paths. Core product build-out: **personality layer**, **Unified Library**, **confirmation/feedback UX**.
+**Play Store internal testing** with a reproducible Node 20 Capacitor sync, signed release build, Google login, TMDB/search/posters, on-device For You persistence, and validated billing/feedback paths. **In flight:** Unified Library device QA. Core product build-out: **personality layer**, **confirmation/feedback UX**. **After testing:** Capgo native auth migration to drop Codetrix `patch-package` debt.

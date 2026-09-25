@@ -26,22 +26,27 @@ if ($userPath -notlike "*$binPath*") {
     $env:Path = "$binPath;$env:Path"
 }
 
-# CLI Gradle from android/ (gradle.properties is gitignored — local only)
-$repoRoot = Split-Path $PSScriptRoot -Parent
-$gradleProps = Join-Path $repoRoot 'android\gradle.properties'
+# CLI Gradle configuration belongs in the user's Gradle home, never in the
+# repository's tracked android/gradle.properties.
+$gradleHome = Join-Path $env:USERPROFILE '.gradle'
+$gradleProps = Join-Path $gradleHome 'gradle.properties'
 $javaHomeLine = "org.gradle.java.home=$($JbrHome -replace '\\', '/')"
-if (Test-Path $gradleProps) {
+if (-not (Test-Path $gradleHome)) {
+    New-Item -ItemType Directory -Path $gradleHome | Out-Null
+}
+
+if (Test-Path -LiteralPath $gradleProps) {
     $content = Get-Content $gradleProps -Raw
     if ($content -match '(?m)^org\.gradle\.java\.home=') {
         $content = $content -replace '(?m)^org\.gradle\.java\.home=.*', $javaHomeLine
     } else {
         $content = $content.TrimEnd() + "`n`n# Option A: same JDK as Android Studio Gradle (see scripts/setup-android-jdk.ps1)`n$javaHomeLine`n"
     }
-    Set-Content -Path $gradleProps -Value $content -NoNewline
-    Write-Host "Updated android/gradle.properties (org.gradle.java.home)"
+    Set-Content -LiteralPath $gradleProps -Value $content -NoNewline
 } else {
-    Write-Warning 'android/gradle.properties not found - create from your local template, then re-run.'
+    Set-Content -LiteralPath $gradleProps -Value "$javaHomeLine`n" -NoNewline
 }
+Write-Host "Updated $gradleProps (org.gradle.java.home)"
 
 Write-Host ''
 Write-Host 'Done. Next steps:'

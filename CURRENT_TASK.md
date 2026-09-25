@@ -1,6 +1,6 @@
 # Current Task — Flicklet TV Tracker
 
-Last updated: 2026-06-02
+Last updated: 2026-09-24
 
 ---
 
@@ -20,11 +20,14 @@ Last updated: 2026-06-02
 
 ## Current branch
 
-`simplify/try-before-buy-v1` — matches Netlify production deploy branch.
+`codex/establish-baseline` — reconstructed, reviewable baseline derived from the preserved pre-baseline working tree.
 
-**Recent push:** `9da7424` — Android TMDB API routing, For You row persistence, trial/Full Access copy, repo cleanup archive.
+**Preservation point:** branch `codex/preserve-working-tree-20260924`, commit `26cdc0d`, contains the complete pre-baseline working tree.
 
-**In progress (local, may be uncommitted):** One-time Full Access billing migration — INAPP `flicklet_full_access`, subscription SKUs removed from purchase path; see `tests/manual/PLAY_BILLING_ONE_TIME.md`.
+**In progress (local, may be uncommitted):**
+
+- **Unified Library (mobile)** at visible version **0.1.177** — Home / Library / Discover tabs; Library segments (Watching, Want, Watched, Returning, My Lists). **Needs device QA** before treating as done.
+- One-time Full Access billing migration — INAPP `flicklet_full_access`; see `tests/manual/PLAY_BILLING_ONE_TIME.md`.
 
 ---
 
@@ -36,16 +39,21 @@ Success looks like: Android build installs cleanly, Google login works, TMDB/sea
 
 ---
 
-## Recently verified (2026-06-03)
+## Recently verified (2026-06-03 – 2026-06-04)
 
 | Area | Status |
 |------|--------|
 | Android install / debug run on phone | ✅ Works |
-| Google native sign-in (Android) | ✅ Works after `VITE_GOOGLE_WEB_CLIENT_ID` + Firebase/Google auth config |
+| **Android debug APK build (CLI)** | ✅ `android/gradlew.bat :app:assembleDebug` after patch-package + ProGuard + Java 21 fixes (2026-06-04) |
+| **`npm run mobile:sync`** | ⚠️ Mobile Vite build succeeds, but Capacitor sync crashes under this workstation's unsupported Node 24 runtime; rerun on Node 20 |
+| Google native sign-in (Android) | ✅ Works after `VITE_GOOGLE_WEB_CLIENT_ID` + Firebase/Google auth config; **native path unchanged** by Gradle patches |
 | TMDB / search / posters (Android) | ✅ Works after `apiConfig` Capacitor → production Netlify `/api/*` fallback |
 | For You row persistence (same device) | ✅ Versioned uid-scoped storage; survives sign-out/sign-in for same account |
 | Trial / Read-Only / Full Access copy | ✅ Centralized; user-facing Pro/subscription/premium-theme wording removed from active UI |
+| **Server-backed trial entitlement** | ✅ Repository implementation, rules, tests, and `resetTrialEntitlement` are present. ⚠️ Deployment state was not verified from this checkout. Ops: [docs/ADMIN_OPERATIONS.md](./docs/ADMIN_OPERATIONS.md) |
 | Android TMDB routing / stale For You rows | ✅ No longer Play Store test blockers |
+
+**Android build contract (do not lose):** Root `postinstall` → `patch-package`. Patches under `patches/` (Codetrix `jcenter`/ProGuard, `@capacitor/android` ProGuard). See [CURRENT_ARCHITECTURE.md](./CURRENT_ARCHITECTURE.md) § Android native build.
 
 ---
 
@@ -64,15 +72,15 @@ Success looks like: Android build installs cleanly, Google login works, TMDB/sea
 
 ### Critical (block Play Store test or revenue path)
 
+- [ ] **Unified Library — device QA** on Android: three-tab nav, Library segments, deep links / `navigate-to-tab`, legacy `setView` shim.
 - [ ] Validate **Google Play Billing** + **Full Access** one-time INAPP end-to-end per `tests/manual/PLAY_BILLING_ONE_TIME.md` (trial expiry, read-only, purchase, reinstall/Firestore).
 - [ ] **Signed release / internal testing track** — build, upload, install from Play Console (not only debug APK).
 - [ ] Verify **feedback** reaches Travis inbox in **production** (`POST /api/feedback` → SendGrid; Netlify env vars set).
-- [ ] Smoke-test **Trial / Read-Only / Full Access** gating and copy on Android release build.
+- [ ] Smoke-test **Trial / Read-Only / Full Access** gating and copy on Android release build — trial persistence across reinstall/sign-out: [tests/manual/TRIAL_REMINDERS_PRO_UX_SMOKE.md](./tests/manual/TRIAL_REMINDERS_PRO_UX_SMOKE.md); admin reset: [docs/ADMIN_OPERATIONS.md](./docs/ADMIN_OPERATIONS.md).
 
 ### High — core product direction (not “polish later”)
 
 - [ ] **WTForecast-style rotating personality system** — curated/static pools (not runtime AI). Surfaces: home headers, recommendation intros, empty states, toasts, confirmations, reminders, errors, fake motivational/context cards. Support intensity levels in settings. Tone: witty, short, memorable, app-store safe — not cruel, not repetitive, not generic. **This is core product identity** (screenshot-worthy, discussion-worthy).
-- [ ] **Unified Library (mobile)** — consolidate Currently Watching / Want To Watch / Watched into one Library-style experience; reduce tab clutter; preserve quick status moves and custom lists; avoid a cluttered mega-dashboard.
 - [ ] **Confirmation + action feedback layer** — “Are you sure?” before destructive/meaningful actions (delete, remove, clear, destructive move/reset, delete list, remove reminder data). Confirmation toasts/snackbars after meaningful actions (add, move, delete, reminder saved/removed, import/export, restore, Full Access state changes). **No silent state changes.**
 
 ### High — likely tester-visible bugs
@@ -100,6 +108,7 @@ Success looks like: Android build installs cleanly, Google login works, TMDB/sea
 
 ### Lower (cleanup + tech debt)
 
+- [ ] **Post Play / internal testing — native Google auth migration:** Replace patched `@codetrix-studio/capacitor-google-auth@3.4.0-rc.4` with `@capgo/capacitor-social-login@7.x`; follow Capgo `MIGRATION_CODETRIX.md`; remove `patches/@codetrix-studio+capacitor-google-auth+3.4.0-rc.4.patch` and `postinstall` if no patches remain. **Not before** Play/internal sign-in regression pass. Tactical debt only — see [KNOWN_ISSUES.md](./KNOWN_ISSUES.md).
 - [ ] Finish **repo cleanup**; keep `_repo_cleanup_archive/` as quarantine only.
 - [ ] Audit **`functions/`** tree vs `netlify/functions` — document owners, delete only with proof.
 - [ ] Deduplicate **`send-email.cjs`** vs **`feedback.cjs`** if redundant.
@@ -125,7 +134,9 @@ Success looks like: Android build installs cleanly, Google login works, TMDB/sea
 | For You rows (current) | Local `flicklet:forYouRows:v2:{uid}`; guest separate; legacy key migrated; not cross-device yet |
 | Capacitor API | Production Netlify origin fallback via `apiConfig` when env unset |
 | Personality | WTForecast-style **curated rotating pools** — core differentiator, in scope |
-| Mobile nav | Unified Library direction — core UX, in scope |
+| Mobile nav | Unified Library is present in the current **0.1.177** code — device QA + Play internal testing remain open |
+| Android native build | Gradle **9.6.1**, AGP **9.2.1**, Java **21**; `patch-package` patches required after `npm install` |
+| Native Google auth (current) | Patched **Codetrix** `@3.4.0-rc.4` — migrate to **Capgo** after Play/internal testing |
 
 ---
 
@@ -136,6 +147,7 @@ Success looks like: Android build installs cleanly, Google login works, TMDB/sea
 - **Uncurated / runtime-AI personality generation** or broad copy churn unrelated to the approved WTForecast-style rotating personality system
 - Deleting `functions/` without audit
 - Large Firebase/settings architecture migration for For You rows (unless blocking cross-device expectation)
+- **Capgo / `@capacitor-social-login` migration** unless Codetrix patch breaks (use post-testing task above)
 
 ---
 

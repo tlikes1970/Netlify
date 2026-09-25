@@ -1,6 +1,6 @@
 # Known Issues — Flicklet TV Tracker
 
-Last updated: 2026-06-02
+Last updated: 2026-09-24
 
 Tracked problems, uncertainties, and tech debt. **Do not modify app code from this file alone** — use it to prioritize fixes. See [CURRENT_TASK.md](./CURRENT_TASK.md) for sprint actions.
 
@@ -25,6 +25,29 @@ Tracked problems, uncertainties, and tech debt. **Do not modify app code from th
 - **Was:** Missing/wrong OAuth client config for WebView native flow.
 - **Fix:** `VITE_GOOGLE_WEB_CLIENT_ID` (e.g. `apps/web/.env.mobile`) + Firebase/Google auth alignment.
 - **Status:** ✅ Verified on device/debug build.
+
+### Android Gradle — Codetrix `jcenter()` / Gradle 9 (2026-06-04)
+
+- **Was:** `Could not find method jcenter()` — Gradle **9.6.1** no longer supports the `jcenter()` repository API; `@codetrix-studio/capacitor-google-auth@3.4.0-rc.4` still called it in `android/build.gradle`.
+- **Fix:** Reproducible `patch-package` patch (root `package.json` → `"postinstall": "patch-package"`):
+  - **File:** `patches/@codetrix-studio+capacitor-google-auth+3.4.0-rc.4.patch`
+  - **Changes:** remove all `jcenter()`; use `google()` + `mavenCentral()`; pin `com.google.android.gms:play-services-auth:21.2.0` (was `18.+`).
+- **Auth behavior:** Unchanged — still `googleAuthNative.ts` → `GoogleAuth.initialize()` / `signIn()` → Firebase `signInWithCredential`.
+- **Status:** ✅ Resolved for configure/build. **Not** a long-term architecture choice.
+
+### Android Gradle — AGP 9 ProGuard default file (2026-06-04)
+
+- **Was:** `getDefaultProguardFile('proguard-android.txt')` no longer supported under **AGP 9.2.1** (`invalid` at evaluate time even with `minifyEnabled false`).
+- **Fix:**
+  - **App:** `android/app/build.gradle` release `buildTypes` → `proguard-android-optimize.txt`
+  - **Dependencies (patch-package):** same one-line change in `patches/@capacitor+android+7.4.4.patch` and Codetrix patch (plugin library `release` block).
+- **Status:** ✅ Project configure and compile pass ProGuard check.
+
+### Android Gradle — Java 21 vs JDK 17 (2026-06-04)
+
+- **Was:** `:capacitor-android:compileDebugJavaWithJavac` → `invalid source release: 21` when Gradle daemon used JDK 17.
+- **Fix:** `android/build.gradle` — `subprojects { ... JavaCompile ... languageVersion.of(21) }` toolchain block. **Recommended:** align `JAVA_HOME` with Android Studio JBR via `scripts/setup-android-jdk.ps1` (see architecture doc).
+- **Status:** ✅ `:app:assembleDebug` and typecheck succeed. ⚠️ The mobile Vite build succeeds, but `npm run mobile:sync` cannot complete on the current Node 24 host; the project declares Node `>=18 <21`, so full sync must be repeated on Node 20. Non-fatal AGP deprecation warnings remain.
 
 ---
 
@@ -66,14 +89,54 @@ Tracked problems, uncertainties, and tech debt. **Do not modify app code from th
 
 ### Unified Library / mobile tab consolidation
 
-- **Status:** Not implemented. **Core mobile UX direction.**
-- **Intent:** One Library-style surface for Currently Watching / Want To Watch / Watched; less tab clutter; room for personality surfaces; keep quick status changes and custom lists without a mega-dashboard.
+- **Status:** **Implemented in code at 0.1.175** — Home / Library / Discover; Library segments + legacy route shim. **Device QA open** (not a build blocker).
+- **Intent:** One Library-style surface for Currently Watching / Want To Watch / Watched; less tab clutter; keep quick status changes and custom lists without a mega-dashboard.
 
 ### Confirmation and action feedback layer
 
 - **Status:** Not implemented. **High priority for trust.**
 - **Missing:** Destructive “Are you sure?” prompts (delete, remove, clear, reset, delete list, reminder removal). Post-action confirmation toasts (add, move, delete, reminder save/remove, import/export, restore, Full Access changes).
 - **Risk:** Silent state changes confuse testers and increase support burden.
+
+---
+
+## Android build / native plugins (known debt)
+
+### Patched Codetrix Google Auth — tactical, not final
+
+| Item | Detail |
+|------|--------|
+| **Package** | `@codetrix-studio/capacitor-google-auth@3.4.0-rc.4` (latest npm; prerelease) |
+| **Official target** | Capacitor **6** (`peer: ^6`); project runs Capacitor **7.4.4** |
+| **Maintenance** | Effectively unmaintained; upstream still has `jcenter()` on master |
+| **Local fix** | `patches/@codetrix-studio+capacitor-google-auth+3.4.0-rc.4.patch` |
+
+**Install contract:**
+
+- Root **`postinstall`** must run **`patch-package`** after every `npm install`.
+- **Do not** use `npm install --ignore-scripts` (patches will not apply → Android build breaks).
+- Fresh installs may need **`npm install --legacy-peer-deps`** (Codetrix peer vs Capacitor 7 mismatch).
+
+**Do not** edit `node_modules` by hand — changes are lost on reinstall. Fix via `patch-package` or dependency replacement.
+
+### Capgo migration (future — after Play / internal testing)
+
+- **Target:** `@capgo/capacitor-social-login@7.x` (Capacitor 7–aligned).
+- **When:** After native Google sign-in regression on Play/internal track — **not** during current sprint unless patch breaks.
+- **Then:** Remove Codetrix patch; update `googleAuthNative.ts` + Android wiring per Capgo migration guide.
+
+### Remaining Android build warnings (non-fatal)
+
+- AGP 9 deprecated `android.*` flags in `gradle.properties`
+- `flatDir` repository warnings
+- Capacitor core vs android minor version skew warning on `cap sync`
+- Java compile deprecation notes (Codetrix plugin, `BillingPlugin`)
+
+### Signing configuration requires release setup
+
+- The active tracked Gradle configuration no longer contains plaintext release credentials.
+- A release keystore was not present in this checkout, so a signed release build has not been verified.
+- Credentials formerly present in repository state/history should be treated as exposed and rotated before release.
 
 ---
 
@@ -110,7 +173,9 @@ Tracked problems, uncertainties, and tech debt. **Do not modify app code from th
 
 - **Migrated (2026-06-02):** Subscription SKUs removed from active path. Single INAPP `flicklet_full_access` (`apps/web/src/lib/billingProducts.ts`); Android `BillingPlugin` uses INAPP; `validate.cjs` writes `purchaseType: one_time` to Firestore `users/{uid}/billing/status` (internal `isPro` unchanged).
 - **Stub validation:** `validate.cjs` does **not** call Google Play Developer API yet — not fraud-safe for production.
-- **Uncertain on device:** Trial countdown, read-only enforcement, internal-testing purchase, reinstall entitlement, second-account isolation.
+- **Uncertain on device:** Internal-testing purchase E2E and read-only enforcement edge cases. Repository code and rules implement the server trial path, but the current deployment state was not verifiable from this checkout.
+- **Implemented in the repository:** Trial is server-backed at `users/{uid}/entitlements/trial` and is intended to survive reinstall, sign-out/sign-in, and device changes. Guest users do not receive a trial. See [docs/ADMIN_OPERATIONS.md](docs/ADMIN_OPERATIONS.md). Production deployment and behavior still require verification.
+- **Still open:** Second-account isolation for **billing** (not trial) — verify per account in Play internal testing.
 - **No Settings “Restore purchases” button** — reinstall + Firestore read is v1 recovery; native `restorePurchases` exists in plugin only.
 - **Manual test doc:** `tests/manual/PLAY_BILLING_ONE_TIME.md`
 - **Status:** **Critical open** for Play Store internal testing (Play Console INAPP product + signed track required).
