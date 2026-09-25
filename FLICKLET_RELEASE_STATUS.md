@@ -205,8 +205,9 @@ Resume the remaining device/configuration matrix. Do not begin black-box UX test
 
 #### DST-07 — Declared API 23 baseline cannot execute the current web bundle
 
-- **Status:** CONFIRMED — not fixed in this diagnostic phase.
-- **Severity:** **RELEASE BLOCKER for the declared `minSdk 23` support claim**; HIGH if API 23 is explicitly removed from release support.
+- **Status:** RESOLVED — supported Android floor raised to API 31; historical failures retained below.
+- **Resolution:** `minSdkVersion=31` (Android 12). No legacy transpilation, polyfill, or WebView-management layer was added.
+- **Severity before resolution:** **RELEASE BLOCKER for the former `minSdk 23` support claim**.
 - **Class:** WebView / JavaScript runtime compatibility.
 - **Configuration:** `Flicklet_P1_API23_Default`, Android 6.0 / API 23, AOSP default x86_64 image, 480×800 physical/logical at 240 dpi, three-button navigation, AOSP WebView `44.0.2403.119`.
 - **Repro:** Cold boot the clean default API 23 image → install the current debug APK → launch Flicklet.
@@ -216,6 +217,12 @@ Resume the remaining device/configuration matrix. Do not begin black-box UX test
 - **Reproduced:** Yes, across both available API 23 image variants; only the default image had a provider capable of reaching the JavaScript parse failure.
 - **Evidence:** `%TEMP%/flicklet-p1-api23-default-launch.png`, `%TEMP%/flicklet-p1-api23-launch.png`; Logcat parse error above. Evidence remains local and is not committed.
 - **Interpretation limit:** A real API 23 device with a Play-updated WebView may execute the bundle. The clean base OS image—the defensible minimum-runtime baseline—does not.
+- **Boundary evidence:**
+  - API 24 stock WebView: parse failure (`Unexpected token (`).
+  - API 26 and API 28 Google image, Chrome/WebView 69: bundle parses, then startup fails because `globalThis` is undefined.
+  - API 29 / WebView 74 and API 30 / WebView 83: application starts, but the wordmark or primary dark-theme controls render incorrectly, so these are not clean product support floors.
+  - API 31 / WebView 91: launch and current dark-theme chrome render correctly without compatibility machinery.
+- **Decision rationale:** API 31 is the first tested stock environment that runs and renders the existing modern bundle correctly. Supporting lower versions would require new legacy-browser behavior or accepting known visual/runtime failures, contrary to the low-maintenance one-time-purchase strategy.
 
 #### DST-08 — Maximum font scale still clips primary chrome on narrower phones
 
