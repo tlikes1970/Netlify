@@ -3,6 +3,7 @@ import {
   MOBILE_NAV_BASE_HEIGHT,
   applySafeAreaFromNative,
   mobileFabInlineInset,
+  mobileNavControlBottom,
   readMobileNavClearancePx,
   readSafeInsetPx,
 } from '@/lib/capacitorSafeArea';
@@ -71,5 +72,13 @@ describe('mobileFabInlineInset', () => {
   it('adds the matching horizontal safe-area variable to the existing gutter', () => {
     expect(mobileFabInlineInset(16, 'right')).toBe('calc(16px + var(--safe-right, 0px))');
     expect(mobileFabInlineInset(16, 'left')).toBe('calc(16px + var(--safe-left, 0px))');
+  });
+});
+
+describe('mobileNavControlBottom', () => {
+  it('docks controls inside the mobile nav above the system inset', () => {
+    expect(mobileNavControlBottom(4, 0)).toBe(
+      'calc(var(--safe-bottom, 0px) + 0px + 4px)'
+    );
   });
 });

@@ -254,7 +254,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
   return (
     <ViewportContext.Provider value={{ viewportOffset, keyboardOpen }}>
       <nav
-        className={`mobile-nav fixed left-0 right-0 z-nav px-2${
+        className={`mobile-nav fixed left-0 right-0 z-nav${
           keyboardOpen ? " mobile-nav--keyboard-hidden" : ""
         }`}
         style={{
@@ -271,7 +271,14 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
         aria-label="Main navigation"
         aria-hidden={keyboardOpen}
       >
-        <div className="grid grid-cols-3 min-h-[3.25rem] w-full max-w-lg mx-auto gap-1">
+        <div
+          className="grid grid-cols-3 min-h-[3.25rem] max-w-lg mx-auto gap-1"
+          style={{
+            width: "calc(100% - 4rem)",
+            marginLeft: "4rem",
+            marginRight: 0,
+          }}
+        >
           {TOP_TABS.map((tabId) => {
             const active = current === tabId;
 
@@ -289,7 +296,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
                 aria-current={active ? "page" : undefined}
                 tabIndex={keyboardOpen ? -1 : 0}
               >
-                <span className="text-sm font-medium leading-tight text-center">
+                <span className="text-xs font-medium leading-tight text-center">
                   {labelFor(tabId)}
                 </span>
 

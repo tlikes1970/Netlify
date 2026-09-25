@@ -32,6 +32,11 @@ export function mobileFabBottom(extraPx: number, viewportOffsetPx = 0): string {
   return `calc(var(--mobile-nav-height, ${MOBILE_NAV_BASE_HEIGHT}px) + ${viewportOffsetPx}px + ${extraPx}px)`;
 }
 
+/** CSS bottom offset for utility controls docked inside the mobile nav row. */
+export function mobileNavControlBottom(extraPx: number, viewportOffsetPx = 0): string {
+  return `calc(var(--safe-bottom, 0px) + ${viewportOffsetPx}px + ${extraPx}px)`;
+}
+
 /** CSS inline offset for fixed controls: existing gutter plus --safe-left / --safe-right. */
 export function mobileFabInlineInset(extraPx: number, side: 'left' | 'right'): string {
   const insetVar = side === 'left' ? '--safe-left' : '--safe-right';

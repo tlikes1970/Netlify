@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useViewportOffset } from './MobileTabs';
-import { mobileFabBottom, mobileFabInlineInset } from '@/lib/capacitorSafeArea';
+import { mobileFabInlineInset, mobileNavControlBottom } from '@/lib/capacitorSafeArea';
+import { useIsMobileScreen } from '@/hooks/useDeviceDetection';
 
 // Settings FAB (COG icon) - Bottom left
 export function SettingsFAB({ onClick }: { onClick: () => void }) {
@@ -59,12 +60,13 @@ export function SettingsFAB({ onClick }: { onClick: () => void }) {
         isPressed ? 'scale-95 active:shadow-inner' : 'hover:scale-105 hover:shadow-md'
       }`}
       style={{
+        zIndex: 10000,
         backgroundColor: isPressed ? 'var(--accent)' : 'var(--btn)',
         borderColor: 'var(--line)',
         color: 'var(--text)',
         // Only apply mobile positioning on mobile screens
         ...(window.innerWidth < 1024 && {
-          bottom: mobileFabBottom(16, effectiveOffset),
+          bottom: mobileNavControlBottom(4, effectiveOffset),
           left: mobileFabInlineInset(16, 'left'),
         })
       }}
@@ -101,6 +103,7 @@ export function ThemeToggleFAB({ theme, onToggle }: { theme: 'light' | 'dark'; o
   const [isPressed, setIsPressed] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { viewportOffset } = useViewportOffset();
+  const isMobile = useIsMobileScreen();
   
   // Cap viewportOffset at 0 if <50px to avoid toolbar micro-shifts
   const effectiveOffset = useMemo(() => Math.max(0, viewportOffset - 50), [viewportOffset]);
@@ -141,8 +144,8 @@ export function ThemeToggleFAB({ theme, onToggle }: { theme: 'light' | 'dark'; o
 
   console.log('🌙 ThemeToggleFAB rendered', { isSettingsOpen });
 
-  // Hide FAB when settings is open
-  if (isSettingsOpen) {
+  // Theme remains available in Settings; avoid competing with primary mobile nav.
+  if (isSettingsOpen || isMobile) {
     return null;
   }
 
@@ -153,12 +156,13 @@ export function ThemeToggleFAB({ theme, onToggle }: { theme: 'light' | 'dark'; o
         isPressed ? 'scale-95 active:shadow-inner' : 'hover:scale-105 hover:shadow-md'
       }`}
       style={{
+        zIndex: 10000,
         backgroundColor: isPressed ? 'var(--accent)' : 'var(--btn)',
         borderColor: 'var(--line)',
         color: 'var(--text)',
         // Only apply mobile positioning on mobile screens
         ...(window.innerWidth < 1024 && {
-          bottom: mobileFabBottom(16, effectiveOffset),
+          bottom: mobileNavControlBottom(4, effectiveOffset),
           right: mobileFabInlineInset(16, 'right'),
         })
       }}

@@ -149,7 +149,7 @@ Authorized order. Do not skip ahead.
   - 768: `mdMin768=true`, `mobileHeader=false`, desktop heading. `dst06-w768.png`.
   - 769: same coherent desktop shell.
   - Pixel 9 native 412 remains below 767 (JS mobile). Landscape ~924 remains JS desktop (Fix 5 live switch).
-- **Commit:** recorded after this checkpoint is committed.
+- **Commit:** `d3cb221` — `Align JS mobile breakpoint with Tailwind md`
 - **Final status:** FIXED.
 
 #### DST-04 — Filters overlay survives rotation / Android Back exits app
@@ -163,18 +163,30 @@ Authorized order. Do not skip ahead.
   - Three-button portrait/landscape: same rotation, Back, and reopen behavior.
   - UI dismissal still closes the menu; body scroll lock is released by state cleanup.
   - SearchRow mobile tests 9/9 (including browser Back, Android Back, rotation, and reopen); typecheck; mobile production build; Capacitor sync; Android debug build/install/launch.
-- **Commit:** recorded after this checkpoint is committed.
+- **Commit:** `443b124eb104518de7e7d25f67a7aebe18e1f3dc` — `Fix Filters rotation and Android Back handling`
+- **Final status:** FIXED.
+
+#### DST-02 — Settings cog overlaps Library posters
+
+- **Original reproduction:** Pixel 9 / API 35 / gesture and three-button / portrait Library. The fixed Settings and theme controls floated above the mobile nav and covered poster/list content as it scrolled beneath them.
+- **Root cause:** Both utility controls used the mobile content-clearance offset (`--mobile-nav-height + extra`) while remaining fixed above the nav. That placed them in the scrollable content viewport instead of reserving space within stable chrome.
+- **Correction:** The Settings control is docked inside a reserved left edge of the mobile nav and follows `--safe-bottom`; the three primary tabs consume the remaining width. Mobile keeps theme selection in Settings and removes the redundant floating theme shortcut. Desktop FAB behavior is unchanged.
+- **Verification (Pixel 9 / API 35):**
+  - Gesture portrait, Home and Library: Settings remains reachable in the nav; no utility control covers cards, posters, titles, or Library controls.
+  - Three-button portrait, Library: the Settings control and tabs remain above the 48px system inset; scrollable content has no fixed control floating over it.
+  - Font scale 1.0 and 2.0: Home, Library, and Discovery labels remain complete; the reserved Settings slot does not collide with labels.
+  - Theme remains available in Settings; the desktop theme FAB is unchanged.
 - **Final status:** FIXED.
 
 ### AUTHORIZED IN THIS CORRECTION BATCH
 
-Order: DST-05 (done) → DST-03 (done) → DST-06 (done) → DST-04 (done) → DST-02 → DST-01.
+Order: DST-05 (done) → DST-03 (done) → DST-06 (done) → DST-04 (done) → DST-02 (done) → DST-01.
 
 Do not resume missing-device stress testing, UX testing, or Maestro during this pause.
 
 ### CONFIRMED NEXT
 
-DST-02 — Settings cog overlaps Library posters.
+DST-01 — Home personality line clips at default size.
 
 ### DEVICE STRESS TESTING — NEW DEFECTS (do not fix this phase)
 
@@ -192,6 +204,7 @@ DST-02 — Settings cog overlaps Library posters.
 
 #### DST-02 — Settings cog overlaps Library posters
 
+- **Status:** FIXED — see §3 FIXED. Original history retained.
 - **Severity:** MEDIUM
 - **Class:** shared layout / FAB
 - **Configuration:** Pixel 9 / API 35 / gesture and three-button / portrait
