@@ -6,6 +6,8 @@
 **Maintainer:** Flicklet Development Team
 
 > **Superseded sections (May 2026):** Community hub, Express/Prisma backend, `weeklyDigest`, `unsubscribe`, and community push/reply functions are removed. References below to those features are historical only. Current runtime: Netlify Functions + Firebase (see [docs/LOCAL_DEV.md](LOCAL_DEV.md)).
+>
+> **Current admin / trial / billing operations (Jun 2026):** Use **[ADMIN_OPERATIONS.md](./ADMIN_OPERATIONS.md)** — not this manual — for trial entitlement, `resetTrialEntitlement`, Firestore rules, and QA reset procedures. Section G API reference below is largely historical.
 
 ---
 

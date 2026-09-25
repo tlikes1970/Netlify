@@ -4,7 +4,8 @@
 **Scope:** 21-day full-access trial, read-only after expiry, Watch Reminders routing, Pro/purchase settings messaging  
 **Related commits:** `fba43fa` (UX alignment), `c252cd1` (trial start fix + read-only → Pro settings)  
 **Environment:** `npx netlify dev` at repo root → http://localhost:8888  
-**Automated:** `npm test -- --run src/lib/__tests__/entitlements.test.ts` (from `apps/web`)  
+**Automated:** `npm test -- --run src/lib/__tests__/entitlements.test.ts src/lib/__tests__/trialEntitlement.test.ts` (from `apps/web`)  
+**Admin / trial ops:** [docs/ADMIN_OPERATIONS.md](../../docs/ADMIN_OPERATIONS.md)
 **Date:** _______________  
 **Tester:** _______________  
 **Browser / device:** _______________
@@ -17,9 +18,10 @@ Mark each: **P** Pass · **F** Fail · **B** Blocked · **N/A**
 
 | Area | Expected behavior |
 |------|-------------------|
-| Trial start | Fresh 21-day window at first sign-in on this device; legacy expired backfills reset once (v2 record) |
+| Trial start | **One lifetime trial per Firebase account** — created at first sign-in in Firestore `users/{uid}/entitlements/trial`; survives reinstall and device change |
 | Active trial | Full access; reminders open settings/modal — **not** upgrade paywall |
 | Expired trial | Library read-only; reminders blocked → **Settings → Pro** (purchase section), not a fleeting toast |
+| Guest | Signed-out users **do not** receive a 21-day trial |
 | Pro screen | Transparent support copy (~$5, hosting, no ads, export always available) |
 | Wording | “Watch Reminders” / “Reminder Settings” — no “Go Pro for notifications” during trial |
 
@@ -38,21 +40,22 @@ Mark each: **P** Pass · **F** Fail · **B** Blocked · **N/A**
 
 ```bash
 cd apps/web
-npm test -- --run src/lib/__tests__/entitlements.test.ts
+npm test -- --run src/lib/__tests__/entitlements.test.ts src/lib/__tests__/trialEntitlement.test.ts
 ```
 
 ---
 
-## Debug helpers (local only)
+## Debug helpers (local / admin)
 
 | Goal | Steps |
 |------|--------|
-| Inspect trial record | Local Storage key `flicklet.trial.v1` — JSON `{ userId, startMs, version }` |
-| Force fresh trial | Remove `flicklet.trial.v1` for your UID, sign out/in, or use v1 expired record then reload (migration resets once) |
-| Simulate expired trial | Set `startMs` to >21 days ago, `version: 2`, reload while signed in |
-| Clear entitlements cache | Hard refresh after changing storage |
+| Inspect server trial | Firestore Console → `users/{uid}/entitlements/trial` (`trialStartMs`, `version`, `resetAt`) |
+| Inspect local cache | Local Storage key `flicklet.trial.v1` — JSON `{ userId, startMs, version }` (cache only; Firestore wins on sync) |
+| Reset test account trial | `cd functions && npm run reset:trial -- <UID>` — see [docs/TRIAL_TEST_ACCOUNT_RESET.md](../../docs/TRIAL_TEST_ACCOUNT_RESET.md) |
+| Simulate expired trial | **Preferred:** backdate Firestore `trialStartMs` or admin reset with old timestamp. **Local hint only:** set `flicklet.trial.v1` `startMs` >21 days ago, `version: 2`, reload while signed in |
+| Clear entitlements cache | Hard refresh after changing storage; sign-out clears local cache — server trial restores on sign-in |
 
-**Do not** use these on production user data you care about without understanding export/backup.
+**Do not** expect uninstall/reinstall or deleting localStorage to grant a fresh trial for the same Firebase account.
 
 ---
 
@@ -67,14 +70,16 @@ npm test -- --run src/lib/__tests__/entitlements.test.ts
 
 ---
 
-## 2. Fresh trial for existing users (regression for c252cd1)
+## 2. Trial start & server persistence (regression)
 
 | # | Steps | Expected | P/F/B |
 |---|--------|----------|-------|
-| 2.1 | Account **A**: before test, note `flicklet.trial.v1` or delete it | — | |
-| 2.2 | Sign in | New or migrated record: `version: 2`, `startMs` ≈ now (not account creation date from years ago) | |
+| 2.1 | Account **A**: note Firestore `users/{uid}/entitlements/trial` | Doc exists after first sign-in with `version: 2` | |
+| 2.2 | Sign in | `trialStartMs` ≈ first sign-in time (not account creation date from years ago) | |
 | 2.3 | `resolveEntitlements` behavior (UI) | Can add/move library items; not read-only | |
 | 2.4 | Trial days remaining | Roughly 21 → 20 after a day (not 0 on first login) | |
+| 2.5 | Uninstall → reinstall → same account | **Same** `trialStartMs`; days remaining unchanged | |
+| 2.6 | Sign out → sign in same account | **Same** trial (local cache cleared; server restores) | |
 
 ---
 
@@ -208,14 +213,15 @@ Test on **Watching** tab card overflow / actions (desktop and mobile if applicab
 
 | Topic | Location |
 |-------|----------|
-| Trial logic | `apps/web/src/lib/entitlements.ts` |
+| Trial logic | `apps/web/src/lib/entitlements.ts`, `apps/web/src/lib/trialEntitlement.ts` |
 | Hook + cache | `apps/web/src/hooks/useEntitlements.ts` |
 | Read-only → Pro | `apps/web/src/lib/readOnlyGuard.ts` |
 | Reminder buttons | `TabCard.tsx`, `LibraryActions.tsx`, `CompactOverflowMenu.tsx` |
 | Reminder modals | `NotificationSettings.tsx`, `ShowNotificationSettingsModal.tsx` |
 | Pro UI | `settingsSections.tsx` (`ProSection`), `settingsProConfig.ts` |
 | Banner | `TrialStatusBanner.tsx` |
-| Unit tests | `apps/web/src/lib/__tests__/entitlements.test.ts` |
+| Unit tests | `apps/web/src/lib/__tests__/entitlements.test.ts`, `trialEntitlement.test.ts` |
+| Admin ops | `docs/ADMIN_OPERATIONS.md`, `docs/TRIAL_TEST_ACCOUNT_RESET.md` |
 
 ---
 
@@ -223,3 +229,4 @@ Test on **Watching** tab card overflow / actions (desktop and mobile if applicab
 
 - Broad simplify regression: `tests/manual/SIMPLIFY_REGRESSION_SMOKE.md`
 - Entitlement design notes: `docs/TRIAL_ENTITLEMENT_AUDIT.md`
+- Admin / trial reset: `docs/ADMIN_OPERATIONS.md`

@@ -1,5 +1,8 @@
 # How to Toggle Pro Status for Testing
 
+> **Trial QA:** Resetting the 21-day trial uses **`resetTrialEntitlement`** / `npm run reset:trial` — not Pro toggles. See [docs/ADMIN_OPERATIONS.md](../../docs/ADMIN_OPERATIONS.md).  
+> **Full Access purchase testing:** Prefer Firestore `users/{uid}/billing/status` or Play purchase flow — not localStorage Pro flags.
+
 There are several ways to toggle Pro status on/off for testing Community v1 features.
 
 ---

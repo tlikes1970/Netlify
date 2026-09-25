@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import { READ_ONLY_PRIMARY } from '../copy/access';
 import {
   TRIAL_LENGTH_DAYS,
-  ensureTrialStartMs,
   getTrialDaysRemaining,
   getTrialStatusLabel,
   isTrialActive,
@@ -21,6 +20,7 @@ describe('entitlements', () => {
       paidPro: true,
       proSource: 'android',
       trialStartMs: NOW - 30 * DAY,
+      trialResolved: true,
       nowMs: NOW,
     });
     expect(state.phase).toBe('paidPro');
@@ -35,6 +35,7 @@ describe('entitlements', () => {
       paidPro: false,
       proSource: null,
       trialStartMs: start,
+      trialResolved: true,
       nowMs: NOW,
     });
     expect(state.phase).toBe('activeTrial');
@@ -49,6 +50,7 @@ describe('entitlements', () => {
       paidPro: false,
       proSource: null,
       trialStartMs: start,
+      trialResolved: true,
       nowMs: NOW,
     });
     expect(state.phase).toBe('expiredReadOnly');
@@ -64,25 +66,44 @@ describe('entitlements', () => {
     expect(isTrialActive(start, NOW)).toBe(true);
   });
 
-  it('first sign-in starts a fresh trial at now', () => {
-    const before = Date.now();
-    const start = ensureTrialStartMs('user-ent-test-new');
-    expect(start).toBeGreaterThanOrEqual(before);
-    expect(isTrialActive(start, Date.now())).toBe(true);
+  it('blocks full access while trial is unresolved', () => {
+    const state = resolveEntitlements({
+      isAuthenticated: true,
+      paidPro: false,
+      proSource: null,
+      trialStartMs: NOW - 2 * DAY,
+      trialResolved: false,
+      nowMs: NOW,
+    });
+    expect(state.hasFullAccess).toBe(false);
+    expect(state.isReadOnlyMode).toBe(true);
   });
 
-  it('resets expired legacy v1 trial record to a new 21-day window', () => {
-    const userId = 'user-ent-test-migrate';
-    const expiredStart = NOW - (TRIAL_LENGTH_DAYS + 5) * DAY;
-    localStorage.setItem(
-      'flicklet.trial.v1',
-      JSON.stringify({ userId, startMs: expiredStart, version: 1 })
-    );
-    const before = Date.now();
-    const start = ensureTrialStartMs(userId);
-    expect(start).toBeGreaterThanOrEqual(before);
-    expect(isTrialActive(start, Date.now())).toBe(true);
-    localStorage.removeItem('flicklet.trial.v1');
+  it('read-only when authenticated, resolved, and no trial record', () => {
+    const state = resolveEntitlements({
+      isAuthenticated: true,
+      paidPro: false,
+      proSource: null,
+      trialStartMs: null,
+      trialResolved: true,
+      nowMs: NOW,
+    });
+    expect(state.isReadOnlyMode).toBe(true);
+    expect(state.hasFullAccess).toBe(false);
+  });
+
+  it('paidPro overrides expired trial', () => {
+    const state = resolveEntitlements({
+      isAuthenticated: true,
+      paidPro: true,
+      proSource: 'android',
+      trialStartMs: NOW - 40 * DAY,
+      trialResolved: true,
+      nowMs: NOW,
+    });
+    expect(state.phase).toBe('paidPro');
+    expect(state.hasFullAccess).toBe(true);
+    expect(isTrialExpired(NOW - 40 * DAY, false, true, NOW)).toBe(true);
   });
 
   it('anonymous user is not read-only', () => {

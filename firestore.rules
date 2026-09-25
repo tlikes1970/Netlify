@@ -45,6 +45,18 @@ service cloud.firestore {
         allow read: if isOwner(userId);
         allow write: if isAdmin();
       }
+
+      // One lifetime trial per account — create once, read own; only admin can reset/update
+      match /entitlements/{docId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId)
+          && docId == 'trial'
+          && !exists(/databases/$(database)/documents/users/$(userId)/entitlements/trial)
+          && request.resource.data.trialStartMs is int
+          && request.resource.data.version == 2
+          && request.resource.data.trialStartMs <= request.time.toMillis() + duration.value(5, 'm');
+        allow update, delete: if isAdmin();
+      }
     }
 
     // Username claiming

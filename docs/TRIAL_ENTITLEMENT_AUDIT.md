@@ -1,7 +1,10 @@
 # Trial / Pro entitlement audit (simplify branch)
 
-**Date:** 2026-05-31  
-**Model:** 21-day full-access trial → paid Pro OR expired read-only (view + export)
+**Date:** 2026-05-31 (gate inventory) · **Updated:** 2026-06-04 (server-backed trial)  
+**Model:** 21-day full-access trial → paid Full Access OR expired read-only (view + export + purchase)
+
+> **Operational docs:** Trial reset, Firestore schema, and deploy status → [ADMIN_OPERATIONS.md](./ADMIN_OPERATIONS.md).  
+> **Do not** treat localStorage as authoritative — server doc at `users/{uid}/entitlements/trial` wins on sign-in.
 
 ## Phase 1 — Gate inventory
 
@@ -29,18 +32,25 @@
 
 ## Central entitlement API
 
-- `apps/web/src/lib/entitlements.ts` — `resolveEntitlements`, trial storage `flicklet.trial.v1`
-- `apps/web/src/hooks/useEntitlements.ts` — React hook + sync cache
+- `apps/web/src/lib/trialEntitlement.ts` — Firestore read/create at `users/{uid}/entitlements/trial`
+- `apps/web/src/lib/entitlements.ts` — `resolveEntitlements`, read-only logic
+- `apps/web/src/hooks/useEntitlements.ts` — React hook; syncs local cache `flicklet.trial.v1` (cache only)
 - `apps/web/src/lib/readOnlyGuard.ts` — mutation guard + toast
 - `apps/web/src/components/TrialStatusBanner.tsx` — countdown under header
+- **Billing override:** `users/{uid}/billing/status` → `useProStatus` → paid wins over expired trial
 
 ## Simulate expired trial (manual)
+
+**Preferred (cross-device truth):** Admin reset or edit Firestore `users/{uid}/entitlements/trial.trialStartMs` to >21 days ago — see [TRIAL_TEST_ACCOUNT_RESET.md](./TRIAL_TEST_ACCOUNT_RESET.md).
+
+Local cache hint only (Firestore wins after sync):
 
 ```js
 // DevTools console while signed in (replace UID)
 localStorage.setItem('flicklet.trial.v1', JSON.stringify({
   userId: 'YOUR_FIREBASE_UID',
-  startMs: Date.now() - (22 * 24 * 60 * 60 * 1000)
+  startMs: Date.now() - (22 * 24 * 60 * 60 * 1000),
+  version: 2
 }));
 location.reload();
 ```

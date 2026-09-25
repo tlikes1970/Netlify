@@ -30,6 +30,8 @@ export interface EntitlementInput {
   paidPro: boolean;
   proSource: ProStatus['source'];
   trialStartMs: number | null;
+  /** False while server trial is loading — conservative access until resolved. */
+  trialResolved?: boolean;
   nowMs?: number;
 }
 
@@ -67,51 +69,6 @@ export function saveTrialRecord(record: TrialRecord): void {
   } catch {
     /* ignore */
   }
-}
-
-export function parseAuthCreationTimeMs(
-  creationTime: string | undefined
-): number | null {
-  if (!creationTime) return null;
-  const ms = Date.parse(creationTime);
-  return Number.isFinite(ms) ? ms : null;
-}
-
-/**
- * Resolve or create trial start for a signed-in user (persisted per user).
- * New users always start a fresh 21-day window at first sign-in on this device.
- * Legacy v1 records that used account creation time and already expired get one reset.
- */
-export function ensureTrialStartMs(userId: string): number {
-  const nowMs = Date.now();
-  const existing = loadTrialRecord(userId);
-
-  if (existing) {
-    const version = existing.version ?? 1;
-    if (version < TRIAL_RECORD_VERSION) {
-      if (!isTrialActive(existing.startMs, nowMs)) {
-        const record: TrialRecord = {
-          userId,
-          startMs: nowMs,
-          version: TRIAL_RECORD_VERSION,
-        };
-        saveTrialRecord(record);
-        return nowMs;
-      }
-      const bumped: TrialRecord = { ...existing, version: TRIAL_RECORD_VERSION };
-      saveTrialRecord(bumped);
-      return existing.startMs;
-    }
-    return existing.startMs;
-  }
-
-  const record: TrialRecord = {
-    userId,
-    startMs: nowMs,
-    version: TRIAL_RECORD_VERSION,
-  };
-  saveTrialRecord(record);
-  return nowMs;
 }
 
 export function getTrialDaysRemaining(
@@ -172,6 +129,36 @@ export function resolveEntitlements(input: EntitlementInput): EntitlementState {
       isReadOnlyMode: false,
       trialStartMs: input.trialStartMs,
       trialDaysRemaining: getTrialDaysRemaining(input.trialStartMs, nowMs),
+      proSource: input.proSource,
+    };
+  }
+
+  if (input.trialResolved === false) {
+    return {
+      phase: 'anonymous',
+      paidPro: false,
+      trialActive: false,
+      trialExpired: false,
+      hasFullAccess: false,
+      isReadOnlyMode: true,
+      trialStartMs: input.trialStartMs,
+      trialDaysRemaining: input.trialStartMs != null
+        ? getTrialDaysRemaining(input.trialStartMs, nowMs)
+        : null,
+      proSource: input.proSource,
+    };
+  }
+
+  if (input.trialStartMs == null) {
+    return {
+      phase: 'expiredReadOnly',
+      paidPro: false,
+      trialActive: false,
+      trialExpired: true,
+      hasFullAccess: false,
+      isReadOnlyMode: true,
+      trialStartMs: null,
+      trialDaysRemaining: 0,
       proSource: input.proSource,
     };
   }

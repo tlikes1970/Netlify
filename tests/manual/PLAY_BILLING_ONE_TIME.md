@@ -62,8 +62,10 @@
 
 ## Forced read-only (expired trial)
 
-- [ ] Backdate `flicklet.trial.v1` in WebView storage **or** use account with expired trial record:
-  - `{ "userId": "<uid>", "startMs": <22+ days ago>, "version": 2 }`
+- [ ] Expire trial using **one** of:
+  - Firestore: set `users/{uid}/entitlements/trial.trialStartMs` to >21 days ago
+  - Admin CLI: `cd functions && npm run reset:trial -- <uid> <old_epoch_ms>` (see [docs/TRIAL_TEST_ACCOUNT_RESET.md](../../docs/TRIAL_TEST_ACCOUNT_RESET.md))
+  - **Local hint only:** backdate `flicklet.trial.v1` in WebView storage: `{ "userId": "<uid>", "startMs": <22+ days ago>, "version": 2 }`
 - [ ] Library edit blocked; opens Full Access settings.
 - [ ] **Export** / **Import backup** still work.
 - [ ] Read-only banner/copy matches centralized strings.
@@ -101,7 +103,7 @@
 
 - [ ] Sign out → sign in with **different** tester account.
 - [ ] No Full Access unless that account purchased.
-- [ ] Trial/read-only behavior independent per account.
+- [ ] Trial/read-only behavior independent per Firebase account (server trial at `users/{uid}/entitlements/trial`).
 
 ---
 
