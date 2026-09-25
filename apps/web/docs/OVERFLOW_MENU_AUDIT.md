@@ -58,20 +58,23 @@
 
 ### Context: `tab-want`
 **Current Actions:**
+- ✅ Open Details (`onOpen`, when handler provided)
+- ✅ Share this show
 - ✅ Mark Watched
-- ✅ Remove from Want to Watch
 - ✅ Not Interested
 - ✅ Notes & Tags
-- ✅ Goofs
-- ✅ Extras
-- ✅ Advanced Notifications
+- ✅ Remind Me (TV only, `onSimpleReminder`)
+- ✅ Shows Like This (Goofs, Pro-gated when applicable)
+- ✅ Extras (Pro-gated when applicable)
+- ✅ Watch Reminders (`onNotificationToggle`)
 - ✅ Delete
 
+**Removed (2026-06):** ~~Remove from Want to Watch~~ — was miswired to `onWant` / `Library.move(..., "wishlist")` (no-op on Want tab). Use **Delete** to leave library; use **Mark Watched** / **Not Interested** / card **Start Watching** to change status.
+
 **Missing Actions:**
-- ❌ Open Details
-- ❌ Rate
-- ❌ Tags
-- ❌ Simple Reminder
+- ❌ Rate (`onRatingChange`) - may be intentional if StarRating shown inline
+- ❌ Tags (`onTagsEdit`) - only Notes & Tags together
+- ❌ Start Watching in overflow (available on TabCard inline / swipe; not in overflow menu)
 
 ### Context: `home` / `search` / `tab-foryou`
 **Current Actions:**
