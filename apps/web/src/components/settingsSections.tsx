@@ -10,9 +10,8 @@ import { useState, useEffect } from "react";
 import {
   useSettings,
   settingsManager,
-  getPersonalityText,
-  PERSONALITY_LIST,
-  DEFAULT_PERSONALITY,
+  resolveFlickletLine,
+  type PersonalityLevel,
 } from "../lib/settings";
 // PersonalityName type used implicitly through PERSONALITY_LIST
 import { useEntitlements } from "../hooks/useEntitlements";
@@ -310,7 +309,7 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
         </button>
       </div>
 
-      {/* Personality Mode - 8 distinct personalities */}
+      {/* Flicklet personality intensity (Phase 1 — single voice) */}
       <div>
         <label
           className="block text-sm font-medium mb-2"
@@ -318,35 +317,43 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
         >
           {translations.personalityLevel}
         </label>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          {PERSONALITY_LIST.map(({ name, description }) => {
-            const currentPersonality = settings.personality || DEFAULT_PERSONALITY;
-            const isSelected = currentPersonality === name;
+        <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
+          Flicklet notices your lists and comments when it fits. Minimal keeps things quiet; Maximum is more opinionated.
+        </p>
+        <div className="grid grid-cols-1 gap-2">
+          {(
+            [
+              { level: 1 as PersonalityLevel, label: "Minimal", hint: "Quiet. Marquee off." },
+              { level: 2 as PersonalityLevel, label: "Standard", hint: "Recommended." },
+              { level: 3 as PersonalityLevel, label: "Maximum", hint: "More observations, stronger tone." },
+            ] as const
+          ).map(({ level, label, hint }) => {
+            const isSelected = (settings.personalityLevel ?? 2) === level;
             return (
               <label
-                key={name}
+                key={level}
                 className={`flex items-center space-x-3 cursor-pointer p-3 rounded-lg transition-all ${
-                  isSelected ? 'ring-2 ring-blue-500' : ''
+                  isSelected ? "ring-2 ring-blue-500" : ""
                 }`}
-                style={{ 
-                  backgroundColor: isSelected ? 'var(--card)' : 'transparent',
-                  border: '1px solid var(--border)'
+                style={{
+                  backgroundColor: isSelected ? "var(--card)" : "transparent",
+                  border: "1px solid var(--line)",
                 }}
               >
                 <input
                   type="radio"
-                  name="personality"
-                  value={name}
+                  name="personalityLevel"
+                  value={level}
                   checked={isSelected}
-                  onChange={() => settingsManager.updatePersonality(name)}
+                  onChange={() => settingsManager.updatePersonalityLevel(level)}
                   className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 focus:ring-blue-500"
                 />
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate" style={{ color: "var(--text)" }}>
-                    {name}
+                  <div className="font-medium" style={{ color: "var(--text)" }}>
+                    {label}
                   </div>
-                  <div className="text-xs truncate" style={{ color: "var(--muted)" }}>
-                    {description}
+                  <div className="text-xs" style={{ color: "var(--muted)" }}>
+                    {hint}
                   </div>
                 </div>
               </label>
@@ -361,7 +368,11 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
             {translations.preview}:
           </p>
           <p className="text-sm mt-1" style={{ color: "var(--text)" }}>
-            "{getPersonalityText(settings.personality || DEFAULT_PERSONALITY, 'welcome', { username: settings.displayName || 'Guest' })}"
+            &ldquo;
+            {resolveFlickletLine("home.header", settings.personalityLevel, {
+              username: settings.displayName || "Guest",
+            }) || "Your lists are here."}
+            &rdquo;
           </p>
         </div>
       </div>

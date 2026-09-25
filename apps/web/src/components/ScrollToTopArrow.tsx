@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { MOBILE_NAV_HEIGHT, useViewportOffset } from './MobileTabs';
+import { useViewportOffset } from './MobileTabs';
+import { mobileFabBottom } from '@/lib/capacitorSafeArea';
 
 function getScrollElement(): HTMLElement | null {
   if (typeof document === 'undefined' || typeof window === 'undefined') {
@@ -153,7 +154,7 @@ export default function ScrollToTopArrow({ threshold, className = '' }: ScrollTo
         style={{
           ...buttonStyle,
           ...(isMobile && {
-            bottom: `calc(${MOBILE_NAV_HEIGHT}px + ${effectiveOffset}px + 128px)`,
+            bottom: mobileFabBottom(128, effectiveOffset),
             right: '16px',
             zIndex: 10000,
           }),
@@ -187,7 +188,7 @@ export default function ScrollToTopArrow({ threshold, className = '' }: ScrollTo
         style={{
           ...buttonStyle,
           ...(isMobile && {
-            bottom: `calc(${MOBILE_NAV_HEIGHT}px + ${effectiveOffset}px + 80px)`,
+            bottom: mobileFabBottom(80, effectiveOffset),
             right: '16px',
             zIndex: 10000,
           }),

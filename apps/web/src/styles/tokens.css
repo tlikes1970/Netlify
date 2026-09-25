@@ -21,6 +21,17 @@
   --z-overlay: 3000;
   --z-modal: 4000;
   --z-toast: 5000;
+
+  /* Sticky search row (FlickletHeader) — Library segment bar sticks below this.
+     Composed from wrapper padding + SearchRow touch height + border-b. */
+  --flicklet-sticky-search-padding-y: 0.375rem; /* py-1.5 on mobile wrapper */
+  --flicklet-sticky-search-row-height: 44px; /* min-h-[44px] filter/search on mobile */
+  --flicklet-sticky-search-border: 1px;
+  --flicklet-sticky-search-height: calc(
+    var(--flicklet-sticky-search-padding-y) * 2 +
+    var(--flicklet-sticky-search-row-height) +
+    var(--flicklet-sticky-search-border)
+  );
   
   /* Aspect ratio helpers */
   --aspect-poster: 2 / 3;
@@ -32,6 +43,12 @@
 /* Poster aspect ratio utility */
 .poster-2x3 {
   aspect-ratio: 2 / 3;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --flicklet-sticky-search-padding-y: 0.5rem; /* md:py-2 wrapper */
+  }
 }
 
 @media (min-width: 769px) {

@@ -15,6 +15,11 @@ html {
 :root {
   /* ensures sticky offset respects notches / iOS safe areas */
   --safe-top: env(safe-area-inset-top, 0px);
+  /* Mobile browser + iOS Capacitor use env(); Android uses MainActivity-injected vars */
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  /* Tab row only; system nav inset is padding inside .mobile-nav, counted once in --mobile-nav-height */
+  --mobile-nav-base-height: 56px;
+  --mobile-nav-height: calc(var(--mobile-nav-base-height) + var(--safe-bottom));
 }
 
 /* Dark theme (default) */
@@ -80,20 +85,15 @@ body,
     color 0.3s ease;
 }
 
-/* Mobile navigation height - single source of truth */
-:root {
-  --mobile-nav-height: 80px;
-}
-
 /* Mobile nav fix - proper CSS specificity */
 @media (max-width: 1024px) {
-  /* Force viewport to be actual visible area using large viewport units */
-  html {
+  /* iOS mobile browser: lock html scroll container */
+  html:not(.capacitor-native) {
     height: 100lvh;
     overflow: hidden;
   }
 
-  body {
+  html:not(.capacitor-native) body {
     height: 100lvh;
     margin: 0;
     padding: 0;
@@ -101,28 +101,97 @@ body,
     overflow-x: hidden;
   }
 
-  /* Ensure the main content area accounts for mobile nav */
-  main {
-    min-height: calc(100lvh - var(--mobile-nav-height));
+  /* Capacitor Android/iOS WebView: avoid html overflow:hidden — breaks keyboard/input */
+  html.capacitor-native {
+    height: 100%;
+    overflow: visible;
+  }
+
+  html.capacitor-native body {
+    height: 100%;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  html.capacitor-native input,
+  html.capacitor-native textarea,
+  html.capacitor-native [role="searchbox"] {
+    -webkit-user-select: text;
+    user-select: text;
+    touch-action: manipulation;
+  }
+
+  /* Page shells use .pb-mobile-nav once — do not also pad main (avoids double-count). */
+  main,
+  .flicklet-app-main {
+    min-height: 100lvh;
+  }
+
+  html.capacitor-native main,
+  html.capacitor-native .flicklet-app-main {
+    min-height: 100%;
+  }
+
+  .pb-mobile-nav {
     padding-bottom: var(--mobile-nav-height);
   }
 
-  /* Mobile nav positioning with GPU layering for stability */
+  /*
+   * Capacitor native: injected --safe-top / --safe-bottom (Android) or env() (iOS).
+   * Top inset once on header; sticky search sticks below status area when scrolled.
+   * Android boot: capacitorSafeArea.ts sets interim --safe-top until data-safe-area-ready.
+   */
+  html.capacitor-native .flicklet-app-header {
+    padding-top: var(--safe-top, 0px);
+  }
+
+  html.capacitor-android:not([data-safe-area-ready]) .flicklet-app-header {
+    padding-top: max(var(--safe-top, 0px), 24px);
+  }
+
+  html.capacitor-native .flicklet-sticky-search {
+    top: var(--safe-top, 0px);
+  }
+
+  html.capacitor-android:not([data-safe-area-ready]) .flicklet-sticky-search {
+    top: max(var(--safe-top, 0px), 24px);
+  }
+
+  /*
+   * Bottom nav: sit above system nav (bottom offset), fixed tab row height.
+   * --mobile-nav-height = tab row + safe-bottom for content/FAB clearance.
+   */
   .mobile-nav {
     position: fixed;
-    bottom: 0;
+    bottom: var(--safe-bottom);
     left: 0;
     right: 0;
     z-index: var(--z-nav);
-    /* Force it to stay within viewport */
-    max-height: 100lvh;
-    /* Force visibility */
+    box-sizing: border-box;
+    height: var(--mobile-nav-base-height);
+    min-height: var(--mobile-nav-base-height);
+    padding-top: 4px;
+    padding-bottom: 0;
     display: flex;
     visibility: visible;
     opacity: 1;
-    /* GPU layering hack for iOS Safari stability */
     transform: translate3d(0, 0, 0);
     -webkit-backface-visibility: hidden;
+  }
+
+  /* Capacitor: hide bottom nav while keyboard is open — do not lift with visualViewport */
+  .mobile-nav.mobile-nav--keyboard-hidden {
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Android: never add env() safe-area on top of injected insets (compact gate) */
+  html.capacitor-native.capacitor-android[data-compact-mobile-v1="true"] main {
+    padding-bottom: 0;
   }
 }
 

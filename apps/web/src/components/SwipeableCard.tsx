@@ -146,6 +146,13 @@ export default function SwipeableCard({
   };
 
   const swipeActions = getSwipeActions();
+  const rowRef = React.useRef<HTMLDivElement>(null);
+
+  const resetSwipeTransform = React.useCallback(() => {
+    if (rowRef.current) {
+      rowRef.current.style.transform = '';
+    }
+  }, []);
 
   const {
     swipeState,
@@ -158,15 +165,18 @@ export default function SwipeableCard({
       enableBidirectional: true
     },
     onSwipeMove: (d, dir) => {
+      if (
+        typeof document !== 'undefined' &&
+        document.querySelector('[data-drag-active="true"]')
+      ) {
+        resetSwipeTransform();
+        return;
+      }
       if (rowRef.current) {
         rowRef.current.style.transform = `translateX(${dir === 'left' ? -d : d}px)`;
       }
     },
-    onSwipeEnd: () => {
-      if (rowRef.current) {
-        rowRef.current.style.transform = '';
-      }
-    },
+    onSwipeEnd: resetSwipeTransform,
     onSwipeAction: (direction) => {
       if (direction === 'right' && swipeActions.length > 0) {
         swipeActions[0].action();
@@ -209,8 +219,6 @@ export default function SwipeableCard({
       : Math.min((swipeState.swipeDistance - minDistance) / (maxDistance - minDistance), 1);
     return progress * 0.9; // Max opacity of 0.9
   };
-
-  const rowRef = React.useRef<HTMLDivElement>(null);
 
   return (
     <div className="relative overflow-hidden">

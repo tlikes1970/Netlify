@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { APP_VERSION } from "../version";
 import { useTranslations } from "../lib/language";
 import AccountButton from "./AccountButton";
-import SnarkDisplay from "./SnarkDisplay";
 import UsernamePromptModal from "./UsernamePromptModal";
 import { useUsername } from "../hooks/useUsername";
 import { useCanInstallPWA } from "../pwa/useInstall";
@@ -12,6 +11,8 @@ import SearchSuggestions, { addSearchToHistory } from "./SearchSuggestions";
 import VoiceSearch from "./VoiceSearch";
 import Portal from "./Portal";
 import { isMobileNow } from "../lib/isMobile";
+import { isCapacitorNative } from "../lib/capacitorEnv";
+import { dispatchKeyboardDismiss } from "../lib/mobileViewportLayout";
 
 // Note: Anime and Animation both use TMDB genre ID 16 (Animation)
 // The distinction is handled in ForYou/Discovery with origin_country filter
@@ -50,7 +51,6 @@ export type FlickletHeaderProps = {
   onClear?: () => void;
   onHelpOpen?: () => void; // callback for opening help modal
   onNavigateHome?: () => void; // callback for navigating to home
-  screenshotMode?: boolean; // ⚠️ TEMPORARY: Hide greeting in screenshot mode
 };
 
 export default function FlickletHeader({
@@ -59,7 +59,6 @@ export default function FlickletHeader({
   onClear,
   onHelpOpen,
   onNavigateHome,
-  screenshotMode = false,
 }: FlickletHeaderProps) {
   const {
     username,
@@ -97,14 +96,13 @@ export default function FlickletHeader({
   return (
     <>
       {/* Main header (not sticky) */}
-      <header className="border-b" style={{ backgroundColor: "var(--bg)" }}>
+      <header
+        className="flicklet-app-header border-b"
+        style={{ backgroundColor: "var(--bg)" }}
+      >
         <div className="mx-auto w-full max-w-screen-2xl px-3 py-3 md:px-6 md:py-6">
           <div className="grid grid-cols-3 items-center gap-2 md:gap-4">
-            {/* Left: username + snark */}
-            {/* Hide greeting in screenshot mode */}
-            <div className="min-w-0 text-left md:text-sm">
-              {!screenshotMode && <SnarkDisplay />}
-            </div>
+            <div className="min-w-0" aria-hidden="true" />
             {/* Center: title */}
             <div className="text-center">
               <AppTitle text={appName} onClick={onNavigateHome} />
@@ -149,12 +147,12 @@ export default function FlickletHeader({
 
       {/* Sticky search bar */}
       <div
-        className="sticky top-0 border-b"
+        className="flicklet-sticky-search sticky top-0 border-b"
         style={{
           zIndex: "var(--z-overlay)",
           backgroundColor: "var(--bg)",
           borderColor: "var(--line)",
-          minHeight: "48px", // Stable height to prevent jumpiness
+          minHeight: "var(--flicklet-sticky-search-height)",
         }}
       >
         <div className="mx-auto w-full max-w-screen-2xl px-2 py-1.5 md:px-4 md:py-2">
@@ -417,6 +415,13 @@ function SearchRow({
     }
 
     setShowSuggestions(false);
+    dismissNativeSearchKeyboard();
+  };
+
+  const dismissNativeSearchKeyboard = () => {
+    if (!isCapacitorNative()) return;
+    inputRef.current?.blur();
+    dispatchKeyboardDismiss();
   };
 
   const clear = () => {
@@ -466,20 +471,34 @@ function SearchRow({
       onSearch?.(trimmedSuggestion, g, effectiveSearchType, mediaTypeFilter);
     }
     addSearchToHistory(trimmedSuggestion);
+    dismissNativeSearchKeyboard();
   };
 
+  const syncQueryFromInput = React.useCallback(
+    (value: string) => {
+      setQ(value);
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+      debounceTimerRef.current = window.setTimeout(() => {
+        setShowSuggestions(value.length > 0 && isFocused);
+      }, 150);
+    },
+    [isFocused]
+  );
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isComposing) return; // Don't update during IME composition
+    // Android WebView can leave isComposing true without compositionEnd — blocks all typing.
+    if (isComposing && !isCapacitorNative()) return;
+    syncQueryFromInput(e.target.value);
+  };
 
-    setQ(e.target.value);
-
-    // Debounce suggestions (150ms as per requirements)
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
+  const handleInputNative = (e: React.FormEvent<HTMLInputElement>) => {
+    if (!isCapacitorNative()) return;
+    syncQueryFromInput(e.currentTarget.value);
+    if (isComposing) {
+      setIsComposing(false);
     }
-    debounceTimerRef.current = window.setTimeout(() => {
-      setShowSuggestions(e.target.value.length > 0 && isFocused);
-    }, 150);
   };
 
   const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -487,7 +506,10 @@ function SearchRow({
     if (q.length > 0) {
       setShowSuggestions(true);
     }
-    e.currentTarget.select();
+    // select() on focus breaks typing in some Android WebViews
+    if (!isCapacitorNative()) {
+      e.currentTarget.select();
+    }
   };
 
   const handleInputBlur = () => {
@@ -1673,11 +1695,16 @@ function SearchRow({
           <div className="relative flex items-center">
             <input
               ref={inputRef}
-              type="search"
+              type={isCapacitorNative() ? "text" : "search"}
               role="searchbox"
               inputMode="search"
+              enterKeyHint="search"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
               aria-label="Search movies, shows, people"
               data-onboarding-id="search-input"
+              data-testid="search-input"
               placeholder={
                 searchMode === "tag"
                   ? "Search by tag..."
@@ -1685,12 +1712,15 @@ function SearchRow({
               }
               value={q}
               onChange={handleInputChange}
+              onInput={handleInputNative}
               onFocus={handleInputFocus}
               onBlur={handleInputBlur}
               onKeyDown={handleKeyDown}
-              onCompositionStart={() => setIsComposing(true)}
+              onCompositionStart={() => {
+                if (!isCapacitorNative()) setIsComposing(true);
+              }}
               onCompositionEnd={() => setIsComposing(false)}
-              className={`w-full rounded-none border-l-0 border-r-0 border-y-0 py-2 md:py-3 outline-none ring-0 focus:border-primary ${
+              className={`w-full rounded-none border-l-0 border-r-0 border-y-0 py-2 md:py-3 outline-none ring-0 focus:border-primary touch-manipulation ${
                 isMobile
                   ? `px-3 text-base ${q.length > 0 ? (hasVoiceSearch ? "pr-20" : "pr-10") : hasVoiceSearch ? "pr-10" : "pr-3"}`
                   : "px-4 pr-12 text-sm"

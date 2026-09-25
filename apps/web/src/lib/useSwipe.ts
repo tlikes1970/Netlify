@@ -186,19 +186,36 @@ export function useSwipe({
   }, [disabled, swipeState.isSwipeActive, enableBidirectional, maxSwipeDistance, clampX, onSwipeMove, onSwipeStart, swipeTimingEnabled]);
 
   const endCore = useCallback(() => {
-    if (disabled || !swipeState.isSwipeActive) {
-      axisLock.current = null; captured.current = false; return;
+    if (disabled) {
+      axisLock.current = null;
+      captured.current = false;
+      return;
     }
-    const { swipeDistance, direction, actionTriggered } = swipeState;
 
-    onSwipeEnd?.(swipeDistance, direction);
-    if (swipeDistance >= threshold && direction && !actionTriggered) {
-      setSwipeState(s => ({ ...s, actionTriggered: true }));
+    const { swipeDistance, direction, actionTriggered, isSwipeActive } = swipeState;
+
+    // Always notify end so callers can reset inline transforms (avoids frozen mid-swipe cards).
+    onSwipeEnd?.(isSwipeActive ? swipeDistance : 0, isSwipeActive ? direction : null);
+
+    if (
+      isSwipeActive &&
+      swipeDistance >= threshold &&
+      direction &&
+      !actionTriggered
+    ) {
+      setSwipeState((s) => ({ ...s, actionTriggered: true }));
       onSwipeAction?.(direction);
       if (navigator.vibrate) navigator.vibrate(30);
     }
-    setSwipeState({ isSwipeActive: false, swipeDistance: 0, direction: null, actionTriggered: false });
-    axisLock.current = null; captured.current = false;
+
+    setSwipeState({
+      isSwipeActive: false,
+      swipeDistance: 0,
+      direction: null,
+      actionTriggered: false,
+    });
+    axisLock.current = null;
+    captured.current = false;
   }, [disabled, swipeState, threshold, onSwipeEnd, onSwipeAction]);
 
   const pointerHandlers = useMemo(() => ({

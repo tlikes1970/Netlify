@@ -429,24 +429,23 @@ export async function fetchGenreContent(mainGenre: string, subGenre: string) {
         combined = [...combined, ...movies];
       }
     } else {
-      // For other genres, use the original approach
-      // Try movies first
-      const movieData = await get("/discover/movie", {
-        with_genres: [...mainGenreIds.movie, ...subGenreIds].join(","),
-        sort_by: "popularity.desc",
-        page: 1,
-      });
+      // For other genres, fetch movies and TV in parallel
+      const [movieData, tvData] = await Promise.all([
+        get("/discover/movie", {
+          with_genres: [...mainGenreIds.movie, ...subGenreIds].join(","),
+          sort_by: "popularity.desc",
+          page: 1,
+        }),
+        get("/discover/tv", {
+          with_genres: [...mainGenreIds.tv, ...subGenreIds].join(","),
+          sort_by: "popularity.desc",
+          page: 1,
+        }),
+      ]);
 
       const movies = (movieData.results ?? [])
         .filter((r: Raw) => r.poster_path)
         .map((r: Raw) => ({ ...map(r), kind: "movie" as const }));
-
-      // Try TV shows
-      const tvData = await get("/discover/tv", {
-        with_genres: [...mainGenreIds.tv, ...subGenreIds].join(","),
-        sort_by: "popularity.desc",
-        page: 1,
-      });
 
       const tvShows = (tvData.results ?? [])
         .filter((r: Raw) => r.poster_path)
@@ -461,17 +460,18 @@ export async function fetchGenreContent(mainGenre: string, subGenre: string) {
         `Not enough content for ${mainGenre}/${subGenre}, trying main genre only`
       );
 
-      const fallbackMovies = await get("/discover/movie", {
-        with_genres: mainGenreIds.movie.join(","),
-        sort_by: "popularity.desc",
-        page: 1,
-      });
-
-      const fallbackTv = await get("/discover/tv", {
-        with_genres: mainGenreIds.tv.join(","),
-        sort_by: "popularity.desc",
-        page: 1,
-      });
+      const [fallbackMovies, fallbackTv] = await Promise.all([
+        get("/discover/movie", {
+          with_genres: mainGenreIds.movie.join(","),
+          sort_by: "popularity.desc",
+          page: 1,
+        }),
+        get("/discover/tv", {
+          with_genres: mainGenreIds.tv.join(","),
+          sort_by: "popularity.desc",
+          page: 1,
+        }),
+      ]);
 
       const fallbackMoviesList = (fallbackMovies.results ?? [])
         .filter((r: Raw) => r.poster_path)
@@ -490,7 +490,7 @@ export async function fetchGenreContent(mainGenre: string, subGenre: string) {
     return combined.slice(0, 24);
   } catch (error) {
     console.error(`Failed to fetch ${mainGenre}/${subGenre} content:`, error);
-    return [];
+    throw error instanceof Error ? error : new Error(String(error));
   }
 }
 

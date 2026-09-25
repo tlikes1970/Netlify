@@ -1,326 +1,307 @@
-import { useTranslations } from '../lib/language';
-import { useLibrary } from '../lib/storage';
-import { useCustomLists } from '../lib/customLists';
-import { useReturningShows } from '@/state/selectors/useReturningShows';
-import { useEffect, useState, createContext, useContext, useMemo, useRef } from 'react';
-import React from 'react';
-import { dlog } from '../lib/log';
+import { useTranslations } from "../lib/language";
 
-type TabId = 'watching'|'want'|'watched'|'returning'|'mylists'|'discovery'; // Removed 'not' - now handled by modal
-export type MobileTabsProps = { current: 'home' | TabId; onChange: (next: 'home' | TabId) => void; };
+import {
+  useEffect,
+  useState,
+  createContext,
+  useContext,
+  useCallback,
+} from "react";
 
-// Single source of truth for mobile nav height
-export const MOBILE_NAV_HEIGHT = 80;
+import type { AppView } from "@/lib/navigation";
 
-// Context for sharing viewport offset with other components
-const ViewportContext = createContext<{ viewportOffset: number }>({ viewportOffset: 0 });
+import { MOBILE_NAV_BASE_HEIGHT } from "@/lib/capacitorSafeArea";
+
+import { isCapacitorAndroid, isCapacitorNative } from "@/lib/capacitorEnv";
+
+import {
+  KEYBOARD_DISMISS_EVENT,
+  KEYBOARD_OPEN_THRESHOLD,
+  useNavViewportLift,
+} from "@/lib/mobileViewportLayout";
+
+export type MobileTabsProps = {
+  current: AppView;
+
+  onChange: (next: AppView) => void;
+};
+
+/** @deprecated Use CSS var --mobile-nav-height (includes safe-bottom) */
+
+export const MOBILE_NAV_HEIGHT = MOBILE_NAV_BASE_HEIGHT;
+
+type ViewportLayoutState = {
+  viewportOffset: number;
+
+  keyboardOpen: boolean;
+};
+
+const ViewportContext = createContext<ViewportLayoutState>({
+  viewportOffset: 0,
+
+  keyboardOpen: false,
+});
+
 export const useViewportOffset = () => useContext(ViewportContext);
+
+const TOP_TABS: AppView[] = ["home", "library", "discovery"];
 
 export default function MobileTabs({ current, onChange }: MobileTabsProps) {
   const translations = useTranslations();
-  const customLists = useCustomLists();
-  
-  // Visual Viewport API state for iOS Safari keyboard handling
+
+  const liftNavWithViewport = useNavViewportLift();
+
   const [viewportOffset, setViewportOffset] = useState(0);
-  
-  // Debug logging
-  dlog('📱 MobileTabs rendering:', { 
-    current, 
-    screenWidth: window.innerWidth,
-    screenHeight: window.innerHeight,
-    viewportHeight: window.visualViewport?.height || 'no visualViewport',
-    scrollY: window.scrollY,
-    bodyHeight: document.body.scrollHeight,
-    viewportOffset
-  });
-  
-  // Visual Viewport API listener for iOS Safari keyboard handling
+
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+
+  const resetKeyboardLayout = useCallback(() => {
+    setViewportOffset(0);
+
+    setKeyboardOpen(false);
+  }, []);
+
   useEffect(() => {
-    if (!window.visualViewport) {
-      dlog('📱 Visual Viewport API not supported, using safe fallback');
-      
-      // Safe fallback: listen to resize, orientationchange, and visibilitychange
-      const handleFallbackResize = () => {
-        dlog('📱 Fallback resize detected, checking for keyboard');
-        // Simple heuristic: if viewport height is significantly less than screen height
-        const heightDiff = window.innerHeight - window.screen.height;
-        if (Math.abs(heightDiff) > 100) {
-          setViewportOffset(Math.abs(heightDiff));
-        } else {
-          setViewportOffset(0);
-        }
-      };
-      
-      const handleOrientationChange = () => {
-        dlog('📱 Orientation change detected');
-        setTimeout(() => setViewportOffset(0), 100); // Reset after orientation settles
-      };
-      
-      const handleVisibilityChange = () => {
-        dlog('📱 Visibility change detected');
-        if (document.hidden) {
-          setViewportOffset(0);
-        }
-      };
-      
-      // Listen for safe fallback events
-      window.addEventListener('resize', handleFallbackResize);
-      window.addEventListener('orientationchange', handleOrientationChange);
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-      
-      return () => {
-        window.removeEventListener('resize', handleFallbackResize);
-        window.removeEventListener('orientationchange', handleOrientationChange);
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-      };
-    }
-    
-    let prevOffsetTop = 0;
-    let throttleTimeout: ReturnType<typeof setTimeout> | null = null;
-    
-    const handleViewportChange = () => {
-      // Throttle to prevent rapid fires from iOS toolbar animations
-      if (throttleTimeout) return;
-      
-      throttleTimeout = setTimeout(() => {
-        throttleTimeout = null;
-        
-        const visualHeight = window.visualViewport?.height || window.innerHeight;
-        const screenHeight = window.innerHeight;
-        const currentOffsetTop = window.visualViewport ? window.visualViewport.offsetTop : 0;
-        
-        // Calculate delta to detect toolbar changes vs keyboard
-        const offsetTopDelta = Math.abs(currentOffsetTop - prevOffsetTop);
-        
-        dlog('📱 Visual viewport changed:', { 
-          visualHeight, 
-          screenHeight, 
-          currentOffsetTop,
-          prevOffsetTop,
-          offsetTopDelta,
-          keyboardOpen: offsetTopDelta <= 50 && (screenHeight - visualHeight) > 50
-        });
-        
-        // If offsetTop changed significantly (>50px), it's toolbar animation - ignore
-        if (offsetTopDelta > 50) {
-          dlog('📱 Toolbar animation detected, ignoring offset change');
-          setViewportOffset(0);
-          prevOffsetTop = currentOffsetTop;
+    const native = isCapacitorNative();
+
+    const handleKeyboardDismiss = () => {
+      resetKeyboardLayout();
+      // Android adjustResize: scrollTo(0) after keyboard causes a blank gap above header.
+      if (
+        native &&
+        !isCapacitorAndroid() &&
+        window.visualViewport &&
+        window.visualViewport.offsetTop > 0
+      ) {
+        window.scrollTo(0, 0);
+      }
+    };
+
+    window.addEventListener(KEYBOARD_DISMISS_EVENT, handleKeyboardDismiss);
+
+    const handleFocusOut = (e: FocusEvent) => {
+      if (!native) return;
+
+      const next = e.relatedTarget as Node | null;
+
+      if (
+        next &&
+        (e.target as HTMLElement)?.closest?.('[data-role="searchbar"]')
+      ) {
+        if (
+          next instanceof HTMLElement &&
+          next.closest('[data-role="searchbar"]')
+        ) {
           return;
         }
-        
-        // Only adjust for height changes with stable offsetTop (keyboard)
-        const offset = Math.max(0, screenHeight - visualHeight);
-        // Only apply offset if it's significant (>50px) to avoid toolbar micro-shifts
-        setViewportOffset(offset > 50 ? offset : 0);
-        prevOffsetTop = currentOffsetTop;
-        
-      }, 50); // Throttle to max 20fps
+      }
+
+      window.setTimeout(handleKeyboardDismiss, 150);
     };
-    
-    // Scroll reset listener for aggressive repaint forcing
-    let scrollResetTimeout: ReturnType<typeof setTimeout> | null = null;
-    const handleScrollReset = () => {
-      if (scrollResetTimeout) clearTimeout(scrollResetTimeout);
-      scrollResetTimeout = setTimeout(() => {
-        // Reset nav position on scroll end if toolbar is stable
-        if (window.visualViewport && Math.abs(window.visualViewport.offsetTop) < 50) {
-          const navElement = document.querySelector('.mobile-nav') as HTMLElement;
-          if (navElement) {
-            navElement.style.bottom = '0';
-          }
+
+    document.addEventListener("focusout", handleFocusOut, true);
+
+    if (native) {
+      const vv = window.visualViewport;
+
+      const syncNativeKeyboard = () => {
+        const inset = Math.max(
+          0,
+          window.innerHeight - (vv?.height ?? window.innerHeight),
+        );
+
+        const open = inset > KEYBOARD_OPEN_THRESHOLD;
+
+        setKeyboardOpen(open);
+
+        setViewportOffset(0);
+
+        if (!open) {
+          setKeyboardOpen(false);
         }
-      }, 100);
+      };
+
+      vv?.addEventListener("resize", syncNativeKeyboard);
+
+      vv?.addEventListener("scroll", syncNativeKeyboard);
+
+      syncNativeKeyboard();
+
+      return () => {
+        vv?.removeEventListener("resize", syncNativeKeyboard);
+
+        vv?.removeEventListener("scroll", syncNativeKeyboard);
+
+        window.removeEventListener(
+          KEYBOARD_DISMISS_EVENT,
+          handleKeyboardDismiss,
+        );
+
+        document.removeEventListener("focusout", handleFocusOut, true);
+      };
+    }
+
+    if (!window.visualViewport) {
+      const handleFallbackResize = () => {
+        const heightDiff = window.innerHeight - window.screen.height;
+
+        setViewportOffset(
+          Math.abs(heightDiff) > 100 ? Math.abs(heightDiff) : 0,
+        );
+      };
+
+      const handleOrientationChange = () => {
+        window.setTimeout(resetKeyboardLayout, 100);
+      };
+
+      const handleVisibilityChange = () => {
+        if (document.hidden) resetKeyboardLayout();
+      };
+
+      window.addEventListener("resize", handleFallbackResize);
+
+      window.addEventListener("orientationchange", handleOrientationChange);
+
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+
+      return () => {
+        window.removeEventListener("resize", handleFallbackResize);
+
+        window.removeEventListener(
+          "orientationchange",
+          handleOrientationChange,
+        );
+
+        document.removeEventListener(
+          "visibilitychange",
+          handleVisibilityChange,
+        );
+
+        window.removeEventListener(
+          KEYBOARD_DISMISS_EVENT,
+          handleKeyboardDismiss,
+        );
+
+        document.removeEventListener("focusout", handleFocusOut, true);
+      };
+    }
+
+    let prevOffsetTop = 0;
+
+    let throttleTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    const handleViewportChange = () => {
+      if (throttleTimeout) return;
+
+      throttleTimeout = window.setTimeout(() => {
+        throttleTimeout = null;
+
+        const visualHeight =
+          window.visualViewport?.height || window.innerHeight;
+
+        const screenHeight = window.innerHeight;
+
+        const currentOffsetTop = window.visualViewport
+          ? window.visualViewport.offsetTop
+          : 0;
+
+        const offsetTopDelta = Math.abs(currentOffsetTop - prevOffsetTop);
+
+        if (offsetTopDelta > 50) {
+          setViewportOffset(0);
+
+          prevOffsetTop = currentOffsetTop;
+
+          return;
+        }
+
+        const offset = Math.max(0, screenHeight - visualHeight);
+
+        setViewportOffset(offset > KEYBOARD_OPEN_THRESHOLD ? offset : 0);
+
+        setKeyboardOpen(offset > KEYBOARD_OPEN_THRESHOLD);
+
+        prevOffsetTop = currentOffsetTop;
+      }, 50);
     };
-    
-    // Initial calculation
+
     handleViewportChange();
-    
-    // Listen for viewport changes (keyboard open/close)
-    window.visualViewport.addEventListener('resize', handleViewportChange);
-    // Listen for scroll events to reset position
-    window.addEventListener('scroll', handleScrollReset, { passive: true });
-    
+
+    window.visualViewport.addEventListener("resize", handleViewportChange);
+
     return () => {
-      window.visualViewport?.removeEventListener('resize', handleViewportChange);
-      window.removeEventListener('scroll', handleScrollReset);
-      if (throttleTimeout) {
-        clearTimeout(throttleTimeout);
-      }
-      if (scrollResetTimeout) {
-        clearTimeout(scrollResetTimeout);
-      }
-    };
-  }, []);
-  
-  // Get reactive counts for each list
-  const watchingItems = useLibrary('watching');
-  const wantItems = useLibrary('wishlist');
-  const watchedItems = useLibrary('watched');
-  const returningItems = useReturningShows();
-  
-  const watchingCount = watchingItems.length;
-  const wantCount = wantItems.length;
-  const watchedCount = watchedItems.length;
-  const myListsCount = Array.isArray(customLists) ? customLists.length : 0;
-  const returningCount = returningItems.length;
-  
-  const TABS: { id: TabId; label: string; count: number }[] = [
-    { id: 'watching', label: 'Watching', count: watchingCount },
-    { id: 'want',     label: 'Wishlist', count: wantCount },
-    { id: 'watched',  label: 'Watched', count: watchedCount },
-    { id: 'returning',label: 'Returning', count: returningCount },
-    { id: 'mylists',  label: 'Lists', count: myListsCount },
-    { id: 'discovery',label: 'Discover', count: 0 }
-  ];
+      window.visualViewport?.removeEventListener(
+        "resize",
+        handleViewportChange,
+      );
 
-  // Split into visible vs overflow (keep Lists visible; move Returning to More)
-  const { visibleTabs, overflowTabs } = useMemo(() => {
-    const visibleIds: TabId[] = ['watching', 'want', 'watched', 'mylists'];
-    const visible = TABS.filter(t => (visibleIds as string[]).includes(t.id));
-    const overflow = TABS.filter(t => !(visibleIds as string[]).includes(t.id));
-    return { visibleTabs: visible, overflowTabs: overflow };
-  }, [TABS]);
+      if (throttleTimeout) clearTimeout(throttleTimeout);
 
-  // "More" dropdown for mobile
-  const [moreOpen, setMoreOpen] = useState(false);
-  const moreRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    const onDocClick = (e: MouseEvent) => {
-      if (!moreRef.current) return;
-      if (!moreRef.current.contains(e.target as Node)) setMoreOpen(false);
+      window.removeEventListener(KEYBOARD_DISMISS_EVENT, handleKeyboardDismiss);
+
+      document.removeEventListener("focusout", handleFocusOut, true);
     };
-    document.addEventListener('click', onDocClick);
-    return () => document.removeEventListener('click', onDocClick);
-  }, []);
+  }, [resetKeyboardLayout]);
+
+  const navBottom = liftNavWithViewport ? viewportOffset : 0;
+
+  const labelFor = (id: AppView) => {
+    if (id === "home") return translations.home;
+    if (id === "library") return "Library";
+    return translations.discovery ?? "Discover";
+  };
 
   return (
-    <ViewportContext.Provider value={{ viewportOffset }}>
-      <nav 
-        className="mobile-nav fixed left-0 right-0 z-nav px-1 py-2"
-        style={{ 
-          paddingBottom: 'calc(8px + env(safe-area-inset-bottom))',
-          boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.1)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          backgroundColor: 'var(--bg)',
-          borderTop: '1px solid var(--line)',
-          height: `${MOBILE_NAV_HEIGHT}px`,
-          position: 'fixed',
-          bottom: `${viewportOffset}px`, // Dynamic bottom position for iOS Safari keyboard
-          left: 0,
-          right: 0,
-          zIndex: 9999
+    <ViewportContext.Provider value={{ viewportOffset, keyboardOpen }}>
+      <nav
+        className={`mobile-nav fixed left-0 right-0 z-nav px-2${
+          keyboardOpen ? " mobile-nav--keyboard-hidden" : ""
+        }`}
+        style={{
+          boxShadow: "0 -2px 10px rgba(0, 0, 0, 0.1)",
+          backdropFilter: "blur(10px)",
+          WebkitBackdropFilter: "blur(10px)",
+          backgroundColor: "var(--bg)",
+          borderTop: "1px solid var(--line)",
+          // Capacitor: omit bottom so CSS .mobile-nav { bottom: var(--safe-bottom) } applies.
+          // iOS mobile browser only: lift above keyboard via visualViewport offset.
+          ...(navBottom > 0 ? { bottom: `${navBottom}px` } : {}),
+          zIndex: 9999,
         }}
+        aria-label="Main navigation"
+        aria-hidden={keyboardOpen}
       >
-        <div className="flex items-center justify-around h-full w-full">
-          {/* Home Tab */}
-          <button
-            onClick={() => onChange('home')}
-            className="flex flex-col items-center justify-center p-2 min-h-[60px] transition-all duration-200 ease-out relative flex-1"
-            style={{
-              color: current === 'home' ? 'var(--accent)' : 'var(--muted)',
-              fontWeight: current === 'home' ? '600' : '500'
-            }}
-          >
-            <span className="text-sm font-medium">{translations.home}</span>
-            {current === 'home' && (
-              <div 
-                className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 rounded-full"
-                style={{ backgroundColor: 'var(--accent)' }}
-              />
-            )}
-          </button>
+        <div className="grid grid-cols-3 h-full w-full max-w-lg mx-auto gap-1">
+          {TOP_TABS.map((tabId) => {
+            const active = current === tabId;
 
-          
-
-          {/* Main Tabs (visible) */}
-          {visibleTabs.map((tab, index) => (
-            <React.Fragment key={tab.id}>
+            return (
               <button
-                onClick={() => onChange(tab.id)}
-                className="flex flex-col items-center justify-center p-2 min-h-[60px] transition-all duration-200 ease-out relative flex-1"
+                key={tabId}
+                type="button"
+                onClick={() => onChange(tabId)}
+                className="flex flex-col items-center justify-center rounded-lg px-2 min-h-[52px] transition-colors relative touch-manipulation"
                 style={{
-                  color: current === tab.id ? 'var(--accent)' : 'var(--muted)',
-                  fontWeight: current === tab.id ? '600' : '500'
+                  color: active ? "var(--accent)" : "var(--muted)",
+
+                  fontWeight: active ? 600 : 500,
                 }}
+                aria-current={active ? "page" : undefined}
+                tabIndex={keyboardOpen ? -1 : 0}
               >
-                <span className="text-sm font-medium">
-                  {tab.label}
-                  {/* Count displayed as subtle parenthetical, not notification badge */}
-                  {tab.count > 0 && (
-                    <span className="font-normal opacity-70 ml-0.5">
-                      ({tab.count})
-                    </span>
-                  )}
+                <span className="text-sm font-medium leading-tight text-center">
+                  {labelFor(tabId)}
                 </span>
-                {current === tab.id && (
-                  <div 
-                    className="absolute top-0 left-1/2 transform -translate-x-1/2 w-8 h-0.5 rounded-full"
-                    style={{ backgroundColor: 'var(--accent)' }}
+
+                {active && (
+                  <div
+                    className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-0.5 rounded-full"
+                    style={{ backgroundColor: "var(--accent)" }}
                   />
                 )}
               </button>
-              
-              {/* Vertical Separator between tabs (except after last tab) */}
-              {index < visibleTabs.length - 1 && (
-                <div 
-                  className="h-8 w-px flex-none"
-                  style={{ backgroundColor: 'var(--line)' }}
-                />
-              )}
-            </React.Fragment>
-          ))}
-
-          {/* More overflow */}
-          {overflowTabs.length > 0 && (
-              <>
-                {/* Separator before More */}
-                <div className="h-8 w-px flex-none" style={{ backgroundColor: 'var(--line)' }} />
-                <div ref={moreRef} className="relative flex-1 flex items-center justify-center">
-                <button
-                  onClick={() => setMoreOpen(v => !v)}
-                  className="flex flex-col items-center justify-center p-2 min-h-[60px] transition-all duration-200 ease-out relative"
-                  style={{ color: moreOpen ? 'var(--accent)' : 'var(--muted)', fontWeight: moreOpen ? 600 as any : 500 as any }}
-                  aria-haspopup="menu"
-                  aria-expanded={moreOpen}
-                >
-                  <span className="text-sm font-medium">
-                    More
-                    {/* Count displayed as subtle parenthetical */}
-                    {overflowTabs.some(t => t.count > 0) && (
-                      <span className="font-normal opacity-70 ml-0.5">
-                        ({overflowTabs.reduce((sum, t) => sum + (t.count || 0), 0)})
-                      </span>
-                    )}
-                  </span>
-                  {moreOpen && (
-                    <div 
-                      role="menu"
-                      className="absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 min-w-[160px] rounded-xl shadow-lg border"
-                      style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)' }}
-                    >
-                      {overflowTabs.map(t => (
-                        <button
-                          key={t.id}
-                          role="menuitem"
-                          onClick={() => { setMoreOpen(false); onChange(t.id); }}
-                          className="w-full text-left px-4 py-2 flex items-center justify-between hover:opacity-90"
-                          style={{ color: 'var(--text)' }}
-                        >
-                          <span>{t.label}</span>
-                          {/* Subtle count, not notification badge */}
-                          {t.count > 0 && (
-                            <span className="ml-2 text-xs opacity-70" style={{ color: 'var(--muted)' }}>({t.count})</span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </button>
-              </div>
-              </>
-          )}
+            );
+          })}
         </div>
       </nav>
     </ViewportContext.Provider>

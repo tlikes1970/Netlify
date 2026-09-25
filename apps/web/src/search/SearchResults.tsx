@@ -237,7 +237,7 @@ export default function SearchResults({
 
   return (
     <section
-      className="mx-auto w-full max-w-7xl px-3 sm:px-4 py-3"
+      className={`mx-auto w-full max-w-7xl px-3 sm:px-4 py-3${isMobile ? " pb-mobile-nav lg:pb-0" : ""}`}
       aria-labelledby="search-results-heading"
     >
       {/* Mobile Back to Home Button */}

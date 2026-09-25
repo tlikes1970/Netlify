@@ -4,7 +4,7 @@ import { getItemSynopsis } from "@/lib/itemSynopsis";
 import { backfillSynopsisForItems } from "@/utils/backfillSynopsis";
 import { removeMediaItemWithConfirmation } from "@/lib/confirmRemoveShow";
 import { Library, LibraryEntry } from "@/lib/storage";
-import { useSettings, getPersonalityText, DEFAULT_PERSONALITY } from "@/lib/settings";
+import { useSettings, resolveFlickletLine } from "@/lib/settings";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import ScrollToTopArrow from "@/components/ScrollToTopArrow";
 import { EpisodeTrackingModal } from "@/components/modals/EpisodeTrackingModal";
@@ -714,26 +714,29 @@ export default function ListPage({
 
   // Get appropriate empty state text based on title
   const getEmptyText = () => {
-    const personality = settings.personality || DEFAULT_PERSONALITY;
+    const level = settings.personalityLevel;
     if (mode === "returning") {
-      return "No upcoming shows in your Watching list yet. Add TV series you're following and they'll appear here when they have return dates or upcoming status.";
+      return (
+        resolveFlickletLine("empty.upnext", level) ||
+        "No upcoming shows in your Watching list yet. Add TV series you're following and they'll appear here when they have return dates or upcoming status."
+      );
     }
     if (title.toLowerCase().includes("watching")) {
-      return getPersonalityText(personality, "emptyWatching");
-    } else if (
+      return resolveFlickletLine("empty.watching", level);
+    }
+    if (
       title.toLowerCase().includes("wishlist") ||
       title.toLowerCase().includes("want")
     ) {
-      return getPersonalityText(personality, "emptyWishlist");
-    } else if (title.toLowerCase().includes("watched")) {
-      return getPersonalityText(personality, "emptyWatched");
-    } else if (title.toLowerCase().includes("not interested")) {
-      return (
-        getPersonalityText(personality, "empty") ||
-        "No items marked as not interested yet."
-      );
+      return resolveFlickletLine("empty.want", level);
     }
-    return getPersonalityText(personality, "empty");
+    if (title.toLowerCase().includes("watched")) {
+      return resolveFlickletLine("empty.watched", level);
+    }
+    if (title.toLowerCase().includes("not interested")) {
+      return "No items marked as not interested yet.";
+    }
+    return resolveFlickletLine("empty.watching", level);
   };
 
   // Action handlers using new Library system

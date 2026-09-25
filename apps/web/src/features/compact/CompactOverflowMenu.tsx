@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from "react";
 import { ActionItem, ActionContext } from "./actionsMap";
 import type {
   CardActionHandlers,
@@ -9,7 +9,11 @@ import { useSettings } from "../../lib/settings";
 import { useEntitlements } from "../../hooks/useEntitlements";
 import { shareShowWithFallback } from "../../lib/shareLinks";
 import { useToast } from "../../components/Toast";
-
+import {
+  computeOverflowMenuPlacement,
+  estimateOverflowMenuHeight,
+  getMenuViewportBounds,
+} from "./overflowMenuPlacement";
 interface CompactOverflowMenuProps {
   item: ActionItem;
   context: ActionContext;
@@ -35,71 +39,63 @@ export function CompactOverflowMenu({
     left: 0,
     direction: "down",
   });
-  const menuRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const settings = useSettings();
+  const menuPanelRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);  const settings = useSettings();
   const { hasFullAccess, isReadOnlyMode } = useEntitlements();
   const { addToast } = useToast();
 
-  // Calculate menu position
-  const calculatePosition = () => {
-    if (!buttonRef.current || !menuRef.current) return;
+  // Build real menu actions from provided handlers (before positioning hooks)
+  const menuActions = useMemo(
+    () => (actions ? buildMenuActions(item, context, actions) : []),
+    [actions, item, context, settings, hasFullAccess, addToast]
+  );
+
+  const updateMenuPosition = useCallback(() => {
+    if (!buttonRef.current || !menuPanelRef.current) return;
 
     const buttonRect = buttonRef.current.getBoundingClientRect();
-    const menuRect = menuRef.current.getBoundingClientRect();
-    const viewportHeight = window.innerHeight;
-    const viewportWidth = window.innerWidth;
+    const menuEl = menuPanelRef.current;
+    const menuHeight = Math.max(
+      menuEl.offsetHeight,
+      estimateOverflowMenuHeight(menuActions.length)
+    );
+    const menuWidth = menuEl.offsetWidth || 200;
 
-    // Default: position below button, aligned to right edge (top-end / bottom-end)
-    // This avoids covering card content (poster, title, buttons)
-    let top = buttonRect.bottom + 4; // Small gap
-    let left = buttonRect.right - menuRect.width; // Align to right edge
-    let direction: "up" | "down" = "down";
+    setMenuPosition(
+      computeOverflowMenuPlacement({
+        buttonRect,
+        menuWidth,
+        menuHeight,
+        viewport: getMenuViewportBounds(),
+      })
+    );
+  }, [menuActions.length]);
 
-    // Check if menu would overflow bottom
-    if (
-      top + menuRect.height > viewportHeight &&
-      buttonRect.top > menuRect.height
-    ) {
-      // Flip up if there's space above
-      top = buttonRect.top - menuRect.height - 4; // Small gap
-      direction = "up";
-    }
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    updateMenuPosition();
+    const raf = requestAnimationFrame(updateMenuPosition);
+    return () => cancelAnimationFrame(raf);
+  }, [isOpen, updateMenuPosition]);
 
-    // Keep within viewport width (prefer right alignment, but adjust if needed)
-    if (left + menuRect.width > viewportWidth) {
-      left = viewportWidth - menuRect.width - 8;
-    }
-    if (left < 8) {
-      left = 8;
-    }
-    
-    // Ensure menu doesn't go above viewport
-    if (top < 8) {
-      top = 8;
-    }
-
-    setMenuPosition({ top, left, direction });
-  };
-
-  // Reposition on open and resize/scroll
+  // Reposition on resize/scroll/visualViewport changes
   useEffect(() => {
     if (!isOpen) return;
 
-    calculatePosition();
+    const handleReposition = () => updateMenuPosition();
 
-    const handleResize = () => calculatePosition();
-    const handleScroll = () => calculatePosition();
-
-    window.addEventListener("resize", handleResize);
-    window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("resize", handleReposition);
+    window.addEventListener("scroll", handleReposition, true);
+    window.visualViewport?.addEventListener("resize", handleReposition);
+    window.visualViewport?.addEventListener("scroll", handleReposition);
 
     return () => {
-      window.removeEventListener("resize", handleResize);
-      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleReposition);
+      window.removeEventListener("scroll", handleReposition, true);
+      window.visualViewport?.removeEventListener("resize", handleReposition);
+      window.visualViewport?.removeEventListener("scroll", handleReposition);
     };
-  }, [isOpen]);
-
+  }, [isOpen, updateMenuPosition]);
   // Close menu on escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -123,8 +119,7 @@ export function CompactOverflowMenu({
       const isOutsideButton =
         buttonRef.current && !buttonRef.current.contains(target);
       const isOutsideMenu =
-        menuRef.current && !menuRef.current.contains(target);
-
+        menuPanelRef.current && !menuPanelRef.current.contains(target);
       if (isOutsideButton && isOutsideMenu) {
         setIsOpen(false);
         buttonRef.current?.focus(); // Return focus to button
@@ -156,11 +151,7 @@ export function CompactOverflowMenu({
     };
   }, [isOpen]);
 
-  // Build real menu actions from provided handlers
-  const menuActions = actions ? buildMenuActions(item, context, actions) : [];
-
-  if (menuActions.length === 0) {
-    return null;
+  if (menuActions.length === 0) {    return null;
   }
 
   const handleToggle = () => {
@@ -393,12 +384,6 @@ export function CompactOverflowMenu({
             label: "Mark Watched",
             onClick: handlers.onWatched,
           });
-        if (handlers.onWant)
-          menuItems.push({
-            id: "remove-want",
-            label: "Remove from Want to Watch",
-            onClick: handlers.onWant,
-          });
         if (handlers.onNotInterested)
           menuItems.push({
             id: "not-interested",
@@ -542,8 +527,7 @@ export function CompactOverflowMenu({
   }
 
   return (
-    <div ref={menuRef} style={{ position: "relative" }}>
-      <button
+    <div style={{ position: "relative" }}>      <button
         ref={buttonRef}
         onClick={handleToggle}
         aria-expanded={isOpen}
@@ -618,15 +602,14 @@ export function CompactOverflowMenu({
       {isOpen && (
         <Portal>
           <div
-            ref={menuRef}
+            ref={menuPanelRef}
             role="menu"
-            className="menu-portal"
+            className="menu-portal compact-overflow-menu"
             data-dir={menuPosition.direction}
             style={{
               position: "fixed",
               top: `${menuPosition.top}px`,
               left: `${menuPosition.left}px`,
-              zIndex: 1000,
               minWidth: "200px",
               maxWidth: "min(90vw, 320px)",
               maxHeight: "min(56vh, 420px)",
@@ -638,8 +621,7 @@ export function CompactOverflowMenu({
               transformOrigin:
                 menuPosition.direction === "up" ? "bottom left" : "top left",
             }}
-          >
-            {menuActions.map((action, index) => (
+          >            {menuActions.map((action, index) => (
               <button
                 key={action.id}
                 onClick={() => handleActionClick(action)}

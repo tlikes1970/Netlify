@@ -10,27 +10,39 @@ function libraryMembershipSignature(): string {
   return buildLibraryMembershipSignature(Library.getAll());
 }
 
-export function useGenreContent(mainGenre: string, subGenre: string) {
-  // const settings = useSettings(); // Unused
-  
-  return useQuery<CardData[]>({ 
-    queryKey: ['tmdb', 'genre', mainGenre, subGenre], 
-    queryFn: () => {
-      console.log(`🎬 useGenreContent: Fetching ${mainGenre}/${subGenre}`);
-      return fetchGenreContent(mainGenre, subGenre);
-    },
+export type ForYouContentRow = {
+  data: CardData[];
+  rawData: CardData[] | undefined;
+  rowId?: string;
+  title: string;
+  isPending: boolean;
+  isFetching: boolean;
+  isError: boolean;
+  isSuccess: boolean;
+  refetch: () => Promise<unknown>;
+};
+
+export function useGenreContent(
+  mainGenre: string,
+  subGenre: string,
+  options?: { fetchEnabled?: boolean }
+) {
+  const fetchEnabled = options?.fetchEnabled !== false;
+
+  return useQuery<CardData[]>({
+    queryKey: ['tmdb', 'genre', mainGenre, subGenre],
+    queryFn: async () => fetchGenreContent(mainGenre, subGenre),
     staleTime: 300_000, // 5 minutes
-    enabled: !!(mainGenre && subGenre),
-    retry: (failureCount, error) => {
-      console.error(`TMDB ${mainGenre}/${subGenre} error:`, error);
-      return failureCount < 2;
-    },
-    // onError removed - not supported in newer React Query versions
+    enabled: fetchEnabled && !!(mainGenre && subGenre),
+    retry: (failureCount) => failureCount < 2,
+    networkMode: 'offlineFirst',
   });
 }
-
-export function useForYouContent(forYouRows: ForYouRow[]) {
-  console.log('🎬 useForYouContent: Processing rows:', forYouRows);
+export function useForYouContent(
+  forYouRows: ForYouRow[],
+  options?: { fetchEnabled?: boolean }
+) {
+  const fetchEnabled = options?.fetchEnabled !== false;
   
   // State to trigger re-renders when library changes
   const [libraryVersion, setLibraryVersion] = useState(0);
@@ -50,42 +62,31 @@ export function useForYouContent(forYouRows: ForYouRow[]) {
     };
   }, []);
   
-  const queries = forYouRows.map(row => 
-    useGenreContent(row.mainGenre, row.subGenre)
+  const queries = forYouRows.map((row) =>
+    useGenreContent(row.mainGenre, row.subGenre, { fetchEnabled })
   );
   
   return queries.map((query, index) => {
     // libraryVersion forces re-filter after membership changes (no TMDB refetch)
     void libraryVersion;
 
+    const rawData = query.data;
+
     // Filter out items that are already in the library
-    const filteredData = query.data?.filter(item => {
-      const isInLibrary = Library.has(item.id, item.kind);
-      
-      if (isInLibrary) {
-        console.log(`🚫 Filtering out ${item.title} (already in library)`);
-      }
-      
-      return !isInLibrary;
-    }) || [];
-    
-    const result = {
-      ...query,
+    const filteredData =
+      rawData?.filter((item) => !Library.has(item.id, item.kind)) ?? [];
+
+    const row = forYouRows[index];
+    return {
       data: filteredData,
-      rowId: forYouRows[index]?.id,
-      title: forYouRows[index]?.title || `${forYouRows[index]?.mainGenre}/${forYouRows[index]?.subGenre}`
-    };
-    
-    console.log(`🎬 useForYouContent: Row ${index} (${result.title}):`, {
-      isLoading: query.isLoading,
+      rawData,
+      rowId: row?.id,
+      title: row?.title || `${row?.mainGenre}/${row?.subGenre}`,
+      isPending: query.isPending,
+      isFetching: query.isFetching,
       isError: query.isError,
-      originalDataLength: query.data?.length || 0,
-      filteredDataLength: filteredData.length,
-      libraryVersion,
-      error: query.error
-    });
-    
-    return result;
+      isSuccess: query.isSuccess,
+      refetch: query.refetch,
+    };
   });
 }
-

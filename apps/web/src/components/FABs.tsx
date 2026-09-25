@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
-import { MOBILE_NAV_HEIGHT, useViewportOffset } from './MobileTabs';
+import { useViewportOffset } from './MobileTabs';
+import { mobileFabBottom } from '@/lib/capacitorSafeArea';
 
 // Settings FAB (COG icon) - Bottom left
 export function SettingsFAB({ onClick }: { onClick: () => void }) {
@@ -63,7 +64,7 @@ export function SettingsFAB({ onClick }: { onClick: () => void }) {
         color: 'var(--text)',
         // Only apply mobile positioning on mobile screens
         ...(window.innerWidth < 1024 && {
-          bottom: `calc(${MOBILE_NAV_HEIGHT}px + ${effectiveOffset}px + 16px)`,
+          bottom: mobileFabBottom(16, effectiveOffset),
           left: '16px'
         })
       }}
@@ -157,7 +158,7 @@ export function ThemeToggleFAB({ theme, onToggle }: { theme: 'light' | 'dark'; o
         color: 'var(--text)',
         // Only apply mobile positioning on mobile screens
         ...(window.innerWidth < 1024 && {
-          bottom: `calc(${MOBILE_NAV_HEIGHT}px + ${effectiveOffset}px + 16px)`,
+          bottom: mobileFabBottom(16, effectiveOffset),
           right: '16px'
         })
       }}

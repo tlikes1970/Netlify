@@ -1,14 +1,14 @@
 import Tabs from "@/components/Tabs";
 import MobileTabs, { useViewportOffset } from "@/components/MobileTabs";
+import { mobileContentPaddingBottom } from "@/lib/mobileViewportLayout";
 import FlickletHeader from "@/components/FlickletHeader";
-import Rail from "@/components/Rail";
 import Section from "@/components/Section";
 import FeedbackPanel from "@/components/FeedbackPanel";
 import SearchResults from "@/search/SearchResults";
 import HomeYourShowsRail from "@/components/rails/HomeYourShowsRail";
 import HomeUpNextRail from "@/components/rails/HomeUpNextRail";
 import HomeMarquee from "@/components/HomeMarquee";
-import { HOME_MARQUEE_MESSAGES } from "@/config/homeMarqueeMessages";
+import HomeForYouSection from "@/components/home/HomeForYouSection";
 import { SettingsFAB, ThemeToggleFAB } from "@/components/FABs";
 import OnboardingCoachmarks from "@/components/onboarding/OnboardingCoachmarks";
 import ScrollToTopArrow from "@/components/ScrollToTopArrow";
@@ -24,15 +24,14 @@ import type { SettingsSectionId } from "@/components/settingsConfig";
 // Lazy load heavy components
 const SettingsPage = lazy(() => import("@/components/SettingsPage"));
 const NotesAndTagsModal = lazy(
-  () => import("@/components/modals/NotesAndTagsModal")
+  () => import("@/components/modals/NotesAndTagsModal"),
 );
 import { ShowNotificationSettingsModal } from "@/components/modals/ShowNotificationSettingsModal";
 import { BloopersModal } from "@/components/extras/BloopersModal";
 import { ExtrasModal } from "@/components/extras/ExtrasModal";
 import { GoofsModal } from "@/components/extras/GoofsModal";
 import { HelpModal } from "@/components/HelpModal";
-const ListPage = lazy(() => import("@/pages/ListPage"));
-const MyListsPage = lazy(() => import("@/pages/MyListsPage"));
+const LibraryPage = lazy(() => import("@/pages/LibraryPage"));
 const DiscoveryPage = lazy(() => import("@/pages/DiscoveryPage"));
 const AuthDebugPage = lazy(() => import("@/debug/AuthDebugPage"));
 import PullToRefreshWrapper from "@/components/PullToRefreshWrapper";
@@ -41,9 +40,13 @@ import { useForYouContent } from "@/hooks/useGenreContent";
 import { useServiceWorker } from "@/hooks/useServiceWorker";
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { flushSync } from "react-dom";
-import { Library, useLibrary } from "@/lib/storage";
+import { Library, useLibrary, type LibraryEntry } from "@/lib/storage";
 import { mountActionBridge, setToastCallback } from "@/state/actions";
-import { useSettings, settingsManager } from "@/lib/settings";
+import {
+  useSettings,
+  settingsManager,
+  getFlickletMarqueeMessages,
+} from "@/lib/settings";
 import { useTranslations } from "@/lib/language";
 import Toast, { useToast } from "@/components/Toast";
 import ConfirmHost from "@/components/ConfirmHost";
@@ -66,16 +69,18 @@ import { trackTabOpenedReturning } from "@/lib/analytics";
 import { googleLogin } from "@/lib/authLogin";
 import { isCapacitorNative } from "@/lib/capacitorEnv";
 import { TrialStatusBanner } from "@/components/TrialStatusBanner";
+import { PersonalityBanner } from "@/components/PersonalityBanner";
+import { useScreenshotMode } from "@/hooks/useScreenshotMode";
 import { useEntitlements } from "@/hooks/useEntitlements";
-
-type View =
-  | "home"
-  | "watching"
-  | "want"
-  | "watched"
-  | "returning"
-  | "mylists"
-  | "discovery";
+import {
+  type AppView,
+  type LibrarySegment,
+  type NavTarget,
+  isLibrarySegment,
+  resolveNavigation,
+  readStoredLibrarySegment,
+  writeStoredLibrarySegment,
+} from "@/lib/navigation";
 type SearchType = "all" | "movies-tv" | "people";
 type SearchState = {
   q: string;
@@ -91,16 +96,21 @@ export default function App() {
   // This marks where the main content starts (first rail / main feed)
   // Config: Home down-arrow - scroll target anchor
   const homeContentAnchorRef = useRef<HTMLDivElement | null>(null);
-  
+
   // Computed smart views
   const returning = useReturningShows();
-  const [view, setView] = useState<View>("home");
+  const [view, setView] = useState<AppView>("home");
+  /** Defer below-fold Home content until after first paint so library rails commit sooner. */
+  const [afterFirstPaintReady, setAfterFirstPaintReady] = useState(false);
+  const [librarySegment, setLibrarySegment] = useState<LibrarySegment>(
+    readStoredLibrarySegment,
+  );
   const [currentPath, setCurrentPath] = useState(
-    typeof window !== "undefined" ? window.location.pathname : "/"
+    typeof window !== "undefined" ? window.location.pathname : "/",
   );
   const isDebugAuth = currentPath === "/debug/auth";
 
-  // Legacy community URLs → home
+  // Legacy community URLs -> home
   useEffect(() => {
     if (
       /^\/posts\/[^/]+$/.test(currentPath) ||
@@ -127,6 +137,8 @@ export default function App() {
       window.removeEventListener("pushstate", handleLocationChange);
     };
   }, []);
+
+  const screenshotMode = useScreenshotMode();
 
   // Settings state
   const settings = useSettings();
@@ -164,7 +176,7 @@ export default function App() {
 
   // Debug modal state changes
   useEffect(() => {
-    console.log("🔔 Modal state changed:", {
+    console.log("Modal state changed:", {
       showNotificationModal,
       notificationModalItem: notificationModalItem?.title,
     });
@@ -172,7 +184,7 @@ export default function App() {
 
   // Debug bloopers modal state changes
   useEffect(() => {
-    console.log("🎬 Bloopers modal state changed:", {
+    console.log("Bloopers modal state changed:", {
       showBloopersModal,
       hasBloopersModalItem: !!bloopersModalItem,
       bloopersModalItemTitle: bloopersModalItem?.title,
@@ -181,7 +193,7 @@ export default function App() {
 
   // Debug extras modal state changes
   useEffect(() => {
-    console.log("🎭 Extras modal state changed:", {
+    console.log("Extras modal state changed:", {
       showExtrasModal,
       hasExtrasModalItem: !!extrasModalItem,
       extrasModalItemTitle: extrasModalItem?.title,
@@ -190,7 +202,6 @@ export default function App() {
 
   // Toast system
   const { toasts, addToast, removeToast } = useToast();
-
 
   // Search state
   const [search, setSearch] = useState<SearchState>({
@@ -205,13 +216,40 @@ export default function App() {
       q: string,
       genre: number | null,
       type: SearchType,
-      mediaTypeFilter?: "tv" | "movie" | null
+      mediaTypeFilter?: "tv" | "movie" | null,
     ) => {
       const nextQ = q.trim();
       setSearch({ q: nextQ, genre, type, mediaTypeFilter });
     },
-    []
+    [],
   );
+
+  const handleClear = () =>
+    setSearch({ q: "", genre: null, type: "all", mediaTypeFilter: null });
+
+  const navigateTo = useCallback(
+    (target: NavTarget, options?: { clearSearch?: boolean }) => {
+      const shouldClear = options?.clearSearch !== false;
+      if (shouldClear) {
+        handleClear();
+      }
+      const { view: nextView, segment } = resolveNavigation(
+        target,
+        librarySegment,
+      );
+      if (nextView === "library") {
+        setLibrarySegment(segment);
+        writeStoredLibrarySegment(segment);
+      }
+      setView(nextView);
+    },
+    [librarySegment],
+  );
+
+  const handleLibrarySegmentChange = useCallback((segment: LibrarySegment) => {
+    setLibrarySegment(segment);
+    writeStoredLibrarySegment(segment);
+  }, []);
 
   // Handle onboarding navigation to search
   useEffect(() => {
@@ -222,12 +260,12 @@ export default function App() {
 
     window.addEventListener(
       "onboarding:navigate-to-search",
-      handleNavigateToSearch
+      handleNavigateToSearch,
     );
     return () => {
       window.removeEventListener(
         "onboarding:navigate-to-search",
-        handleNavigateToSearch
+        handleNavigateToSearch,
       );
     };
   }, [handleSearch]);
@@ -237,37 +275,43 @@ export default function App() {
     const handleFirstShowAdded = () => {
       addToast("Added to Your Shows", "success");
       // Navigate to home (onboarding step advancement handled by OnboardingCoachmarks)
-      setView("home");
-      setSearch({ q: "", genre: null, type: "all", mediaTypeFilter: null });
+      navigateTo("home");
     };
 
     window.addEventListener("onboarding:firstShowAdded", handleFirstShowAdded);
     return () => {
       window.removeEventListener(
         "onboarding:firstShowAdded",
-        handleFirstShowAdded
+        handleFirstShowAdded,
       );
     };
-  }, [addToast]);
+  }, [addToast, navigateTo]);
 
   // Navigate to tab (e.g. from home CW rail "Go to Currently Watching" button)
   useEffect(() => {
     const handleNavigateToTab = (e: Event) => {
       const detail = (e as CustomEvent<{ tab: string }>).detail;
-      if (detail?.tab && ["watching", "want", "watched", "returning", "mylists", "discovery", "home"].includes(detail.tab)) {
-        setView(detail.tab as View);
+      const tab = detail?.tab;
+      if (!tab) return;
+      if (tab === "home" || tab === "discovery" || tab === "library") {
+        navigateTo(tab as NavTarget);
+        return;
+      }
+      if (isLibrarySegment(tab)) {
+        navigateTo(tab);
       }
     };
     window.addEventListener("navigate-to-tab", handleNavigateToTab);
-    return () => window.removeEventListener("navigate-to-tab", handleNavigateToTab);
-  }, []);
+    return () =>
+      window.removeEventListener("navigate-to-tab", handleNavigateToTab);
+  }, [navigateTo]);
 
   // Handle "Search Works" button click from person search results
   useEffect(() => {
     const handlePersonWorksSearch = (e: Event) => {
       const detail = (e as CustomEvent).detail;
       if (detail?.personName) {
-        console.log("🎬 Searching for person's works:", detail.personName);
+        console.log("Searching for person's works:", detail.personName);
         // Search for the person's name with movies-tv filter to show their filmography
         handleSearch(detail.personName, null, "movies-tv", null);
       }
@@ -275,7 +319,10 @@ export default function App() {
 
     document.addEventListener("search:person-works", handlePersonWorksSearch);
     return () => {
-      document.removeEventListener("search:person-works", handlePersonWorksSearch);
+      document.removeEventListener(
+        "search:person-works",
+        handlePersonWorksSearch,
+      );
     };
   }, [handleSearch]);
 
@@ -286,6 +333,10 @@ export default function App() {
     isAuthenticated,
     status,
   } = useAuth();
+
+  useEffect(() => {
+    setAfterFirstPaintReady(true);
+  }, []);
 
   // Initialize FCM and setup message handlers
   useEffect(() => {
@@ -333,7 +384,7 @@ export default function App() {
     }
   });
 
-  // Auto-prompt for authentication when not authenticated (web only — native app uses header / account to sign in)
+  // Auto-prompt for authentication when not authenticated (web only â€” native app uses header / account to sign in)
   useEffect(() => {
     if (isCapacitorNative()) {
       return;
@@ -359,7 +410,7 @@ export default function App() {
       urlParams.has("state") || urlParams.has("code") || urlParams.has("error");
     const isReturningFromRedirect = window.location.hash || hasAuthParams;
 
-    // ⚠️ MULTI-TAB SAFETY: Check if auth is in-flight in another tab
+    // MULTI-TAB SAFETY: Check if auth is in-flight in another tab
     let otherTabBlocking = false;
     try {
       otherTabBlocking = isAuthInFlightInOtherTab();
@@ -439,7 +490,7 @@ export default function App() {
     const handler = () => {
       try {
         setShowPopupHint(
-          localStorage.getItem("flicklet.auth.popup.hint") === "1"
+          localStorage.getItem("flicklet.auth.popup.hint") === "1",
         );
       } catch (e) {
         void e;
@@ -455,7 +506,7 @@ export default function App() {
 
   // Refresh function for pull-to-refresh
   const handleRefresh = async () => {
-    console.log("🔄 Pull-to-refresh triggered");
+    console.log("Pull-to-refresh triggered");
 
     // Force refresh of library data
     // Library.refresh(); // Commented out - method doesn't exist
@@ -470,17 +521,27 @@ export default function App() {
   // Search is active if there's a query OR a genre selected (for genre-only search)
   const searchActive = !!search.q.trim() || search.genre != null;
 
-  const handleClear = () =>
-    setSearch({ q: "", genre: null, type: "all", mediaTypeFilter: null });
-
   // For You configuration from settings
   const forYouRows = useForYouRows();
-  const forYouContent = useForYouContent(forYouRows);
+  const forYouContent = useForYouContent(forYouRows, {
+    // Start TMDB fetches as soon as Home is active — decoupled from For You JSX mount.
+    fetchEnabled: view === "home",
+  });
 
   // Lists - using new Library system with reactive updates
   const watching = useLibrary("watching");
   const wishlist = useLibrary("wishlist");
   const watched = useLibrary("watched");
+
+  const flickletMarqueeMessages = useMemo(
+    () => getFlickletMarqueeMessages(settings.personalityLevel),
+    [
+      settings.personalityLevel,
+      watching.length,
+      wishlist.length,
+      watched.length,
+    ],
+  );
 
   // Show all watching items in the tab (no filtering)
   // Note: The "Returning" tab is a separate smart view for returning shows
@@ -489,12 +550,12 @@ export default function App() {
     return watching; // Show all items - don't filter out returning shows
   }, [watching]);
 
-  // Analytics for Returning tab open
+  // Analytics for Returning segment open
   useEffect(() => {
-    if (view === "returning") {
+    if (view === "library" && librarySegment === "returning") {
       trackTabOpenedReturning(Array.isArray(returning) ? returning.length : 0);
     }
-  }, [view, returning]);
+  }, [view, librarySegment, returning]);
 
   // Mobile Settings breakpoint - use sheet below this width
   const MOBILE_SETTINGS_BREAKPOINT = 744;
@@ -525,12 +586,12 @@ export default function App() {
 
   // Handle settings click - route mobile to SettingsSheet, desktop to SettingsPage
   const handleSettingsClick = () => {
-    console.log("🔧 handleSettingsClick called");
+    console.log("handleSettingsClick called");
     if (shouldUseMobileSettings()) {
-      console.log("🔧 Opening SettingsSheet");
+      console.log("Opening SettingsSheet");
       openSettingsSheet();
     } else {
-      console.log("🔧 Opening SettingsPage");
+      console.log("Opening SettingsPage");
       setSettingsDesktopInitialSection("account");
       setShowSettings(true);
     }
@@ -545,7 +606,7 @@ export default function App() {
 
     // Trigger show status backfill after a short delay
     const backfillTimer = setTimeout(() => {
-      // ⚠️ REMOVED: debugGate diagnostics disabled
+      // REMOVED: debugGate diagnostics disabled
       backfillShowStatus();
       backfillSynopsis();
     }, 3000); // Wait 3 seconds after app loads
@@ -562,7 +623,7 @@ export default function App() {
       const detail = (event as CustomEvent<{ message?: string }>).detail;
       addToast(
         detail?.message ?? "Purchase confirmed. Full Access unlocked.",
-        "success"
+        "success",
       );
     };
     const onPurchaseError = (event: Event) => {
@@ -611,128 +672,138 @@ export default function App() {
           window.dispatchEvent(
             new CustomEvent("navigate-to-settings-section", {
               detail: { sectionId },
-            })
+            }),
           );
         }
       }
     };
 
-      /**
-       * Deep-link handling for shared URLs from list/show sharing.
-       *
-       * Supported deep-link formats:
-       * - ?view=list&listId=... - Opens list detail in My Lists view
-       * - ?view=title&tmdbId=... - Navigates to search/discovery for the show
-       * - ?view=title&titleId=... - Navigates to search/discovery for the show
-       */
-      const handleQueryParams = () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const viewParam = urlParams.get("view");
-        
-        // Handle list deep links - reuses same navigation as clicking a list in UI
-        if (viewParam === "list") {
-          const listId = urlParams.get("listId");
-          // Validate: only proceed if listId is present and not empty
-          if (listId && listId.trim() !== "") {
-            // Navigate to mylists view (same as clicking "My Lists" in UI)
-            setView("mylists");
-            // Store listId for MyListsPage to select (canonical way to open list detail)
-            try {
-              localStorage.setItem("flicklet:shareListId", listId);
-              // Dispatch event to notify MyListsPage (same event used by UI clicks)
-              window.dispatchEvent(
-                new CustomEvent("flicklet:selectList", { detail: { listId } })
-              );
-            } catch (e) {
-              console.warn("Failed to store list share params:", e);
-            }
-            
-            // Clean up URL
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.delete("view");
-            newUrl.searchParams.delete("listId");
-            window.history.replaceState({}, "", newUrl.toString());
+    /**
+     * Deep-link handling for shared URLs from list/show sharing.
+     *
+     * Supported deep-link formats:
+     * - ?view=list&listId=... - Opens list detail in My Lists view
+     * - ?view=title&tmdbId=... - Navigates to search/discovery for the show
+     * - ?view=title&titleId=... - Navigates to search/discovery for the show
+     */
+    const handleQueryParams = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const viewParam = urlParams.get("view");
+
+      // Handle list deep links - reuses same navigation as clicking a list in UI
+      if (viewParam === "list") {
+        const listId = urlParams.get("listId");
+        // Validate: only proceed if listId is present and not empty
+        if (listId && listId.trim() !== "") {
+          // Navigate to mylists view (same as clicking "My Lists" in UI)
+          navigateTo("mylists", { clearSearch: false });
+          // Store listId for MyListsPage to select (canonical way to open list detail)
+          try {
+            localStorage.setItem("flicklet:shareListId", listId);
+            // Dispatch event to notify MyListsPage (same event used by UI clicks)
+            window.dispatchEvent(
+              new CustomEvent("flicklet:selectList", { detail: { listId } }),
+            );
+          } catch (e) {
+            console.warn("Failed to store list share params:", e);
           }
-          // If listId is missing or empty, app boots normally (no deep-link action)
+
+          // Clean up URL
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete("view");
+          newUrl.searchParams.delete("listId");
+          window.history.replaceState({}, "", newUrl.toString());
         }
-        // Handle show deep links - navigates to appropriate view based on where show exists
-        // Note: There is no in-app detail modal, so we navigate to the tab where the show
-        // appears in the user's library, or to discovery if not found. This reuses the
-        // same navigation as clicking a card in the UI.
-        else if (viewParam === "title") {
-          const tmdbId = urlParams.get("tmdbId");
-          const titleId = urlParams.get("titleId");
-          
-          // Validate: proceed if at least one ID is present and not empty
-          const hasValidTmdbId = tmdbId && tmdbId.trim() !== "";
-          const hasValidTitleId = titleId && titleId.trim() !== "";
-          
-          if (hasValidTmdbId || hasValidTitleId) {
-            // Try to find the show in the user's library
-            // Check both tv and movie media types since we don't know which it is
-            let foundList: "watching" | "want" | "watched" | null = null;
-            const idToCheck = hasValidTmdbId ? tmdbId : titleId;
-            
-            if (idToCheck) {
-              // Try to find in library (check both tv and movie)
-              const numericId = hasValidTmdbId ? parseInt(idToCheck, 10) : idToCheck;
-              if (!isNaN(numericId as number) || typeof numericId === "string") {
-                const tvList = Library.getCurrentList(numericId, "tv");
-                const movieList = Library.getCurrentList(numericId, "movie");
-                
-                if (tvList === "watching" || tvList === "wishlist" || tvList === "watched") {
-                  foundList = tvList === "wishlist" ? "want" : tvList;
-                } else if (movieList === "watching" || movieList === "wishlist" || movieList === "watched") {
-                  foundList = movieList === "wishlist" ? "want" : movieList;
-                }
+        // If listId is missing or empty, app boots normally (no deep-link action)
+      }
+      // Handle show deep links - navigates to appropriate view based on where show exists
+      // Note: There is no in-app detail modal, so we navigate to the tab where the show
+      // appears in the user's library, or to discovery if not found. This reuses the
+      // same navigation as clicking a card in the UI.
+      else if (viewParam === "title") {
+        const tmdbId = urlParams.get("tmdbId");
+        const titleId = urlParams.get("titleId");
+
+        // Validate: proceed if at least one ID is present and not empty
+        const hasValidTmdbId = tmdbId && tmdbId.trim() !== "";
+        const hasValidTitleId = titleId && titleId.trim() !== "";
+
+        if (hasValidTmdbId || hasValidTitleId) {
+          // Try to find the show in the user's library
+          // Check both tv and movie media types since we don't know which it is
+          let foundList: "watching" | "want" | "watched" | null = null;
+          const idToCheck = hasValidTmdbId ? tmdbId : titleId;
+
+          if (idToCheck) {
+            // Try to find in library (check both tv and movie)
+            const numericId = hasValidTmdbId
+              ? parseInt(idToCheck, 10)
+              : idToCheck;
+            if (!isNaN(numericId as number) || typeof numericId === "string") {
+              const tvList = Library.getCurrentList(numericId, "tv");
+              const movieList = Library.getCurrentList(numericId, "movie");
+
+              if (
+                tvList === "watching" ||
+                tvList === "wishlist" ||
+                tvList === "watched"
+              ) {
+                foundList = tvList === "wishlist" ? "want" : tvList;
+              } else if (
+                movieList === "watching" ||
+                movieList === "wishlist" ||
+                movieList === "watched"
+              ) {
+                foundList = movieList === "wishlist" ? "want" : movieList;
               }
             }
-            
-            // Navigate to the appropriate view
-            if (foundList) {
-              // Show is in user's library - navigate to that tab (same as clicking a card)
-              setView(foundList);
-            } else {
-              // Show not in library - navigate to discovery where user can find it
-              setView("discovery");
-            }
-            
-            // Store the ID in localStorage for potential use by search/discovery
-            // This allows search to potentially look up the show if needed
-            try {
-              if (hasValidTmdbId) {
-                localStorage.setItem("flicklet:shareTmdbId", tmdbId);
-              }
-              if (hasValidTitleId) {
-                localStorage.setItem("flicklet:shareTitleId", titleId);
-              }
-            } catch (e) {
-              console.warn("Failed to store title share params:", e);
-            }
-            
-            // Clean up URL
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.delete("view");
-            newUrl.searchParams.delete("tmdbId");
-            newUrl.searchParams.delete("titleId");
-            window.history.replaceState({}, "", newUrl.toString());
           }
-          // If both IDs are missing or empty, app boots normally (no deep-link action)
+
+          // Navigate to the appropriate view
+          if (foundList) {
+            // Show is in user's library - navigate to that tab (same as clicking a card)
+            navigateTo(foundList, { clearSearch: false });
+          } else {
+            // Show not in library - navigate to discovery where user can find it
+            navigateTo("discovery", { clearSearch: false });
+          }
+
+          // Store the ID in localStorage for potential use by search/discovery
+          // This allows search to potentially look up the show if needed
+          try {
+            if (hasValidTmdbId) {
+              localStorage.setItem("flicklet:shareTmdbId", tmdbId);
+            }
+            if (hasValidTitleId) {
+              localStorage.setItem("flicklet:shareTitleId", titleId);
+            }
+          } catch (e) {
+            console.warn("Failed to store title share params:", e);
+          }
+
+          // Clean up URL
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete("view");
+          newUrl.searchParams.delete("tmdbId");
+          newUrl.searchParams.delete("titleId");
+          window.history.replaceState({}, "", newUrl.toString());
         }
-      };
+        // If both IDs are missing or empty, app boots normally (no deep-link action)
+      }
+    };
 
     // Check hash on load
     handleHashChange();
-    
+
     // Check query params on load
     handleQueryParams();
 
     // Listen for hash changes
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
-  }, []);
+  }, [navigateTo]);
 
-  // Listen for custom event to open Settings (e.g., SnarkDisplay, startProUpgrade fallback)
+  // Listen for custom event to open Settings (e.g., startProUpgrade fallback)
   useEffect(() => {
     const handleOpenSettingsPage = (e: Event) => {
       const detail = (e as CustomEvent<{ section?: SettingsSectionId }>).detail;
@@ -753,29 +824,9 @@ export default function App() {
     window.addEventListener("auth:sign-in-required", handleSignInRequired);
     return () => {
       window.removeEventListener("settings:open-page", handleOpenSettingsPage);
-      window.removeEventListener(
-        "auth:sign-in-required",
-        handleSignInRequired
-      );
+      window.removeEventListener("auth:sign-in-required", handleSignInRequired);
     };
   }, []);
-
-  // Show loading screen until auth state is initialized
-  // Add timeout to prevent infinite loading
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
-  useEffect(() => {
-    if (!authInitialized) {
-      const timer = setTimeout(() => {
-        setLoadingTimeout(true);
-        console.error(
-          "[App] Auth initialization timeout - authInitialized still false after 10 seconds"
-        );
-      }, 10000); // 10 second timeout
-      return () => clearTimeout(timer);
-    } else {
-      setLoadingTimeout(false);
-    }
-  }, [authInitialized]);
 
   // Notes and Tags handlers
   const handleNotesEdit = (item: any) => {
@@ -791,40 +842,40 @@ export default function App() {
   // Notification handler
   const handleNotificationToggle = (item: any) => {
     console.log(
-      "🔔 App.tsx handleNotificationToggle called for:",
+      "App.tsx handleNotificationToggle called for:",
       item.title,
-      item.mediaType
+      item.mediaType,
     );
-    console.log("🔔 Setting notification modal state:", {
+    console.log("Setting notification modal state:", {
       showNotificationModal: true,
       notificationModalItem: item,
     });
     setNotificationModalItem(item);
     setShowNotificationModal(true);
-    console.log("🔔 Modal state should now be set");
+    console.log("Modal state should now be set");
   };
 
   // Simple reminder handler (Free feature)
   const handleSimpleReminder = (item: any) => {
     console.log(
-      "⏰ App.tsx handleSimpleReminder called for:",
+      "App.tsx handleSimpleReminder called for:",
       item.title,
-      item.mediaType
+      item.mediaType,
     );
     // For now, just show a simple alert - this will be replaced with actual reminder logic
     alert(
-      `⏰ Simple reminder set for "${item.title}" - you'll be notified 24 hours before the next episode airs!`
+      `Simple reminder set for "${item.title}" - you'll be notified 24 hours before the next episode airs!`,
     );
   };
 
   // Bloopers handler
   const handleBloopersOpen = (item: any) => {
     console.log(
-      "🎬 App.tsx handleBloopersOpen called for:",
+      "App.tsx handleBloopersOpen called for:",
       item.title,
-      item.mediaType
+      item.mediaType,
     );
-    console.log("🎬 Setting bloopers modal state:", {
+    console.log("Setting bloopers modal state:", {
       showBloopersModal: true,
       bloopersModalItem: item,
     });
@@ -834,17 +885,17 @@ export default function App() {
       setShowBloopersModal(true);
     });
 
-    console.log("🎬 Bloopers modal state should now be set");
+    console.log("Bloopers modal state should now be set");
   };
 
   // Goofs handler
   const handleGoofsOpen = (item: any) => {
     console.log(
-      "🎭 App.tsx handleGoofsOpen called for:",
+      "App.tsx handleGoofsOpen called for:",
       item.title,
-      item.mediaType
+      item.mediaType,
     );
-    console.log("🎭 Setting goofs modal state:", {
+    console.log("Setting goofs modal state:", {
       showGoofsModal: true,
       goofsModalItem: item,
     });
@@ -854,17 +905,17 @@ export default function App() {
       setShowGoofsModal(true);
     });
 
-    console.log("🎭 Goofs modal state should now be set");
+    console.log("Goofs modal state should now be set");
   };
 
   // Extras handler
   const handleExtrasOpen = (item: any) => {
     console.log(
-      "🎭 App.tsx handleExtrasOpen called for:",
+      "App.tsx handleExtrasOpen called for:",
       item.title,
-      item.mediaType
+      item.mediaType,
     );
-    console.log("🎭 Setting extras modal state:", {
+    console.log("Setting extras modal state:", {
       showExtrasModal: true,
       extrasModalItem: item,
     });
@@ -874,15 +925,15 @@ export default function App() {
       setShowExtrasModal(true);
     });
 
-    console.log("🎭 Extras modal state should now be set");
+    console.log("Extras modal state should now be set");
   };
 
   // Help handler
   const handleHelpOpen = () => {
-    console.log("❓ App.tsx handleHelpOpen called");
-    console.log("❓ Current showHelpModal state:", showHelpModal);
+    console.log("App.tsx handleHelpOpen called");
+    console.log("Current showHelpModal state:", showHelpModal);
     setShowHelpModal(true);
-    console.log("❓ setShowHelpModal(true) called");
+    console.log("setShowHelpModal(true) called");
   };
 
   const handleSaveNotesAndTags = (item: any, notes: string, tags: string[]) => {
@@ -891,489 +942,6 @@ export default function App() {
     setShowNotesModal(false);
     setNotesModalItem(null);
   };
-
-  if (view !== "home") {
-    return (
-      <>
-        <main
-          className="min-h-screen"
-          style={{
-            backgroundColor: "var(--bg)",
-            color: "var(--text)",
-            minHeight: "100lvh",
-          }}
-        >
-          {/* Debug: Show when modal should be visible - TOP LEVEL */}
-          {showExtrasModal && (
-            <div
-              style={{
-                position: "fixed",
-                top: "10px",
-                left: "10px",
-                background: "red",
-                color: "white",
-                padding: "10px",
-                zIndex: 9999,
-                fontSize: "12px",
-              }}
-            >
-              🎬 MODAL SHOULD BE VISIBLE: {extrasModalItem?.title}
-            </div>
-          )}
-
-          <FlickletHeader
-            appName="Flicklet"
-            onSearch={(q, g, t, m) =>
-              handleSearch(q, g ?? null, (t as SearchType) ?? "all", m)
-            }
-            onClear={handleClear}
-            onHelpOpen={() => {
-              console.log("❓ App.tsx onHelpOpen prop called");
-              handleHelpOpen();
-            }}
-            onNavigateHome={() => {
-              handleClear();
-              setView("home");
-            }}
-          />
-          <TrialStatusBanner />
-
-          {/* Desktop Tabs - tablet and above */}
-          <div className="hidden md:block">
-            <Tabs
-              current={view}
-              onChange={(tab) => {
-                // Clear search when switching tabs
-                handleClear();
-                setView(tab);
-              }}
-            />
-          </div>
-
-          {/* Mobile Tabs - mobile only */}
-          <div className="block md:hidden">
-            <MobileTabs
-              current={view}
-              onChange={(tab) => {
-                // Clear search when switching tabs (consistent with desktop behavior)
-                // Use setTimeout to ensure clear happens before view change on iOS
-                handleClear();
-                // Small delay to ensure state updates properly on iOS Safari
-                setTimeout(() => {
-                  setView(tab);
-                }, 0);
-              }}
-            />
-          </div>
-
-          {/* Content Area */}
-          <div
-            className="pb-20 lg:pb-0"
-            style={{
-              paddingBottom:
-                viewportOffset > 0 && window.visualViewport?.offsetTop === 0
-                  ? `${80 + viewportOffset}px`
-                  : undefined,
-            }}
-          >
-            {searchActive ? (
-              <SearchResults
-                query={search.q}
-                genre={search.genre}
-                searchType={search.type}
-                mediaTypeFilter={search.mediaTypeFilter}
-                onBackToHome={() => {
-                  handleClear();
-                  setView("home");
-                }}
-                onNotesEdit={handleNotesEdit}
-                onTagsEdit={handleTagsEdit}
-                onNotificationToggle={handleNotificationToggle}
-                onSimpleReminder={handleSimpleReminder}
-                onBloopersOpen={handleBloopersOpen}
-                onGoofsOpen={handleGoofsOpen}
-                onExtrasOpen={handleExtrasOpen}
-              />
-            ) : (
-              <>
-                {/* Old home block removed - using newer layout with HomeMarquee and Section components below */}
-                {/* The canonical homeContentAnchorRef is now in the newer home layout */}
-                {view === "watching" && (
-                  <Suspense
-                    fallback={
-                      <div className="loading-spinner">
-                        Loading watching list...
-                      </div>
-                    }
-                  >
-                    <PullToRefreshWrapper onRefresh={handleRefresh}>
-                      <div data-page="lists" data-list="watching">
-                        <ListPage
-                          title="Currently Watching"
-                          items={watchingVisible}
-                          mode="watching"
-                          onNotesEdit={handleNotesEdit}
-                          onTagsEdit={handleTagsEdit}
-                          onNotificationToggle={handleNotificationToggle}
-                          onSimpleReminder={handleSimpleReminder}
-                          onBloopersOpen={handleBloopersOpen}
-                          onGoofsOpen={handleGoofsOpen}
-                          onExtrasOpen={handleExtrasOpen}
-                        />
-                      </div>
-                    </PullToRefreshWrapper>
-                  </Suspense>
-                )}
-                {view === "want" && (
-                  <Suspense
-                    fallback={
-                      <div className="loading-spinner">Loading wishlist...</div>
-                    }
-                  >
-                    <PullToRefreshWrapper onRefresh={handleRefresh}>
-                      <div data-page="lists" data-list="wishlist">
-                        <ListPage
-                          title="Want to Watch"
-                          items={wishlist}
-                          mode="want"
-                          onNotesEdit={handleNotesEdit}
-                          onTagsEdit={handleTagsEdit}
-                          onNotificationToggle={handleNotificationToggle}
-                          onSimpleReminder={handleSimpleReminder}
-                          onBloopersOpen={handleBloopersOpen}
-                          onGoofsOpen={handleGoofsOpen}
-                          onExtrasOpen={handleExtrasOpen}
-                        />
-                      </div>
-                    </PullToRefreshWrapper>
-                  </Suspense>
-                )}
-                {view === "watched" && (
-                  <Suspense
-                    fallback={
-                      <div className="loading-spinner">
-                        Loading watched list...
-                      </div>
-                    }
-                  >
-                    <PullToRefreshWrapper onRefresh={handleRefresh}>
-                      <div data-page="lists" data-list="watched">
-                        <ListPage
-                          title="Watched"
-                          items={watched}
-                          mode="watched"
-                          onNotesEdit={handleNotesEdit}
-                          onTagsEdit={handleTagsEdit}
-                          onNotificationToggle={handleNotificationToggle}
-                          onSimpleReminder={handleSimpleReminder}
-                          onBloopersOpen={handleBloopersOpen}
-                          onGoofsOpen={handleGoofsOpen}
-                          onExtrasOpen={handleExtrasOpen}
-                        />
-                      </div>
-                    </PullToRefreshWrapper>
-                  </Suspense>
-                )}
-                {view === "returning" && (
-                  <Suspense
-                    fallback={
-                      <div className="loading-spinner">
-                        Loading returning shows...
-                      </div>
-                    }
-                  >
-                    <PullToRefreshWrapper onRefresh={handleRefresh}>
-                      <div data-page="lists" data-list="returning">
-                        <ListPage
-                          title="Returning"
-                          items={returning as any}
-                          mode="returning"
-                          onNotesEdit={handleNotesEdit}
-                          onTagsEdit={handleTagsEdit}
-                          onNotificationToggle={handleNotificationToggle}
-                          onSimpleReminder={handleSimpleReminder}
-                          onBloopersOpen={handleBloopersOpen}
-                          onGoofsOpen={handleGoofsOpen}
-                          onExtrasOpen={handleExtrasOpen}
-                        />
-                      </div>
-                    </PullToRefreshWrapper>
-                  </Suspense>
-                )}
-                {view === "mylists" && (
-                  <Suspense
-                    fallback={
-                      <div className="loading-spinner">Loading my lists...</div>
-                    }
-                  >
-                    <div data-page="lists" data-list="mylists">
-                      <MyListsPage />
-                    </div>
-                  </Suspense>
-                )}
-                {view === "discovery" && (
-                  <Suspense
-                    fallback={
-                      <div className="loading-spinner">
-                        Loading discovery...
-                      </div>
-                    }
-                  >
-                    <DiscoveryPage />
-                  </Suspense>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Offline Indicator */}
-          {!isOnline && (
-            <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-yellow-500 text-black px-4 py-2 rounded-lg shadow-lg text-sm font-medium">
-              📱 You&apos;re offline - viewing cached content
-            </div>
-          )}
-
-          {/* FAB Components - Available on all tabs */}
-          <SettingsFAB onClick={handleSettingsClick} />
-          <ThemeToggleFAB
-            theme={settings.layout.theme}
-            onToggle={() =>
-              settingsManager.updateTheme(
-                settings.layout.theme === "dark" ? "light" : "dark"
-              )
-            }
-          />
-
-          {/* Settings Modal (Desktop) */}
-          {showSettings && (
-            <Suspense
-              fallback={
-                <div className="loading-spinner">Loading settings...</div>
-              }
-            >
-              <SettingsPage
-                initialSection={settingsDesktopInitialSection}
-                onClose={() => {
-                  setShowSettings(false);
-                  setSettingsDesktopInitialSection("account");
-                }}
-              />
-            </Suspense>
-          )}
-
-          {/* Settings Sheet (Mobile) */}
-          <SettingsSheet />
-
-          {/* Notes and Tags Modal */}
-          {showNotesModal && notesModalItem && (
-            <Suspense
-              fallback={<div className="loading-spinner">Loading notes...</div>}
-            >
-              <NotesAndTagsModal
-                item={notesModalItem}
-                isOpen={showNotesModal}
-                onClose={() => setShowNotesModal(false)}
-                onSave={handleSaveNotesAndTags}
-              />
-            </Suspense>
-          )}
-
-          {/* Show Notification Settings Modal */}
-          {(() => {
-            const shouldRender = showNotificationModal && notificationModalItem;
-            console.log("🔔 Modal render check:", {
-              showNotificationModal,
-              notificationModalItem: notificationModalItem?.title,
-              shouldRender,
-            });
-            return shouldRender;
-          })() && (
-            <ShowNotificationSettingsModal
-              isOpen={showNotificationModal}
-              onClose={() => {
-                console.log("🔔 Closing notification modal");
-                setShowNotificationModal(false);
-              }}
-              show={{
-                id: Number(notificationModalItem.id),
-                title: notificationModalItem.title,
-                mediaType: notificationModalItem.mediaType,
-              }}
-            />
-          )}
-
-          {/* Bloopers Modal - DEPRECATED: Use GoofsModal instead */}
-          {console.log("🎬 BloopersModal render check:", {
-            showBloopersModal,
-            hasBloopersModalItem: !!bloopersModalItem,
-            bloopersModalItemTitle: bloopersModalItem?.title,
-          })}
-          {showBloopersModal && bloopersModalItem && (
-            <BloopersModal
-              isOpen={showBloopersModal}
-              onClose={() => setShowBloopersModal(false)}
-              showId={(() => {
-                const id =
-                  typeof bloopersModalItem.id === "string"
-                    ? parseInt(bloopersModalItem.id)
-                    : bloopersModalItem.id;
-                console.log("🎬 BloopersModal showId conversion:", {
-                  originalId: bloopersModalItem.id,
-                  convertedId: id,
-                  type: typeof id,
-                });
-                return id;
-              })()}
-              showTitle={bloopersModalItem.title}
-            />
-          )}
-
-          {/* Goofs Modal */}
-          {showGoofsModal && goofsModalItem && (
-            <GoofsModal
-              isOpen={showGoofsModal}
-              onClose={() => setShowGoofsModal(false)}
-              tmdbId={(() => {
-                const id =
-                  typeof goofsModalItem.id === "string"
-                    ? parseInt(goofsModalItem.id)
-                    : goofsModalItem.id;
-                console.log("🎭 GoofsModal tmdbId conversion:", {
-                  originalId: goofsModalItem.id,
-                  convertedId: id,
-                  type: typeof id,
-                });
-                return id;
-              })()}
-              title={goofsModalItem.title}
-            />
-          )}
-
-          {/* Extras Modal */}
-          {showExtrasModal && extrasModalItem && (
-            <ExtrasModal
-              isOpen={showExtrasModal}
-              onClose={() => setShowExtrasModal(false)}
-              showId={(() => {
-                const id =
-                  typeof extrasModalItem.id === "string"
-                    ? parseInt(extrasModalItem.id)
-                    : extrasModalItem.id;
-                console.log("🎭 ExtrasModal showId conversion:", {
-                  originalId: extrasModalItem.id,
-                  convertedId: id,
-                  type: typeof id,
-                });
-                return id;
-              })()}
-              showTitle={extrasModalItem.title}
-              mediaType={extrasModalItem.mediaType === "movie" ? "movie" : "tv"}
-            />
-          )}
-
-          {/* Help Modal */}
-          {showHelpModal && (
-            <HelpModal
-              isOpen={showHelpModal}
-              onClose={() => setShowHelpModal(false)}
-            />
-          )}
-        </main>
-        {/* Popup hint banner */}
-        {showPopupHint && (
-          <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-[10000] rounded-lg border bg-background/95 backdrop-blur px-3 py-2 text-xs md:text-sm text-foreground shadow-lg">
-            <div className="flex items-center gap-2">
-              <span>
-                Allow popups and third‑party cookies for Google sign‑in.
-              </span>
-              <button
-                className="rounded border px-2 py-0.5 text-[11px] hover:bg-accent hover:text-accent-foreground"
-                onClick={() => {
-                  try {
-                    localStorage.removeItem("flicklet.auth.popup.hint");
-                  } catch (e) {
-                    /* ignore */
-                  }
-                  setShowPopupHint(false);
-                  // User gesture: retry
-                  void googleLogin();
-                }}
-              >
-                Try again
-              </button>
-              <button
-                className="rounded border px-2 py-0.5 text-[11px] hover:bg-muted"
-                onClick={() => {
-                  try {
-                    localStorage.removeItem("flicklet.auth.popup.hint");
-                  } catch (e) {
-                    /* ignore */
-                  }
-                  setShowPopupHint(false);
-                }}
-                aria-label="Dismiss"
-                title="Dismiss"
-              >
-                Dismiss
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Toast Notifications */}
-        {toasts.map((toast) => (
-          <Toast
-            key={toast.id}
-            message={toast.message}
-            type={toast.type}
-            personalityLevel={settings.personalityLevel}
-            onClose={() => removeToast(toast.id)}
-          />
-        ))}
-
-        <ConfirmHost />
-      </>
-    );
-  }
-
-  if (!authInitialized) {
-    return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}
-      >
-        <div className="text-center">
-          <div className="w-8 h-8 border-2 border-current border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-sm" style={{ color: "var(--muted)" }}>
-            Loading...
-          </p>
-          {loadingTimeout && (
-            <div
-              className="mt-4 p-3 rounded border"
-              style={{
-                backgroundColor: "var(--btn)",
-                borderColor: "var(--line)",
-              }}
-            >
-              <p className="text-xs mb-2" style={{ color: "var(--muted)" }}>
-                Loading is taking longer than expected.
-              </p>
-              <button
-                onClick={() => window.location.reload()}
-                className="px-3 py-1.5 text-xs rounded transition-colors"
-                style={{
-                  backgroundColor: "var(--accent)",
-                  color: "var(--text)",
-                }}
-              >
-                Reload Page
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
 
   // Render debug auth page if on /debug/auth route
   if (isDebugAuth) {
@@ -1403,11 +971,10 @@ export default function App() {
   return (
     <PersonalityErrorBoundary>
       <main
-        className="min-h-screen"
+        className="flicklet-app-main min-h-screen"
         style={{
           backgroundColor: "var(--bg)",
           color: "var(--text)",
-          minHeight: "100lvh",
         }}
       >
         <FlickletHeader
@@ -1417,35 +984,25 @@ export default function App() {
           }
           onClear={handleClear}
           onHelpOpen={handleHelpOpen}
-          onNavigateHome={() => {
-            handleClear();
-            setView("home");
-          }}
+          onNavigateHome={() => navigateTo("home")}
         />
-        <TrialStatusBanner />
+        {afterFirstPaintReady && (
+          <>
+            <TrialStatusBanner />
+            {!screenshotMode && (view !== "home" || searchActive) && (
+              <PersonalityBanner />
+            )}
+          </>
+        )}
 
         {/* Desktop Tabs - tablet and above */}
         <div className="hidden md:block">
-          <Tabs
-            current={view}
-            onChange={(tab) => {
-              // Clear search when switching tabs
-              handleClear();
-              setView(tab);
-            }}
-          />
+          <Tabs current={view} onChange={(tab) => navigateTo(tab)} />
         </div>
 
         {/* Mobile Tabs - mobile only */}
         <div className="block md:hidden">
-          <MobileTabs
-            current={view}
-            onChange={(tab) => {
-              // Clear search when switching tabs (consistent with desktop behavior)
-              handleClear();
-              setView(tab);
-            }}
-          />
+          <MobileTabs current={view} onChange={(tab) => navigateTo(tab)} />
         </div>
 
         {searchActive ? (
@@ -1455,10 +1012,7 @@ export default function App() {
               genre={search.genre}
               searchType={search.type}
               mediaTypeFilter={search.mediaTypeFilter}
-              onBackToHome={() => {
-                handleClear();
-                setView("home");
-              }}
+              onBackToHome={() => navigateTo("home")}
               onNotesEdit={handleNotesEdit}
               onTagsEdit={handleTagsEdit}
               onNotificationToggle={handleNotificationToggle}
@@ -1473,24 +1027,23 @@ export default function App() {
             <>
               {view === "home" && (
                 <div
-                  className="pb-20 lg:pb-0"
+                  className="pb-mobile-nav lg:pb-0"
                   style={{
-                    paddingBottom:
-                      viewportOffset > 0 &&
-                      window.visualViewport?.offsetTop === 0
-                        ? `${80 + viewportOffset}px`
-                        : undefined,
+                    paddingBottom: mobileContentPaddingBottom(viewportOffset),
                   }}
                 >
-                  {/* Home Marquee - between tabs and Your Shows */}
-                  <HomeMarquee messages={HOME_MARQUEE_MESSAGES} />
+                  {afterFirstPaintReady && (
+                    <>
+                      <HomeMarquee messages={flickletMarqueeMessages} />
+                    </>
+                  )}
 
                   {/* Content anchor - scroll target for down-arrow */}
                   {/* This marks where the main content starts (first rail / main feed) */}
-                  <div 
+                  <div
                     ref={homeContentAnchorRef}
                     id="home-content-anchor"
-                    style={{ scrollMarginTop: '100px' }} // Account for sticky header
+                    style={{ scrollMarginTop: "100px" }} // Account for sticky header
                   />
 
                   {/* Your Shows container with both rails */}
@@ -1505,16 +1058,17 @@ export default function App() {
                     </div>
                   </Section>
 
-                  {/* For you container with dynamic rails based on settings */}
-                  <Section
-                    title={translations.forYou}
-                    inlineHeaderAction={true}
-                    headerAction={
-                      <button
-                        onClick={() => {
-                          // CTA: Opens Settings directly to the personalization/home-rows section.
+                  {afterFirstPaintReady && (
+                    <>
+                      <HomeForYouSection
+                        afterFirstPaintReady={afterFirstPaintReady}
+                        view={view}
+                        forYouContent={forYouContent}
+                        forYouRows={forYouRows}
+                        settings={settings}
+                        forYouLabel={translations.forYou}
+                        onPersonalizeGenres={() => {
                           openSettingsAtSection("display", setShowSettings);
-                          // Scroll to row 1 after a delay to ensure Settings is mounted
                           setTimeout(() => {
                             const row1 =
                               document.getElementById("for-you-row-1");
@@ -1526,74 +1080,84 @@ export default function App() {
                             }
                           }, 300);
                         }}
-                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-sm transition-all duration-150 hover:scale-105 active:scale-95"
-                        style={{ 
-                          backgroundColor: "var(--btn)", 
-                          color: "var(--muted)",
-                          border: "1px solid var(--line)"
-                        }}
-                        aria-label="Personalize For You genres"
-                        title="Personalize For You genres"
-                      >
-                        {/* Gear/settings icon */}
-                        <svg 
-                          className="w-4 h-4" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={1.5} 
-                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" 
-                          />
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={1.5} 
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" 
-                          />
-                        </svg>
-                        <span>Genres</span>
-                      </button>
-                    }
-                  >
-                    <div className="space-y-4">
-                      {forYouContent.map((contentQuery) => (
-                        <Rail
-                          key={`for-you-${contentQuery.rowId}`}
-                          id={`for-you-${contentQuery.rowId}`}
-                          title={contentQuery.title}
-                          items={
-                            Array.isArray(contentQuery.data)
-                              ? contentQuery.data
-                              : []
-                          }
-                          skeletonCount={12}
-                        />
-                      ))}
-                    </div>
-                  </Section>
+                      />
 
-                  {/* Feedback container */}
-                  <Section title={translations.feedback}>
-                    <FeedbackPanel />
-                  </Section>
+                      <Section title={translations.feedback}>
+                        <FeedbackPanel />
+                      </Section>
+                    </>
+                  )}
 
                   {/* Home down-arrow - scrolls to content anchor (only on Home page) */}
                   {view === "home" && (
                     <HomeDownArrow contentAnchorRef={homeContentAnchorRef} />
                   )}
-                  
+
                   {/* Scroll to top arrow - appears when scrolled down */}
                   <ScrollToTopArrow />
                 </div>
               )}
 
-              {/* These views are handled in the main home view above */}
+              {view === "library" && (
+                <div
+                  className="pb-mobile-nav lg:pb-0"
+                  style={{
+                    paddingBottom: mobileContentPaddingBottom(viewportOffset),
+                  }}
+                >
+                  <Suspense
+                    fallback={
+                      <div className="loading-spinner">Loading library...</div>
+                    }
+                  >
+                    <LibraryPage
+                      segment={librarySegment}
+                      onSegmentChange={handleLibrarySegmentChange}
+                      watchingItems={watchingVisible}
+                      wishlistItems={wishlist}
+                      watchedItems={watched}
+                      returningItems={returning as LibraryEntry[]}
+                      onRefresh={handleRefresh}
+                      onNotesEdit={handleNotesEdit}
+                      onTagsEdit={handleTagsEdit}
+                      onNotificationToggle={handleNotificationToggle}
+                      onSimpleReminder={handleSimpleReminder}
+                      onBloopersOpen={handleBloopersOpen}
+                      onGoofsOpen={handleGoofsOpen}
+                      onExtrasOpen={handleExtrasOpen}
+                    />
+                  </Suspense>
+                  <ScrollToTopArrow />
+                </div>
+              )}
+
+              {view === "discovery" && (
+                <div
+                  className="pb-mobile-nav lg:pb-0"
+                  style={{
+                    paddingBottom: mobileContentPaddingBottom(viewportOffset),
+                  }}
+                >
+                  <Suspense
+                    fallback={
+                      <div className="loading-spinner">
+                        Loading discovery...
+                      </div>
+                    }
+                  >
+                    <DiscoveryPage />
+                  </Suspense>
+                  <ScrollToTopArrow />
+                </div>
+              )}
             </>
           </PullToRefreshWrapper>
+        )}
+
+        {!isOnline && (
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-yellow-500 text-black px-4 py-2 rounded-lg shadow-lg text-sm font-medium">
+            📱 You&apos;re offline - viewing cached content
+          </div>
         )}
 
         {/* FAB Components - Available on all tabs */}
@@ -1602,7 +1166,7 @@ export default function App() {
           theme={settings.layout.theme}
           onToggle={() =>
             settingsManager.updateTheme(
-              settings.layout.theme === "dark" ? "light" : "dark"
+              settings.layout.theme === "dark" ? "light" : "dark",
             )
           }
         />
@@ -1639,6 +1203,58 @@ export default function App() {
               onSave={handleSaveNotesAndTags}
             />
           </Suspense>
+        )}
+
+        {showNotificationModal && notificationModalItem && (
+          <ShowNotificationSettingsModal
+            isOpen={showNotificationModal}
+            onClose={() => setShowNotificationModal(false)}
+            show={{
+              id: Number(notificationModalItem.id),
+              title: notificationModalItem.title,
+              mediaType: notificationModalItem.mediaType,
+            }}
+          />
+        )}
+
+        {showBloopersModal && bloopersModalItem && (
+          <BloopersModal
+            isOpen={showBloopersModal}
+            onClose={() => setShowBloopersModal(false)}
+            showId={
+              typeof bloopersModalItem.id === "string"
+                ? parseInt(bloopersModalItem.id, 10)
+                : bloopersModalItem.id
+            }
+            showTitle={bloopersModalItem.title}
+          />
+        )}
+
+        {showGoofsModal && goofsModalItem && (
+          <GoofsModal
+            isOpen={showGoofsModal}
+            onClose={() => setShowGoofsModal(false)}
+            tmdbId={
+              typeof goofsModalItem.id === "string"
+                ? parseInt(goofsModalItem.id, 10)
+                : goofsModalItem.id
+            }
+            title={goofsModalItem.title}
+          />
+        )}
+
+        {showExtrasModal && extrasModalItem && (
+          <ExtrasModal
+            isOpen={showExtrasModal}
+            onClose={() => setShowExtrasModal(false)}
+            showId={
+              typeof extrasModalItem.id === "string"
+                ? parseInt(extrasModalItem.id, 10)
+                : extrasModalItem.id
+            }
+            showTitle={extrasModalItem.title}
+            mediaType={extrasModalItem.mediaType === "movie" ? "movie" : "tv"}
+          />
         )}
 
         {/* Toast Notifications */}
@@ -1686,6 +1302,47 @@ export default function App() {
             isOpen={showHelpModal}
             onClose={() => setShowHelpModal(false)}
           />
+        )}
+
+        {showPopupHint && (
+          <div className="fixed bottom-16 left-1/2 -translate-x-1/2 z-[10000] rounded-lg border bg-background/95 backdrop-blur px-3 py-2 text-xs md:text-sm text-foreground shadow-lg">
+            <div className="flex items-center gap-2">
+              <span>
+                Allow popups and third-party cookies for Google sign-in.
+              </span>
+              <button
+                type="button"
+                className="rounded border px-2 py-0.5 text-[11px] hover:bg-accent hover:text-accent-foreground"
+                onClick={() => {
+                  try {
+                    localStorage.removeItem("flicklet.auth.popup.hint");
+                  } catch {
+                    /* ignore */
+                  }
+                  setShowPopupHint(false);
+                  void googleLogin();
+                }}
+              >
+                Try again
+              </button>
+              <button
+                type="button"
+                className="rounded border px-2 py-0.5 text-[11px] hover:bg-muted"
+                onClick={() => {
+                  try {
+                    localStorage.removeItem("flicklet.auth.popup.hint");
+                  } catch {
+                    /* ignore */
+                  }
+                  setShowPopupHint(false);
+                }}
+                aria-label="Dismiss"
+                title="Dismiss"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
         )}
       </main>
     </PersonalityErrorBoundary>

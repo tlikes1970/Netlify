@@ -3,20 +3,46 @@ import type { MediaItem } from './cards/card.types';
 import { removeMediaItemWithConfirmation } from '@/lib/confirmRemoveShow';
 import { Library } from '@/lib/storage';
 import { useRailImagePreload } from '../hooks/useImagePreload';
+import { ForYouErrorFallback } from './home/ForYouErrorFallback';
+import type { ForYouRowLoadState } from './home/forYouRowStatus';
 
 type Item = { id: string; kind?: 'movie'|'tv'; title?: string; poster?: string; year?: number };
 
 type Props = {
   id: string;
   title: string;
+  intro?: string;
   enabled?: boolean;
   skeletonCount?: number;
+  /** Lite placeholders avoid heavy CardV2 mount during For You loading. */
+  skeletonVariant?: 'card' | 'lite';
   items?: Item[];
+  /** Explicit load state for For You — avoids treating empty/error as loading. */
+  loadState?: ForYouRowLoadState;
+  onRetry?: () => void;
+  isOnline?: boolean;
 };
 
-export default function Rail({ id, title, enabled = true, skeletonCount = 0, items }: Props) {
+export default function Rail({
+  id,
+  title,
+  intro,
+  enabled = true,
+  skeletonCount = 0,
+  skeletonVariant = 'card',
+  items,
+  loadState,
+  onRetry,
+  isOnline = true,
+}: Props) {
   if (!enabled) return null;
-  const list = items && items.length ? items : Array.from({ length: skeletonCount }).map(() => ({} as Item));
+
+  const legacyLoading = !items || items.length === 0;
+  const isLoading = loadState ? loadState === 'loading' : legacyLoading;
+  const isError = loadState === 'error';
+  const list = isLoading
+    ? Array.from({ length: skeletonCount }).map(() => ({} as Item))
+    : items ?? [];
   
   // Map rail ID to CardV2 context
   const getContext = (railId: string): 'home' | 'tab-watching' | 'tab-foryou' => {
@@ -27,8 +53,8 @@ export default function Rail({ id, title, enabled = true, skeletonCount = 0, ite
 
   const context = getContext(id);
 
-  // Preload images for better performance
-  useRailImagePreload(list.map(item => ({ posterUrl: item.poster })));
+  // Preload images for better performance (skip while showing skeletons)
+  useRailImagePreload(isLoading ? [] : list.map(item => ({ posterUrl: item.poster })));
 
   // Action handlers using new Library system
   const actions = {
@@ -101,7 +127,19 @@ export default function Rail({ id, title, enabled = true, skeletonCount = 0, ite
 
   return (
     <section data-rail={id} aria-label={title} className="px-4 py-3">
-      <h2 className="mb-2 text-base font-semibold" style={{ color: 'var(--text)' }}>{title}</h2>
+      <h2 className="mb-1 text-base font-semibold" style={{ color: 'var(--text)' }}>{title}</h2>
+      {intro ? (
+        <p className="mb-2 text-sm" style={{ color: 'var(--muted)' }}>
+          {intro}
+        </p>
+      ) : null}
+      {isError && onRetry ? (
+        <ForYouErrorFallback
+          compact
+          isOnline={isOnline}
+          onRetry={onRetry}
+        />
+      ) : (
       <div
         data-cards
         role="list"
@@ -110,6 +148,27 @@ export default function Rail({ id, title, enabled = true, skeletonCount = 0, ite
         className="flex gap-3 overflow-x-auto snap-x snap-proximity pb-2 rail-scroll"
       >
         {list.map((it, i) => {
+          if (isLoading && skeletonVariant === 'lite') {
+            return (
+              <div
+                key={`skeleton-${i}`}
+                role="listitem"
+                className="snap-start flex-shrink-0"
+                aria-hidden="true"
+              >
+                <div
+                  className="rounded-lg animate-pulse"
+                  style={{
+                    width: 154,
+                    height: 231,
+                    backgroundColor: 'var(--card)',
+                    border: '1px solid var(--line)',
+                  }}
+                />
+              </div>
+            );
+          }
+
           // Convert Item to MediaItem format with proper title validation
           const safeTitle = (() => {
             // Ensure title is a string and not the same as id
@@ -141,6 +200,7 @@ export default function Rail({ id, title, enabled = true, skeletonCount = 0, ite
           );
         })}
       </div>
+      )}
     </section>
   );
 }

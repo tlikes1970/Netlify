@@ -44,6 +44,18 @@ const getTouchHoldDuration = () => {
   return 200; // Default: improved responsiveness
 };
 
+/** Opt-in only: localStorage `flag:drag-handle-debug` = `true` */
+function dragHandleDebug(...args: unknown[]) {
+  if (!import.meta.env.DEV) return;
+  try {
+    if (localStorage.getItem("flag:drag-handle-debug") === "true") {
+      dragHandleDebug(...args);
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
 export function DragHandle({
   onDragStart,
   onDragEnd,
@@ -58,7 +70,7 @@ export function DragHandle({
   const { ready, isDesktop } = useIsDesktop();
 
   // DEBUG: Log when component renders
-  console.log("[DragHandle] Component rendering", {
+  dragHandleDebug("[DragHandle] Component rendering", {
     ready,
     isDesktop,
     hasOnDragStart: !!onDragStart,
@@ -88,7 +100,7 @@ export function DragHandle({
 
   // Attach non-passive touch listener directly to handle element AND document (capture phase)
   useEffect(() => {
-    console.log("[DragHandle] useEffect running", {
+    dragHandleDebug("[DragHandle] useEffect running", {
       isDesktop,
       ready,
       hasHandleRef: !!handleRef.current,
@@ -98,7 +110,7 @@ export function DragHandle({
 
     // Wait for ready state and handle ref to be available
     if (isDesktop || !ready || !handleRef.current) {
-      console.log("[DragHandle] useEffect skipping listener attachment", {
+      dragHandleDebug("[DragHandle] useEffect skipping listener attachment", {
         isDesktop,
         ready,
         hasHandleRef: !!handleRef.current,
@@ -107,7 +119,7 @@ export function DragHandle({
       return;
     }
 
-    console.log("[DragHandle] ✅ All conditions met, attaching listeners!", {
+    dragHandleDebug("[DragHandle] ✅ All conditions met, attaching listeners!", {
       handleRef: handleRef.current,
       isDesktop,
       ready,
@@ -117,12 +129,12 @@ export function DragHandle({
 
     // Verify handle is in DOM and can receive events
     if (!document.contains(handle)) {
-      console.warn("[DragHandle] handle not in DOM yet");
+      dragHandleDebug("[DragHandle] handle not in DOM yet");
     }
 
     // Add click test listener to verify handle is clickable
     const testClick = (e: MouseEvent) => {
-      console.log("[DragHandle] TEST: Handle is clickable!", {
+      dragHandleDebug("[DragHandle] TEST: Handle is clickable!", {
         target: e.target,
         currentTarget: e.currentTarget,
       });
@@ -138,7 +150,7 @@ export function DragHandle({
     handle.addEventListener("click", testClick);
     // Also add mousedown for testing
     const testMouseDown = (e: MouseEvent) => {
-      console.log("[DragHandle] TEST: mousedown on handle!", {
+      dragHandleDebug("[DragHandle] TEST: mousedown on handle!", {
         target: e.target,
       });
     };
@@ -152,7 +164,7 @@ export function DragHandle({
 
       // Verify the touch is on our handle or its children
       if (!target || (!handle.contains(target) && handle !== target)) {
-        console.log("[DragHandle] touchstart ignored - not on handle", {
+        dragHandleDebug("[DragHandle] touchstart ignored - not on handle", {
           target,
           handle,
         });
@@ -161,11 +173,11 @@ export function DragHandle({
 
       // Only handle if we're not already dragging
       if (isDragging) {
-        console.log("[DragHandle] touchstart ignored - already dragging");
+        dragHandleDebug("[DragHandle] touchstart ignored - already dragging");
         return;
       }
 
-      console.log("[DragHandle] touchstart detected", {
+      dragHandleDebug("[DragHandle] touchstart detected", {
         target: e.target,
         currentTarget: e.currentTarget,
         touches: e.touches.length,
@@ -203,7 +215,7 @@ export function DragHandle({
 
       // Disable swipe on the SwipeableCard when dragging
       if (swipeableElement) {
-        console.log("[DragHandle] Disabling SwipeableCard", {
+        dragHandleDebug("[DragHandle] Disabling SwipeableCard", {
           swipeableElement,
         });
         swipeableElement.style.pointerEvents = "none";
@@ -212,7 +224,7 @@ export function DragHandle({
 
       // Start touch-hold timer
       touchHoldTimerRef.current = window.setTimeout(() => {
-        console.log(
+        dragHandleDebug(
           "[DragHandle] touch-hold complete, firing onDragStart for index=",
           index
         );
@@ -255,7 +267,7 @@ export function DragHandle({
 
       // Only handle if touch is on our handle
       if (target && (handle.contains(target) || handle === target)) {
-        console.log("[DragHandle] Document capture touchstart on handle");
+        dragHandleDebug("[DragHandle] Document capture touchstart on handle");
         handleNativeTouchStart(e);
       }
     };
@@ -288,7 +300,7 @@ export function DragHandle({
       const touch = e.touches[0];
       const deltaY = touch.clientY - touchStartRef.current.y;
       const deltaX = touch.clientX - touchStartRef.current.x;
-      console.log("[DragHandle] touchmove deltaY=", deltaY, "deltaX=", deltaX);
+      dragHandleDebug("[DragHandle] touchmove deltaY=", deltaY, "deltaX=", deltaX);
 
       // Calculate scale based on drag distance (slight scale up as you drag)
       const dragDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
@@ -347,7 +359,7 @@ export function DragHandle({
     };
 
     const handleGlobalTouchEnd = (_e: TouchEvent) => {
-      console.log("[DragHandle] touchend – resetting drag state");
+      dragHandleDebug("[DragHandle] touchend – resetting drag state");
       if (!isDragging) return;
 
       setIsDragging(false);
@@ -552,14 +564,14 @@ export function DragHandle({
   const mobileOpacity = isDesktop ? 1 : isTouchHolding ? 1 : 0.5; // Increased from 0.3 to 0.5 for better visibility
 
   if (!ready) {
-    console.log("[DragHandle] Component NOT ready, returning null", {
+    dragHandleDebug("[DragHandle] Component NOT ready, returning null", {
       ready,
       isDesktop,
     });
     return null;
   }
 
-  console.log("[DragHandle] Component ready, rendering handle", {
+  dragHandleDebug("[DragHandle] Component ready, rendering handle", {
     ready,
     isDesktop,
     itemId,

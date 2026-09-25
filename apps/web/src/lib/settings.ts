@@ -19,8 +19,15 @@ import type { UserSettings } from './auth.types';
 // Settings data model based on design document
 // Personality modes: 8 distinct personalities with unique commentary styles
 import { PersonalityName, DEFAULT_PERSONALITY, clearVariantCache } from '../data/personalities';
+import { clearFlickletPersonalitySession } from './flickletPersonality';
 export type { PersonalityName } from '../data/personalities';
 export { getPersonalityText, PERSONALITY_LIST, DEFAULT_PERSONALITY, clearVariantCache } from '../data/personalities';
+export {
+  resolveFlickletLine,
+  getFlickletMarqueeMessages,
+  clearFlickletPersonalitySession,
+  FLICKLET_VOICE_ID,
+} from './flickletPersonality';
 
 export type Theme = 'light' | 'dark';
 export type TargetList = 'watching' | 'wishlist';
@@ -72,7 +79,7 @@ export interface Settings {
 // Default settings
 const DEFAULT_SETTINGS: Settings = {
   displayName: 'Guest',
-  personalityLevel: 1, // Legacy (kept for migration)
+  personalityLevel: 2, // 1=Minimal, 2=Standard (default), 3=Maximum
   personality: DEFAULT_PERSONALITY, // New: defaults to 'Zen'
   
   notifications: {
@@ -323,6 +330,7 @@ class SettingsManager {
 
   updatePersonalityLevel(level: PersonalityLevel): void {
     this.settings.personalityLevel = level;
+    clearFlickletPersonalitySession();
     this.saveSettings();
   }
 
