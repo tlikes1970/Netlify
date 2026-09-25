@@ -188,13 +188,14 @@ Authorized order. Do not skip ahead.
   - Gesture portrait, font 1.0: full “Flicklet tracks habits, not hype.” is visible at once and remains stable.
   - Gesture portrait, font 2.0: the full message remains readable without clipping or horizontal overflow.
   - Focused HomeMarquee test 1/1; TypeScript check; mobile production build; Capacitor sync; Android debug build/install/launch.
+- **Commit:** `99a3b338aeedbfb8619abb16df8f772fbe206baa` — `Keep mobile personality messages fully readable`
 - **Final status:** FIXED.
 
 ### AUTHORIZED IN THIS CORRECTION BATCH
 
 Order: DST-05 (done) → DST-03 (done) → DST-06 (done) → DST-04 (done) → DST-02 (done) → DST-01 (done).
 
-Do not resume missing-device stress testing, UX testing, or Maestro during this pause.
+The authorized correction pause is complete. Device stress testing remains in progress; UX testing and Maestro have not started.
 
 ### CONFIRMED NEXT
 
@@ -461,11 +462,11 @@ These remain product/tech items from existing control docs. They are **not** the
 | Field | Value |
 |-------|--------|
 | Branch | `codex/establish-baseline` |
-| Verified HEAD | `c93db0cb460bd54f64aa7ffad791807951055065` |
-| HEAD message | Let primary chrome grow and wrap with font scale |
-| Current phase | 2 — **PAUSED FOR AUTHORIZED DEFECT CORRECTION** |
-| Current authorized task | DST-06 in this commit; next DST-04. Do **not** start black-box UX or Maestro. |
-| Latest test evidence | DST-06 CDP 767/768/769 Settings shells coherent. API 23/33/36 and real tablet AVDs outstanding. |
+| Verified application-fix commit | `99a3b338aeedbfb8619abb16df8f772fbe206baa` |
+| Application-fix message | Keep mobile personality messages fully readable |
+| Current phase | 2 — **DEVICE STRESS TESTING — IN PROGRESS** |
+| Current authorized task | Authorized DST-01 through DST-06 correction batch complete. Do **not** start black-box UX or Maestro. |
+| Latest test evidence | 231/231 automated tests; TypeScript; production + mobile builds; Firebase functions; Capacitor sync; Android debug build/install/launch. Pixel 9/API 35 gesture + three-button smoke passed Home, Library, Search, Settings, Filters, font 1.0/2.0, portrait/landscape, rotation, and Filters Back. API 23/33/36 and real tablet AVDs remain outstanding. |
 
 ---
 
