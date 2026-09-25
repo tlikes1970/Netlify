@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import ListPage from '@/pages/ListPage';
-import type { LibraryEntry } from '@/lib/storage';
-import { mockWatchingTv } from '@/lib/__tests__/testHelpers/libraryEntries';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen } from "@testing-library/react";
+import ListPage from "@/pages/ListPage";
+import type { LibraryEntry } from "@/lib/storage";
+import { mockWatchingTv } from "@/lib/__tests__/testHelpers/libraryEntries";
 
-vi.mock('@/hooks/useDragAndDrop', () => ({
+vi.mock("@/hooks/useDragAndDrop", () => ({
   useDragAndDrop: () => ({
     dragState: {
       draggedItem: null,
@@ -19,48 +19,48 @@ vi.mock('@/hooks/useDragAndDrop', () => ({
   }),
 }));
 
-vi.mock('@/lib/settings', () => ({
-  useSettings: () => ({ personality: 'default', layout: { theme: 'light' } }),
-  getPersonalityText: () => 'Empty list',
-  DEFAULT_PERSONALITY: 'default',
+vi.mock("@/lib/settings", () => ({
+  useSettings: () => ({ personalityLevel: 2, layout: { theme: "light" } }),
+  resolveFlickletLine: () =>
+    "No upcoming shows in your Watching list yet. Add TV series you are following.",
 }));
 
-vi.mock('@/lib/tabState', () => ({
-  getTabKey: () => 'returning',
+vi.mock("@/lib/tabState", () => ({
+  getTabKey: () => "returning",
   restoreTabState: () => ({
-    sort: 'date-newest',
-    filter: { type: 'all', providers: [] },
+    sort: "date-newest",
+    filter: { type: "all", providers: [] },
   }),
   saveTabState: vi.fn(),
   resetTabState: () => ({
-    sort: 'date-newest',
-    filter: { type: 'all', providers: [] },
+    sort: "date-newest",
+    filter: { type: "all", providers: [] },
   }),
   validateFilters: (filters: unknown) => filters,
 }));
 
-vi.mock('@/lib/analytics', () => ({
+vi.mock("@/lib/analytics", () => ({
   trackSortChange: vi.fn(),
   trackFilterChange: vi.fn(),
   trackReorderCompleted: vi.fn(),
   trackTabStateReset: vi.fn(),
 }));
 
-vi.mock('@/components/ScrollToTopArrow', () => ({
+vi.mock("@/components/ScrollToTopArrow", () => ({
   default: () => null,
 }));
 
-vi.mock('@/components/modals/EpisodeTrackingModal', () => ({
+vi.mock("@/components/modals/EpisodeTrackingModal", () => ({
   EpisodeTrackingModal: () => null,
 }));
 
-vi.mock('@/components/WatchingListWithBackdrop', () => ({
+vi.mock("@/components/WatchingListWithBackdrop", () => ({
   WatchingListWithBackdrop: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
 }));
 
-vi.mock('@/components/cards/TabCard', () => ({
+vi.mock("@/components/cards/TabCard", () => ({
   default: ({
     item,
     tabType,
@@ -75,41 +75,45 @@ vi.mock('@/components/cards/TabCard', () => ({
 }));
 
 function returningItem(
-  overrides: Partial<LibraryEntry> & Pick<LibraryEntry, 'id' | 'title'>
+  overrides: Partial<LibraryEntry> & Pick<LibraryEntry, "id" | "title">,
 ): LibraryEntry {
   return mockWatchingTv(overrides);
 }
 
-describe('ListPage returning mode', () => {
+describe("ListPage returning mode", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders returning items instead of a blank workspace', () => {
+  it("renders returning items instead of a blank workspace", () => {
     const items = [
-      returningItem({ id: 1, title: 'Alpha Returning' }),
-      returningItem({ id: 2, title: 'Beta Returning' }),
+      returningItem({ id: 1, title: "Alpha Returning" }),
+      returningItem({ id: 2, title: "Beta Returning" }),
     ];
 
     render(<ListPage title="Returning" items={items} mode="returning" />);
 
-    expect(screen.getByRole('heading', { name: 'Returning' })).toBeInTheDocument();
     expect(
-      screen.getByText(/All upcoming and returning shows from your Watching list/)
+      screen.getByRole("heading", { name: "Returning" }),
     ).toBeInTheDocument();
-    const cards = screen.getAllByTestId('returning-tab-card');
+    expect(
+      screen.getByText(
+        /All upcoming and returning shows from your Watching list/,
+      ),
+    ).toBeInTheDocument();
+    const cards = screen.getAllByTestId("returning-tab-card");
     expect(cards).toHaveLength(2);
-    expect(cards[0]).toHaveAttribute('data-tab-type', 'returning');
-    expect(screen.getByText('Alpha Returning')).toBeInTheDocument();
-    expect(screen.getByText('Beta Returning')).toBeInTheDocument();
+    expect(cards[0]).toHaveAttribute("data-tab-type", "returning");
+    expect(screen.getByText("Alpha Returning")).toBeInTheDocument();
+    expect(screen.getByText("Beta Returning")).toBeInTheDocument();
   });
 
-  it('shows an empty state when no returning items exist', () => {
+  it("shows an empty state when no returning items exist", () => {
     render(<ListPage title="Returning" items={[]} mode="returning" />);
 
     expect(
-      screen.getByText(/No upcoming shows in your Watching list yet/)
+      screen.getByText(/No upcoming shows in your Watching list yet/),
     ).toBeInTheDocument();
-    expect(screen.queryByTestId('returning-tab-card')).toBeNull();
+    expect(screen.queryByTestId("returning-tab-card")).toBeNull();
   });
 });
