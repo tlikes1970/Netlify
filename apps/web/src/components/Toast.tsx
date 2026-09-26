@@ -51,10 +51,14 @@ export default function Toast({ message, type, onClose, action }: ToastProps) {
 
   return (
     <div
-      className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 ${
+      className={`fixed z-50 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
       }`}
-      style={getToastStyle()}
+      style={{
+        ...getToastStyle(),
+        top: 'calc(var(--safe-top, 0px) + 1rem)',
+        right: 'calc(var(--safe-right, 0px) + 1rem)',
+      }}
     >
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium">{message}</p>
