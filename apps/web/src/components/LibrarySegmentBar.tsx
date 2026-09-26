@@ -13,11 +13,11 @@ const SEGMENTS: {
   label: string;
   shortLabel: string;
 }[] = [
-  { id: 'watching', label: 'Watching', shortLabel: 'Watch' },
-  { id: 'want', label: 'Want', shortLabel: 'Want' },
-  { id: 'watched', label: 'Watched', shortLabel: 'Seen' },
-  { id: 'returning', label: 'Returning', shortLabel: 'Return' },
-  { id: 'mylists', label: 'My Lists', shortLabel: 'Lists' },
+  { id: 'watching', label: 'Currently Watching', shortLabel: 'Watching' },
+  { id: 'want', label: 'Want to Watch', shortLabel: 'Want' },
+  { id: 'watched', label: 'Watched', shortLabel: 'Watched' },
+  { id: 'returning', label: 'Up Next', shortLabel: 'Up Next' },
+  { id: 'mylists', label: 'Custom Lists', shortLabel: 'Lists' },
 ];
 
 function formatCount(count: number): string {

@@ -111,7 +111,7 @@ export default function LibraryPage({
           {segment === 'returning' && (
             <div data-page="lists" data-list="returning">
               <ListPage
-                title="Returning"
+                title="Up Next"
                 items={returningItems}
                 mode="returning"
                 {...listHandlers}

@@ -65,6 +65,6 @@ describe("HomeUpNextRail", () => {
     render(<HomeUpNextRail />);
 
     expect(screen.queryByTestId("up-next-card")).toBeNull();
-    expect(screen.getByText(/Add TV shows to Watching\./)).toBeInTheDocument();
+    expect(screen.getByText(/Currently Watching or Watched/)).toBeInTheDocument();
   });
 });

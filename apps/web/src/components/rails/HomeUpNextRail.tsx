@@ -53,7 +53,7 @@ export default function HomeUpNextRail() {
               "No upcoming shows on the radar."}
           </p>
 
-          <p className="mt-1">{translations.addTvShowsToWatchingList}</p>
+          <p className="mt-1">Add TV shows to Currently Watching or Watched to follow their release schedule.</p>
         </div>
       )}
     </div>

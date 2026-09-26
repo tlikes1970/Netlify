@@ -31,6 +31,24 @@ describe('buildUpNextShows', () => {
     expect(result[0].displayAirDate).not.toBe('TBA');
   });
 
+  it('includes upcoming TV in Watched but excludes Want to Watch input', () => {
+    const watched = mockWatchingTv({
+      id: 11,
+      title: 'Caught Up Show',
+      list: 'watched',
+      nextAirDate: isoDaysFromToday(4),
+      showStatus: 'Returning Series',
+    });
+    const want = mockWatchingTv({
+      id: 12,
+      title: 'Saved For Later',
+      list: 'wishlist',
+      nextAirDate: isoDaysFromToday(2),
+      showStatus: 'Returning Series',
+    });
+    expect(buildUpNextShows([watched, want]).map((item) => item.title)).toEqual(['Caught Up Show']);
+  });
+
   it('excludes Ended and Canceled shows', () => {
     const watching = [
       mockWatchingTv({

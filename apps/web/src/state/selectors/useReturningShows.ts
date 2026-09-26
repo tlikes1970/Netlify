@@ -9,12 +9,13 @@ import { RETURNING_STATUS } from '@/lib/constants/metadata';
 export type ReturningShow = UpNextShow;
 
 /**
- * Reactive Up Next / Returning dataset from the Watching list.
+ * Reactive release-schedule dataset from active and caught-up shows.
  * Used by Home (capped) and Returning tab (full list).
  */
 export function useReturningShows(): ReturningShow[] {
   const watching = useLibrary('watching');
-  return useMemo(() => buildUpNextShows(watching), [watching]);
+  const watched = useLibrary('watched');
+  return useMemo(() => buildUpNextShows([...watching, ...watched]), [watching, watched]);
 }
 
 export { RETURNING_STATUS };

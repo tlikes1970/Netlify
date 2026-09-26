@@ -21,7 +21,7 @@ export type UpNextCardProps = {
 export default function UpNextCard({ item }: UpNextCardProps) {
   const { title, year, posterUrl, nextAirDate, mediaType, id, showStatus, lastAirDate } = item;
   const translations = useTranslations();
-  const [episodeInfo, setEpisodeInfo] = useState<string>('S01E01');
+  const [episodeInfo, setEpisodeInfo] = useState<string | null>(null);
 
   // Debug: Log the nextAirDate prop and timezone info
   dlog(`🔍 UpNextCard ${title} received nextAirDate:`, nextAirDate);
@@ -178,7 +178,7 @@ export default function UpNextCard({ item }: UpNextCardProps) {
             className="text-xs mb-1" 
             style={{ color: 'var(--muted)' }}
           >
-            {year || 'TBA'} • {episodeInfo}
+            {year || 'TBA'}{episodeInfo ? ` • ${episodeInfo}` : ''}
           </div>
 
           {/* Status Message */}

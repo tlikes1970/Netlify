@@ -16,11 +16,11 @@ describe('LibrarySegmentBar', () => {
       <LibrarySegmentBar segment="watching" counts={counts} onChange={() => {}} />
     );
 
-    expect(screen.getByRole('tab', { name: /Watching, 5 items/i })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: /Want, 2 items/i })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: /Currently Watching, 5 items/i })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: /Want to Watch, 2 items/i })).toBeTruthy();
     expect(screen.getByRole('tab', { name: /Watched, 10 items/i })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: /Returning, 1 item/i })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: /My Lists, 7 items/i })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: /Up Next, 1 item/i })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: /Custom Lists, 7 items/i })).toBeTruthy();
   });
 
   it('calls onChange when a segment is selected', () => {
@@ -29,7 +29,7 @@ describe('LibrarySegmentBar', () => {
       <LibrarySegmentBar segment="watching" counts={counts} onChange={onChange} />
     );
 
-    fireEvent.click(screen.getByRole('tab', { name: /My Lists, 7 items/i }));
+    fireEvent.click(screen.getByRole('tab', { name: /Custom Lists, 7 items/i }));
     expect(onChange).toHaveBeenCalledWith('mylists');
   });
 });

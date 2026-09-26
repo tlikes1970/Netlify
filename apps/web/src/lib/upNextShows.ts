@@ -36,11 +36,13 @@ function statusPriority(status: string | null | undefined): number {
 }
 
 /**
- * Shared Up Next / Returning dataset from the Watching list.
+ * Shared release-schedule dataset. Callers provide Currently Watching and
+ * Watched entries; Want to Watch is intentionally excluded.
  * Dated items first (soonest first), then undated upcoming shows.
  */
-export function buildUpNextShows(watching: LibraryEntry[]): UpNextShow[] {
-  const activeShows = watching.filter((item) => {
+export function buildUpNextShows(caredAbout: LibraryEntry[]): UpNextShow[] {
+  const activeShows = caredAbout.filter((item) => {
+    if (item.list !== 'watching' && item.list !== 'watched') return false;
     if (item.mediaType !== 'tv') return false;
     const statusInfo = getShowStatusInfo(item.showStatus);
     return !statusInfo?.isCompleted;
