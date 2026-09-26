@@ -1107,7 +1107,13 @@ export default function App() {
                 >
                   <Suspense
                     fallback={
-                      <div className="loading-spinner">Loading library...</div>
+                      <div
+                        className="flex min-h-48 flex-col items-center justify-center"
+                        role="status"
+                      >
+                        <div className="loading-spinner" aria-hidden="true" />
+                        <span>Loading library...</span>
+                      </div>
                     }
                   >
                     <LibraryPage

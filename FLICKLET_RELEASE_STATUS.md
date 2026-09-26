@@ -593,6 +593,13 @@ Status: **PHASE 4 — VISUAL/DESIGN ACCEPTANCE: DIAGNOSTIC REVIEW COMPLETE.** Th
 - **Correction:** Settings is now an explicit fourth destination inside phone bottom navigation and a compact header control on tablet/desktop layouts. The independent floating Settings FAB is no longer mounted; Settings remains reachable without occupying poster/card/action content.
 - **Verification:** Home, Library, Search, Discovery, and Settings were checked on Pixel 9 gesture/three-button portrait and landscape. The full-screen Settings surface contains no redundant floating gear. API 33 small-tablet Settings uses the header control and retains its existing modal layout.
 
+### Wave 1 — VIS-15 correction
+
+- **Reproduction:** API 33 small tablet, first cold Library entry. At approximately 100 ms, `Loading library...` appeared rotating and clipped at the extreme left edge; the state resolved by approximately 600 ms. Warm Library entry did not show the malformed state.
+- **Root cause:** The Suspense fallback applied the reusable `.loading-spinner` class directly to the text container. That class forces a 40×40 circle and applies the `spin` transform, so the entire text node rotated inside a clipped box.
+- **Correction:** The Library fallback now uses a centered status container with a separate, aria-hidden spinner element and normally oriented status text.
+- **Verification:** Cold/warm entry and portrait/landscape rotation are covered in the final Wave 1 tablet regression gate.
+
 ---
 
 ## 7. Maestro user journeys
