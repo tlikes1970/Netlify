@@ -506,6 +506,20 @@ These remain product/tech items from existing control docs. They are **not** the
 - `wm size` / `wm density` emulator overrides often show a blank WebView until process restart — test-method, not classified as a shipping defect
 - Discovery posters sometimes grey placeholders (network/cache), not classified this phase
 - Double-Back from Search IME can leave the app (launcher) — typical Android, observation only
+- Android Back from the Settings sheet exits the activity because Settings does not currently subscribe to `flicklet:android-back`; this behavior predates the API 36 dispatcher migration and is deferred rather than folded into the platform change.
+
+---
+
+## 10A. Android 16 / target API 36 migration
+
+- `compileSdkVersion` and `targetSdkVersion` are now 36; `minSdkVersion` remains 31.
+- Google Play requires new apps and updates to target Android 16 / API 36 from August 31, 2026 (phone form factor).
+- The Android 16 behavior audit identified predictive Back as the only directly reproduced target-36 break: the legacy `Activity.onBackPressed()` override was no longer invoked, so Back from the Filters overlay left the app instead of closing the overlay.
+- `MainActivity` now registers an AndroidX `OnBackPressedCallback`, preserves the existing cancellable `flicklet:android-back` web contract, and temporarily disables that callback before delegating an unhandled Back to the dispatcher.
+- Edge-to-edge behavior remains owned by the existing four-sided WindowInsets contract. No orientation restriction or large-screen opt-out is present, so Android 16's large-screen enforcement required no manifest change.
+- API 36 phone verification passed gesture/three-button navigation, cold launch, warm resume, Filters Back, Search/IME, portrait/landscape rotation, inset re-synchronization, and 2.0x font scale. Insets observed at 560 dpi: gesture `41.142857 / 24` CSS px top/bottom; three-button `41.142857 / 48` CSS px.
+- API 36 Pixel Tablet verification passed Home, Library, Settings, portrait/landscape rotation, and inset re-synchronization at 2560x1600, 320 dpi. Insets were `24 / 32` CSS px top/bottom.
+- Post-target smoke launches passed on API 31, 33, 35, and 36. API 31 rendered at 1080x1920 / 420 dpi with `24 / 48` CSS px top/bottom; API 33 also retained a usable 2.0x-font layout.
 
 ---
 
@@ -514,11 +528,11 @@ These remain product/tech items from existing control docs. They are **not** the
 | Field | Value |
 |-------|--------|
 | Branch | `codex/establish-baseline` |
-| Verified application checkpoint | `e1228202b1fce88437cac3dcf00385e09a86bd19` plus the focused DST-08 commit containing this update |
-| Application source changes in this gate | API 31 support-floor configuration and targeted DST-08 responsive chrome correction |
-| Current phase | Platform-correction gate — **DST-07 AND DST-08 COMPLETE; TARGET API 36 NEXT** |
-| Current authorized task | Complete target/compile API 36 migration and its regression gate. Do **not** start black-box UX testing. |
-| Latest test evidence | API 31 is the supported floor. DST-08 post-fix phone checks pass at 1.0×/1.3×/1.5×/2.0× on API 33, API 35 Pixel 9, and API 36, including API 33 Library, Search/IME, Settings, portrait, and landscape checks. |
+| Verified application checkpoint | `39853ca` plus the focused target-36 migration commit containing this update |
+| Application source changes in this gate | API 31 support floor, targeted DST-08 responsive chrome correction, compile/target API 36, and AndroidX predictive-Back dispatch migration |
+| Current phase | Platform-correction gate — **DST-07, DST-08, TARGET API 36 MIGRATION, AND FULL REGRESSION COMPLETE** |
+| Current authorized task | Platform-correction checkpoint complete. Stop before black-box UX testing. |
+| Latest test evidence | Target-36 debug APK passes 38 test files / 232 tests, TypeScript, production and mobile builds, Firebase functions build, Capacitor sync, Android debug assembly, final APK install/launch, API 31/33/35/36 phone smokes, and API 36 Pixel Tablet checks. API 36 predictive Back, gesture/three-button insets, warm resume, rotation, Search/IME, and maximum font scale pass. |
 
 ---
 

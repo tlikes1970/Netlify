@@ -4,6 +4,7 @@ import android.util.Log;
 import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
+import androidx.activity.OnBackPressedCallback;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -26,6 +27,12 @@ public class MainActivity extends BridgeActivity {
     private int lastSafeBottom = 0;
     private int lastSafeLeft = 0;
     private int lastSafeRight = 0;
+    private final OnBackPressedCallback webBackCallback = new OnBackPressedCallback(true) {
+        @Override
+        public void handleOnBackPressed() {
+            dispatchBackToWeb();
+        }
+    };
 
     private final WebViewListener safeAreaWebViewListener = new WebViewListener() {
         @Override
@@ -47,6 +54,7 @@ public class MainActivity extends BridgeActivity {
         if (getBridge() != null) {
             getBridge().addWebViewListener(safeAreaWebViewListener);
         }
+        getOnBackPressedDispatcher().addCallback(this, webBackCallback);
     }
 
     @Override
@@ -71,11 +79,10 @@ public class MainActivity extends BridgeActivity {
         decor.postDelayed(this::syncInsetsNow, 250);
     }
 
-    @Override
-    public void onBackPressed() {
+    private void dispatchBackToWeb() {
         WebView webView = getBridge() != null ? getBridge().getWebView() : null;
         if (webView == null) {
-            super.onBackPressed();
+            dispatchUnhandledBack();
             return;
         }
 
@@ -86,9 +93,15 @@ public class MainActivity extends BridgeActivity {
                 + "})();";
         webView.evaluateJavascript(js, handled -> {
             if (!"true".equals(handled)) {
-                MainActivity.super.onBackPressed();
+                dispatchUnhandledBack();
             }
         });
+    }
+
+    private void dispatchUnhandledBack() {
+        webBackCallback.setEnabled(false);
+        getOnBackPressedDispatcher().onBackPressed();
+        webBackCallback.setEnabled(true);
     }
 
     private void ensureInsetsPipeline() {
