@@ -47,7 +47,7 @@ Authorized order. Do not skip ahead.
 |---|--------|--------|
 | 1 | Known Android defects | Complete through Fix 5 (`04fbc38`) |
 | 2 | Device stress testing | **COMPLETE** — real API 23/33/35/36 phone and API 33/36 tablet matrix exercised; DST-07 and DST-08 resolved in the platform-correction gate |
-| 3 | AI black-box usability testing | Not started |
+| 3 | AI black-box usability testing | **COMPLETE** — all ten missions attempted on Pixel 9 / API 35; findings UX-01 through UX-10 documented below |
 | 4 | Visual/design acceptance | Not started |
 | 5 | Maestro automated user journeys | Not started — do not install/configure until this phase |
 | 6 | Accessibility/usability testing | Not started |
@@ -407,35 +407,133 @@ The API 36 headless AVD initially produced black WebView frames with deprecated 
 
 ---
 
-## 5. UX acceptance missions (locked)
+## 5. Phase 3 — black-box usability testing
 
-Black-box missions. On the first run, **do not** use source-code knowledge to complete the task.
+**Status: COMPLETE.** All ten locked missions were attempted before source inspection. Test state was emulator-local, signed out, and reset with `pm clear`; no production data was used. Configuration: Pixel 9 AVD, Android 15 / API 35, 1080×2424 at 420 dpi, three-button navigation for the final recovery checks. Product source was not changed.
 
-1. Find a specific show and begin tracking it.
-2. Determine what to watch next.
-3. Mark an episode watched / update progress.
-4. Discover something new to watch.
-5. Save something for later.
-6. Find previously saved content.
-7. Rate something watched.
-8. Change a user preference.
-9. Determine what Full Access means.
-10. Remove or undo something added accidentally.
+### First-launch impression
 
-For each future capture record:
+- Flicklet presents itself as a TV/movie tracker centered on Currently Watching, Want to Watch, Watched, Returning, ratings, custom lists, recommendations, and optional episode-oriented Full Access features.
+- Search is the clearest primary action. Home, Library, and Discovery are visible in bottom navigation; Settings is a gear FAB.
+- The opening coachmark was clipped substantially off the left edge, making first-run copy partially unreadable. Later coachmarks explained Search and adding a title, but did not guide the user through a real add/progress action.
+- Full Access was not explained during onboarding. Its Settings section later communicated a 21-day trial and one-time unlock, but not the price.
 
-- success/failure
-- completion time
-- actions/taps
-- wrong turns
-- hesitation/confusion
-- terminology problems
-- discoverability
-- system feedback
-- confidence the task completed
-- visual/usability problems
+### Mission results
 
-Results: **not yet run.**
+| Mission | Result | Time | Meaningful actions | Wrong turns | Main friction | Confidence |
+|---------|--------|------|--------------------|-------------|---------------|------------|
+| 1. Find `Tulsa King` and begin tracking | PASS | ~0:35 | 3 | 0 | Search and add were direct; toast plus Home/Library state confirmed success | HIGH |
+| 2. Determine what to watch next | PARTIAL | ~0:08 | 0–1 | 0 | Up Next named `Tulsa King` but supplied no episode/progress detail | MEDIUM |
+| 3. Mark an episode watched / update progress | FAIL | ~4:00 | ~8 | 3 | Card tap did nothing; ellipsis only said “Swipe for actions”; unlabeled grid control did not expose progress; swipes silently changed list state | LOW |
+| 4. Discover something new | PARTIAL | ~0:15 | 1 | 0 | Dedicated Discovery was sign-in gated without a visible body CTA; a generic Home rail was usable instead | MEDIUM |
+| 5. Save something for later | PASS, high friction | ~2:00 | ~7 | 1 | `My List +` opened custom lists; search lacked a direct Want to Watch action; required add-as-watching then an undocumented swipe | LOW–MEDIUM |
+| 6. Find saved content | PASS | ~0:05 | 1 | 0 | Library’s Want tab and count made the saved title immediately findable | HIGH |
+| 7. Rate watched content | PASS | ~0:10 | 2 | 0 | Five-star control and `(4/5)` feedback were obvious and immediate | HIGH |
+| 8. Change a preference | PASS | ~0:35 | 3 | 0 | Settings section and Personality choices were understandable; selection feedback was immediate | HIGH |
+| 9. Understand Full Access | PARTIAL | ~0:40 | ~4 | 0 | Benefits, trial, sign-in requirement, and one-time model were clear; price was absent | MEDIUM |
+| 10. Remove/undo an accidental add | FAIL | ~2:00 | ~5 | 2 | No swipe undo; Manage contained Remove from List only beneath app/system navigation, and tapping the visible sliver invoked Android Back and exited Flicklet | HIGH (failure confirmed) |
+
+### Confirmed Phase-3 findings
+
+#### UX-01 — First-launch coachmark is clipped
+
+- **Category / severity:** ACCESSIBILITY-ADJACENT, INFORMATION HIERARCHY / HIGH
+- **Missions:** first launch
+- **Behavior:** The opening “Welcome to Flicklet” coachmark extends off the left edge, hiding part of the message. The CTA remains reachable.
+- **Expected:** All onboarding copy is readable within the viewport.
+- **Evidence:** `%TEMP%/flicklet-phase3-first-launch.png` (local, not committed).
+- **Repeated:** Observed on the clean first launch; not applicable after dismissal.
+
+#### UX-02 — List-state gestures are undiscoverable and provide inadequate recovery
+
+- **Category / severity:** DISCOVERABILITY, FEEDBACK / SYSTEM STATUS, ERROR RECOVERY / HIGH
+- **Missions:** 3, 5, 10
+- **Behavior:** The card ellipsis says only “Swipe for actions.” A left swipe silently moved a title from Currently Watching to Want; the opposite swipe advanced it to Seen rather than undoing. There was no direction legend, confirmation, or undo.
+- **Expected:** State-changing gestures communicate direction/outcome before use and offer confirmation or immediate undo.
+- **Evidence:** `%TEMP%/flicklet-phase3-m3-menu.png`, `m3-swiped.png`, `recovery-swipe.png`.
+- **Repeated:** Yes, across progress, save-later, and recovery missions.
+
+#### UX-03 — Save-for-later workflow is indirect and misleading
+
+- **Category / severity:** WORKFLOW COMPLEXITY, DISCOVERABILITY, TERMINOLOGY / HIGH
+- **Missions:** 5, 6
+- **Behavior:** `My List +` means custom lists, not Want to Watch. An untracked search result offered Currently Watching, Watched, Not Interested, and My List+, but no Want to Watch. The successful path required adding as Currently Watching, navigating to Library, then using the undocumented swipe.
+- **Expected:** “Save for later” maps directly to Want to Watch from discovery/search results.
+- **Evidence:** `%TEMP%/flicklet-phase3-m5-mylist.png`, `m5-overflow.png`, `m5-saved.png`.
+- **Repeated:** The ambiguity appeared in Home, Search, and Library.
+
+#### UX-04 — Signed-out Discovery is a dead end
+
+- **Category / severity:** NAVIGATION, DISCOVERABILITY / MEDIUM
+- **Missions:** 4
+- **Behavior:** Discovery shows “Sign In to Discover Content” but no visible sign-in CTA in the page body. Generic Home rails remain available as a substitute.
+- **Expected:** The destination either provides useful signed-out discovery or a clear next action.
+- **Evidence:** `%TEMP%/flicklet-phase3-m4-discovery.png`.
+- **Repeated:** No.
+
+#### UX-05 — Episode progress is not discoverable from tracked content
+
+- **Category / severity:** DISCOVERABILITY, FUNCTIONAL DEFECT / HIGH
+- **Missions:** 2, 3
+- **Behavior:** Neither the Home Up Next card, Library card, card tap, ellipsis hint, nor unlabeled grid control exposed an understandable episode/progress workflow. Full Access later claims Episode Tracking is available, increasing the mismatch.
+- **Expected:** A tracked TV title exposes current/next episode and a clear watched/progress action, or clearly identifies a locked prerequisite.
+- **Evidence:** `%TEMP%/flicklet-phase3-m3-manage.png`, `m3-menu.png`, `m3-grid-control.png`.
+- **Repeated:** Yes, across Home and Library.
+
+#### UX-06 — Android Back behavior is inconsistent across overlays
+
+- **Category / severity:** NAVIGATION, ERROR RECOVERY, CONSISTENCY / MEDIUM
+- **Missions:** 8, 9, 10; navigation evaluation
+- **Behavior:** Android Back from Settings exited to the launcher instead of closing Settings. Back from the Filters menu correctly dismissed Filters and kept Flicklet foregrounded.
+- **Expected:** Back first dismisses the active sheet/menu consistently.
+- **Evidence:** `%TEMP%/flicklet-phase3-settings-back.png`, `flicklet-phase3-filters-open.png`, `flicklet-phase3-filters-back.png`; `dumpsys window` confirmed the foreground activity.
+- **Repeated:** Settings behavior is a previously documented deferred technical observation; cross-surface inconsistency was reconfirmed here.
+
+#### UX-07 — Full Access omits price at the decision point
+
+- **Category / severity:** INFORMATION HIERARCHY / MEDIUM
+- **Missions:** 9
+- **Behavior:** The section lists benefits, a 21-day trial, sign-in requirement, and one-time unlock, but no price through the bottom of the page.
+- **Expected:** Users can understand the price before starting an unlock/authentication path.
+- **Evidence:** `%TEMP%/flicklet-phase3-m9-full-access.png`, `m9-full-access-lower.png`, `m9-full-access-price.png`.
+- **Repeated:** No purchase flow was entered.
+
+#### UX-08 — `My List +` and custom-list creation copy are ambiguous
+
+- **Category / severity:** TERMINOLOGY, WORKFLOW COMPLEXITY / MEDIUM
+- **Missions:** 5
+- **Behavior:** `My List +` was reasonably interpreted as save-for-later, but opened an empty custom-list modal with both “Create Your First List” and “Create New List.”
+- **Expected:** The label distinguishes custom lists from Want to Watch, and the empty state presents one clear primary action.
+- **Evidence:** `%TEMP%/flicklet-phase3-m5-mylist.png`.
+- **Repeated:** The naming conflict also contributes to UX-03.
+
+#### UX-09 — Library terminology changes between navigation and content
+
+- **Category / severity:** TERMINOLOGY, CONSISTENCY / MEDIUM
+- **Missions:** 3, 5, 6, 7
+- **Behavior:** Tabs read Watch / Want / Seen / Return while headings and actions use Currently Watching / Want to Watch / Watched / Returning.
+- **Expected:** Status names remain stable, or abbreviations are unambiguously explained.
+- **Evidence:** Library screenshots including `%TEMP%/flicklet-phase3-m6-found.png` and `m7-seen.png`.
+- **Repeated:** Yes, throughout Library workflows.
+
+#### UX-10 — Remove control is obscured by app and system navigation
+
+- **Category / severity:** FUNCTIONAL DEFECT, ERROR RECOVERY / RELEASE BLOCKER for three-button removal
+- **Missions:** 10
+- **Behavior:** Manage exposes `Remove from List` only at the bottom of a tall sheet. In Pixel 9 API 35 three-button mode, Flicklet’s bottom navigation and the Android navigation area cover it. Dragging the sheet did not bring it clear; tapping the visible sliver hit Android Back and exited the app.
+- **Expected:** Removal is fully visible/reachable above both navigation layers and gives clear completion feedback/undo.
+- **Evidence:** `%TEMP%/flicklet-phase3-m10-manage.png`, `m10-remove-visible.png`, `m10-after-remove-tap.png`.
+- **Repeated:** Reachability remained blocked after an additional sheet drag.
+
+### Recurring themes and comprehension
+
+- **Strong paths:** Search/add, Library retrieval, rating, and ordinary preference changes provide clear controls and immediate state feedback.
+- **Weak paths:** List-state transitions depend on hidden gestures, use inconsistent terminology, and lack recovery. Episode progress—the behavior most likely to distinguish Flicklet from a simple list—was not discoverable.
+- **Navigation:** Bottom-nav destination state is clear. Filters Back behaves as expected; Settings Back does not. Search text persists across destinations, which is functional but visually persistent.
+- **First-time-user understanding:** Flicklet is understandable as a TV/movie tracking organizer for regular viewers. Its 3–5 clearest functions are search/add, status lists, saved-content retrieval, ratings, and preference/personalization controls. Recommendations, Shows Like This, Extras, reminders, and episode tracking appear intended to differentiate it from a static list, but signed-out Discovery and undiscoverable progress prevent that value from being demonstrated. Full Access appears to be a 21-day trial followed by a one-time purchase; the price is not understandable from the tested interface.
+- **Still unclear to a new user:** swipe directions, Return/Returning semantics, My List versus Want to Watch, how to update episode progress, which capabilities require sign-in versus payment, and the purchase price.
+
+Temporary screenshots remain local and are intentionally not committed. Formal visual/design acceptance has not begun.
 
 ---
 
@@ -528,11 +626,11 @@ These remain product/tech items from existing control docs. They are **not** the
 | Field | Value |
 |-------|--------|
 | Branch | `codex/establish-baseline` |
-| Verified application checkpoint | `39853ca` plus the focused target-36 migration commit containing this update |
-| Application source changes in this gate | API 31 support floor, targeted DST-08 responsive chrome correction, compile/target API 36, and AndroidX predictive-Back dispatch migration |
-| Current phase | Platform-correction gate — **DST-07, DST-08, TARGET API 36 MIGRATION, AND FULL REGRESSION COMPLETE** |
-| Current authorized task | Platform-correction checkpoint complete. Stop before black-box UX testing. |
-| Latest test evidence | Target-36 debug APK passes 38 test files / 232 tests, TypeScript, production and mobile builds, Firebase functions build, Capacitor sync, Android debug assembly, final APK install/launch, API 31/33/35/36 phone smokes, and API 36 Pixel Tablet checks. API 36 predictive Back, gesture/three-button insets, warm resume, rotation, Search/IME, and maximum font scale pass. |
+| Verified application checkpoint | `c44e038b71766ccead0bb850ebcc39357012b89f` plus the focused Phase-3 evidence commit containing this update |
+| Application source changes in this gate | None; Phase 3 was diagnostic black-box testing only |
+| Current phase | Phase 3 — **BLACK-BOX USABILITY TESTING COMPLETE** |
+| Current authorized task | Phase 3 complete. Stop before visual/design acceptance and before fixing UX findings. |
+| Latest test evidence | All ten locked missions attempted on Pixel 9 / API 35 from a clean emulator-local first-user state. Strong paths: search/add, Library retrieval, rating, and preference changes. High-severity findings cover onboarding clipping, hidden list-state gestures, indirect save-for-later, undiscoverable episode progress, and an unreachable three-button Remove control. |
 
 ---
 
