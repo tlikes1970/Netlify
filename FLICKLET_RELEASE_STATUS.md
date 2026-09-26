@@ -573,6 +573,13 @@ Status: **PHASE 4 — VISUAL/DESIGN ACCEPTANCE: DIAGNOSTIC REVIEW COMPLETE.** Th
 | VIS-15 | MEDIUM / REPRODUCE | Small-tablet portrait Library evidence showed malformed rotated/clipped `Loading Library` text at the extreme left edge. | Possible transient loading/layout defect. | Reproduce first; fix only if confirmed. |
 | VIS-16 | MEDIUM | Mobile bottom navigation combines an oversized Settings gear, text-only destinations, active-line treatment, and Android system navigation like layered navigation systems. | Correlates UX-06, UX-10. | Broad navigation redesign deferred. |
 
+### Wave 1 — UX-10 / VIS-03 correction
+
+- **Reproduction:** Pixel 9 / API 35 / three-button / portrait. Search `Tulsa King` → tracked result → Manage. The search-management bottom sheet ended at viewport bottom inside a `z-50` parent, below the higher-z mobile navigation. Its final `Remove from List` action occupied the same bottom region as Flicklet navigation and Android system navigation; tapping the visible sliver could invoke Android Back.
+- **Root cause:** The inner sheet declared `zIndex: 10004`, but its parent created a lower `z-50` stacking context, so the complete surface remained below mobile navigation. The fixed overlay also ended at physical viewport bottom without consuming `--safe-bottom`.
+- **Correction:** Promote the complete overlay above app navigation, bottom-pad it with the shared `--safe-bottom` contract, use dynamic viewport units, and keep the sheet body independently scrollable with overscroll containment. No device-specific offset was added.
+- **Verification:** Rebuilt/synced debug APK on Pixel 9 / API 35. In three-button portrait, the full Remove action is visible and tappable above the 48 CSS-pixel protected navigation area; the sheet covers app navigation instead of competing with it. Gesture-safe spacing uses the same contract. Elevated-font and landscape coverage are included in the Wave 1 regression gate.
+
 ---
 
 ## 7. Maestro user journeys

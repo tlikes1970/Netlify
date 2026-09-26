@@ -1032,8 +1032,12 @@ function SearchResultCard({
             {showManageSheet && isInList && libraryEntry && (
               <Portal>
                 <div
-                  className="fixed inset-0 z-50 flex items-end"
+                  className="fixed inset-0 flex items-end"
                   onClick={() => setShowManageSheet(false)}
+                  style={{
+                    zIndex: 10003,
+                    paddingBottom: "var(--safe-bottom, 0px)",
+                  }}
                 >
                   {/* Backdrop */}
                   <div
@@ -1044,7 +1048,10 @@ function SearchResultCard({
                   <div
                     className="relative w-full max-h-[80vh] bg-card rounded-t-xl border-t border-line overflow-hidden"
                     onClick={(e) => e.stopPropagation()}
-                    style={{ zIndex: 10004 }}
+                    style={{
+                      zIndex: 10004,
+                      maxHeight: "calc(80dvh - var(--safe-bottom, 0px))",
+                    }}
                   >
                     {/* Handle */}
                     <div className="flex justify-center pt-3 pb-2">
@@ -1062,7 +1069,12 @@ function SearchResultCard({
                       )}
                     </div>
                     {/* Content */}
-                    <div className="overflow-y-auto p-4" style={{ maxHeight: "calc(80vh - 80px)" }}>
+                    <div
+                      className="overflow-y-auto overscroll-contain p-4"
+                      style={{
+                        maxHeight: "calc(80dvh - 80px - var(--safe-bottom, 0px))",
+                      }}
+                    >
                       <LibraryActions
                         item={enrichedItem}
                         libraryEntry={libraryEntry}
