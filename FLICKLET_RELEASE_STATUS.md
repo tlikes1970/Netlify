@@ -639,6 +639,12 @@ Status: **PASS — WAVE 2 IMPLEMENTATION COMPLETE.** No Wave 3 or Wave 4 work wa
 - **Correction:** the state now presents a prominent `Sign In` action and dispatches the existing `auth:sign-in-required` contract, preserving the single application authentication flow.
 - **Focused verification:** signed-out CTA rendering/event dispatch and unchanged signed-in empty-state behavior are covered by `DiscoveryPage.signedOut.test.tsx`; TypeScript passes.
 
+### Wave 3 — UX-06 Settings Android Back
+
+- **Root cause:** neither responsive Settings shell subscribed to the existing cancellable `flicklet:android-back` event, so `MainActivity` treated Back as unhandled and delegated to the activity dispatcher.
+- **Correction:** both `SettingsSheet` and `SettingsPage` use one shared web listener for the existing native contract. Settings-owned transient overlays close first; otherwise Settings closes and returns to the prior Flicklet surface. A previously consumed event is ignored, preserving dismissal precedence and native fallback semantics.
+- **Focused verification:** Settings consumes the cancellable event and closes; the existing Filters Android/browser Back suite remains green; TypeScript passes. Native predictive Back still uses the unchanged AndroidX dispatcher integration.
+
 ---
 
 ## 7. Maestro user journeys

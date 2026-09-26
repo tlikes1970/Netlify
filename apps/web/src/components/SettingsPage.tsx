@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from "react";
+import { useCallback, useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useTranslations } from "../lib/language";
 import { useAdminRole } from "../hooks/useAdminRole";
 import { lockScroll, unlockScroll } from "../utils/scrollLock";
@@ -13,6 +13,7 @@ import { useCustomLists } from "../lib/customLists";
 import { Library } from "../lib/storage";
 import type { MediaItem } from "./cards/card.types";
 import type { ListName } from "../state/library.types";
+import { useAndroidBackDismiss } from "../hooks/useAndroidBackDismiss";
 
 // Lazy load heavy notification modals
 const NotificationSettings = lazy(() =>
@@ -46,6 +47,31 @@ export default function SettingsPage({
   const { isAdmin } = useAdminRole();
   const isMobile = useIsMobileScreen();
   const { user } = useAuth();
+
+  const dismissForAndroidBack = useCallback(() => {
+    if (showNotificationCenter) {
+      setShowNotificationCenter(false);
+    } else if (showNotificationSettings) {
+      setShowNotificationSettings(false);
+    } else if (showNotInterestedModal) {
+      setShowNotInterestedModal(false);
+    } else if (showSharingModal) {
+      setShowSharingModal(false);
+    } else if (showMobileSectionMenu) {
+      setShowMobileSectionMenu(false);
+    } else {
+      onClose();
+    }
+  }, [
+    onClose,
+    showMobileSectionMenu,
+    showNotInterestedModal,
+    showNotificationCenter,
+    showNotificationSettings,
+    showSharingModal,
+  ]);
+
+  useAndroidBackDismiss(true, dismissForAndroidBack);
   
   // Map old tab navigation events to new sections
   useEffect(() => {

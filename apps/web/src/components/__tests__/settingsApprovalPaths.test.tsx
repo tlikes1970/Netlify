@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { act, render, screen, cleanup, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import SettingsSheet from "@/components/settings/SettingsSheet";
@@ -98,6 +98,23 @@ describe("Settings approval paths", () => {
     window.history.replaceState(null, "", "/");
     window.location.hash = "";
     vi.clearAllMocks();
+  });
+
+  it("consumes Android Back and closes Settings", async () => {
+    render(<SettingsSheet />);
+
+    let handled = false;
+    act(() => {
+      handled = !window.dispatchEvent(
+        new CustomEvent("flicklet:android-back", { cancelable: true }),
+      );
+    });
+
+    expect(handled).toBe(true);
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog", { name: "Settings" })).not.toBeInTheDocument();
+    });
+    expect(document.documentElement).not.toHaveAttribute("data-settings-sheet");
   });
 
   it("keeps admin-only controls hidden for anonymous visitors while showing upgrade CTAs", async () => {

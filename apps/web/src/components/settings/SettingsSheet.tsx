@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, lazy, Suspense } from 'react';
+import { useCallback, useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { useFocusTrap } from '../../lib/a11y/useFocusTrap';
 import { useInertOutside } from '../../lib/a11y/useInertOutside';
 import { getVisibleSections, type SettingsSectionId } from '../settingsConfig';
@@ -6,6 +6,7 @@ import { renderSettingsSection } from '../settingsSections';
 import { useAdminRole } from '../../hooks/useAdminRole';
 import { useIsMobileScreen } from '../../hooks/useDeviceDetection';
 import NotInterestedModal from '../modals/NotInterestedModal';
+import { useAndroidBackDismiss } from '../../hooks/useAndroidBackDismiss';
 
 // Lazy load heavy notification modals
 const NotificationSettings = lazy(() =>
@@ -145,6 +146,27 @@ export default function SettingsSheet() {
   
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const bodyRef = useRef<HTMLDivElement | null>(null);
+
+  const dismissForAndroidBack = useCallback(() => {
+    if (showNotificationCenter) {
+      setShowNotificationCenter(false);
+    } else if (showNotificationSettings) {
+      setShowNotificationSettings(false);
+    } else if (showNotInterestedModal) {
+      setShowNotInterestedModal(false);
+    } else if (showSharingModal) {
+      setShowSharingModal(false);
+    } else {
+      closeSettingsSheet();
+    }
+  }, [
+    showNotificationCenter,
+    showNotificationSettings,
+    showNotInterestedModal,
+    showSharingModal,
+  ]);
+
+  useAndroidBackDismiss(open, dismissForAndroidBack);
 
   // Prevent background scroll with layout stabilization
   useEffect(() => {
