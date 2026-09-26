@@ -19,6 +19,40 @@ function getCapacitor(): any {
   return null;
 }
 
+export interface FullAccessProductDetails {
+  productId: string;
+  price: string;
+  title?: string;
+  description?: string;
+  currency?: string;
+}
+
+export function isAndroidBillingAvailable(): boolean {
+  const Capacitor = getCapacitor();
+  return (
+    Capacitor?.getPlatform?.() === 'android' &&
+    Boolean(Capacitor?.Plugins?.Billing)
+  );
+}
+
+/** Read the localized Play price without initiating a purchase. */
+export async function getFullAccessProductDetails(): Promise<FullAccessProductDetails | null> {
+  if (!isAndroidBillingAvailable()) return null;
+
+  const Billing = getCapacitor().Plugins.Billing;
+  await Billing.initialize();
+  const result = await Billing.getProducts({
+    productIds: [FULL_ACCESS_PRODUCT_ID],
+    productType: FULL_ACCESS_PRODUCT_TYPE,
+  });
+  const product = result.products?.find(
+    (candidate: FullAccessProductDetails) =>
+      candidate.productId === FULL_ACCESS_PRODUCT_ID,
+  );
+
+  return product?.price ? product : null;
+}
+
 /** Start Full Access purchase flow (Android: Play Billing one-time product). */
 export async function startProUpgrade(): Promise<void> {
   console.log('[Full Access] startProUpgrade() called');

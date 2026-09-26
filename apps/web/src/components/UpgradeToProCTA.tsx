@@ -20,6 +20,7 @@ export interface UpgradeToProCTAProps {
   message?: string; // Optional custom message
   showIcon?: boolean; // Show 💎 icon (default: true for banner/panel)
   className?: string;
+  disabled?: boolean;
 }
 
 /**
@@ -36,6 +37,7 @@ export function UpgradeToProCTA({
   message,
   showIcon,
   className = '',
+  disabled = false,
 }: UpgradeToProCTAProps) {
   const entitlements = useEntitlements();
 
@@ -120,8 +122,14 @@ export function UpgradeToProCTA({
       return (
         <button
           onClick={startProUpgrade}
+          disabled={disabled}
           className={`px-6 py-3 rounded-lg font-medium transition-colors ${className}`}
-          style={{ backgroundColor: "var(--accent)", color: "white" }}
+          style={{
+            backgroundColor: "var(--accent)",
+            color: "white",
+            opacity: disabled ? 0.6 : 1,
+            cursor: disabled ? "not-allowed" : "pointer",
+          }}
         >
           {displayMessage}
         </button>

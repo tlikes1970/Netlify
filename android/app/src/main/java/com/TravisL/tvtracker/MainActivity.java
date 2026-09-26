@@ -49,6 +49,7 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(android.os.Bundle savedInstanceState) {
+        registerPlugin(BillingPlugin.class);
         super.onCreate(savedInstanceState);
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         if (getBridge() != null) {

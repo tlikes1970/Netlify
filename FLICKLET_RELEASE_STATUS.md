@@ -645,6 +645,13 @@ Status: **PASS — WAVE 2 IMPLEMENTATION COMPLETE.** No Wave 3 or Wave 4 work wa
 - **Correction:** both `SettingsSheet` and `SettingsPage` use one shared web listener for the existing native contract. Settings-owned transient overlays close first; otherwise Settings closes and returns to the prior Flicklet surface. A previously consumed event is ignored, preserving dismissal precedence and native fallback semantics.
 - **Focused verification:** Settings consumes the cancellable event and closes; the existing Filters Android/browser Back suite remains green; TypeScript passes. Native predictive Back still uses the unchanged AndroidX dispatcher integration.
 
+### Wave 3 — UX-07 / VIS-10 Full Access purchase decision
+
+- **Architecture audit:** Full Access is the non-consumable Google Play INAPP product `flicklet_full_access`. `BillingPlugin.getProducts()` already returns Play's localized `SkuDetails.price`, currency, title, and description, but the Settings decision surface never requested those details. Purchase validation and entitlement refresh remain in the existing `startProUpgrade()` path; restore support exists in the billing bridge but is not currently surfaced by this Settings section.
+- **Correction:** the native Billing plugin is explicitly registered, and a read-only product-details path loads the configured Play product before purchase. The decision hierarchy is now Full Access identity, localized one-time price/status, entitlement state, primary CTA, then four concise benefits. Android purchase is gated while pricing loads or is unavailable; no fallback dollar amount is fabricated.
+- **Paid-copy correction:** Episode Tracking was removed from Full Access benefits because Wave 2 made it available to all users. Repetitive trial/continued-access tiles and per-benefit `INCLUDED / Available Now` labels were removed; Unlimited Custom Lists remains a genuine paid benefit.
+- **Focused verification:** localized price/product-ID/type mapping and non-Android no-fabrication behavior are covered by `proUpgrade.productDetails.test.ts`; guest, expired/read-only, paid, and admin entitlement render paths remain covered by `settingsApprovalPaths.test.tsx`.
+
 ---
 
 ## 7. Maestro user journeys

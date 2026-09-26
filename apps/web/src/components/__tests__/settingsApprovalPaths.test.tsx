@@ -141,11 +141,13 @@ describe("Settings approval paths", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Full Access" }));
     expect(
-      screen.getByRole("heading", { name: "Support Flicklet" })
+      screen.getByRole("heading", { name: "Full Access", level: 3 })
     ).toBeInTheDocument();
+    expect(screen.getByText(/one-time purchase · price shown in Google Play/i)).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Unlock Full Access" })
     ).toBeInTheDocument();
+    expect(screen.queryByText("Episode Tracking")).not.toBeInTheDocument();
   });
 
   it("lets a signed-in free user browse settings sections and still sees upgrade messaging", async () => {
@@ -170,9 +172,7 @@ describe("Settings approval paths", () => {
 
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Full Access" }));
-    expect(
-      screen.getByRole("heading", { name: "Trial ended — Read-Only" })
-    ).toBeInTheDocument();
+    expect(screen.getByText("Trial ended — Read-Only")).toBeInTheDocument();
     expect(
       screen.getByText(/Your trial has ended, but your library is still yours/i)
     ).toBeInTheDocument();
@@ -206,8 +206,9 @@ describe("Settings approval paths", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Full Access" }));
     expect(
-      screen.getByRole("heading", { name: "Thanks for supporting Flicklet" })
+      screen.getByRole("heading", { name: "Full Access", level: 3 })
     ).toBeInTheDocument();
+    expect(screen.getByText("Purchased")).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Unlock Full Access" })
     ).toBeNull();
@@ -235,7 +236,7 @@ describe("Settings approval paths", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Full Access" }));
     expect(
-      screen.getByRole("heading", { name: "Thanks for supporting Flicklet" })
+      screen.getByRole("heading", { name: "Full Access", level: 3 })
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Unlock Full Access" })

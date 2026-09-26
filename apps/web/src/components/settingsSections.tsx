@@ -24,6 +24,7 @@ import {
 import { useTranslations, useLanguage, changeLanguage } from "../lib/language";
 import { PRO_FEATURES_AVAILABLE } from "./settingsProConfig";
 import { UpgradeToProCTA } from "./UpgradeToProCTA";
+import { useFullAccessProduct } from "../hooks/useFullAccessProduct";
 import { useCustomLists, customListManager } from "../lib/customLists";
 import { useUsername } from "../hooks/useUsername";
 import { useLibrary } from "../lib/storage";
@@ -985,6 +986,19 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
 function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
   const entitlements = useEntitlements();
   const trialLabel = getTrialStatusLabel(entitlements);
+  const priceState = useFullAccessProduct();
+  const purchaseDisabled =
+    priceState.status === "loading" || priceState.status === "unavailable";
+
+  const priceLabel = entitlements.paidPro
+    ? "One-time purchase complete"
+    : priceState.status === "available"
+      ? `${priceState.product.price} · one-time purchase`
+      : priceState.status === "loading"
+        ? "Checking Google Play price…"
+        : priceState.status === "unavailable"
+          ? "Price temporarily unavailable"
+          : "One-time purchase · price shown in Google Play";
 
   return (
     <div className="space-y-6">
@@ -994,17 +1008,26 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
       >
         <div className="text-4xl mb-3">💎</div>
         <h3
-          className="text-xl font-semibold mb-2"
+          className="text-2xl font-semibold mb-2"
           style={{ color: "var(--text)" }}
         >
+          Full Access
+        </h3>
+        <p
+          className="text-xl font-semibold mb-3"
+          style={{ color: entitlements.paidPro ? "var(--text)" : "var(--accent)" }}
+        >
+          {priceLabel}
+        </p>
+        <p className="text-sm font-medium mb-3" style={{ color: "var(--text)" }}>
           {entitlements.paidPro
-            ? "Thanks for supporting Flicklet"
+            ? "Purchased"
             : entitlements.trialActive
-              ? "Flicklet is fully unlocked for your trial"
+              ? trialLabel ?? "21-day Full Access trial active"
               : entitlements.isReadOnlyMode
                 ? READ_ONLY_HEADING
-                : "Support Flicklet"}
-        </h3>
+                : "Sign in to start your 21-day trial"}
+        </p>
         {entitlements.isReadOnlyMode ? (
           <div className="text-sm mb-3 space-y-3" style={{ color: "var(--muted)" }}>
             <p>{READ_ONLY_PRIMARY}</p>
@@ -1013,16 +1036,21 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
         ) : (
           <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
             {entitlements.paidPro
-              ? "Your one-time unlock keeps full access and helps support the app and continued development."
+              ? "Thanks for supporting Flicklet. Your purchase keeps Full Access unlocked."
               : entitlements.trialActive
                 ? `${trialLabel ?? "21-day Full Access trial active"}. Explore everything — reminders, Shows Like This, Extras, and your full library.`
-                : "Sign in to start a 21-day Full Access trial, or unlock Full Access anytime."}
+                : "Unlock continued library editing, reminders, Shows Like This, Extras, and unlimited custom lists."}
           </p>
         )}
-        {(entitlements.isReadOnlyMode || (!entitlements.paidPro && !entitlements.trialActive)) && (
+        {!entitlements.paidPro && (
           <div className="mt-3">
-            <UpgradeToProCTA variant="button" />
+            <UpgradeToProCTA variant="button" disabled={purchaseDisabled} />
           </div>
+        )}
+        {priceState.status === "unavailable" && !entitlements.paidPro && (
+          <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>
+            Google Play pricing could not be loaded. Try again when Play Billing is available.
+          </p>
         )}
         {entitlements.trialActive && !entitlements.paidPro && (
           <p className="text-xs mt-3" style={{ color: "var(--muted)" }}>
@@ -1033,7 +1061,7 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
 
       <div>
         <h4
-          className="text-lg font-medium mb-4"
+          className="text-lg font-medium mb-3"
           style={{ color: "var(--text)" }}
         >
           {entitlements.trialActive && !entitlements.paidPro
@@ -1042,18 +1070,11 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
         </h4>
 
         <div className="mb-6">
-          <h5
-            className="text-sm font-medium mb-3"
-            style={{ color: "var(--text)" }}
-          >
-            Available Now
-          </h5>
-
-          <div className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
             {PRO_FEATURES_AVAILABLE.map((feature) => (
               <div
                 key={feature.id}
-                className="p-4 rounded-lg border"
+                className="p-3 rounded-lg border"
                 style={{
                   backgroundColor: "var(--bg)",
                   borderColor: "var(--line)",
@@ -1068,23 +1089,9 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
                     >
                       {feature.title}
                     </h5>
-                    <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
+                    <p className="text-sm" style={{ color: "var(--muted)" }}>
                       {feature.description}
                     </p>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="px-2 py-1 text-xs rounded-full"
-                        style={{
-                          backgroundColor: "var(--accent)",
-                          color: "white",
-                        }}
-                      >
-                        INCLUDED
-                      </span>
-                      <span className="text-xs" style={{ color: "var(--muted)" }}>
-                        Available Now
-                      </span>
-                    </div>
                   </div>
                 </div>
               </div>
