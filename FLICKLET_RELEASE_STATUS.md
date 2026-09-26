@@ -612,6 +612,27 @@ Status: **PASS — WAVE 1 COMPLETE.** No Wave 2 work was started.
 - Newly discovered / deferred: on a fresh tablet state, opening Settings before dismissing onboarding can leave the active coachmark layered above Settings. Classified as an onboarding/modal layering usability issue; not changed in Wave 1.
 - Existing non-blocking warnings remain: stale Browserslist/baseline data, Vite dynamic/static import notices, Capacitor package version mismatch, and Android Gradle deprecation notices.
 
+### Wave 2 — watch-state, episode-progress, and Up Next correction
+
+Status: **PASS — WAVE 2 IMPLEMENTATION COMPLETE.** No Wave 3 or Wave 4 work was started.
+
+- **Authoritative watch state:** `Currently Watching`, `Want to Watch`, and `Watched` are the three primary states. Factual release status such as `RETURNING` remains metadata, and `Not Interested` remains a separate secondary signal.
+- **Custom-list model:** custom-list membership is additive through `customListIds`; adding or removing a custom-list membership no longer replaces the title's primary watch state. Legacy custom-only records remain readable.
+- **Visible status actions:** mixed cards and mobile cards expose the three primary states through a shared status control. Direct controls and swipe actions route through one transition helper, provide explicit feedback, and offer Undo.
+- **Android feedback placement:** the action toast consumes shared top/right safe-area values. Pixel 9 / API 35 evidence placed the toast at physical `y=183–304` and its Undo action at `y=215–270`, below the status/cutout area; tapping Undo restored the prior library state.
+- **Episode progress:** episode tracking is available to all users and remains controlled by the existing setting. Card summaries are current-season based (for example, `Up next: S2 E4 · 3/10 watched`). Moving a TV title to `Watched` marks the currently available episodes in its latest season watched; new releases do not silently change the primary watch state.
+- **Up Next:** the Home/Library schedule derives from TV titles in `Currently Watching` and `Watched`, excludes `Want to Watch`, and no longer fabricates an episode label before schedule metadata exists.
+- **Terminology:** Library segments now use `Currently Watching`, `Want to Watch`, `Watched`, `Up Next`, and `Custom Lists`.
+
+### Wave 2 regression gate
+
+- Automated suite: 40 files / 237 tests passed, including new primary-status, current-season episode-progress, and Up Next coverage.
+- TypeScript checks, production web build, mobile production build, Firebase Functions build, Capacitor Android sync, and Android debug build passed.
+- Lint completed with 0 errors and 552 pre-existing warnings.
+- Final debug APK installed on Pixel 9 / API 35 and representative API 36 phone emulators. API 35 verified the visible three-state selector, state transition feedback, tappable Undo, and Library counts. API 36 cold-launch smoke verification passed without visible system-bar or bottom-navigation overlap.
+- Data-dependent external checks not fully exercised in this gate: signed-in cross-device Firebase synchronization for additive custom lists; a live upcoming-episode schedule fixture; and the complete episode modal journey on a populated signed-in account. Their storage/selector paths compile and are covered by focused automated tests, but these are not represented as completed black-box missions.
+- Existing non-blocking warnings remain: stale Browserslist/baseline data, Vite dynamic/static import notices, Capacitor package version mismatch, Android Gradle deprecation notices, and existing React test warnings.
+
 ---
 
 ## 7. Maestro user journeys
@@ -691,11 +712,11 @@ These remain product/tech items from existing control docs. They are **not** the
 | Field | Value |
 |-------|--------|
 | Branch | `codex/establish-baseline` |
-| Verified application checkpoint | `4e91eea1c2a325a67afad9f7907263e2d2311d1b` plus the focused Phase-4 evidence-collection status commit containing this update |
-| Application source changes in this gate | None; Phase 4 evidence collection changed only this status document |
-| Current phase | Phase 4 — **VISUAL/DESIGN DIAGNOSTIC REVIEW COMPLETE; FINAL ACCEPTANCE OPEN** |
-| Current authorized task | Wave 1 release-integrity corrections only: UX-10/VIS-03, UX-01/VIS-01, VIS-02, and VIS-15 only if reproducible. |
-| Latest test evidence | External package contains 39 verified native-resolution screenshots plus a manifest across Pixel 9 / API 35, API 33 small tablet, and API 36 Pixel Tablet; dark/light and portrait/landscape states are represented. Episode/progress screenshot was unavailable because the state was not discoverable through the UI. |
+| Verified application checkpoint | Wave 2 implementation commits `226aa4d`, `5fa8d4f`, and `0867da5`, plus the focused release-status/Android-assets commit containing this update |
+| Application source changes in this gate | Watch-state/custom-list separation, shared primary-state transitions and feedback, all-user current-season episode progress, Up Next schedule semantics, terminology, and Android-safe toast placement |
+| Current phase | Wave 2 — **IMPLEMENTATION AND REGRESSION GATE COMPLETE** |
+| Current authorized task | Wave 2 only; Wave 3 and Wave 4 remain unauthorized. |
+| Latest test evidence | 40 files / 237 tests; TypeScript, lint (0 errors), production web/mobile, Functions, Capacitor sync, Android debug; APK launch on API 35 and API 36; API 35 visible status transition and tappable Undo mission passed. |
 
 ---
 
