@@ -48,7 +48,7 @@ Authorized order. Do not skip ahead.
 | 1 | Known Android defects | Complete through Fix 5 (`04fbc38`) |
 | 2 | Device stress testing | **COMPLETE** — real API 23/33/35/36 phone and API 33/36 tablet matrix exercised; DST-07 and DST-08 resolved in the platform-correction gate |
 | 3 | AI black-box usability testing | **COMPLETE** — all ten missions attempted on Pixel 9 / API 35; findings UX-01 through UX-10 documented below |
-| 4 | Visual/design acceptance | Not started |
+| 4 | Visual/design acceptance | Evidence collection complete; analysis **NOT YET STARTED** |
 | 5 | Maestro automated user journeys | Not started — do not install/configure until this phase |
 | 6 | Accessibility/usability testing | Not started |
 | 7 | Human usability testing | Not started |
@@ -545,7 +545,12 @@ Track: visual hierarchy, typography, spacing rhythm, alignment, visual density, 
 
 Architecture may be investigated when it produces UX/design inconsistency. **Do not authorize architectural rewrites merely for code elegance.**
 
-Status: **not started.**
+Status: **EVIDENCE COLLECTION COMPLETE; VISUAL/DESIGN ANALYSIS NOT YET STARTED.**
+
+- Package: `C:\Users\Likes\Documents\Flicklet_Phase4_Visual_Audit.zip`
+- Contents: 39 native-resolution screenshots plus `manifest.md` covering Pixel 9 / API 35 phone dark/light and portrait/landscape states, API 33 7-inch tablet portrait/landscape, and API 36 Pixel Tablet portrait/landscape.
+- Requested screenshot 17 (episode/progress state) was not captured because no such state was discoverable through the black-box UI. No substitute was fabricated.
+- Screenshots and manifest remain outside Git and are not release findings. Formal visual/design evaluation remains the next separate phase action.
 
 ---
 
@@ -626,11 +631,11 @@ These remain product/tech items from existing control docs. They are **not** the
 | Field | Value |
 |-------|--------|
 | Branch | `codex/establish-baseline` |
-| Verified application checkpoint | `c44e038b71766ccead0bb850ebcc39357012b89f` plus the focused Phase-3 evidence commit containing this update |
-| Application source changes in this gate | None; Phase 3 was diagnostic black-box testing only |
-| Current phase | Phase 3 — **BLACK-BOX USABILITY TESTING COMPLETE** |
-| Current authorized task | Phase 3 complete. Stop before visual/design acceptance and before fixing UX findings. |
-| Latest test evidence | All ten locked missions attempted on Pixel 9 / API 35 from a clean emulator-local first-user state. Strong paths: search/add, Library retrieval, rating, and preference changes. High-severity findings cover onboarding clipping, hidden list-state gestures, indirect save-for-later, undiscoverable episode progress, and an unreachable three-button Remove control. |
+| Verified application checkpoint | `4e91eea1c2a325a67afad9f7907263e2d2311d1b` plus the focused Phase-4 evidence-collection status commit containing this update |
+| Application source changes in this gate | None; Phase 4 evidence collection changed only this status document |
+| Current phase | Phase 4 — **VISUAL/DESIGN EVIDENCE COLLECTION COMPLETE; ANALYSIS NOT YET STARTED** |
+| Current authorized task | Evidence package complete. Stop before visual/design analysis or corrections. |
+| Latest test evidence | External package contains 39 verified native-resolution screenshots plus a manifest across Pixel 9 / API 35, API 33 small tablet, and API 36 Pixel Tablet; dark/light and portrait/landscape states are represented. Episode/progress screenshot was unavailable because the state was not discoverable through the UI. |
 
 ---
 
