@@ -1,6 +1,7 @@
 import CardV2 from "../cards/CardV2";
 
 import { useLibrary, Library } from "../../lib/storage";
+import { setPrimaryStatus } from "../../lib/statusTransitions";
 
 import { removeMediaItemWithConfirmation } from "../../lib/confirmRemoveShow";
 
@@ -42,9 +43,9 @@ export default function HomeYourShowsRail() {
                 disableSwipe={true}
                 disableOverflow={true}
                 actions={{
-                  onWant: (i) => Library.move(i.id, i.mediaType, "wishlist"),
+                  onWant: (i) => setPrimaryStatus(i, "wishlist", { feedback: true }),
 
-                  onWatched: (i) => Library.move(i.id, i.mediaType, "watched"),
+                  onWatched: (i) => setPrimaryStatus(i, "watched", { feedback: true }),
 
                   onNotInterested: (i) =>
                     Library.move(i.id, i.mediaType, "not"),

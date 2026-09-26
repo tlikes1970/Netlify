@@ -4,6 +4,7 @@ import { getItemSynopsis } from "@/lib/itemSynopsis";
 import { useTranslations } from "../../lib/language";
 import { useSettings } from "../../lib/settings";
 import { Library } from "../../lib/storage";
+import { setPrimaryStatus } from "../../lib/statusTransitions";
 import StarRating from "./StarRating";
 import MyListToggle from "../MyListToggle";
 import { useIsDesktop } from "../../hooks/useDeviceDetection";
@@ -172,7 +173,7 @@ export default function TabCard({
               </button>
             )}
             {/* Simple reminder for TV shows (Free feature) */}
-            {mediaType === "tv" && (
+            {mediaType === "tv" && settings.layout.episodeTracking && (
               <button
                 onClick={() => {
                   dlog(
@@ -202,7 +203,7 @@ export default function TabCard({
               onClick={() => {
                 // Move to watching list
                 if (item.id && item.mediaType) {
-                  Library.move(item.id, item.mediaType, "watching");
+                  setPrimaryStatus(item, "watching", { feedback: true });
                 }
               }}
               className={buttonClass}
@@ -296,7 +297,7 @@ export default function TabCard({
               onClick={() => {
                 // Move to watching list
                 if (item.id && item.mediaType) {
-                  Library.move(item.id, item.mediaType, "watching");
+                  setPrimaryStatus(item, "watching", { feedback: true });
                 }
               }}
               className={buttonClass}
@@ -376,7 +377,7 @@ export default function TabCard({
             </button>
             <button
               onClick={() => {
-                if (item.id && item.mediaType) Library.move(item.id, item.mediaType, "watching");
+                if (item.id && item.mediaType) setPrimaryStatus(item, "watching", { feedback: true });
               }}
               className={buttonClass}
               style={{
@@ -794,25 +795,12 @@ export default function TabCard({
                 className={buttonClass}
                 style={{
                   backgroundColor: "var(--btn)",
-                  color:
-                    settings.layout.episodeTracking || canUseProFeatures
-                      ? "var(--text)"
-                      : "var(--muted)",
+                  color: "var(--text)",
                   borderColor: "var(--line)",
                   border: "1px solid",
-                  opacity:
-                    settings.layout.episodeTracking || canUseProFeatures
-                      ? 1
-                      : 0.6,
+                  opacity: 1,
                 }}
-                disabled={
-                  !settings.layout.episodeTracking && !canUseProFeatures
-                }
-                title={
-                  settings.layout.episodeTracking || settings.pro.isPro
-                    ? "Track episode progress"
-                    : "Enable episode tracking in settings"
-                }
+                title="Track episode progress"
               >
                 Episode Progress
               </button>

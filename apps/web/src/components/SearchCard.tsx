@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Library } from '@/lib/storage';
+import { setPrimaryStatus } from '@/lib/statusTransitions';
 import HolidayModal from '@/components/HolidayModal';
 import { getHolidays, assignToHoliday } from '@/lib/holidays';
 
@@ -9,8 +10,8 @@ export default function SearchCard({ id, kind, title, poster }: Props) {
   const [open, setOpen] = useState(false);
   const [added, setAdded] = useState(false);
 
-  function want() { Library.upsert({ id, mediaType: kind, title }, 'wishlist'); }
-  function watching() { Library.upsert({ id, mediaType: kind, title }, 'watching'); }
+  function want() { setPrimaryStatus({ id, mediaType: kind, title }, 'wishlist', { feedback: true }); }
+  function watching() { setPrimaryStatus({ id, mediaType: kind, title }, 'watching', { feedback: true }); }
   function notInt() { Library.upsert({ id, mediaType: kind, title }, 'not'); }
 
   function onPickHoliday(hid: string) {
@@ -34,7 +35,7 @@ export default function SearchCard({ id, kind, title, poster }: Props) {
         <div className="text-[11px] text-neutral-200 line-clamp-2">{title}</div>
         <div className="grid grid-cols-1 gap-1">
           <button className="btn" onClick={want} title="Want to Watch">Want to Watch</button>
-          <button className="btn" onClick={watching} title="Mark Watching">Mark Watching</button>
+          <button className="btn" onClick={watching} title="Currently Watching">Currently Watching</button>
           <button className="btn" onClick={notInt} title="Not Interested">Not Interested</button>
         </div>
       </div>

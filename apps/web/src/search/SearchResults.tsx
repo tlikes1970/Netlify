@@ -7,6 +7,7 @@ import { discoverByGenre } from "./api";
 import { emit } from "../lib/events";
 import { removeMediaItemWithConfirmation } from "../lib/confirmRemoveShow";
 import { addToListWithConfirmation, Library } from "../lib/storage";
+import { setPrimaryStatus } from "../lib/statusTransitions";
 import { fetchFullMediaMetadata, fetchNetworkInfo } from "./api";
 import { fetchNextAirDate, fetchShowStatus } from "../tmdb/tv";
 import { useTranslations } from "../lib/language";
@@ -62,12 +63,12 @@ export default function SearchResults({
   const actions: CardActionHandlers = {
     onWant: (item: MediaItem) => {
       if (item.id && item.mediaType) {
-        Library.move(item.id, item.mediaType, "wishlist");
+        setPrimaryStatus(item, "wishlist", { feedback: true });
       }
     },
     onWatched: (item: MediaItem) => {
       if (item.id && item.mediaType) {
-        Library.move(item.id, item.mediaType, "watched");
+        setPrimaryStatus(item, "watched", { feedback: true });
       }
     },
     onNotInterested: (item: MediaItem) => {

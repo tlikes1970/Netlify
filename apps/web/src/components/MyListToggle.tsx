@@ -74,34 +74,34 @@ export default function MyListToggle({ item, currentListContext }: MyListToggleP
   };
 
   const getButtonText = () => {
-    // If we're on a list-specific page, always show "My List +" (context already implies membership)
+    // Custom lists are organization and are separate from primary watch status.
     // This prevents redundant "In list: Currently Watching" text on list pages
     if (currentListContext) {
-      return 'My List +';
+      return 'Custom Lists +';
     }
     
     // If not in any list, show "My List +"
     if (membershipInfo.displayName === null) {
-      return 'My List +';
+      return 'Custom Lists +';
     }
     
     // Otherwise, show "In list: <DisplayName>" (useful in mixed contexts like search/home)
-    return `In list: ${membershipInfo.displayName}`;
+    return 'Custom Lists +';
   };
 
   const getButtonTitle = () => {
     // If not in any list
     if (membershipInfo.displayName === null) {
-      return 'Add to one of your lists';
+      return 'Add to a custom list without changing watch status';
     }
     
     // If we're on a list-specific page, show simple tooltip (context already implies membership)
     if (currentListContext) {
-      return 'Click to change lists';
+      return 'Add to a custom list without changing watch status';
     }
     
     // Otherwise, show full info
-    return `Currently in list: ${membershipInfo.displayName}. Click to change lists.`;
+    return 'Add to a custom list without changing watch status';
   };
 
   return (

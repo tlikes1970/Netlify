@@ -5,6 +5,9 @@ import { ProviderBadges } from '../ProviderBadge';
 import { CardMobileTitleRow } from './CardMobileTitleRow';
 import { getItemSynopsis } from '../../../lib/itemSynopsis';
 import type { ActionItem } from '../../../features/compact/actionsMap';
+import { useSettings } from '../../../lib/settings';
+import { EpisodeProgressDisplay } from '../../EpisodeProgressDisplay';
+import PrimaryStatusControl from '../../PrimaryStatusControl';
 
 type CardMobileInfoSectionProps = {
   item: MediaItem;
@@ -26,6 +29,7 @@ export function CardMobileInfoSection({
   providerMediaType,
 }: CardMobileInfoSectionProps) {
   const synopsis = getItemSynopsis(item);
+  const settings = useSettings();
 
   const handleRatingChange = (rating: number) => {
     actions?.onRatingChange?.(item, rating);
@@ -42,6 +46,10 @@ export function CardMobileInfoSection({
         />
         <span className="meta">{metaLine}</span>
         {chips}
+        {item.mediaType === 'tv' && settings.layout.episodeTracking && (
+          <EpisodeProgressDisplay showId={Number(item.id)} compact />
+        )}
+        <PrimaryStatusControl item={item} compact />
         {item.networks && item.networks.length > 0 && (
           <ProviderBadges
             providers={item.networks}

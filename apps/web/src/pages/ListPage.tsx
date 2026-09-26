@@ -4,6 +4,7 @@ import { getItemSynopsis } from "@/lib/itemSynopsis";
 import { backfillSynopsisForItems } from "@/utils/backfillSynopsis";
 import { removeMediaItemWithConfirmation } from "@/lib/confirmRemoveShow";
 import { Library, LibraryEntry } from "@/lib/storage";
+import { setPrimaryStatus } from "@/lib/statusTransitions";
 import { useSettings, resolveFlickletLine } from "@/lib/settings";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import ScrollToTopArrow from "@/components/ScrollToTopArrow";
@@ -718,7 +719,7 @@ export default function ListPage({
     if (mode === "returning") {
       return (
         resolveFlickletLine("empty.upnext", level) ||
-        "No upcoming shows in your Watching list yet. Add TV series you're following and they'll appear here when they have return dates or upcoming status."
+        "No upcoming releases yet. Add TV series to Currently Watching or Watched and they'll appear here when schedule information is available."
       );
     }
     if (title.toLowerCase().includes("watching")) {
@@ -743,12 +744,12 @@ export default function ListPage({
   const actions = {
     onWant: (item: MediaItem) => {
       if (item.id && item.mediaType) {
-        Library.move(item.id, item.mediaType, "wishlist");
+        setPrimaryStatus(item, "wishlist", { feedback: true });
       }
     },
     onWatched: (item: MediaItem) => {
       if (item.id && item.mediaType) {
-        Library.move(item.id, item.mediaType, "watched");
+        setPrimaryStatus(item, "watched", { feedback: true });
       }
     },
     onNotInterested: (item: MediaItem) => {

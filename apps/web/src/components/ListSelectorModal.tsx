@@ -27,11 +27,10 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
   const handleAddToList = () => {
     if (!selectedListId) return;
 
-    // Check if item already exists in any list
-    const currentList = Library.getCurrentList(item.id, item.mediaType);
-    if (currentList) {
-      const currentListName = getListDisplayName(currentList);
-      setExistingListName(currentListName);
+    const selectedList = customListManager.getListById(selectedListId);
+    const existing = Library.getEntry(item.id, item.mediaType);
+    if (existing?.customListIds?.includes(selectedListId) || existing?.list === `custom:${selectedListId}`) {
+      setExistingListName(selectedList?.name || getListDisplayName(`custom:${selectedListId}`));
       setShowConfirmation(true);
       return;
     }
@@ -43,8 +42,7 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
   const addToList = () => {
     if (!selectedListId) return;
 
-    const listName = `custom:${selectedListId}` as const;
-    Library.upsert(item, listName);
+    Library.addToCustomList(item, selectedListId);
     emit('card:holidayAdd', { id: item.id, mediaType: item.mediaType as any });
     
     // Set as selected list for future additions
@@ -55,7 +53,7 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
 
   const handleConfirmMove = () => {
     setShowConfirmation(false);
-    addToList();
+    onClose();
   };
 
   const handleCancelMove = () => {
@@ -106,7 +104,7 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
         
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>
-            {translations.addToList || 'Add to List'}
+            Add to Custom List
           </h3>
           <button
             onClick={onClose}
@@ -124,7 +122,7 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
 
         <div className="mb-4">
           <p className="text-sm" style={{ color: 'var(--muted)' }}>
-            {translations.selectListFor || 'Select a list for'}: <strong>{item.title}</strong>
+            Select a custom list for <strong>{item.title}</strong>. Watch status will not change.
           </p>
         </div>
 
@@ -228,7 +226,7 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
             className="flex-1 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: 'var(--accent)', color: 'white' }}
           >
-            {translations.addToList || 'Add to List'}
+            Add to Custom List
           </button>
         </div>
 
@@ -255,7 +253,7 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
                 <strong>{item.title}</strong> {translations.alreadyInList || 'is already in'} <strong>{existingListName}</strong>.
               </p>
               <p className="text-sm mb-6" style={{ color: 'var(--muted)' }}>
-                {translations.confirmMoveToList || 'Do you want to move it to the selected list?'}
+                This custom-list membership is already active. Its watch status has not changed.
               </p>
               <div className="flex gap-3">
                 <button
@@ -270,7 +268,7 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
                   className="flex-1 px-4 py-2 rounded-lg transition-colors"
                   style={{ backgroundColor: 'var(--accent)', color: 'white' }}
                 >
-                  {translations.moveToList || 'Move to List'}
+                    OK
                 </button>
               </div>
             </div>

@@ -1,4 +1,5 @@
-import { getEpisodeProgress, formatEpisodeProgress, getProgressColor } from '@/utils/episodeProgress';
+import { useEffect, useState } from 'react';
+import { getCurrentSeasonProgress } from '@/utils/episodeProgress';
 
 interface EpisodeProgressDisplayProps {
   showId: number;
@@ -9,24 +10,27 @@ interface EpisodeProgressDisplayProps {
 
 export function EpisodeProgressDisplay({ 
   showId, 
-  totalEpisodes,
   compact = false, 
-  showPercentage = false 
 }: EpisodeProgressDisplayProps) {
-  const progress = getEpisodeProgress(showId, totalEpisodes);
-  
-  if (!progress.hasProgress) return null;
-  
-  const progressText = formatEpisodeProgress(progress);
-  const progressColor = getProgressColor(progress);
+  const [, refresh] = useState(0);
+  useEffect(() => {
+    const onUpdate = (event: Event) => {
+      if ((event as CustomEvent<{ showId: number }>).detail?.showId === showId) refresh((value) => value + 1);
+    };
+    window.addEventListener('episode-progress:updated', onUpdate);
+    return () => window.removeEventListener('episode-progress:updated', onUpdate);
+  }, [showId]);
+  const progress = getCurrentSeasonProgress(showId);
+  if (!progress) return null;
+  const next = progress.nextEpisode === null
+    ? `Season ${progress.seasonNumber} complete`
+    : `Up next: S${progress.seasonNumber} E${progress.nextEpisode}`;
+  const progressText = `${next} · ${progress.watched}/${progress.total} watched`;
   
   if (compact) {
     return (
-      <div className="flex items-center gap-1 text-xs" style={{ color: progressColor }}>
+      <div className="flex items-center gap-1 text-xs" style={{ color: 'var(--muted)' }}>
         <span className="font-medium">{progressText}</span>
-        {showPercentage && (
-          <span className="opacity-75">({progress.percentage}%)</span>
-        )}
       </div>
     );
   }
@@ -40,17 +44,13 @@ export function EpisodeProgressDisplay({
       >
         <div
           className="h-full transition-all duration-300 ease-out"
-          style={{ 
-            width: `${progress.percentage}%`,
-            backgroundColor: progressColor
-          }}
+          style={{ width: `${progress.total ? Math.round((progress.watched / progress.total) * 100) : 0}%`, backgroundColor: 'var(--accent)' }}
         />
       </div>
       
       {/* Progress text */}
-      <div className="text-xs font-medium" style={{ color: progressColor }}>
+      <div className="text-xs font-medium" style={{ color: 'var(--muted)' }}>
         {progressText}
-        {showPercentage && ` (${progress.percentage}%)`}
       </div>
     </div>
   );

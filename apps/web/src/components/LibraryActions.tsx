@@ -9,6 +9,7 @@ import StarRating from "./cards/StarRating";
 import { useEntitlements } from "../hooks/useEntitlements";
 import { notifyReadOnlyBlocked } from "../lib/readOnlyGuard";
 import { startProUpgrade } from "../lib/proUpgrade";
+import { setPrimaryStatus } from "../lib/statusTransitions";
 
 export type LibraryActionsMode = "list" | "search-inline" | "search-sheet";
 
@@ -113,7 +114,7 @@ export default function LibraryActions({
             key="watching"
             onClick={() => {
               if (item.id && item.mediaType) {
-                Library.move(item.id, item.mediaType, "watching");
+                setPrimaryStatus(item, "watching", { feedback: true });
               }
             }}
             className={buttonClass}
@@ -173,7 +174,7 @@ export default function LibraryActions({
             key="watching"
             onClick={() => {
               if (item.id && item.mediaType) {
-                Library.move(item.id, item.mediaType, "watching");
+                setPrimaryStatus(item, "watching", { feedback: true });
               }
             }}
             className={buttonClass}
@@ -221,7 +222,7 @@ export default function LibraryActions({
             key="watching"
             onClick={() => {
               if (item.id && item.mediaType) {
-                Library.move(item.id, item.mediaType, "watching");
+                setPrimaryStatus(item, "watching", { feedback: true });
               }
             }}
             className={buttonClass}
@@ -291,7 +292,7 @@ export default function LibraryActions({
         )}
         
         {/* Remind Me (TV shows only) */}
-        {mediaType === "tv" && (
+        {mediaType === "tv" && settings.layout.episodeTracking && (
           <button
             onClick={() => {
               actions?.onSimpleReminder?.(item);
@@ -316,13 +317,12 @@ export default function LibraryActions({
             className={buttonClass}
             style={{
               backgroundColor: "var(--btn)",
-              color: settings.layout.episodeTracking || canUseProFeatures ? "var(--text)" : "var(--muted)",
+              color: "var(--text)",
               borderColor: "var(--line)",
               border: "1px solid",
-              opacity: settings.layout.episodeTracking || canUseProFeatures ? 1 : 0.6,
+              opacity: 1,
             }}
-            disabled={!settings.layout.episodeTracking && !canUseProFeatures}
-            title={settings.layout.episodeTracking || canUseProFeatures ? "Track episode progress" : "Enable episode tracking in settings"}
+            title="Track episode progress"
           >
             Episode Progress
           </button>
@@ -383,7 +383,7 @@ export default function LibraryActions({
         </button>
         
         {/* Remind Me (TV shows only) */}
-        {mediaType === "tv" && (
+        {mediaType === "tv" && settings.layout.episodeTracking && (
           <button
             onClick={() => {
               actions?.onSimpleReminder?.(item);
@@ -407,12 +407,12 @@ export default function LibraryActions({
             className="w-full px-4 py-3 rounded-lg text-sm text-left"
             style={{
               backgroundColor: "var(--btn)",
-              color: settings.layout.episodeTracking || canUseProFeatures ? "var(--text)" : "var(--muted)",
+              color: "var(--text)",
               borderColor: "var(--line)",
               border: "1px solid",
-              opacity: settings.layout.episodeTracking || canUseProFeatures ? 1 : 0.6,
+              opacity: 1,
             }}
-            disabled={!settings.layout.episodeTracking && !canUseProFeatures}
+            title="Track episode progress"
           >
             Episode Progress
           </button>

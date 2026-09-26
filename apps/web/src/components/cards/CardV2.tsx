@@ -2,6 +2,7 @@ import React from "react";
 import type { CardContext, CardActionHandlers, MediaItem } from "./card.types";
 import type { ListName } from "../../state/library.types";
 import { useTranslations } from "../../lib/language";
+import { useSettings } from "../../lib/settings";
 import { useIsDesktop } from "../../hooks/useDeviceDetection";
 import SwipeableCard from "../SwipeableCard";
 import MyListToggle from "../MyListToggle";
@@ -9,6 +10,7 @@ import { OptimizedImage } from "../OptimizedImage";
 import { CompactPrimaryAction } from "../../features/compact/CompactPrimaryAction";
 import { CompactOverflowMenu } from "../../features/compact/CompactOverflowMenu";
 import { EpisodeProgressDisplay } from "../EpisodeProgressDisplay";
+import PrimaryStatusControl from "../PrimaryStatusControl";
 import { ListMembershipBadge } from "../ListMembershipBadge";
 import {
   POSTER_PLACEHOLDER,
@@ -92,6 +94,7 @@ export default function CardV2({
       ? Math.round(voteAverage * 10) / 10
       : undefined;
   const isDesktop = useIsDesktop(); // Device detection for conditional swipe
+  const settings = useSettings();
 
   const showMyListBtn =
     context === "tab-foryou" ||
@@ -201,6 +204,7 @@ export default function CardV2({
 
           {/* Episode progress indicator for TV shows - only show on tab contexts, not home/search */}
           {item.mediaType === "tv" &&
+            settings.layout.episodeTracking &&
             (context === "tab-watching" ||
               context === "tab-want" ||
               context === "tab-watched" ||
@@ -230,6 +234,12 @@ export default function CardV2({
             {showRating && <span aria-label="rating">{rating || "—"}</span>}
           </div>
         </div>
+
+        {context !== "holiday" && context !== "home-cw-preview" && context !== "tab-not" && (
+          <div className="px-1 pb-1">
+            <PrimaryStatusControl item={item} compact />
+          </div>
+        )}
 
         {/* Actions per context */}
         <CardActions context={context} item={item} actions={actions} />

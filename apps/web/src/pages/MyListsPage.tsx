@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import CardV2 from '../components/cards/CardV2';
 import { useCustomLists, customListManager } from '../lib/customLists';
-import { removeMediaItemWithConfirmation } from '../lib/confirmRemoveShow';
 import { Library } from '../lib/storage';
 import { useTranslations } from '../lib/language';
 import { useSettings, getPersonalityText, DEFAULT_PERSONALITY } from '../lib/settings';
 import type { ListName } from '../state/library.types';
 import { shareListWithFallback } from '../lib/shareLinks';
 import { getToastCallback } from '../state/actions';
+import { setPrimaryStatus } from '../lib/statusTransitions';
 
 export default function MyListsPage() {
   const userLists = useCustomLists();
@@ -154,12 +154,12 @@ export default function MyListsPage() {
   const actions = {
     onWant: (item: any) => {
       if (item.id && item.mediaType) {
-        Library.move(item.id, item.mediaType, 'wishlist');
+        setPrimaryStatus(item, 'wishlist', { feedback: true });
       }
     },
     onWatched: (item: any) => {
       if (item.id && item.mediaType) {
-        Library.move(item.id, item.mediaType, 'watched');
+        setPrimaryStatus(item, 'watched', { feedback: true });
       }
     },
     onNotInterested: (item: any) => {
@@ -168,7 +168,9 @@ export default function MyListsPage() {
       }
     },
     onDelete: (item: any) => {
-      removeMediaItemWithConfirmation(item);
+      if (selectedListId && window.confirm(`Remove “${item.title}” from this custom list?`)) {
+        Library.removeFromCustomList(item.id, item.mediaType, selectedListId);
+      }
     },
   };
 
@@ -176,7 +178,7 @@ export default function MyListsPage() {
     <section className="px-4 py-4">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>
-          {translations.myLists || 'My Lists'}
+          Custom Lists
         </h1>
         
         <div className="flex gap-2">

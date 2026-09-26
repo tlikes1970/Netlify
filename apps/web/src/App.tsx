@@ -1268,6 +1268,7 @@ export default function App() {
             key={toast.id}
             message={toast.message}
             type={toast.type}
+            action={toast.action}
             personalityLevel={settings.personalityLevel}
             onClose={() => removeToast(toast.id)}
           />

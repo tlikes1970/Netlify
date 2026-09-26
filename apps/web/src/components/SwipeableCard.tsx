@@ -3,7 +3,7 @@ import type { MediaItem, CardActionHandlers, CardContext } from '../components/c
 import { useSwipe } from '../lib/useSwipe';
 import { useIsDesktop } from '../hooks/useDeviceDetection';
 import { SWIPE } from '../lib/gestures';
-import { Library } from '../lib/storage';
+import { setPrimaryStatus } from '../lib/statusTransitions';
 
 export interface SwipeableCardProps {
   item: MediaItem;
@@ -39,15 +39,15 @@ export default function SwipeableCard({
             icon: '',
             color: '#ffffff',
             backgroundColor: '#10b981',
-            action: () => actions?.onWatched?.(item)
+            action: () => setPrimaryStatus(item, 'watched', { feedback: true })
           },
           {
             id: 'want',
-            label: 'Want',
+            label: 'Want to Watch',
             icon: '',
             color: '#ffffff',
             backgroundColor: '#ef4444',
-            action: () => actions?.onWant?.(item)
+            action: () => setPrimaryStatus(item, 'wishlist', { feedback: true })
           }
         ];
 
@@ -59,20 +59,15 @@ export default function SwipeableCard({
             icon: '',
             color: '#ffffff',
             backgroundColor: '#10b981',
-            action: () => actions?.onWatched?.(item)
+            action: () => setPrimaryStatus(item, 'watched', { feedback: true })
           },
           {
             id: 'watching',
-            label: 'Watching',
+            label: 'Currently Watching',
             icon: '',
             color: '#ffffff',
             backgroundColor: '#3b82f6',
-            action: () => {
-              // Move from wishlist to watching
-              if (item.id && item.mediaType) {
-                Library.move(item.id, item.mediaType, 'watching');
-              }
-            }
+            action: () => setPrimaryStatus(item, 'watching', { feedback: true })
           }
         ];
 
@@ -80,24 +75,19 @@ export default function SwipeableCard({
         return [
           {
             id: 'want',
-            label: 'Want',
+            label: 'Want to Watch',
             icon: '',
             color: '#ffffff',
             backgroundColor: '#ef4444',
-            action: () => actions?.onWant?.(item)
+            action: () => setPrimaryStatus(item, 'wishlist', { feedback: true })
           },
           {
             id: 'watching',
-            label: 'Watching',
+            label: 'Currently Watching',
             icon: '',
             color: '#ffffff',
             backgroundColor: '#3b82f6',
-            action: () => {
-              // Move from watched to watching
-              if (item.id && item.mediaType) {
-                Library.move(item.id, item.mediaType, 'watching');
-              }
-            }
+            action: () => setPrimaryStatus(item, 'watching', { feedback: true })
           }
         ];
 
@@ -111,7 +101,7 @@ export default function SwipeableCard({
             icon: '',
             color: '#ffffff',
             backgroundColor: '#ef4444',
-            action: () => actions?.onWant?.(item)
+            action: () => setPrimaryStatus(item, 'wishlist', { feedback: true })
           }
         ];
 
@@ -119,16 +109,11 @@ export default function SwipeableCard({
         return [
           {
             id: 'watching',
-            label: 'Watching',
+            label: 'Currently Watching',
             icon: '',
             color: '#ffffff',
             backgroundColor: '#3b82f6',
-            action: () => {
-              // Move from not interested to watching
-              if (item.id && item.mediaType) {
-                Library.move(item.id, item.mediaType, 'watching');
-              }
-            }
+            action: () => setPrimaryStatus(item, 'watching', { feedback: true })
           },
           {
             id: 'delete',

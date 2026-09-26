@@ -942,25 +942,18 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
 
           <div className="space-y-1">
             <label
-              className={`flex items-center space-x-3 ${settings.layout.condensedView && !isPro ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
+              className="flex items-center space-x-3 cursor-pointer"
             >
               <input
                 type="checkbox"
                 checked={settings.layout.episodeTracking}
                 onChange={() => settingsManager.toggleEpisodeTracking()}
-                disabled={settings.layout.condensedView && !isPro}
                 className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 rounded focus:ring-blue-500"
               />
               <span style={{ color: "var(--text)" }}>
                 {translations.enableEpisodeTracking}
               </span>
             </label>
-            {settings.layout.condensedView && !isPro && (
-              <p className="text-xs ml-7" style={{ color: "var(--muted)" }}>
-                {translations.episodeTrackingCondensedProRequired}{" "}
-                <UpgradeToProCTA variant="inline" />
-              </p>
-            )}
             {settings.layout.condensedView && isPro && (
               <p className="text-xs ml-7" style={{ color: "var(--muted)" }}>
                 {translations.episodeTrackingCondensedProAllowed}

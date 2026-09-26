@@ -6,9 +6,10 @@ interface ToastProps {
   type: 'success' | 'error' | 'info';
   personalityLevel: PersonalityLevel;
   onClose: () => void;
+  action?: { label: string; onClick: () => void };
 }
 
-export default function Toast({ message, type, onClose }: ToastProps) {
+export default function Toast({ message, type, onClose, action }: ToastProps) {
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
@@ -57,6 +58,14 @@ export default function Toast({ message, type, onClose }: ToastProps) {
     >
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium">{message}</p>
+        {action && (
+          <button
+            className="ml-3 text-sm font-semibold underline"
+            onClick={() => { action.onClick(); setIsVisible(false); setTimeout(onClose, 300); }}
+          >
+            {action.label}
+          </button>
+        )}
         <button
           onClick={() => {
             setIsVisible(false);
@@ -80,11 +89,12 @@ export function useToast() {
     id: string;
     message: string;
     type: 'success' | 'error' | 'info';
+    action?: { label: string; onClick: () => void };
   }>>([]);
 
-  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'info', action?: { label: string; onClick: () => void }) => {
     const id = Math.random().toString(36).substr(2, 9);
-    setToasts(prev => [...prev, { id, message, type }]);
+    setToasts(prev => [...prev, { id, message, type, action }]);
   };
 
   const removeToast = (id: string) => {

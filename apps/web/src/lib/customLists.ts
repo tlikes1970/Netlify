@@ -264,6 +264,13 @@ class CustomListManager {
           const currentCount = newCounts.get(listId) || 0;
           newCounts.set(listId, currentCount + 1);
         }
+        if (Array.isArray(item.customListIds)) {
+          item.customListIds.forEach((listId: string) => {
+            // Legacy custom-primary entries also carry the migrated id; count once.
+            if (item.list === `custom:${listId}`) return;
+            newCounts.set(listId, (newCounts.get(listId) || 0) + 1);
+          });
+        }
       });
 
       // Check if any counts actually changed

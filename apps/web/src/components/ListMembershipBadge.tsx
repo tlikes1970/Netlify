@@ -32,7 +32,7 @@ export function ListMembershipBadge({
     return null;
   }
 
-  const label = `In list: ${displayName}`;
+  const label = list.startsWith('custom:') ? `Custom list: ${displayName}` : `Status: ${displayName}`;
 
   return (
     <span

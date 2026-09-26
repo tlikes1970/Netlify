@@ -194,9 +194,8 @@ export function CompactOverflowMenu({
 
     // Check if item is a TV show (for episode tracking)
     const isTVShow = (_item as any)?.mediaType === "tv";
-    // Only show episode tracking if enabled in settings OR if user is Pro
-    const episodeTrackingEnabled =
-      settings.layout.episodeTracking || hasFullAccess;
+    // Episode tracking is available to every user, but remains opt-in UI.
+    const episodeTrackingEnabled = settings.layout.episodeTracking;
 
     // Share handler for shows
     const handleShareShow = async (showItem: MediaItem) => {
@@ -391,6 +390,12 @@ export function CompactOverflowMenu({
             id: "not-interested",
             label: "Not Interested",
             onClick: handlers.onNotInterested,
+          });
+        if (isTVShow && episodeTrackingEnabled && handlers.onEpisodeTracking)
+          menuItems.push({
+            id: "episodes",
+            label: "Episodes",
+            onClick: handlers.onEpisodeTracking,
           });
         if (handlers.onNotesEdit)
           menuItems.push({

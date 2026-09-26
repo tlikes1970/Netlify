@@ -2,6 +2,7 @@ import CardV2 from './cards/CardV2';
 import type { MediaItem } from './cards/card.types';
 import { removeMediaItemWithConfirmation } from '@/lib/confirmRemoveShow';
 import { Library } from '@/lib/storage';
+import { setPrimaryStatus } from '@/lib/statusTransitions';
 import { useRailImagePreload } from '../hooks/useImagePreload';
 import { ForYouErrorFallback } from './home/ForYouErrorFallback';
 import type { ForYouRowLoadState } from './home/forYouRowStatus';
@@ -61,28 +62,28 @@ export default function Rail({
     onWant: (item: MediaItem) => {
       console.log('🎬 For You Want button clicked:', item);
       if (item.id && item.mediaType) {
-        Library.upsert({ 
+        setPrimaryStatus({
           id: item.id, 
           mediaType: item.mediaType, 
           title: item.title,
           posterUrl: item.posterUrl,
           year: item.year,
           voteAverage: item.voteAverage
-        }, 'wishlist');
+        }, 'wishlist', { feedback: true });
         console.log('✅ Item added to wishlist:', item.title);
       }
     },
     onWatched: (item: MediaItem) => {
       console.log('🎬 For You Watched button clicked:', item);
       if (item.id && item.mediaType) {
-        Library.upsert({ 
+        setPrimaryStatus({
           id: item.id, 
           mediaType: item.mediaType, 
           title: item.title,
           posterUrl: item.posterUrl,
           year: item.year,
           voteAverage: item.voteAverage
-        }, 'watched');
+        }, 'watched', { feedback: true });
         console.log('✅ Item added to watched:', item.title);
       }
     },

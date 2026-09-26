@@ -6,6 +6,51 @@ export interface EpisodeProgress {
   hasProgress: boolean;
 }
 
+export interface EpisodeSeasonSummary {
+  seasonNumber: number;
+  episodeNumbers: number[];
+}
+
+export interface StoredEpisodeProgress {
+  episodes: Record<string, boolean>;
+  totalEpisodes?: number;
+  seasons?: EpisodeSeasonSummary[];
+}
+
+export function readStoredEpisodeProgress(showId: number): StoredEpisodeProgress {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(`episode-progress-${showId}`) || '{}');
+    if (parsed.episodes) return parsed;
+    return { episodes: parsed };
+  } catch {
+    return { episodes: {} };
+  }
+}
+
+export function writeStoredEpisodeProgress(showId: number, data: StoredEpisodeProgress): void {
+  localStorage.setItem(`episode-progress-${showId}`, JSON.stringify(data));
+  window.dispatchEvent(new CustomEvent('episode-progress:updated', { detail: { showId } }));
+}
+
+export function getCurrentSeasonProgress(showId: number): {
+  seasonNumber: number;
+  watched: number;
+  total: number;
+  nextEpisode: number | null;
+} | null {
+  const stored = readStoredEpisodeProgress(showId);
+  const seasons = stored.seasons?.filter((season) => season.seasonNumber > 0 && season.episodeNumbers.length > 0);
+  if (!seasons?.length) return null;
+  const current = [...seasons].sort((a, b) => b.seasonNumber - a.seasonNumber)[0];
+  const watched = current.episodeNumbers.filter(
+    (episode) => stored.episodes[`S${current.seasonNumber}E${episode}`],
+  ).length;
+  const nextEpisode = current.episodeNumbers.find(
+    (episode) => !stored.episodes[`S${current.seasonNumber}E${episode}`],
+  ) ?? null;
+  return { seasonNumber: current.seasonNumber, watched, total: current.episodeNumbers.length, nextEpisode };
+}
+
 /**
  * Get episode progress for a TV show
  */

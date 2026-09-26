@@ -2,6 +2,7 @@ import { useState } from 'react';
 import HolidayModal from '@/components/HolidayModal';
 import { getHolidays, assignToHoliday } from '@/lib/holidays';
 import { Library } from '@/lib/storage';
+import { setPrimaryStatus } from '@/lib/statusTransitions';
 import { removeShowWithConfirmation } from '@/lib/confirmRemoveShow';
 
 type Base = { id?: string; kind?: 'movie'|'tv'; title?: string; poster?: string };
@@ -17,11 +18,11 @@ export default function Card({ id, kind, title, poster, mode = 'catalog', showHo
 
   function toWant() {
     if (!safe.id || !safe.kind) return;
-    Library.upsert({ id: safe.id, mediaType: safe.kind as 'movie'|'tv', title: safe.title }, 'wishlist');
+    setPrimaryStatus({ id: safe.id, mediaType: safe.kind as 'movie'|'tv', title: safe.title }, 'wishlist', { feedback: true });
   }
   function toWatched() {
     if (!safe.id || !safe.kind) return;
-    Library.move(safe.id, safe.kind as 'movie'|'tv', 'watched');
+    setPrimaryStatus({ id: safe.id, mediaType: safe.kind as 'movie'|'tv', title: safe.title }, 'watched', { feedback: true });
   }
   function toNot() {
     if (!safe.id || !safe.kind) return;

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { getTVShowDetails, type Episode, type Season } from '@/lib/tmdb';
 import { lockScroll, unlockScroll } from '@/utils/scrollLock';
-import { cleanupInvalidEpisodeKeys, getValidEpisodeKeys } from '@/utils/episodeProgress';
+import { cleanupInvalidEpisodeKeys, getValidEpisodeKeys, readStoredEpisodeProgress, writeStoredEpisodeProgress } from '@/utils/episodeProgress';
 import { useModalScrollIsolation } from '@/utils/modalScrollIsolation';
 import ErrorBoundary from '../ErrorBoundary';
 
@@ -73,6 +73,17 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
       // Clean up any invalid episode keys that don't correspond to actual episodes
       const validEpisodeKeys = getValidEpisodeKeys(seasonsWithWatchedState);
       cleanupInvalidEpisodeKeys(show.id, validEpisodeKeys);
+      const stored = readStoredEpisodeProgress(show.id);
+      writeStoredEpisodeProgress(show.id, {
+        ...stored,
+        totalEpisodes: tvShowDetails.number_of_episodes,
+        seasons: seasonsWithWatchedState
+          .filter((season) => season.season_number > 0)
+          .map((season) => ({
+            seasonNumber: season.season_number,
+            episodeNumbers: season.episodes.map((episode) => episode.episode_number),
+          })),
+      });
       
       setSeasons(seasonsWithWatchedState);
     } catch (err) {
@@ -85,12 +96,7 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
 
   const getSavedEpisodeProgress = (showId: number): Record<string, boolean> => {
     try {
-      const saved = localStorage.getItem(`episode-progress-${showId}`);
-      if (!saved) return {};
-      
-      const data = JSON.parse(saved);
-      // Handle both old format (just episodes) and new format (with totalEpisodes)
-      return data.episodes || data;
+      return readStoredEpisodeProgress(showId).episodes;
     } catch {
       return {};
     }
@@ -100,11 +106,13 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
     try {
       // Use the actual show's total episode count from TMDB instead of counting loaded seasons
       // This ensures accuracy even if not all seasons are loaded
+      const existing = readStoredEpisodeProgress(showId);
       const progressData = {
+        ...existing,
         episodes: progress,
         totalEpisodes: show.number_of_episodes
       };
-      localStorage.setItem(`episode-progress-${showId}`, JSON.stringify(progressData));
+      writeStoredEpisodeProgress(showId, progressData);
       
       // Sync to Firebase in background
       const { syncEpisodeProgressToFirebase } = await import('../../lib/episodeProgressSync');

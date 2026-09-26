@@ -4,16 +4,16 @@ import type { MediaType } from '../components/cards/card.types';
 import { fetchNextAirDate } from '../tmdb/tv';
 import { settingsManager, getPersonalityText, DEFAULT_PERSONALITY } from '../lib/settings';
 import { get } from '../lib/tmdb';
+import { getGlobalToastCallback, setGlobalToastCallback, type ToastCallback } from '../lib/toastBridge';
+import { setPrimaryStatus } from '../lib/statusTransitions';
 
 // Toast system for user feedback
-let toastCallback: ((message: string, type: 'success' | 'error' | 'info') => void) | null = null;
-
-export function setToastCallback(callback: (message: string, type: 'success' | 'error' | 'info') => void) {
-  toastCallback = callback;
+export function setToastCallback(callback: ToastCallback) {
+  setGlobalToastCallback(callback);
 }
 
-export function getToastCallback(): ((message: string, type: 'success' | 'error' | 'info') => void) | null {
-  return toastCallback;
+export function getToastCallback(): ToastCallback | null {
+  return getGlobalToastCallback();
 }
 
 // Helper function to fetch title and year from TMDB API
@@ -50,7 +50,7 @@ export function mountActionBridge() {
     const mediaData = title ? { title } : await fetchMediaDataFromTMDB(String(id), mediaType as MediaType);
     
     // Search "Want to Watch" goes to wishlist, not watching
-    Library.upsert({ 
+    setPrimaryStatus({
       id, 
       mediaType: mediaType as MediaType, 
       title: mediaData.title,
@@ -64,15 +64,15 @@ export function mountActionBridge() {
     const settings = settingsManager.getSettings();
     const personality = settings.personality || DEFAULT_PERSONALITY;
     const message = getPersonalityText(personality, 'itemAdded');
-    toastCallback?.(message, 'success');
+    getGlobalToastCallback()?.(message, 'success');
   });
 
   const off2 = on('card:watched', async ({ id, mediaType, title }: { id: string|number; mediaType: string; title?: string }) => {
     // Use provided title or fetch from TMDB
     const mediaData = title ? { title } : await fetchMediaDataFromTMDB(String(id), mediaType as MediaType);
     
-    // Mark as watched
-    Library.upsert({ 
+    // Mark as watched and complete the currently available season for TV.
+    setPrimaryStatus({
       id, 
       mediaType: mediaType as MediaType, 
       title: mediaData.title,
@@ -86,7 +86,7 @@ export function mountActionBridge() {
     const settings = settingsManager.getSettings();
     const personality = settings.personality || DEFAULT_PERSONALITY;
     const message = getPersonalityText(personality, 'itemAdded');
-    toastCallback?.(message, 'success');
+    getGlobalToastCallback()?.(message, 'success');
   });
 
   const off3 = on('card:notInterested', async ({ id, mediaType, title }: { id: string|number; mediaType: string; title?: string }) => {
@@ -108,7 +108,7 @@ export function mountActionBridge() {
     const settings = settingsManager.getSettings();
     const personality = settings.personality || DEFAULT_PERSONALITY;
     const message = getPersonalityText(personality, 'itemRemoved');
-    toastCallback?.(message, 'success');
+    getGlobalToastCallback()?.(message, 'success');
   });
 
   // Holiday add is implemented in a later step; no‑op for now
@@ -138,7 +138,7 @@ export function mountActionBridge() {
     const settings = settingsManager.getSettings();
     const personality = settings.personality || DEFAULT_PERSONALITY;
     const message = getPersonalityText(personality, 'itemAdded');
-    toastCallback?.(message, 'success');
+    getGlobalToastCallback()?.(message, 'success');
   });
 
   return () => { off1(); off2(); off3(); off4(); off5(); };

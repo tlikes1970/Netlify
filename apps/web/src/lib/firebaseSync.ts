@@ -66,6 +66,7 @@ export class FirebaseSyncManager {
       last_air_date: item.lastAirDate || null, // V2 addition for TV shows
       networks: item.networks || null, // V2 addition
       production_companies: item.productionCompanies || null, // V2 addition
+      custom_list_ids: item.customListIds || [],
     };
   }
 
@@ -114,6 +115,15 @@ export class FirebaseSyncManager {
               (watchlists.tv[item.list as keyof typeof watchlists.tv] as any).push(prunedItem);
             }
           }
+        }
+        if (Array.isArray(item.customListIds)) {
+          item.customListIds.forEach((customListId: string) => {
+            if (item.list === `custom:${customListId}`) return;
+            if (!(watchlists as any).customItems[customListId]) {
+              (watchlists as any).customItems[customListId] = [];
+            }
+            (watchlists as any).customItems[customListId].push(prunedItem);
+          });
         }
       });
       
@@ -420,6 +430,7 @@ export class FirebaseSyncManager {
                 networks: cloudItem.networks,
                 productionCompanies: cloudItem.production_companies,
                 list: `custom:${customListId}`,
+                customListIds: [customListId],
                 addedAt: Date.now(),
               };
               
@@ -440,8 +451,10 @@ export class FirebaseSyncManager {
                   tags: cloudItem.user_tags && cloudItem.user_tags.length > 0 
                     ? cloudItem.user_tags 
                     : cleanedData[existingKey].tags,
-                  // Update list if it changed
-                  list: `custom:${customListId}`,
+                  customListIds: Array.from(new Set([
+                    ...(cleanedData[existingKey].customListIds || []),
+                    customListId,
+                  ])),
                 };
                 console.log(`🔄 Updated custom item with cloud data: ${cloudItem.title || cloudItem.name}`);
               }

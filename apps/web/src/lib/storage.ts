@@ -39,6 +39,8 @@ function getCurrentFirebaseUser() {
 
 export interface LibraryEntry extends MediaItem {
   list: ListName;
+  /** Custom-list membership is additive and never replaces the primary watch status. */
+  customListIds?: string[];
   addedAt: number; // epoch ms
   ratingUpdatedAt?: number; // epoch ms - timestamp when userRating was last updated (for conflict resolution)
   isFavorite?: boolean;
@@ -531,8 +533,61 @@ export const Library = {
 
   getByList(list: ListName): LibraryEntry[] {
     return Object.values(state)
-      .filter((x) => x.list === list)
+      .filter((x) => {
+        if (!list.startsWith("custom:")) return x.list === list;
+        const listId = list.replace("custom:", "");
+        return x.list === list || x.customListIds?.includes(listId);
+      })
       .sort((a, b) => a.addedAt - b.addedAt);
+  },
+  addToCustomList(item: MediaItem, listId: string) {
+    if (!guardMutation()) return;
+    const key = k(item.id, item.mediaType);
+    const existing = state[key];
+    const currentIds = existing?.customListIds ?? [];
+    if (currentIds.includes(listId)) return;
+
+    if (existing) {
+      state[key] = { ...existing, customListIds: [...currentIds, listId] };
+    } else {
+      // A custom list is organization, not a primary status. Keep legacy storage
+      // compatibility while leaving the title out of the three primary tabs.
+      state[key] = {
+        ...item,
+        list: `custom:${listId}`,
+        customListIds: [listId],
+        addedAt: Date.now(),
+      };
+    }
+    customListManager.updateItemCount(listId, 1);
+    save(state);
+    emit();
+    const currentUser = getCurrentFirebaseUser();
+    if (currentUser) {
+      window.dispatchEvent(new CustomEvent("library:changed", {
+        detail: { uid: currentUser.uid, operation: "customListAdd" },
+      }));
+    }
+  },
+  removeFromCustomList(id: string | number, mediaType: MediaType, listId: string) {
+    if (!guardMutation()) return;
+    const key = k(id, mediaType);
+    const existing = state[key];
+    const isLegacyMembership = existing?.list === `custom:${listId}`;
+    if (!existing || (!existing.customListIds?.includes(listId) && !isLegacyMembership)) return;
+    const remaining = (existing.customListIds ?? []).filter((id) => id !== listId);
+    if (isLegacyMembership && remaining.length === 0) {
+      delete state[key];
+    } else {
+      state[key] = {
+        ...existing,
+        ...(isLegacyMembership ? { list: `custom:${remaining[0]}` as ListName } : {}),
+        customListIds: remaining,
+      };
+    }
+    customListManager.updateItemCount(listId, -1);
+    save(state);
+    emit();
   },
   has(id: string | number, mediaType: MediaType) {
     return !!state[k(id, mediaType)];
