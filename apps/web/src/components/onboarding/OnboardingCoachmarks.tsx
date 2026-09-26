@@ -433,17 +433,28 @@ export default function OnboardingCoachmarks() {
   } => {
     if (!anchorRect) return { display: "none", arrowDirection: "up" as const };
 
-    const bubbleWidth = 280;
+    const rootStyle = getComputedStyle(document.documentElement);
+    const safeLeft = parseFloat(rootStyle.getPropertyValue("--safe-left")) || 0;
+    const safeRight = parseFloat(rootStyle.getPropertyValue("--safe-right")) || 0;
+    const edgeGutter = 16;
+    const bubbleWidth = Math.min(
+      280,
+      window.innerWidth - safeLeft - safeRight - edgeGutter * 2
+    );
     const bubbleHeight = 200; // Approximate height of bubble
+    const clampBubbleLeft = (centerX: number) =>
+      Math.min(
+        Math.max(centerX - bubbleWidth / 2, safeLeft + edgeGutter),
+        window.innerWidth - safeRight - edgeGutter - bubbleWidth
+      );
 
     // Special handling for help step - position below help icon with arrow pointing up
     if (step === "help") {
       return {
         position: "fixed",
         top: anchorRect.bottom + 12,
-        left: anchorRect.left + anchorRect.width / 2 - 20, // Shift left by 20px
-        transform: "translateX(-50%)",
-        maxWidth: bubbleWidth,
+        left: clampBubbleLeft(anchorRect.left + anchorRect.width / 2 - 20),
+        width: bubbleWidth,
         zIndex: 9999,
         arrowDirection: "up" as const,
       };
@@ -461,9 +472,8 @@ export default function OnboardingCoachmarks() {
       top: shouldPositionAbove
         ? anchorRect.top - bubbleHeight - 12
         : anchorRect.bottom + 12,
-      left: anchorRect.left + anchorRect.width / 2,
-      transform: "translateX(-50%)",
-      maxWidth: bubbleWidth,
+      left: clampBubbleLeft(anchorRect.left + anchorRect.width / 2),
+      width: bubbleWidth,
       zIndex: 9999,
       arrowDirection: shouldPositionAbove ? "down" : "up",
     };

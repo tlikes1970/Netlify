@@ -580,6 +580,13 @@ Status: **PHASE 4 — VISUAL/DESIGN ACCEPTANCE: DIAGNOSTIC REVIEW COMPLETE.** Th
 - **Correction:** Promote the complete overlay above app navigation, bottom-pad it with the shared `--safe-bottom` contract, use dynamic viewport units, and keep the sheet body independently scrollable with overscroll containment. No device-specific offset was added.
 - **Verification:** Rebuilt/synced debug APK on Pixel 9 / API 35. In three-button portrait, the full Remove action is visible and tappable above the 48 CSS-pixel protected navigation area; the sheet covers app navigation instead of competing with it. Gesture-safe spacing uses the same contract. Elevated-font and landscape coverage are included in the Wave 1 regression gate.
 
+### Wave 1 — UX-01 / VIS-01 correction
+
+- **Reproduction:** Fresh app data on Pixel 9 / API 35 placed the first `Welcome to Flicklet` coachmark partly beyond the left viewport edge, clipping its title, body, and container.
+- **Root cause:** The coachmark used a fixed 280 CSS-pixel maximum width and `translateX(-50%)` around the header anchor center without constraining the resulting left/right edges to the usable viewport.
+- **Correction:** Calculate the coachmark width from the usable viewport and clamp its left edge between 16 CSS-pixel gutters plus the shared `--safe-left` / `--safe-right` values. The onboarding flow and copy are unchanged.
+- **Verification:** The entire first coachmark and primary action remain visible on API 31, Pixel 9 / API 35, and an API 36 representative phone. Pixel 9 verification also passed at 2.0× font scale without horizontal clipping or loss of either action.
+
 ---
 
 ## 7. Maestro user journeys
