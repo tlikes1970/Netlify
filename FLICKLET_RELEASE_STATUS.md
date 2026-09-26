@@ -600,6 +600,18 @@ Status: **PHASE 4 — VISUAL/DESIGN ACCEPTANCE: DIAGNOSTIC REVIEW COMPLETE.** Th
 - **Correction:** The Library fallback now uses a centered status container with a separate, aria-hidden spinner element and normally oriented status text.
 - **Verification:** Cold/warm entry and portrait/landscape rotation are covered in the final Wave 1 tablet regression gate.
 
+### Wave 1 regression gate
+
+Status: **PASS — WAVE 1 COMPLETE.** No Wave 2 work was started.
+
+- Automated suite: 38 files / 232 tests passed.
+- TypeScript checks, production web build, mobile production build, Firebase Functions build, Capacitor Android sync, and Android debug build passed.
+- Final debug APK installed and cold-launched successfully.
+- Phone smoke coverage: Home, Library, Search, Discovery, Settings, first-launch onboarding, corrected Remove action surface, gesture/three-button navigation, portrait/landscape, and normal/2.0× font.
+- Tablet smoke coverage: API 33 small-tablet Library and Settings in portrait/landscape; API 36 large-tablet Home, Library, and Settings representative states.
+- Newly discovered / deferred: on a fresh tablet state, opening Settings before dismissing onboarding can leave the active coachmark layered above Settings. Classified as an onboarding/modal layering usability issue; not changed in Wave 1.
+- Existing non-blocking warnings remain: stale Browserslist/baseline data, Vite dynamic/static import notices, Capacitor package version mismatch, and Android Gradle deprecation notices.
+
 ---
 
 ## 7. Maestro user journeys
