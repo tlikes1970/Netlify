@@ -108,6 +108,22 @@ describe("SearchRow Mobile Behavior", () => {
       expect(filterButton.className).toContain("min-h-[2.75rem]");
       expect(searchButton.className).toContain("min-h-[2.75rem]");
     });
+
+    it("allows enlarged mobile search controls to wrap without clipping actions", () => {
+      mockIsMobileNow.mockReturnValue(true);
+
+      render(<FlickletHeader onSearch={mockOnSearch} onClear={mockOnClear} />);
+
+      const searchButton = screen.getByRole("button", { name: /^search$/i });
+
+      expect(screen.getByTestId("search-input-shell").className).toContain(
+        "min-w-[min(12rem,100%)]",
+      );
+      expect(screen.getByTestId("search-actions").className).toContain(
+        "flex-[1_0_auto]",
+      );
+      expect(searchButton.className).toContain("w-full");
+    });
   });
 
   describe("Mobile Filter Menu", () => {

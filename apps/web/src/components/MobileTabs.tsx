@@ -272,7 +272,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
         aria-hidden={keyboardOpen}
       >
         <div
-          className="grid grid-cols-3 min-h-[3.25rem] max-w-lg mx-auto gap-1"
+          className="grid grid-cols-[max-content_max-content_minmax(0,1fr)] min-h-[3.25rem] max-w-lg mx-auto gap-1"
           style={{
             width: "calc(100% - 4rem)",
             marginLeft: "4rem",
@@ -287,7 +287,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
                 key={tabId}
                 type="button"
                 onClick={() => onChange(tabId)}
-                className="flex flex-col items-center justify-center rounded-lg px-2 min-h-[3.25rem] py-1 transition-colors relative touch-manipulation"
+                className="flex min-w-0 flex-col items-center justify-center rounded-lg px-1 min-h-[3.25rem] py-1 transition-colors relative touch-manipulation"
                 style={{
                   color: active ? "var(--accent)" : "var(--muted)",
 
@@ -296,7 +296,7 @@ export default function MobileTabs({ current, onChange }: MobileTabsProps) {
                 aria-current={active ? "page" : undefined}
                 tabIndex={keyboardOpen ? -1 : 0}
               >
-                <span className="text-xs font-medium leading-tight text-center">
+                <span className="min-w-0 max-w-full text-xs font-medium leading-tight text-center [overflow-wrap:anywhere]">
                   {labelFor(tabId)}
                 </span>
 

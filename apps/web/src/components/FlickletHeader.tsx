@@ -101,14 +101,14 @@ export default function FlickletHeader({
         style={{ backgroundColor: "var(--bg)" }}
       >
         <div className="mx-auto w-full max-w-screen-2xl px-3 py-3 md:px-6 md:py-6">
-          <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 md:gap-4">
-            <div className="min-w-0" aria-hidden="true" />
+          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-4">
+            <div className="hidden min-w-0 md:block" aria-hidden="true" />
             {/* Center: title */}
-            <div className="min-w-0 text-center">
+            <div className="min-w-min text-center">
               <AppTitle text={appName} onClick={onNavigateHome} />
             </div>
             {/* Right: version + help + optional show toggle + auth */}
-            <div className="flex items-center justify-end gap-1 md:gap-2">
+            <div className="flex min-w-0 items-center justify-end gap-1 md:gap-2">
               <span
                 className="select-none text-[10px] md:text-[11px] leading-none text-muted-foreground"
                 title="App version"
@@ -1756,7 +1756,10 @@ function SearchRow({
       </div>
 
       {/* Search Input - Takes up most of the space */}
-      <div className="relative flex-1 min-w-[12rem]">
+      <div
+        className="relative min-w-[min(12rem,100%)] flex-[999_1_12rem]"
+        data-testid="search-input-shell"
+      >
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -1883,10 +1886,10 @@ function SearchRow({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex">
+      <div className="flex flex-[1_0_auto]" data-testid="search-actions">
         <button
           type="submit"
-          className={`rounded-r-2xl rounded-l-none border-l-0 border-r-0 px-3 py-2 md:px-3 md:py-3 font-semibold hover:bg-accent hover:text-accent-foreground transition-all duration-150 ease-out h-auto min-h-[2.75rem] leading-tight whitespace-normal ${
+          className={`w-full rounded-r-2xl rounded-l-none border-l-0 border-r-0 px-3 py-2 md:px-3 md:py-3 font-semibold hover:bg-accent hover:text-accent-foreground transition-all duration-150 ease-out h-auto min-h-[2.75rem] leading-tight whitespace-normal ${
             isMobile ? "text-sm" : "text-xs"
           }`}
           onClick={submit}
