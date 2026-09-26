@@ -48,7 +48,7 @@ Authorized order. Do not skip ahead.
 | 1 | Known Android defects | Complete through Fix 5 (`04fbc38`) |
 | 2 | Device stress testing | **COMPLETE** — real API 23/33/35/36 phone and API 33/36 tablet matrix exercised; DST-07 and DST-08 resolved in the platform-correction gate |
 | 3 | AI black-box usability testing | **COMPLETE** — all ten missions attempted on Pixel 9 / API 35; findings UX-01 through UX-10 documented below |
-| 4 | Visual/design acceptance | Evidence collection complete; analysis **NOT YET STARTED** |
+| 4 | Visual/design acceptance | **DIAGNOSTIC REVIEW COMPLETE** — findings VIS-01 through VIS-16 recorded; final acceptance remains open |
 | 5 | Maestro automated user journeys | Not started — do not install/configure until this phase |
 | 6 | Accessibility/usability testing | Not started |
 | 7 | Human usability testing | Not started |
@@ -545,12 +545,33 @@ Track: visual hierarchy, typography, spacing rhythm, alignment, visual density, 
 
 Architecture may be investigated when it produces UX/design inconsistency. **Do not authorize architectural rewrites merely for code elegance.**
 
-Status: **EVIDENCE COLLECTION COMPLETE; VISUAL/DESIGN ANALYSIS NOT YET STARTED.**
+Status: **PHASE 4 — VISUAL/DESIGN ACCEPTANCE: DIAGNOSTIC REVIEW COMPLETE.** This records completion of the review, not final visual acceptance.
 
 - Package: `C:\Users\Likes\Documents\Flicklet_Phase4_Visual_Audit.zip`
 - Contents: 39 native-resolution screenshots plus `manifest.md` covering Pixel 9 / API 35 phone dark/light and portrait/landscape states, API 33 7-inch tablet portrait/landscape, and API 36 Pixel Tablet portrait/landscape.
 - Requested screenshot 17 (episode/progress state) was not captured because no such state was discoverable through the black-box UI. No substitute was fabricated.
-- Screenshots and manifest remain outside Git and are not release findings. Formal visual/design evaluation remains the next separate phase action.
+- Screenshots and manifest remain outside Git.
+
+### Phase 4 findings
+
+| ID | Severity | Finding | Classification / correlation | Wave 1 disposition |
+|----|----------|---------|------------------------------|--------------------|
+| VIS-01 | HIGH | First onboarding coachmark is clipped off-screen. | Visual defect; usability-supporting visual issue; correlates UX-01. | Authorized. |
+| VIS-02 | HIGH | Floating Settings gear competes with/overlaps application content and appears where its role is unclear, including Settings itself. | Usability-supporting visual issue; navigation/chrome inconsistency. | Authorized, narrow chrome-ownership correction only. |
+| VIS-03 | RELEASE BLOCKER | Bottom-sheet/action content can occupy the same region as Flicklet/Android navigation; Remove is obscured/unreachable in three-button mode. | Visual/layout defect; correlates UX-10. | Authorized. |
+| VIS-04 | MEDIUM | Light theme is not strongly differentiated from dark theme. | Design-system/theme inconsistency. | Deferred; do not fix in Wave 1. |
+| VIS-05 | MEDIUM | Phone header, Search, and helper copy consume excessive initial vertical space. | Information hierarchy; responsive visual density. | Deferred. |
+| VIS-06 | MEDIUM | Home uses nested bordered containers and excess empty space, creating a dashboard/web-app feel. | Composition/visual density. | Deferred. |
+| VIS-07 | HIGH | Library is visually overloaded with competing status, filter, metadata, rating, overflow, and manipulation controls. | Correlates UX-02, UX-03, UX-09. | Deferred. |
+| VIS-08 | MEDIUM | Search-result cards have weak action hierarchy, oversized repeated status actions, and excessive competing metadata. | Action hierarchy/visual density. | Deferred. |
+| VIS-09 | MEDIUM | Overflow/menu treatment and `My List +` use inconsistent visual/action patterns. | Correlates UX-02, UX-03, UX-08. | Deferred. |
+| VIS-10 | HIGH | Full Access is a long repetitive feature catalog rather than a clear purchase-decision surface; purchase/price hierarchy is weak or absent. | Correlates UX-07. | Deferred. |
+| VIS-11 | MEDIUM | Icons, emoji illustrations, FABs, pills, menus, and buttons do not form one mature component language. | Component-language consistency. | Deferred. |
+| VIS-12 | LOW/MEDIUM | Application version is displayed prominently beside consumer branding. | Branding/information hierarchy. | Deferred. |
+| VIS-13 | MEDIUM | Signed-out Discovery explains the limitation but provides no strong sign-in action and leaves a visually dead screen. | Correlates UX-04. | Deferred. |
+| VIS-14 | MEDIUM | Landscape/tablet layouts often resemble enlarged/rearranged phone or responsive-web layouts rather than space-specific compositions; Settings is notably stronger. | Responsive composition. | Deferred. |
+| VIS-15 | MEDIUM / REPRODUCE | Small-tablet portrait Library evidence showed malformed rotated/clipped `Loading Library` text at the extreme left edge. | Possible transient loading/layout defect. | Reproduce first; fix only if confirmed. |
+| VIS-16 | MEDIUM | Mobile bottom navigation combines an oversized Settings gear, text-only destinations, active-line treatment, and Android system navigation like layered navigation systems. | Correlates UX-06, UX-10. | Broad navigation redesign deferred. |
 
 ---
 
@@ -633,8 +654,8 @@ These remain product/tech items from existing control docs. They are **not** the
 | Branch | `codex/establish-baseline` |
 | Verified application checkpoint | `4e91eea1c2a325a67afad9f7907263e2d2311d1b` plus the focused Phase-4 evidence-collection status commit containing this update |
 | Application source changes in this gate | None; Phase 4 evidence collection changed only this status document |
-| Current phase | Phase 4 — **VISUAL/DESIGN EVIDENCE COLLECTION COMPLETE; ANALYSIS NOT YET STARTED** |
-| Current authorized task | Evidence package complete. Stop before visual/design analysis or corrections. |
+| Current phase | Phase 4 — **VISUAL/DESIGN DIAGNOSTIC REVIEW COMPLETE; FINAL ACCEPTANCE OPEN** |
+| Current authorized task | Wave 1 release-integrity corrections only: UX-10/VIS-03, UX-01/VIS-01, VIS-02, and VIS-15 only if reproducible. |
 | Latest test evidence | External package contains 39 verified native-resolution screenshots plus a manifest across Pixel 9 / API 35, API 33 small tablet, and API 36 Pixel Tablet; dark/light and portrait/landscape states are represented. Episode/progress screenshot was unavailable because the state was not discoverable through the UI. |
 
 ---
