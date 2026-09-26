@@ -633,6 +633,12 @@ Status: **PASS — WAVE 2 IMPLEMENTATION COMPLETE.** No Wave 3 or Wave 4 work wa
 - Data-dependent external checks not fully exercised in this gate: signed-in cross-device Firebase synchronization for additive custom lists; a live upcoming-episode schedule fixture; and the complete episode modal journey on a populated signed-in account. Their storage/selector paths compile and are covered by focused automated tests, but these are not represented as completed black-box missions.
 - Existing non-blocking warnings remain: stale Browserslist/baseline data, Vite dynamic/static import notices, Capacitor package version mismatch, Android Gradle deprecation notices, and existing React test warnings.
 
+### Wave 3 — UX-04 / VIS-13 Discovery signed-out action
+
+- **Root cause:** the signed-out Discovery empty state explained that authentication was required but rendered no actionable control.
+- **Correction:** the state now presents a prominent `Sign In` action and dispatches the existing `auth:sign-in-required` contract, preserving the single application authentication flow.
+- **Focused verification:** signed-out CTA rendering/event dispatch and unchanged signed-in empty-state behavior are covered by `DiscoveryPage.signedOut.test.tsx`; TypeScript passes.
+
 ---
 
 ## 7. Maestro user journeys

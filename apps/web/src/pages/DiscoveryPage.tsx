@@ -55,6 +55,10 @@ export default function DiscoveryPage() {
   const isLoading = discoveryLoading;
   const hasError = discoveryError;
 
+  const handleSignIn = () => {
+    window.dispatchEvent(new CustomEvent("auth:sign-in-required"));
+  };
+
   const actions = {
     onWant: (item: MediaItem) => {
       console.log("🎬 Discovery onWant called:", item);
@@ -173,6 +177,14 @@ export default function DiscoveryPage() {
               Sign in for recommendations personalized by your tastes and
               tracking activity.
             </p>
+            <button
+              type="button"
+              onClick={handleSignIn}
+              className="px-6 py-3 rounded-lg font-semibold transition-colors"
+              style={{ backgroundColor: "var(--accent)", color: "white" }}
+            >
+              Sign In
+            </button>
           </div>
         )}
 
