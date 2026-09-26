@@ -9,7 +9,7 @@ import HomeYourShowsRail from "@/components/rails/HomeYourShowsRail";
 import HomeUpNextRail from "@/components/rails/HomeUpNextRail";
 import HomeMarquee from "@/components/HomeMarquee";
 import HomeForYouSection from "@/components/home/HomeForYouSection";
-import { SettingsFAB, ThemeToggleFAB } from "@/components/FABs";
+import { ThemeToggleFAB } from "@/components/FABs";
 import OnboardingCoachmarks from "@/components/onboarding/OnboardingCoachmarks";
 import ScrollToTopArrow from "@/components/ScrollToTopArrow";
 import HomeDownArrow from "@/components/HomeDownArrow";
@@ -979,6 +979,7 @@ export default function App() {
           }
           onClear={handleClear}
           onHelpOpen={handleHelpOpen}
+          onSettingsOpen={handleSettingsClick}
           onNavigateHome={() => navigateTo("home")}
         />
         {afterFirstPaintReady && (
@@ -997,7 +998,11 @@ export default function App() {
 
         {/* Mobile Tabs - mobile only */}
         <div className="block md:hidden">
-          <MobileTabs current={view} onChange={(tab) => navigateTo(tab)} />
+          <MobileTabs
+            current={view}
+            onChange={(tab) => navigateTo(tab)}
+            onSettingsClick={handleSettingsClick}
+          />
         </div>
 
         {searchActive ? (
@@ -1155,8 +1160,7 @@ export default function App() {
           </div>
         )}
 
-        {/* FAB Components - Available on all tabs */}
-        <SettingsFAB onClick={handleSettingsClick} />
+        {/* Desktop theme control; mobile theme selection lives in Settings. */}
         <ThemeToggleFAB
           theme={settings.layout.theme}
           onToggle={() =>

@@ -587,6 +587,12 @@ Status: **PHASE 4 — VISUAL/DESIGN ACCEPTANCE: DIAGNOSTIC REVIEW COMPLETE.** Th
 - **Correction:** Calculate the coachmark width from the usable viewport and clamp its left edge between 16 CSS-pixel gutters plus the shared `--safe-left` / `--safe-right` values. The onboarding flow and copy are unchanged.
 - **Verification:** The entire first coachmark and primary action remain visible on API 31, Pixel 9 / API 35, and an API 36 representative phone. Pixel 9 verification also passed at 2.0× font scale without horizontal clipping or loss of either action.
 
+### Wave 1 — VIS-02 correction
+
+- **Ownership finding:** Settings was globally mounted as a fixed FAB. A prior change visually docked it beside the phone navigation but left it outside the navigation structure, and its visibility state only recognized the optional Settings sheet—not the production full-screen Settings page.
+- **Correction:** Settings is now an explicit fourth destination inside phone bottom navigation and a compact header control on tablet/desktop layouts. The independent floating Settings FAB is no longer mounted; Settings remains reachable without occupying poster/card/action content.
+- **Verification:** Home, Library, Search, Discovery, and Settings were checked on Pixel 9 gesture/three-button portrait and landscape. The full-screen Settings surface contains no redundant floating gear. API 33 small-tablet Settings uses the header control and retains its existing modal layout.
+
 ---
 
 ## 7. Maestro user journeys
