@@ -1,7 +1,7 @@
 # Flicklet Release Status
 
 **Authoritative release-control document.**  
-Last updated: 2026-09-25
+Last updated: 2026-09-26
 
 Technical detail continues to live in [CURRENT_ARCHITECTURE.md](./CURRENT_ARCHITECTURE.md), [CURRENT_TASK.md](./CURRENT_TASK.md), and [KNOWN_ISSUES.md](./KNOWN_ISSUES.md). Those files must not contradict this document.
 
@@ -636,8 +636,8 @@ Status: **PASS — WAVE 2 IMPLEMENTATION COMPLETE.** No Wave 3 or Wave 4 work wa
 ### Wave 3 — UX-04 / VIS-13 Discovery signed-out action
 
 - **Root cause:** the signed-out Discovery empty state explained that authentication was required but rendered no actionable control.
-- **Correction:** the state now presents a prominent `Sign In` action and dispatches the existing `auth:sign-in-required` contract, preserving the single application authentication flow.
-- **Focused verification:** signed-out CTA rendering/event dispatch and unchanged signed-in empty-state behavior are covered by `DiscoveryPage.signedOut.test.tsx`; TypeScript passes.
+- **Correction:** the state now presents a prominent `Sign In` action and dispatches the existing `auth:sign-in-required` contract, preserving the single application authentication flow. The shared Auth modal also consumes the existing cancellable Android Back event so cancelling the flow returns to Discovery instead of exiting the activity.
+- **Focused verification:** signed-out CTA rendering/event dispatch, unchanged signed-in empty-state behavior, and Auth-modal Android Back consumption are covered by focused tests. Pixel 9 / API 35 and Pixel Tablet / API 36 show the CTA; the phone CTA opens the existing provider modal and Android Back returns to Discovery.
 
 ### Wave 3 — UX-06 Settings Android Back
 
@@ -651,6 +651,15 @@ Status: **PASS — WAVE 2 IMPLEMENTATION COMPLETE.** No Wave 3 or Wave 4 work wa
 - **Correction:** the native Billing plugin is explicitly registered, and a read-only product-details path loads the configured Play product before purchase. The decision hierarchy is now Full Access identity, localized one-time price/status, entitlement state, primary CTA, then four concise benefits. Android purchase is gated while pricing loads or is unavailable; no fallback dollar amount is fabricated.
 - **Paid-copy correction:** Episode Tracking was removed from Full Access benefits because Wave 2 made it available to all users. Repetitive trial/continued-access tiles and per-benefit `INCLUDED / Available Now` labels were removed; Unlimited Custom Lists remains a genuine paid benefit.
 - **Focused verification:** localized price/product-ID/type mapping and non-Android no-fabrication behavior are covered by `proUpgrade.productDetails.test.ts`; guest, expired/read-only, paid, and admin entitlement render paths remain covered by `settingsApprovalPaths.test.tsx`.
+
+### Wave 3 regression gate
+
+- Automated suite: 43 files / 243 tests passed, including Discovery signed-out, Auth-modal Android Back, Settings Android Back, and localized Billing product-detail coverage.
+- TypeScript, production web build, mobile production build, Firebase Functions build, Capacitor Android sync, Android debug build, APK install/launch, and `git diff --check` passed. Lint completed with 0 errors and 552 pre-existing warnings.
+- Pixel 9 / API 35 verified signed-out Discovery → existing Auth modal → Android Back → Discovery; Settings Back from Home, Library, and Search; repeated Settings cycles; Filters Back precedence; gesture and three-button navigation; portrait and landscape; and rotation with Settings open.
+- Representative API 36 phone verified gesture/predictive Settings Back. Pixel Tablet / API 36 verified signed-out Discovery and the Full Access hierarchy in its desktop/tablet shell.
+- Sideloaded debug installs cannot retrieve a live Play catalog price, so they correctly show `Price temporarily unavailable` and keep purchase disabled. The localized-price path is verified by automated Billing-product fixtures; a live Play-installed localized price, actual purchase, restore, trial transition, and already-entitled production account remain release/billing-gate work and were not represented as completed black-box purchases.
+- Existing non-blocking warnings remain: stale Browserslist/baseline data, Vite dynamic/static import notices, Capacitor package version mismatch, Android Gradle deprecation notices, and existing React test warnings.
 
 ---
 
@@ -731,11 +740,11 @@ These remain product/tech items from existing control docs. They are **not** the
 | Field | Value |
 |-------|--------|
 | Branch | `codex/establish-baseline` |
-| Verified application checkpoint | Wave 2 implementation commits `226aa4d`, `5fa8d4f`, and `0867da5`, plus the focused release-status/Android-assets commit containing this update |
-| Application source changes in this gate | Watch-state/custom-list separation, shared primary-state transitions and feedback, all-user current-season episode progress, Up Next schedule semantics, terminology, and Android-safe toast placement |
-| Current phase | Wave 2 — **IMPLEMENTATION AND REGRESSION GATE COMPLETE** |
-| Current authorized task | Wave 2 only; Wave 3 and Wave 4 remain unauthorized. |
-| Latest test evidence | 40 files / 237 tests; TypeScript, lint (0 errors), production web/mobile, Functions, Capacitor sync, Android debug; APK launch on API 35 and API 36; API 35 visible status transition and tappable Undo mission passed. |
+| Verified application checkpoint | Wave 3 implementation commits `954733f`, `baf6949`, and `245fe25`, plus the focused Auth-modal Back/regression/status commit containing this update |
+| Application source changes in this gate | Signed-out Discovery action using the existing Auth flow; shared cancellable Android Back handling for Settings and Auth; localized Google Play one-time-product details and a clearer Full Access decision hierarchy |
+| Current phase | Wave 3 — **IMPLEMENTATION AND REGRESSION GATE COMPLETE** |
+| Current authorized task | Wave 3 only is complete; Wave 4 has not started. |
+| Latest test evidence | 43 files / 243 tests; TypeScript, lint (0 errors), production web/mobile, Functions, Capacitor sync, Android debug; APK checks on Pixel 9 API 35 phone, API 36 phone, and API 36 Pixel Tablet; gesture/three-button, portrait/landscape, Discovery/Auth Back, Settings Back, Filters precedence, and price-unavailable gating passed. |
 
 ---
 
