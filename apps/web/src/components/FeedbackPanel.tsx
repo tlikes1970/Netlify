@@ -6,7 +6,7 @@ import { ERROR_MESSAGES, logErrorDetails } from '../lib/errorMessages';
 
 function feedbackSubmitUrl(): string {
   const base = (import.meta.env.VITE_PUBLIC_BASE_URL || '').trim().replace(/\/$/, '');
-  return base ? `${base}/api/feedback` : '/api/feedback';
+  return base ? `${base}/` : '/';
 }
 
 export default function FeedbackPanel() {
@@ -35,33 +35,24 @@ export default function FeedbackPanel() {
       //   return;
       // }
       
-      // Netlify Function + SendGrid (Netlify Forms POST / is unreliable with SPA /* → index.html)
-      const payload = {
+      const payload = new URLSearchParams({
+        'form-name': 'feedback',
+        'bot-field': '',
         message: feedback.trim(),
         theme: 'light',
         timestamp: new Date().toISOString(),
-      };
+      });
 
       const response = await fetch(feedbackSubmitUrl(), {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: payload.toString(),
       });
 
-      const ct = response.headers.get('content-type') || '';
-      const raw = await response.text();
-      let data: { ok?: boolean; error?: string } = {};
-      if (ct.includes('application/json')) {
-        try {
-          data = JSON.parse(raw) as typeof data;
-        } catch {
-          throw new Error('Invalid response from server');
-        }
-      }
-
-      if (!response.ok || !data.ok) {
-        console.error('❌ Feedback API error:', response.status, raw);
-        throw new Error(data.error || `HTTP ${response.status}`);
+      if (!response.ok) {
+        const raw = await response.text();
+        console.error('❌ Feedback form error:', response.status, raw);
+        throw new Error(`HTTP ${response.status}`);
       }
       addToast('Thanks for sharing! Your thoughts have been received. 💭', 'success');
       setFeedback('');
