@@ -9,6 +9,7 @@ import { useSettings } from "../../lib/settings";
 import { useEntitlements } from "../../hooks/useEntitlements";
 import { shareShowWithFallback } from "../../lib/shareLinks";
 import { useToast } from "../../components/Toast";
+import { isSeriesReminderEnabled } from "../../lib/seriesReminders";
 import {
   computeOverflowMenuPlacement,
   estimateOverflowMenuHeight,
@@ -261,7 +262,7 @@ export function CompactOverflowMenu({
         if (isTVShow && handlers.onSimpleReminder)
           menuItems.push({
             id: "reminder",
-            label: "Remind Me",
+            label: isSeriesReminderEnabled(_item.id) ? "✓ Reminded" : "Remind Me",
             onClick: handlers.onSimpleReminder,
           });
         if (handlers.onGoofsOpen)
@@ -277,12 +278,6 @@ export function CompactOverflowMenu({
             label: "Extras",
             onClick: handlers.onExtrasOpen,
             proOnly: !hasFullAccess,
-          });
-        if (handlers.onNotificationToggle)
-          menuItems.push({
-            id: "notifications",
-            label: "Watch Reminders",
-            onClick: handlers.onNotificationToggle,
           });
         if (handlers.onDelete)
           menuItems.push({
@@ -334,7 +329,7 @@ export function CompactOverflowMenu({
         if (isTVShow && handlers.onSimpleReminder)
           menuItems.push({
             id: "reminder",
-            label: "Remind Me",
+            label: isSeriesReminderEnabled(_item.id) ? "✓ Reminded" : "Remind Me",
             onClick: handlers.onSimpleReminder,
           });
         if (handlers.onGoofsOpen)
@@ -350,12 +345,6 @@ export function CompactOverflowMenu({
             label: "Extras",
             onClick: handlers.onExtrasOpen,
             proOnly: !hasFullAccess,
-          });
-        if (handlers.onNotificationToggle)
-          menuItems.push({
-            id: "notifications",
-            label: "Watch Reminders",
-            onClick: handlers.onNotificationToggle,
           });
         if (handlers.onDelete)
           menuItems.push({
@@ -407,7 +396,7 @@ export function CompactOverflowMenu({
         if (isTVShow && handlers.onSimpleReminder)
           menuItems.push({
             id: "reminder",
-            label: "Remind Me",
+            label: isSeriesReminderEnabled(_item.id) ? "✓ Reminded" : "Remind Me",
             onClick: handlers.onSimpleReminder,
           });
         if (handlers.onGoofsOpen)
@@ -423,12 +412,6 @@ export function CompactOverflowMenu({
             label: "Extras",
             onClick: handlers.onExtrasOpen,
             proOnly: !hasFullAccess,
-          });
-        if (handlers.onNotificationToggle)
-          menuItems.push({
-            id: "notifications",
-            label: "Watch Reminders",
-            onClick: handlers.onNotificationToggle,
           });
         if (handlers.onDelete)
           menuItems.push({
@@ -489,7 +472,7 @@ export function CompactOverflowMenu({
         if (isTVShow && handlers.onSimpleReminder)
           menuItems.push({
             id: "reminder",
-            label: "Remind Me",
+            label: isSeriesReminderEnabled(_item.id) ? "✓ Reminded" : "Remind Me",
             onClick: handlers.onSimpleReminder,
           });
         if (handlers.onGoofsOpen)
@@ -505,12 +488,6 @@ export function CompactOverflowMenu({
             label: "Extras",
             onClick: handlers.onExtrasOpen,
             proOnly: !hasFullAccess,
-          });
-        if (handlers.onNotificationToggle)
-          menuItems.push({
-            id: "notifications",
-            label: "Watch Reminders",
-            onClick: handlers.onNotificationToggle,
           });
         break;
 

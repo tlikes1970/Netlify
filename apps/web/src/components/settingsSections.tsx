@@ -37,11 +37,6 @@ import type { ListName } from "../state/library.types";
 import { lazy, Suspense } from "react";
 
 // Lazy load heavy components
-const NotificationSettings = lazy(() =>
-  import("./modals/NotificationSettings").then((m) => ({
-    default: m.NotificationSettings,
-  }))
-);
 const NotificationCenter = lazy(() =>
   import("./modals/NotificationCenter").then((m) => ({
     default: m.NotificationCenter,
@@ -396,22 +391,10 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
 }
 
 function NotificationsSection({
-  onShowNotificationSettings,
   onShowNotificationCenter,
 }: SettingsSectionProps) {
-  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
-  const entitlements = useEntitlements();
-  const isProUser = entitlements.hasFullAccess;
   const translations = useTranslations();
-
-  const handleOpenSettings = () => {
-    if (onShowNotificationSettings) {
-      onShowNotificationSettings();
-    } else {
-      setShowNotificationSettings(true);
-    }
-  };
 
   const handleOpenCenter = () => {
     if (onShowNotificationCenter) {
@@ -428,28 +411,10 @@ function NotificationsSection({
           {translations.notifications}
         </h3>
 
-        {/* Quick Actions */}
+        <p className="text-sm" style={{ color: "var(--muted)" }}>
+          Episode reminders are managed from each TV show card. Flicklet reminds you on the day new episodes air.
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <button
-            onClick={handleOpenSettings}
-            className="p-4 rounded-lg border transition-colors hover:opacity-80"
-            style={{
-              backgroundColor: "var(--card)",
-              borderColor: "var(--line)",
-              color: "var(--text)",
-            }}
-          >
-            <div className="flex items-center space-x-3">
-              <div className="text-2xl">⚙️</div>
-              <div className="text-left">
-                <div className="font-medium">{translations.notificationSettings}</div>
-                <div className="text-sm" style={{ color: "var(--muted)" }}>
-                  {translations.notificationSettingsDescription}
-                </div>
-              </div>
-            </div>
-          </button>
-
           <button
             onClick={handleOpenCenter}
             className="p-4 rounded-lg border transition-colors hover:opacity-80"
@@ -470,65 +435,9 @@ function NotificationsSection({
             </div>
           </button>
         </div>
-
-
-        {/* Current Settings Summary */}
-        <div
-          className="p-4 rounded-lg"
-          style={{
-            backgroundColor: "var(--card)",
-            borderColor: "var(--line)",
-            border: "1px solid",
-          }}
-        >
-          <h4
-            className="text-lg font-medium mb-3"
-            style={{ color: "var(--text)" }}
-          >
-            {translations.currentSettings}
-          </h4>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span style={{ color: "var(--muted)" }}>
-                {translations.episodeReminders}:
-              </span>
-              <span style={{ color: "var(--text)" }}>{translations.enabled}</span>
-            </div>
-            <div className="flex justify-between">
-              <span style={{ color: "var(--muted)" }}>
-                {translations.notificationTiming}:
-              </span>
-              <span style={{ color: "var(--text)" }}>
-                {isProUser
-                  ? translations.timingCustomLeadTime
-                  : translations.timing24HoursBefore}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span style={{ color: "var(--muted)" }}>
-                {translations.notificationMethods}:
-              </span>
-              <span style={{ color: "var(--text)" }}>
-                {translations.methodsDeviceNotifications}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {entitlements.isReadOnlyMode && (
-          <UpgradeToProCTA variant="banner" />
-        )}
       </div>
 
       {/* Modals */}
-      {showNotificationSettings && (
-        <Suspense fallback={<div>Loading...</div>}>
-          <NotificationSettings
-            isOpen={showNotificationSettings}
-            onClose={() => setShowNotificationSettings(false)}
-          />
-        </Suspense>
-      )}
       {showNotificationCenter && (
         <Suspense fallback={<div>Loading...</div>}>
           <NotificationCenter

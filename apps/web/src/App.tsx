@@ -24,7 +24,7 @@ const SettingsPage = lazy(() => import("@/components/SettingsPage"));
 const NotesAndTagsModal = lazy(
   () => import("@/components/modals/NotesAndTagsModal"),
 );
-import { ShowNotificationSettingsModal } from "@/components/modals/ShowNotificationSettingsModal";
+import { SeriesReminderModal } from "@/components/modals/SeriesReminderModal";
 import { BloopersModal } from "@/components/extras/BloopersModal";
 import { ExtrasModal } from "@/components/extras/ExtrasModal";
 import { GoofsModal } from "@/components/extras/GoofsModal";
@@ -66,6 +66,7 @@ import { useReturningShows } from "@/state/selectors/useReturningShows";
 import { trackTabOpenedReturning } from "@/lib/analytics";
 import { googleLogin } from "@/lib/authLogin";
 import { isCapacitorNative } from "@/lib/capacitorEnv";
+import { reconcileSeriesReminders } from "@/lib/seriesReminders";
 import { TrialStatusBanner } from "@/components/TrialStatusBanner";
 import { PersonalityBanner } from "@/components/PersonalityBanner";
 import { useScreenshotMode } from "@/hooks/useScreenshotMode";
@@ -155,9 +156,7 @@ export default function App() {
   const [notesModalItem, setNotesModalItem] = useState<any>(null);
   const [showNotesModal, setShowNotesModal] = useState(false);
 
-  // Notification modal state
-  const [notificationModalItem, setNotificationModalItem] = useState<any>(null);
-  const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [seriesReminderItem, setSeriesReminderItem] = useState<any>(null);
 
   // Bloopers modal state (deprecated - kept for backward compatibility)
   const [bloopersModalItem, setBloopersModalItem] = useState<any>(null);
@@ -173,14 +172,6 @@ export default function App() {
 
   // Help modal state
   const [showHelpModal, setShowHelpModal] = useState(false);
-
-  // Debug modal state changes
-  useEffect(() => {
-    console.log("Modal state changed:", {
-      showNotificationModal,
-      notificationModalItem: notificationModalItem?.title,
-    });
-  }, [showNotificationModal, notificationModalItem]);
 
   // Debug bloopers modal state changes
   useEffect(() => {
@@ -478,6 +469,19 @@ export default function App() {
   // Service Worker for offline caching
   const { isOnline } = useServiceWorker();
 
+  useEffect(() => {
+    void reconcileSeriesReminders();
+    const reconcileOnResume = () => {
+      if (document.visibilityState === "visible") void reconcileSeriesReminders();
+    };
+    document.addEventListener("visibilitychange", reconcileOnResume);
+    window.addEventListener("focus", reconcileOnResume);
+    return () => {
+      document.removeEventListener("visibilitychange", reconcileOnResume);
+      window.removeEventListener("focus", reconcileOnResume);
+    };
+  }, []);
+
   // Popup hint banner state
   const [showPopupHint, setShowPopupHint] = useState<boolean>(() => {
     try {
@@ -513,6 +517,7 @@ export default function App() {
 
     // Trigger custom refresh events for components that need it
     window.dispatchEvent(new CustomEvent("force-refresh"));
+    await reconcileSeriesReminders({ force: true });
 
     // Small delay to show the refresh animation
     await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -834,33 +839,8 @@ export default function App() {
     setShowNotesModal(true);
   };
 
-  // Notification handler
-  const handleNotificationToggle = (item: any) => {
-    console.log(
-      "App.tsx handleNotificationToggle called for:",
-      item.title,
-      item.mediaType,
-    );
-    console.log("Setting notification modal state:", {
-      showNotificationModal: true,
-      notificationModalItem: item,
-    });
-    setNotificationModalItem(item);
-    setShowNotificationModal(true);
-    console.log("Modal state should now be set");
-  };
-
-  // Simple reminder handler (Free feature)
   const handleSimpleReminder = (item: any) => {
-    console.log(
-      "App.tsx handleSimpleReminder called for:",
-      item.title,
-      item.mediaType,
-    );
-    // For now, just show a simple alert - this will be replaced with actual reminder logic
-    alert(
-      `Simple reminder set for "${item.title}" - you'll be notified 24 hours before the next episode airs!`,
-    );
+    setSeriesReminderItem(item);
   };
 
   // Bloopers handler
@@ -1015,7 +995,7 @@ export default function App() {
               onBackToHome={() => navigateTo("home")}
               onNotesEdit={handleNotesEdit}
               onTagsEdit={handleTagsEdit}
-              onNotificationToggle={handleNotificationToggle}
+              onNotificationToggle={handleSimpleReminder}
               onSimpleReminder={handleSimpleReminder}
               onBloopersOpen={handleBloopersOpen}
               onGoofsOpen={handleGoofsOpen}
@@ -1126,7 +1106,7 @@ export default function App() {
                       onRefresh={handleRefresh}
                       onNotesEdit={handleNotesEdit}
                       onTagsEdit={handleTagsEdit}
-                      onNotificationToggle={handleNotificationToggle}
+                      onNotificationToggle={handleSimpleReminder}
                       onSimpleReminder={handleSimpleReminder}
                       onBloopersOpen={handleBloopersOpen}
                       onGoofsOpen={handleGoofsOpen}
@@ -1210,15 +1190,10 @@ export default function App() {
           </Suspense>
         )}
 
-        {showNotificationModal && notificationModalItem && (
-          <ShowNotificationSettingsModal
-            isOpen={showNotificationModal}
-            onClose={() => setShowNotificationModal(false)}
-            show={{
-              id: Number(notificationModalItem.id),
-              title: notificationModalItem.title,
-              mediaType: notificationModalItem.mediaType,
-            }}
+        {seriesReminderItem && (
+          <SeriesReminderModal
+            item={seriesReminderItem}
+            onClose={() => setSeriesReminderItem(null)}
           />
         )}
 

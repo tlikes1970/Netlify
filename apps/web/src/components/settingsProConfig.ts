@@ -54,10 +54,10 @@ export const PRO_FEATURES_AVAILABLE: ProFeature[] = [
   {
     id: "watch-reminders",
 
-    title: "Watch Reminders",
+    title: "Episode Reminders",
 
     description:
-      "Episode alerts on your device with per-show timing — in-app and push reminders.",
+      "Android alerts around 8:00 AM on the day a new episode airs.",
 
     icon: "🔔",
   },

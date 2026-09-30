@@ -1226,7 +1226,7 @@ export default function AdminExtrasPage({
                       className="list-disc list-inside space-y-1 text-sm text-green-700"
                       style={{ color: "var(--text)" }}
                     >
-                      <li>Watch Reminders</li>
+                      <li>Episode Reminders</li>
                       <li>Theme Packs</li>
                       <li>Bloopers Access</li>
                       <li>Extras Access</li>

@@ -22,6 +22,7 @@ import { startProUpgrade } from "../../lib/proUpgrade";
 import { useEntitlements } from "../../hooks/useEntitlements";
 import { notifyReadOnlyBlocked } from "../../lib/readOnlyGuard";
 import { useBackdropCallbacks } from "../WatchingListWithBackdrop";
+import { isSeriesReminderEnabled } from "../../lib/seriesReminders";
 
 export type TabCardProps = {
   item: MediaItem;
@@ -191,7 +192,7 @@ export default function TabCard({
                 }}
                 title="Set simple reminder (24 hours before)"
               >
-                ⏰ Remind Me
+                {isSeriesReminderEnabled(item.id) ? "✓ Reminded" : "Remind Me"}
               </button>
             )}
           </>
@@ -273,7 +274,7 @@ export default function TabCard({
                 }}
                 title="Set simple reminder (24 hours before)"
               >
-                ⏰ Remind Me
+                {isSeriesReminderEnabled(item.id) ? "✓ Reminded" : "Remind Me"}
               </button>
             )}
           </>
@@ -355,7 +356,7 @@ export default function TabCard({
                 }}
                 title="Set simple reminder (24 hours before)"
               >
-                ⏰ Remind Me
+                {isSeriesReminderEnabled(item.id) ? "✓ Reminded" : "Remind Me"}
               </button>
             )}
           </>
@@ -867,30 +868,6 @@ export default function TabCard({
                 }}
               >
                 Extras
-              </button>
-              <button
-                onClick={() => {
-                  if (isReadOnlyMode) {
-                    notifyReadOnlyBlocked();
-                  } else {
-                    actions?.onNotificationToggle?.(item);
-                  }
-                }}
-                title={
-                  isReadOnlyMode
-                    ? "Read-Only — unlock Full Access"
-                    : "Watch reminders and episode alerts for this show"
-                }
-                className={buttonClass}
-                style={{
-                  backgroundColor: "var(--btn)",
-                  color: "var(--text)",
-                  borderColor: "var(--line)",
-                  border: "1px solid",
-                  cursor: "pointer",
-                }}
-              >
-                Watch Reminders
               </button>
             </div>
           )}

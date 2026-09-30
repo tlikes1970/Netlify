@@ -62,6 +62,16 @@ Authorized order. Do not skip ahead.
 
 ## 3. Defect register
 
+### IMPLEMENTED — AWAITING DEVICE VERIFICATION
+
+#### Android series-level episode reminders (2.0.3 / versionCode 8)
+
+- A single **Remind Me / ✓ Reminded** workflow now enables or disables a persistent series-level reminder on the current Android device.
+- Flicklet schedules all known future episodes from the relevant TMDB season at approximately 8:00 AM device-local time, and reconciles schedules on enable, startup/resume, and pull-to-refresh.
+- Capacitor Local Notifications 7.0.7 is configured with Android notification permission handling, a dedicated channel, pending-notification comparison, cancellation, and reboot restoration supplied by the plugin.
+- Automated type checking, 251 tests, production/mobile web builds, Capacitor Android sync, and the Android debug build pass.
+- Real permission prompts, scheduled delivery while closed, cancellation isolation, reconciliation behavior, and post-reboot delivery remain **unverified until manual Android device testing is completed**.
+
 ### FIXED
 
 #### Fix 1 — Android physical-pixel / CSS-pixel inset conversion

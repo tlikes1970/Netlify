@@ -285,7 +285,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   cards.
                 </li>
                 <li>
-                  ⏰ <strong>Watch Reminders:</strong> episode alerts and timing on your device,
+                  ⏰ <strong>Episode Reminders:</strong> Android alerts when new episodes air,
                   per show.
                 </li>
                 <li>
@@ -383,7 +383,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   totals.
                 </li>
                 <li>
-                  <strong>Watch Reminders:</strong> set episode alerts ahead of time
+                  <strong>Episode Reminders:</strong> get an alert when a new episode airs
                   on your device (in-app and push).
                 </li>
               </ul>
@@ -393,7 +393,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
               <h4 className="font-semibold mb-2">How to Manage</h4>
               <ol className="list-decimal list-inside space-y-2 ml-4">
                 <li>
-                  Go to <strong>Settings → Watch Reminders</strong>.
+                  Choose <strong>Remind Me</strong> from a TV show card.
                 </li>
                 <li>Toggle each alert on or off.</li>
                 <li>

@@ -10,6 +10,7 @@ import { useEntitlements } from "../hooks/useEntitlements";
 import { notifyReadOnlyBlocked } from "../lib/readOnlyGuard";
 import { startProUpgrade } from "../lib/proUpgrade";
 import { setPrimaryStatus } from "../lib/statusTransitions";
+import { isSeriesReminderEnabled } from "../lib/seriesReminders";
 
 export type LibraryActionsMode = "list" | "search-inline" | "search-sheet";
 
@@ -306,7 +307,7 @@ export default function LibraryActions({
             }}
             title="Set simple reminder (24 hours before)"
           >
-            ⏰ Remind Me
+            {isSeriesReminderEnabled(item.id) ? "✓ Reminded" : "Remind Me"}
           </button>
         )}
         
@@ -396,7 +397,7 @@ export default function LibraryActions({
               border: "1px solid",
             }}
           >
-            ⏰ Remind Me
+            {isSeriesReminderEnabled(item.id) ? "✓ Reminded" : "Remind Me"}
           </button>
         )}
         
@@ -463,24 +464,6 @@ export default function LibraryActions({
             >
               Extras {!canUseProFeatures && "🔒"}
             </button>
-            <button
-              onClick={() => {
-                if (isReadOnlyMode) {
-                  notifyReadOnlyBlocked();
-                } else {
-                  actions?.onNotificationToggle?.(item);
-                }
-              }}
-              className="w-full px-4 py-3 rounded-lg text-sm text-left"
-              style={{
-                backgroundColor: "var(--btn)",
-                color: "var(--text)",
-                borderColor: "var(--line)",
-                border: "1px solid",
-              }}
-            >
-              Watch Reminders
-            </button>
           </div>
         )}
         
@@ -539,7 +522,7 @@ export default function LibraryActions({
           }}
           title="Set simple reminder (24 hours before)"
         >
-          ⏰ Remind Me
+          {isSeriesReminderEnabled(item.id) ? "✓ Reminded" : "Remind Me"}
         </button>
       )}
     </>
