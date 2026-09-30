@@ -2,5 +2,15 @@
   "appId": "com.TravisL.tvtracker",
   "appName": "Flicklet",
   "webDir": "apps/web/dist",
-  "bundledWebRuntime": false
+  "bundledWebRuntime": false,
+  "plugins": {
+    "SocialLogin": {
+      "providers": {
+        "google": true,
+        "facebook": false,
+        "apple": false,
+        "twitter": false
+      }
+    }
+  }
 }
