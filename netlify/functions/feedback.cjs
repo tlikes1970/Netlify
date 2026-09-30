@@ -4,7 +4,29 @@
  * recording a form submission, so notifications never fire.
  */
 
-const sgMail = require('@sendgrid/mail');
+async function sendMail({ apiKey, to, from, subject, text, html }) {
+  const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      personalizations: [{ to: [{ email: to }] }],
+      from: { email: from },
+      subject,
+      content: [
+        { type: 'text/plain', value: text },
+        { type: 'text/html', value: html },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const detail = (await response.text()).slice(0, 1000);
+    throw new Error(`SendGrid request failed (${response.status}): ${detail}`);
+  }
+}
 
 const jsonHeaders = {
   'Content-Type': 'application/json',
@@ -71,8 +93,6 @@ exports.handler = async (event) => {
       };
     }
 
-    sgMail.setApiKey(apiKey);
-
     const text = [
       'New Flicklet feedback',
       '',
@@ -86,7 +106,8 @@ exports.handler = async (event) => {
       'Sent from Flicklet',
     ].join('\n');
 
-    await sgMail.send({
+    await sendMail({
+      apiKey,
       to,
       from,
       subject: `Flicklet feedback (${theme})`,
