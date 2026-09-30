@@ -81,17 +81,11 @@ exports.handler = async (event) => {
     const to =
       process.env.FEEDBACK_EMAIL ||
       process.env.CONTACT_EMAIL ||
-      '';
-    const from = process.env.FROM_EMAIL || process.env.SENDGRID_FROM || '';
-
-    if (!to || !from) {
-      console.error('[feedback] Set FEEDBACK_EMAIL and FROM_EMAIL (or SENDGRID_FROM)');
-      return {
-        statusCode: 500,
-        headers: jsonHeaders,
-        body: JSON.stringify({ error: 'Feedback inbox not configured' }),
-      };
-    }
+      'feedback@flicklet.app';
+    const from =
+      process.env.FROM_EMAIL ||
+      process.env.SENDGRID_FROM ||
+      'noreply@flicklet.app';
 
     const text = [
       'New Flicklet feedback',
