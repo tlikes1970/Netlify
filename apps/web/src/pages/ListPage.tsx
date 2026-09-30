@@ -7,7 +7,6 @@ import { Library, LibraryEntry } from "@/lib/storage";
 import { setPrimaryStatus } from "@/lib/statusTransitions";
 import { useSettings, resolveFlickletLine } from "@/lib/settings";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
-import ScrollToTopArrow from "@/components/ScrollToTopArrow";
 import { EpisodeTrackingModal } from "@/components/modals/EpisodeTrackingModal";
 import { getTVShowDetails } from "@/lib/tmdb";
 import {
@@ -1267,9 +1266,6 @@ export default function ListPage({
           {/* Non-list tabs (discovery) - no wrapper */}
         </>
       )}
-
-      {/* Scroll to top arrow - appears when scrolled down */}
-      <ScrollToTopArrow />
 
       {/* Episode Tracking Modal */}
       {selectedShow && (

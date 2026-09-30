@@ -12,7 +12,6 @@ import HomeForYouSection from "@/components/home/HomeForYouSection";
 import { ThemeToggleFAB } from "@/components/FABs";
 import OnboardingCoachmarks from "@/components/onboarding/OnboardingCoachmarks";
 import ScrollToTopArrow from "@/components/ScrollToTopArrow";
-import HomeDownArrow from "@/components/HomeDownArrow";
 import { lazy, Suspense } from "react";
 import { openSettingsSheet, closeSettingsSheet } from "@/components/settings/SettingsSheet";
 import SettingsSheet from "@/components/settings/SettingsSheet";
@@ -91,10 +90,6 @@ type SearchState = {
 export default function App() {
   useEntitlements();
 
-  // Content anchor ref for Home down-arrow scroll target
-  // This marks where the main content starts (first rail / main feed)
-  // Config: Home down-arrow - scroll target anchor
-  const homeContentAnchorRef = useRef<HTMLDivElement | null>(null);
 
   // Computed smart views
   const returning = useReturningShows();
@@ -1018,10 +1013,9 @@ export default function App() {
                     </>
                   )}
 
-                  {/* Content anchor - scroll target for down-arrow */}
+                  {/* Main content start anchor */}
                   {/* This marks where the main content starts (first rail / main feed) */}
                   <div
-                    ref={homeContentAnchorRef}
                     id="home-content-anchor"
                     style={{ scrollMarginTop: "100px" }} // Account for sticky header
                   />
@@ -1067,14 +1061,6 @@ export default function App() {
                       </Section>
                     </>
                   )}
-
-                  {/* Home down-arrow - scrolls to content anchor (only on Home page) */}
-                  {view === "home" && (
-                    <HomeDownArrow contentAnchorRef={homeContentAnchorRef} />
-                  )}
-
-                  {/* Scroll to top arrow - appears when scrolled down */}
-                  <ScrollToTopArrow />
                 </div>
               )}
 
@@ -1113,7 +1099,6 @@ export default function App() {
                       onExtrasOpen={handleExtrasOpen}
                     />
                   </Suspense>
-                  <ScrollToTopArrow />
                 </div>
               )}
 
@@ -1133,11 +1118,14 @@ export default function App() {
                   >
                     <DiscoveryPage />
                   </Suspense>
-                  <ScrollToTopArrow />
                 </div>
               )}
             </>
           </PullToRefreshWrapper>
+        )}
+
+        {!searchActive && ["home", "library", "discovery"].includes(view) && (
+          <ScrollToTopArrow key={view} />
         )}
 
         {!isOnline && (
