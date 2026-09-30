@@ -17,6 +17,7 @@ beforeEach(() => {
   height = 800;
   contentHeight = 3000;
   document.body.style.overflowY = 'auto';
+  document.documentElement.style.overflowY = 'hidden';
   document.body.scrollTop = 0;
   Object.defineProperties(document.body, {
     clientHeight: { configurable: true, get: () => height },
@@ -37,6 +38,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.clearAllMocks();
   document.body.style.overflowY = '';
+  document.documentElement.style.overflowY = '';
 });
 
 function move(top: number) {
@@ -120,6 +122,32 @@ describe('scroll navigation', () => {
     expect(getScrollElement()).toBe(document.body);
     document.body.style.overflowY = 'visible';
     expect(getScrollElement()).toBe(document.scrollingElement || document.documentElement);
+  });
+
+  it('uses the document viewport on Android despite body overflow auto', () => {
+    document.documentElement.style.overflowY = 'visible';
+    const owner = document.scrollingElement || document.documentElement;
+    Object.defineProperties(owner, {
+      clientHeight: { configurable: true, value: 800 },
+      scrollHeight: { configurable: true, value: 3000 },
+      scrollTo: { configurable: true, value: scrollTo },
+    });
+    owner.scrollTop = 0;
+    render(<ScrollToTopArrow />);
+    expect(getScrollElement()).toBe(owner);
+    const button = screen.getByRole('button', { name: 'Scroll to bottom' });
+    fireEvent.click(button);
+    expect(scrollTo).toHaveBeenCalledWith({ top: 2200, behavior: 'smooth' });
+    owner.scrollTop = 800;
+    fireEvent.scroll(owner);
+    expect(document.body.scrollTop).toBe(0);
+    expect(button).toHaveAccessibleName('Scroll to top');
+    owner.scrollTop = 2200;
+    fireEvent.scroll(window);
+    expect(button).toHaveAccessibleName('Scroll to top');
+    fireEvent.click(button);
+    expect(scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'smooth' });
+    expect(screen.getAllByRole('button')).toHaveLength(1);
   });
 
   it('uses the desktop owner, 1.25 viewport threshold and placement', () => {

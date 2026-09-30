@@ -19,7 +19,8 @@ export function scrollThresholdForViewport(
 export function getScrollElement(): HTMLElement {
   const body = document.body;
   const overflow = getComputedStyle(body).overflowY;
-  if (window.innerWidth <= 1024 && /^(auto|scroll)$/.test(overflow)) {
+  const rootOverflow = getComputedStyle(document.documentElement).overflowY;
+  if (window.innerWidth <= 1024 && rootOverflow === 'hidden' && /^(auto|scroll)$/.test(overflow)) {
     return body;
   }
   return (document.scrollingElement as HTMLElement) || document.documentElement;
