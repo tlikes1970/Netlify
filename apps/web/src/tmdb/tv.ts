@@ -66,12 +66,21 @@ export async function fetchRelevantSeasonEpisodes(tvId: number): Promise<Episode
     futureSeason?.season_number ??
     show?.last_episode_to_air?.season_number ??
     show?.number_of_seasons;
+  console.info("[SeriesReminder] Selected season", { tvId, seasonNumber });
   if (!Number.isInteger(seasonNumber) || seasonNumber < 1) return [];
   const seasonResponse = await fetch(
     `${TMDB_PROXY_BASE}?path=tv/${tvId}/season/${seasonNumber}&language=en-US`,
   );
   if (!seasonResponse.ok) throw new Error(`Unable to load season schedule (${seasonResponse.status})`);
   const season = await seasonResponse.json();
+  console.info("[SeriesReminder] Season episode dates", {
+    tvId,
+    seasonNumber,
+    episodes: (season.episodes || []).map((episode: any) => ({
+      episodeNumber: episode.episode_number,
+      airDate: episode.air_date || "",
+    })),
+  });
   return (season.episodes || []).map((episode: any) => ({
     id: episode.id,
     name: episode.name || "",

@@ -85,8 +85,21 @@ function pendingDate(notification: {
 }
 
 async function reconcileOne(reminder: SeriesReminder): Promise<void> {
+  console.info("[SeriesReminder] Reconciling", {
+    showId: reminder.showId,
+    title: reminder.title,
+  });
   const episodes = await fetchRelevantSeasonEpisodes(reminder.showId);
   const desired = selectDesiredEpisodeReminders(reminder.showId, episodes);
+  console.info("[SeriesReminder] Desired notifications", {
+    showId: reminder.showId,
+    count: desired.length,
+    notifications: desired.map((episode) => ({
+      episodeNumber: episode.episodeNumber,
+      notificationId: episode.id,
+      scheduledAt: episode.scheduledAt,
+    })),
+  });
   const pendingResult = await LocalNotifications.getPending();
   const seriesPending = pendingResult.notifications.filter(
     (notification) =>
@@ -97,7 +110,20 @@ async function reconcileOne(reminder: SeriesReminder): Promise<void> {
     id: notification.id,
     scheduledAt: pendingDate(notification),
   }));
+  console.info("[SeriesReminder] Existing pending notifications", {
+    showId: reminder.showId,
+    notifications: pending.map((notification) => ({
+      notificationId: notification.id,
+      scheduledAt: notification.scheduledAt,
+    })),
+  });
   const changes = diffReminderSchedules(desired, pending);
+  console.info("[SeriesReminder] Reconciliation changes", {
+    showId: reminder.showId,
+    addCount: changes.add.length,
+    cancelCount: changes.cancelIds.length,
+    cancelIds: changes.cancelIds,
+  });
 
   if (changes.cancelIds.length > 0) {
     await LocalNotifications.cancel({
@@ -105,24 +131,39 @@ async function reconcileOne(reminder: SeriesReminder): Promise<void> {
     });
   }
   if (changes.add.length > 0) {
-    await LocalNotifications.schedule({
-      notifications: changes.add.map((episode) => ({
-        id: episode.id,
-        title: `${reminder.title} airs today`,
-        body: episode.episodeTitle
-          ? `S${episode.seasonNumber} E${episode.episodeNumber} · ${episode.episodeTitle}`
-          : `S${episode.seasonNumber} E${episode.episodeNumber}`,
-        schedule: { at: episode.scheduledAt },
-        channelId: CHANNEL_ID,
-        extra: {
-          flickletSeriesReminder: true,
-          showId: reminder.showId,
-          seasonNumber: episode.seasonNumber,
-          episodeNumber: episode.episodeNumber,
-          airDate: episode.airDate,
-        },
-      })),
+    const notifications = changes.add.map((episode) => ({
+      id: episode.id,
+      title: `${reminder.title} airs today`,
+      body: episode.episodeTitle
+        ? `S${episode.seasonNumber} E${episode.episodeNumber} · ${episode.episodeTitle}`
+        : `S${episode.seasonNumber} E${episode.episodeNumber}`,
+      schedule: { at: episode.scheduledAt },
+      channelId: CHANNEL_ID,
+      extra: {
+        flickletSeriesReminder: true,
+        showId: reminder.showId,
+        seasonNumber: episode.seasonNumber,
+        episodeNumber: episode.episodeNumber,
+        airDate: episode.airDate,
+      },
+    }));
+    console.info("[SeriesReminder] Calling LocalNotifications.schedule()", {
+      showId: reminder.showId,
+      notifications,
     });
+    try {
+      const result = await LocalNotifications.schedule({ notifications });
+      console.info("[SeriesReminder] LocalNotifications.schedule() resolved", {
+        showId: reminder.showId,
+        result,
+      });
+    } catch (error) {
+      console.error("[SeriesReminder] LocalNotifications.schedule() failed", {
+        showId: reminder.showId,
+        error,
+      });
+      throw error;
+    }
   }
 }
 
@@ -181,24 +222,49 @@ export async function reconcileSeriesReminders(options?: {
   return reconcilePromise;
 }
 
-export async function scheduleDevelopmentReminderTest(): Promise<void> {
-  if (!import.meta.env.DEV || !nativeAndroid()) {
-    throw new Error("The reminder test is available only in an Android development build.");
+export async function scheduleDevelopmentReminderTest(): Promise<{
+  notificationId: number;
+  scheduledAt: Date;
+  result: Awaited<ReturnType<typeof LocalNotifications.schedule>>;
+}> {
+  if (!nativeAndroid()) {
+    throw new Error("The reminder test is available only in the native Android app.");
   }
   if (!(await ensurePermission())) throw new Error("Notification permission was not granted.");
   await ensureChannel();
-  await LocalNotifications.schedule({
-    notifications: [{
-      id: 2_147_400_001,
-      title: "Flicklet reminder test",
-      body: "Local Android notifications are working.",
-      schedule: { at: new Date(Date.now() + 60_000) },
-      channelId: CHANNEL_ID,
-      extra: { flickletDevelopmentTest: true },
-    }],
+  const notificationId = 2_147_400_001;
+  const scheduledAt = new Date(Date.now() + 60_000);
+  console.info("[SeriesReminder] Scheduling diagnostic notification", {
+    notificationId,
+    scheduledAt,
   });
+  try {
+    const result = await LocalNotifications.schedule({
+      notifications: [{
+        id: notificationId,
+        title: "Flicklet reminder diagnostic",
+        body: "The Android local-notification scheduler is working.",
+        schedule: { at: scheduledAt },
+        channelId: CHANNEL_ID,
+        extra: { flickletDevelopmentTest: true },
+      }],
+    });
+    console.info("[SeriesReminder] Diagnostic schedule resolved", {
+      notificationId,
+      scheduledAt,
+      result,
+    });
+    return { notificationId, scheduledAt, result };
+  } catch (error) {
+    console.error("[SeriesReminder] Diagnostic schedule failed", {
+      notificationId,
+      scheduledAt,
+      error,
+    });
+    throw error;
+  }
 }
 
-if (import.meta.env.DEV && typeof window !== "undefined") {
+if (typeof window !== "undefined" && nativeAndroid()) {
   (window as any).flickletTestEpisodeReminder = scheduleDevelopmentReminderTest;
 }
