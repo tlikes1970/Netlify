@@ -1,6 +1,6 @@
 {
   "name": "flicklet-tv-tracker",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Flicklet - TV & Movie Tracker",
   "private": true,
   "scripts": {
@@ -25,7 +25,9 @@
     "prepare": "husky install"
   },
   "dependencies": {
-    "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
+    "@capacitor/core": "^7.4.4",
+    "@capacitor/local-notifications": "7.0.7",
+    "@capgo/capacitor-social-login": "7.20.0",
     "@playwright/test": "^1.55.0",
     "dotenv": "^16.3.1",
     "netlify-cli": "^23.11.0",
@@ -34,9 +36,7 @@
   "devDependencies": {
     "@capacitor/android": "^7.4.4",
     "@capacitor/cli": "^7.4.4",
-    "@capacitor/core": "^7.4.4",
     "@capacitor/ios": "^7.4.4",
-    "@capacitor/local-notifications": "7.0.7",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
     "axe-core": "^4.10.3",

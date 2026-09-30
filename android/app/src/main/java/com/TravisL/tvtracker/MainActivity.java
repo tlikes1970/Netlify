@@ -1,5 +1,6 @@
 package com.TravisL.tvtracker;
 
+import android.content.Intent;
 import android.util.Log;
 import android.view.View;
 import android.webkit.JavascriptInterface;
@@ -10,13 +11,18 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.Plugin;
+import com.getcapacitor.PluginHandle;
 import com.getcapacitor.WebViewListener;
+import ee.forgr.capacitor.social.login.GoogleProvider;
+import ee.forgr.capacitor.social.login.ModifiedMainActivityForSocialLoginPlugin;
+import ee.forgr.capacitor.social.login.SocialLoginPlugin;
 
 /**
  * Edge-to-edge WebView with CSS safe areas driven by WindowInsets (all Android versions).
  * IME is excluded from --safe-bottom; keyboard UX is handled in the web layer.
  */
-public class MainActivity extends BridgeActivity {
+public class MainActivity extends BridgeActivity implements ModifiedMainActivityForSocialLoginPlugin {
     private static final String TAG = "FlickletInsets";
     private static final int WEBVIEW_RETRY_MS = 50;
     private static final int WEBVIEW_RETRY_MAX = 60;
@@ -57,6 +63,29 @@ public class MainActivity extends BridgeActivity {
         }
         getOnBackPressedDispatcher().addCallback(this, webBackCallback);
     }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode >= GoogleProvider.REQUEST_AUTHORIZE_GOOGLE_MIN
+                && requestCode < GoogleProvider.REQUEST_AUTHORIZE_GOOGLE_MAX) {
+            PluginHandle pluginHandle = getBridge().getPlugin("SocialLogin");
+            if (pluginHandle == null) {
+                Log.i("Google Activity Result", "SocialLogin login handle is null");
+                return;
+            }
+            Plugin plugin = pluginHandle.getInstance();
+            if (!(plugin instanceof SocialLoginPlugin)) {
+                Log.i("Google Activity Result", "SocialLogin plugin instance is not SocialLoginPlugin");
+                return;
+            }
+            ((SocialLoginPlugin) plugin).handleGoogleLoginIntent(requestCode, data);
+        }
+    }
+
+    @Override
+    public void IHaveModifiedTheMainActivityForTheUseWithSocialLoginPlugin() {}
 
     @Override
     public void onStart() {

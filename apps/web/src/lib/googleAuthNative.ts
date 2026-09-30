@@ -8,7 +8,10 @@
  */
 
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import {
+  SocialLogin,
+  type GoogleLoginResponseOnline,
+} from '@capgo/capacitor-social-login';
 import { auth } from './firebaseBootstrap';
 import { isCapacitorNative } from './capacitorEnv';
 import { logger } from './logger';
@@ -26,10 +29,11 @@ async function ensureGoogleAuthInitialized(): Promise<void> {
     );
   }
 
-  await GoogleAuth.initialize({
-    scopes: ['profile', 'email', 'openid'],
-    grantOfflineAccess: false,
-    clientId: webClientId,
+  await SocialLogin.initialize({
+    google: {
+      webClientId,
+      mode: 'online',
+    },
   });
   initialized = true;
 }
@@ -44,9 +48,15 @@ export async function signInWithGoogleNative(): Promise<void> {
 
   await ensureGoogleAuthInitialized();
 
-  logger.log('[googleAuthNative] Starting GoogleAuth.signIn()');
-  const googleUser = await GoogleAuth.signIn();
-  const idToken = googleUser.authentication?.idToken;
+  logger.log('[googleAuthNative] Starting SocialLogin.login()');
+  const response = await SocialLogin.login({
+    provider: 'google',
+    options: {
+      scopes: ['profile', 'email', 'openid'],
+    },
+  });
+  const googleResult = response.result as GoogleLoginResponseOnline;
+  const idToken = googleResult.idToken;
   if (!idToken) {
     throw new Error('Google Sign-In did not return an ID token');
   }
