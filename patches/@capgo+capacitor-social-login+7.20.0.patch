@@ -11,7 +11,7 @@ index 630cdcc..849778e 100644
          }
      }
      lintOptions {
-@@ -93,7 +93,7 @@ dependencies {
+@@ -93,6 +93,6 @@ dependencies {
      // Apple dependencies
      if (appleDependencyType == 'compileOnly') {
 -        compileOnly "androidx.browser:browser:1.9.0"
