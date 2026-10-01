@@ -1,3 +1,4 @@
+import { CompactOverflowMenu } from '@/features/compact/CompactOverflowMenu';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import SwipeableCard from '../SwipeableCard';
@@ -115,5 +116,61 @@ describe('non-blocking swipe instruction', () => {
     expect(storage).not.toHaveBeenCalled();
     expect(vi.getTimerCount()).toBe(0);
     vi.useRealTimers();
+  });
+});
+
+vi.mock('@/lib/settings', () => ({useSettings: () => ({layout:{episodeTracking:false}})}));
+vi.mock('@/hooks/useEntitlements', () => ({useEntitlements: () => ({hasFullAccess:true,isReadOnlyMode:false})}));
+vi.mock('@/components/Toast', () => ({useToast: () => ({addToast:vi.fn()})}));
+vi.mock('@/lib/shareLinks', () => ({shareShowWithFallback:vi.fn()}));
+vi.mock('@/lib/seriesReminders', () => ({isSeriesReminderEnabled: () => false}));
+
+function menuFixture() {
+  vi.spyOn(HTMLElement.prototype,'offsetHeight','get').mockReturnValue(160);
+  vi.spyOn(HTMLElement.prototype,'offsetWidth','get').mockReturnValue(200);
+  vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockReturnValue({
+    top:200,bottom:240,left:200,right:300,width:100,height:40,
+  } as DOMRect);
+  const onOpen=vi.fn();
+  const card=(withMenu:boolean) => <SwipeableCard item={item} context="home">
+    {withMenu && <CompactOverflowMenu item={item} context="home" actions={{onOpen}}/>}
+  </SwipeableCard>;
+  return {...render(card(true)),onOpen,card};
+}
+
+describe('swipe hint with real overflow menu', () => {
+  it('hides throughout an open menu and restores normal eligibility on close/reopen', () => {
+    menuFixture();
+    expect(hint()).toHaveClass('pointer-events-none');
+    fireEvent.click(screen.getByRole('button',{name:'More'}));
+    expect(screen.getByRole('menu')).toBeInTheDocument();
+    expect(screen.queryByText('Swipe for actions')).toBeNull();
+    fireEvent.scroll(window);
+    fireEvent.resize(window);
+    act(()=>frame(0));
+    expect(screen.queryByText('Swipe for actions')).toBeNull();
+    fireEvent.keyDown(document,{key:'Escape'});
+    expect(screen.queryByRole('menu')).toBeNull();
+    expect(hint()).toHaveClass('pointer-events-none','group-hover/swipe-card:opacity-100');
+    fireEvent.click(screen.getByRole('button',{name:'More'}));
+    expect(screen.queryByText('Swipe for actions')).toBeNull();
+    fireEvent.click(screen.getByRole('button',{name:'More'}));
+    expect(hint()).toBeInTheDocument();
+  });
+  it('preserves menu action and restores the hint when the action closes the menu', () => {
+    const {onOpen}=menuFixture();
+    fireEvent.click(screen.getByRole('button',{name:'More'}));
+    expect(screen.getByRole('menuitem',{name:'Open Details'})).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('menuitem',{name:'Open Details'}));
+    expect(onOpen).toHaveBeenCalledWith(item);
+    expect(screen.queryByRole('menu')).toBeNull();
+    expect(hint()).toBeInTheDocument();
+  });
+  it('clears local open state when the overflow child unmounts', () => {
+    const {rerender,card}=menuFixture();
+    fireEvent.click(screen.getByRole('button',{name:'More'}));
+    expect(screen.queryByText('Swipe for actions')).toBeNull();
+    rerender(card(false));
+    expect(hint()).toBeInTheDocument();
   });
 });
