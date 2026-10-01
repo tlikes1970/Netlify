@@ -57,7 +57,7 @@ describe('overflow measurement lifecycle', () => {
       onNotesEdit:vi.fn(),onGoofsOpen:vi.fn(),onExtrasOpen:vi.fn()};
     render(<CompactOverflowMenu item={item} context="home" actions={longerActions}/>);
     open();
-    expect(screen.getAllByRole('menuitem').length).toBe(8);
+    expect(screen.getAllByRole('menuitem').length).toBe(9);
     expect(panel()).toHaveAttribute('data-dir','down');
     expect(panel().style.top).toBe('444px');
   });
@@ -136,7 +136,7 @@ describe('overflow measurement lifecycle', () => {
   it('preserves action ordering and callbacks', () => {
     render(<CompactOverflowMenu item={item} context="home" actions={actions}/>);
     open();
-    expect(screen.getAllByRole('menuitem').map(el=>el.textContent)).toEqual(['Open Details','Share this show']);
+    expect(screen.getAllByRole('menuitem').map(el=>el.textContent)).toEqual(['Open Details','Share this show','Custom Lists']);
     fireEvent.click(screen.getByRole('menuitem',{name:'Open Details'}));
     expect(actions.onOpen).toHaveBeenCalledWith(item);
     expect(panel()).toBeNull();
@@ -154,4 +154,15 @@ describe('overflow measurement lifecycle', () => {
     expect(vvRemove).toHaveBeenCalledWith('scroll',expect.any(Function));
     expect(cancelAnimationFrame).toHaveBeenCalledWith(1);
   });
+});
+
+it('uses a compact vertical icon and omits status actions exposed on the card', () => {
+  const want=vi.fn(); const watched=vi.fn();
+  render(<CompactOverflowMenu item={item} context="tab-watching" actions={{onWant:want,onWatched:watched}} showText={false} hideStatusActions/>);
+  const trigger=screen.getByRole('button',{name:'More options'});
+  expect(trigger).toHaveStyle({minWidth:'44px',minHeight:'44px'});
+  expect([...trigger.querySelectorAll('circle')].map(circle=>circle.getAttribute('cx'))).toEqual(['12','12','12']);
+  fireEvent.click(trigger);
+  expect(screen.queryByRole('menuitem',{name:'Want to Watch'})).toBeNull();
+  expect(screen.getByRole('menuitem',{name:'Custom Lists'})).toBeInTheDocument();
 });

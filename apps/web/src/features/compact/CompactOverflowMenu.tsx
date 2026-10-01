@@ -1,3 +1,4 @@
+import ListSelectorModal from "../../components/ListSelectorModal";
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo, useContext } from "react";
 import { ActionItem, ActionContext } from "./actionsMap";
 import type {
@@ -21,6 +22,8 @@ interface CompactOverflowMenuProps {
   item: ActionItem;
   context: ActionContext;
   actions?: CardActionHandlers; // Add actions prop for real functionality
+  hideStatusActions?: boolean;
+  customListContext?: boolean;
   showText?: boolean; // Show "More" text or just ellipses icon (default: true)
 }
 
@@ -29,7 +32,10 @@ export function CompactOverflowMenu({
   context,
   actions,
   showText = true,
+  hideStatusActions = false,
+  customListContext = false,
 }: CompactOverflowMenuProps) {
+  const [showLists, setShowLists] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const reportOverflowOpen = useContext(SwipeOverflowContext);
   useLayoutEffect(() => {
@@ -46,7 +52,7 @@ export function CompactOverflowMenu({
   // Build real menu actions from provided handlers (before positioning hooks)
   const menuActions = useMemo(
     () => (actions ? buildMenuActions(item, context, actions) : []),
-    [actions, item, context, settings, hasFullAccess, addToast]
+    [actions, item, context, settings, hasFullAccess, addToast, hideStatusActions, customListContext]
   );
 
   const updateMenuPosition = useCallback(() => {
@@ -306,7 +312,7 @@ export function CompactOverflowMenu({
         if (handlers.onDelete)
           menuItems.push({
             id: "delete",
-            label: "Delete",
+            label: customListContext ? "Remove from Custom List" : "Delete",
             onClick: handlers.onDelete,
           });
         break;
@@ -373,7 +379,7 @@ export function CompactOverflowMenu({
         if (handlers.onDelete)
           menuItems.push({
             id: "delete",
-            label: "Delete",
+            label: customListContext ? "Remove from Custom List" : "Delete",
             onClick: handlers.onDelete,
           });
         break;
@@ -440,7 +446,7 @@ export function CompactOverflowMenu({
         if (handlers.onDelete)
           menuItems.push({
             id: "delete",
-            label: "Delete",
+            label: customListContext ? "Remove from Custom List" : "Delete",
             onClick: handlers.onDelete,
           });
         break;
@@ -526,12 +532,14 @@ export function CompactOverflowMenu({
         if (handlers.onDelete)
           menuItems.push({
             id: "delete",
-            label: "Delete",
+            label: customListContext ? "Remove from Custom List" : "Delete",
             onClick: handlers.onDelete,
           });
     }
 
-    return menuItems;
+    menuItems.push({ id: "custom-lists", label: "Custom Lists", onClick: () => setShowLists(true) });
+    if (customListContext && handlers.onWatched) menuItems.push({id:"watched",label:"Watched",onClick:handlers.onWatched});
+    return menuItems.filter(action => !hideStatusActions || !["want", "watching", "watched"].includes(action.id) || (customListContext && action.id === "watched"));
   }
 
   return (
@@ -546,14 +554,14 @@ export function CompactOverflowMenu({
           padding: "var(--space-2, 8px)",
           borderRadius: "var(--radius, 12px)",
           fontSize: "var(--font-sm, 13px)",
-          backgroundColor: "var(--muted, rgba(255, 255, 255, 0.1))",
+          backgroundColor: "transparent",
           color: "var(--text, #ffffff)",
-          border: "1px solid var(--line, rgba(255, 255, 255, 0.1))",
+          border: "none",
           cursor: "pointer",
-          width: showText ? "100%" : "36px",
-          height: showText ? "auto" : "36px",
-          minWidth: showText ? "auto" : "36px",
-          minHeight: showText ? "auto" : "36px",
+          width: showText ? "100%" : "44px",
+          height: showText ? "auto" : "44px",
+          minWidth: showText ? "auto" : "44px",
+          minHeight: showText ? "auto" : "44px",
           marginTop: "var(--space-2, 8px)",
           transition: "all 0.2s ease",
           display: "flex",
@@ -601,12 +609,13 @@ export function CompactOverflowMenu({
             strokeLinejoin="round"
           >
             <circle cx="12" cy="12" r="1" />
-            <circle cx="19" cy="12" r="1" />
-            <circle cx="5" cy="12" r="1" />
+            <circle cx="12" cy="19" r="1" />
+            <circle cx="12" cy="5" r="1" />
           </svg>
         )}
       </button>
 
+      {showLists && <ListSelectorModal isOpen onClose={() => setShowLists(false)} item={item as MediaItem} />}
       {isOpen && (
         <Portal>
           <div

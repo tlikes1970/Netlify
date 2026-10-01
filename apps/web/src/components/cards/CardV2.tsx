@@ -10,7 +10,8 @@ import { OptimizedImage } from "../OptimizedImage";
 import { CompactPrimaryAction } from "../../features/compact/CompactPrimaryAction";
 import { CompactOverflowMenu } from "../../features/compact/CompactOverflowMenu";
 import { EpisodeProgressDisplay } from "../EpisodeProgressDisplay";
-import PrimaryStatusControl from "../PrimaryStatusControl";
+import { ContextStatusActions } from "./mobile/ContextStatusActions";
+import StarRating from "./StarRating";
 import { ListMembershipBadge } from "../ListMembershipBadge";
 import {
   POSTER_PLACEHOLDER,
@@ -19,6 +20,7 @@ import {
 
 export type CardV2Props = {
   item: MediaItem;
+  ratingOpportunity?: React.ReactNode;
   context: CardContext;
   actions?: CardActionHandlers;
   // optional presentation flags
@@ -83,6 +85,7 @@ export default function CardV2({
   actions,
   compact,
   showRating = true,
+  ratingOpportunity,
   disableSwipe = false,
   disableOverflow = false,
   currentListContext: propCurrentListContext,
@@ -96,12 +99,14 @@ export default function CardV2({
   const isDesktop = useIsDesktop(); // Device detection for conditional swipe
   const settings = useSettings();
 
+  const isCustomList = propCurrentListContext?.startsWith("custom:") ?? false;
+  const simplified =
+    context === "tab-foryou" || context === "home" || isCustomList;
   const showMyListBtn =
-    context === "tab-foryou" ||
-    context === "search" ||
-    context === "home" ||
-    context === "tab-watching" ||
-    context === "holiday";
+    !simplified &&
+    (context === "search" ||
+      context === "tab-watching" ||
+      context === "holiday");
 
   // Card content (shared between mobile and desktop)
   const cardContent = (
@@ -164,7 +169,7 @@ export default function CardV2({
           <div className="flex items-start gap-1 min-w-0">
             <h3
               className={[
-                "line-clamp-2 break-words flex-1 min-w-0",
+                "line-clamp-2 break-words flex-1 min-w-0 min-h-[2.5em] leading-tight",
                 compact ? "font-medium" : "text-sm",
                 "font-medium",
               ].join(" ")}
@@ -235,44 +240,52 @@ export default function CardV2({
           </div>
         </div>
 
-        {context !== "holiday" && context !== "home-cw-preview" && context !== "tab-not" && (
-          <div className="px-1 pb-1">
-            <PrimaryStatusControl item={item} compact />
-          </div>
-        )}
-
         {/* Actions per context */}
-        <CardActions context={context} item={item} actions={actions} />
+        {ratingOpportunity ||
+          (isCustomList ? (
+            <div className="p-2">
+              <ContextStatusActions item={item} />
+              <StarRating
+                value={item.userRating || 0}
+                onChange={(rating) => actions?.onRatingChange?.(item, rating)}
+                size="sm"
+                className="compact-user-rating"
+              />
+            </div>
+          ) : (
+            <CardActions context={context} item={item} actions={actions} />
+          ))}
 
         {/* Compact Actions - only visible when gate and flag are enabled (hidden for home-cw-preview) */}
         <div
           className="compact-actions-container"
           style={{ padding: "var(--space-1, 4px)" }}
         >
-          {context !== "home-cw-preview" && (
-            <CompactPrimaryAction
-              item={item as any}
-              context={
-                context === "home" ||
-                context === "tab-foryou" ||
-                context === "search"
-                  ? "home"
-                  : "tab"
-              }
-              actions={actions}
-            />
-          )}
-          {!disableOverflow && (
+          {context !== "home-cw-preview" &&
+            !simplified &&
+            !ratingOpportunity && (
+              <CompactPrimaryAction
+                item={item as any}
+                context={context === "search" ? "home" : "tab"}
+                actions={actions}
+              />
+            )}
+          {!disableOverflow && !ratingOpportunity && (
             <CompactOverflowMenu
               item={item as any}
               context={
-                context === "home" ||
-                context === "tab-foryou" ||
-                context === "search"
-                  ? "home"
-                  : "tab"
+                isCustomList
+                  ? "tab-watching"
+                  : context === "home" ||
+                      context === "tab-foryou" ||
+                      context === "search"
+                    ? "home"
+                    : "tab"
               }
               actions={actions}
+              hideStatusActions={simplified}
+              customListContext={isCustomList}
+              showText={false}
             />
           )}
         </div>

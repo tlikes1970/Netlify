@@ -7,7 +7,7 @@ import { getItemSynopsis } from '../../../lib/itemSynopsis';
 import type { ActionItem } from '../../../features/compact/actionsMap';
 import { useSettings } from '../../../lib/settings';
 import { EpisodeProgressDisplay } from '../../EpisodeProgressDisplay';
-import PrimaryStatusControl from '../../PrimaryStatusControl';
+import { ContextStatusActions } from './ContextStatusActions';
 
 type CardMobileInfoSectionProps = {
   item: MediaItem;
@@ -49,7 +49,7 @@ export function CardMobileInfoSection({
         {item.mediaType === 'tv' && settings.layout.episodeTracking && (
           <EpisodeProgressDisplay showId={Number(item.id)} compact />
         )}
-        <PrimaryStatusControl item={item} compact />
+        <ContextStatusActions item={item} tabKey={tabKey} />
         {item.networks && item.networks.length > 0 && (
           <ProviderBadges
             providers={item.networks}
@@ -71,6 +71,7 @@ export function CardMobileInfoSection({
             value={item.userRating || 0}
             onChange={handleRatingChange}
             size="sm"
+            className="compact-user-rating"
           />
         </div>
       </div>

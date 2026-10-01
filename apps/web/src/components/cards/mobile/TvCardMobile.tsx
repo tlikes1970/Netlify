@@ -4,12 +4,10 @@ import SwipeableCard from '../../SwipeableCard';
 import { OptimizedImage } from '../../OptimizedImage';
 import { getShowStatusInfo } from '../../../utils/showStatus';
 import { DragHandle } from '../DragHandle';
-import MyListToggle from '../../MyListToggle';
 import { CardMobileInfoSection, CardMobileChipsRow } from './CardMobileInfoSection';
 import {
   useMobileCardEnrichedItem,
   getMobileTabContext,
-  getMobileListContext,
   formatMobileMetaLine,
 } from './cardMobileShared';
 import { POSTER_PLACEHOLDER } from '../../../lib/posterPlaceholder';
@@ -89,10 +87,7 @@ export function TvCardMobile({
             className="poster-image"
             loading="lazy"
           />
-          <MyListToggle
-            item={enrichedItem}
-            currentListContext={getMobileListContext(tabKey)}
-          />
+
         </div>
 
         <CardMobileInfoSection

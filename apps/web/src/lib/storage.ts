@@ -364,15 +364,23 @@ export const Library = {
     if (!curr) return;
 
     const oldList = curr.list;
+    // Legacy custom-primary records already represent membership; retain it
+    // using the existing additive field when assigning a normal watch status.
+    const preserveCustom = oldList.startsWith("custom:") &&
+      ["watching", "wishlist", "watched"].includes(list);
+    const customListIds = preserveCustom
+      ? [...new Set([...(curr.customListIds ?? []), oldList.slice(7)])]
+      : curr.customListIds;
     // Preserve ALL existing data including synopsis, notes, tags, etc. when moving
     state[key] = {
       ...curr, // All existing fields preserved
       list, // Only update the list property
+      ...(customListIds ? { customListIds } : {}),
     };
 
     // Update custom list item counts
     if (oldList !== list) {
-      if (oldList.startsWith("custom:")) {
+      if (oldList.startsWith("custom:") && !preserveCustom) {
         const oldListId = oldList.replace("custom:", "");
         customListManager.updateItemCount(oldListId, -1);
       }

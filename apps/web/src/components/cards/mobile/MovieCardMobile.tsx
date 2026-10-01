@@ -3,12 +3,10 @@ import type { MediaItem, CardActionHandlers } from '../card.types';
 import SwipeableCard from '../../SwipeableCard';
 import { OptimizedImage } from '../../OptimizedImage';
 import { DragHandle } from '../DragHandle';
-import MyListToggle from '../../MyListToggle';
 import { CardMobileInfoSection } from './CardMobileInfoSection';
 import {
   useMobileCardEnrichedItem,
   getMobileTabContext,
-  getMobileListContext,
   formatMobileMetaLine,
   formatMovieCompactMeta,
 } from './cardMobileShared';
@@ -77,10 +75,7 @@ export function MovieCardMobile({
             className="poster-image"
             loading="lazy"
           />
-          <MyListToggle
-            item={enrichedItem}
-            currentListContext={getMobileListContext(tabKey)}
-          />
+
         </div>
 
         <CardMobileInfoSection

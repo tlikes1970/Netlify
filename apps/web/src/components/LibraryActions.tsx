@@ -422,27 +422,7 @@ export default function LibraryActions({
         {/* Pro features */}
         {!isCondensed && (
           <div className="space-y-2 pt-2 border-t" style={{ borderColor: "var(--line)" }}>
-            <button
-              onClick={() => {
-                if (canUseProFeatures) {
-                  actions?.onGoofsOpen?.(item);
-                } else if (isReadOnlyMode) {
-                  notifyReadOnlyBlocked();
-                } else {
-                  startProUpgrade();
-                }
-              }}
-              className="w-full px-4 py-3 rounded-lg text-sm text-left"
-              style={{
-                backgroundColor: "var(--btn)",
-                color: "var(--text)",
-                borderColor: "var(--line)",
-                border: "1px solid",
-                opacity: canUseProFeatures ? 1 : 0.65,
-              }}
-            >
-              Shows Like This {!canUseProFeatures && "🔒"}
-            </button>
+
             <button
               onClick={() => {
                 if (canUseProFeatures) {
@@ -478,7 +458,7 @@ export default function LibraryActions({
               border: "1px solid",
             }}
           >
-            Remove from List
+            Remove from Library
           </button>
         )}
       </div>

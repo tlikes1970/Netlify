@@ -166,7 +166,7 @@ export default function UpNextCard({ item }: UpNextCardProps) {
         <div className="p-2 text-center">
           {/* Title */}
           <h3 
-            className="font-bold text-sm mb-1 truncate" 
+            className="font-bold text-sm mb-1 line-clamp-2 break-words min-h-[2.5em] leading-tight"
             title={title}
             style={{ color: 'var(--text)' }}
           >

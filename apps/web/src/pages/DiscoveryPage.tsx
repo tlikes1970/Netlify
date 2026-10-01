@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import CardV2 from "@/components/cards/CardV2";
 import type { MediaItem, MediaType } from "@/components/cards/card.types";
 import { Library } from "@/lib/storage";
+import StarRating from "@/components/cards/StarRating";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
 /**
@@ -19,6 +20,16 @@ export default function DiscoveryPage() {
   const { isAuthenticated } = useAuth();
 
   const [libraryVersion, setLibraryVersion] = useState(0);
+  const [ratingOpportunities, setRatingOpportunities] = useState<
+    Array<{ item: MediaItem; index: number }>
+  >([]);
+  const dismissRating = (item: MediaItem) =>
+    setRatingOpportunities((current) =>
+      current.filter(
+        ({ item: other }) =>
+          other.id !== item.id || other.mediaType !== item.mediaType,
+      ),
+    );
 
   useEffect(() => {
     const handleLibraryChange = () => {
@@ -35,7 +46,7 @@ export default function DiscoveryPage() {
       return [];
     }
 
-    return recommendations
+    const candidates: MediaItem[] = recommendations
       .map((rec) => ({
         id: rec.item.id,
         mediaType: rec.item.kind,
@@ -50,7 +61,16 @@ export default function DiscoveryPage() {
         const kind = (it.mediaType === "tv" ? "tv" : "movie") as MediaType;
         return !Library.has(it.id, kind);
       });
-  }, [recommendations, isAuthenticated, libraryVersion]);
+    // Keep each rating opportunity in its original grid position, including
+    // when a recommendation refresh no longer includes the Watched title.
+    const display = [...candidates];
+    [...ratingOpportunities]
+      .sort((a, b) => a.index - b.index)
+      .forEach(({ item, index }) => {
+        display.splice(Math.max(0, Math.min(index, display.length)), 0, item);
+      });
+    return display;
+  }, [recommendations, isAuthenticated, libraryVersion, ratingOpportunities]);
 
   const isLoading = discoveryLoading;
   const hasError = discoveryError;
@@ -77,7 +97,7 @@ export default function DiscoveryPage() {
             synopsis: item.synopsis,
             userRating: existing?.userRating || item.userRating,
           },
-          "wishlist"
+          "wishlist",
         );
         setLibraryVersion((prev) => prev + 1);
         console.log("✅ Item added to wishlist, libraryVersion updated");
@@ -101,7 +121,7 @@ export default function DiscoveryPage() {
             synopsis: item.synopsis,
             userRating: existing?.userRating || item.userRating,
           },
-          "watching"
+          "watching",
         );
         setLibraryVersion((prev) => prev + 1);
       }
@@ -123,8 +143,23 @@ export default function DiscoveryPage() {
             synopsis: item.synopsis,
             userRating: existing?.userRating || item.userRating,
           },
-          "watched"
+          "watched",
         );
+        if (Library.getCurrentList(item.id, item.mediaType) === "watched") {
+          setRatingOpportunities((current) => [
+            ...current.filter(
+              ({ item: other }) =>
+                other.id !== item.id || other.mediaType !== item.mediaType,
+            ),
+            {
+              item,
+              index: items.findIndex(
+                (other) =>
+                  other.id === item.id && other.mediaType === item.mediaType,
+              ),
+            },
+          ]);
+        }
         setLibraryVersion((prev) => prev + 1);
         console.log("✅ Item added to watched, libraryVersion updated");
       } else {
@@ -147,7 +182,7 @@ export default function DiscoveryPage() {
             synopsis: item.synopsis,
             userRating: existing?.userRating || item.userRating,
           },
-          "not"
+          "not",
         );
         setLibraryVersion((prev) => prev + 1);
       }
@@ -162,8 +197,8 @@ export default function DiscoveryPage() {
             🎯 Personalized Recommendations
           </h2>
           <p className="text-sm text-neutral-400">
-            Personalized by your tastes and tracking activity. Use the search bar
-            for specific titles.
+            Personalized by your tastes and tracking activity. Use the search
+            bar for specific titles.
           </p>
         </div>
 
@@ -225,30 +260,69 @@ export default function DiscoveryPage() {
             }}
           >
             <div className="discovery-results-grid gap-3">
-              {items.map((it: Record<string, unknown>, index: number) => {
-                const mediaType = (it.kind || it.mediaType || "movie") as
-                  | "movie"
-                  | "tv";
+              {items.map((it) => {
+                const mediaType = (it.mediaType || "movie") as "movie" | "tv";
                 const normalizedMediaType = mediaType === "tv" ? "tv" : "movie";
 
                 const mediaItem: MediaItem = {
                   id: String(it.id),
                   mediaType: normalizedMediaType,
                   title: (it.title as string) || "Untitled",
-                  posterUrl: (it.posterUrl || it.poster) as string | undefined,
+                  posterUrl: it.posterUrl as string | undefined,
                   year: it.year as string | undefined,
                   voteAverage: it.voteAverage as number | undefined,
                 };
 
                 return (
                   <div
-                    key={`${normalizedMediaType}-${it.id}-${index}`}
+                    key={`${normalizedMediaType}-${it.id}`}
                     className="relative"
                   >
                     <CardV2
                       item={mediaItem}
                       context="tab-foryou"
                       actions={actions}
+                      ratingOpportunity={
+                        ratingOpportunities.some(
+                          ({ item }) =>
+                            item.id === mediaItem.id &&
+                            item.mediaType === mediaItem.mediaType,
+                        ) ? (
+                          <div
+                            className="p-2 space-y-1"
+                            aria-label={`Rate ${mediaItem.title}`}
+                          >
+                            <p className="text-xs">
+                              Added to Watched. Rate it?
+                            </p>
+                            <StarRating
+                              value={
+                                Library.getEntry(
+                                  mediaItem.id,
+                                  mediaItem.mediaType,
+                                )?.userRating || 0
+                              }
+                              size="sm"
+                              className="compact-user-rating"
+                              onChange={(rating) => {
+                                Library.updateRating(
+                                  mediaItem.id,
+                                  mediaItem.mediaType,
+                                  rating,
+                                );
+                                dismissRating(mediaItem);
+                              }}
+                            />
+                            <button
+                              type="button"
+                              className="min-h-[44px] text-sm"
+                              onClick={() => dismissRating(mediaItem)}
+                            >
+                              Not now
+                            </button>
+                          </div>
+                        ) : undefined
+                      }
                     />
                   </div>
                 );

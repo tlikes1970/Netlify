@@ -16,7 +16,7 @@ type UpNextCandidate = {
   next_episode_to_air?: { air_date?: string | null } | null;
 };
 
-export const HOME_UP_NEXT_LIMIT = 12;
+export const HOME_UP_NEXT_LIMIT = 20;
 
 export interface UpNextShow extends LibraryEntry {
   displayAirDate: string;

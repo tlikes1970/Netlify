@@ -26,15 +26,15 @@ describe('Home Up Next remains intact after Library destination removal', () => 
   });
   afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
 
-  it('uses the real shared selector and cards, preserving the 12-card cap and ascending order', async () => {
-    lists.watching = Array.from({ length: 15 }, (_, i) => mockWatchingTv({
-      id: 15 - i, title: `Show ${15 - i}`, nextAirDate: isoDaysFromToday(15 - i), showStatus: 'Returning Series',
+  it('uses the real shared selector and cards, preserving the 20-card cap and ascending order', async () => {
+    lists.watching = Array.from({ length: 25 }, (_, i) => mockWatchingTv({
+      id: 25 - i, title: `Show ${25 - i}`, nextAirDate: isoDaysFromToday(25 - i), showStatus: 'Returning Series',
     }));
     await renderRail();
     expect(screen.getByText('Up Next')).toBeInTheDocument();
     const cards = screen.getAllByTestId('up-next-card');
-    expect(cards).toHaveLength(12);
-    expect(cards.map(card => card.getAttribute('aria-label'))).toEqual(Array.from({ length: 12 }, (_, i) => `Show ${i + 1}`));
+    expect(cards).toHaveLength(20);
+    expect(cards.map(card => card.getAttribute('aria-label'))).toEqual(Array.from({ length: 20 }, (_, i) => `Show ${i + 1}`));
     const open = vi.spyOn(window, 'open').mockImplementation(() => null);
     fireEvent.click(within(cards[0]).getByRole('img', { name: 'Show 1' }));
     expect(open).toHaveBeenCalledWith('https://www.themoviedb.org/tv/1', '_blank', 'noopener,noreferrer');

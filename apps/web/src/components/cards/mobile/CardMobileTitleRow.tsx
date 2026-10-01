@@ -26,6 +26,7 @@ export function CardMobileTitleRow({
           context={context}
           actions={actions}
           showText={false}
+          hideStatusActions
         />
       </div>
     </div>

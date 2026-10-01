@@ -152,6 +152,8 @@ export default function MyListsPage() {
 
   // Action handlers for cards
   const actions = {
+    onWatching: (item: any) => setPrimaryStatus(item, "watching", { feedback: true }),
+    onRatingChange: (item: any, rating: number) => Library.updateRating(item.id, item.mediaType, rating),
     onWant: (item: any) => {
       if (item.id && item.mediaType) {
         setPrimaryStatus(item, 'wishlist', { feedback: true });

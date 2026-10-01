@@ -10,8 +10,8 @@ import {
 } from './testHelpers/libraryEntries';
 
 describe('HOME_UP_NEXT_LIMIT', () => {
-  it('caps Home Up Next at 12 items', () => {
-    expect(HOME_UP_NEXT_LIMIT).toBe(12);
+  it('caps Home Up Next at 20 items', () => {
+    expect(HOME_UP_NEXT_LIMIT).toBe(20);
   });
 });
 

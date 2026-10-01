@@ -460,3 +460,9 @@
 .primary-action:active {
   transform: scale(0.98);
 }
+/* Reserve two title lines and keep rating glyphs compact without shrinking targets. */
+.card-mobile-title { min-height: 2.6em; }
+.compact-user-rating { gap: 0 !important; flex-wrap: wrap; }
+.compact-user-rating button { width: 24px !important; height: 44px !important; min-width: 24px !important; }
+.compact-user-rating button svg { width: 18px !important; height: 18px !important; margin: auto; }
+.compact-user-rating > span { font-size: 11px; }

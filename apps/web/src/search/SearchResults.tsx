@@ -17,8 +17,6 @@ import { OptimizedImage } from "../components/OptimizedImage";
 import { searchTagsLocal } from "../lib/libraryIndex";
 import { isMobileNow, onMobileChange } from "../lib/isMobile";
 import Portal from "../components/Portal";
-import SearchTip from "../components/onboarding/SearchTip";
-import { getSearchTipDismissed } from "../lib/onboarding";
 import { ListMembershipBadge } from "../components/ListMembershipBadge";
 import LibraryActions from "../components/LibraryActions";
 import { EpisodeTrackingModal } from "../components/modals/EpisodeTrackingModal";
@@ -346,7 +344,7 @@ export default function SearchResults({
  * Update Path: Mobile actions in SearchResultCard component (lines 434-589)
  * Dependencies: Library storage, isMobileNow() detection, More menu dropdown (z-index 10003)
  */
-function SearchResultCard({
+export function SearchResultCard({
   item,
   index,
   onRemove,
@@ -371,7 +369,6 @@ function SearchResultCard({
   const [showManageSheet, setShowManageSheet] = React.useState(false);
   const moreMenuRef = React.useRef<HTMLDivElement>(null);
   const moreButtonRef = React.useRef<HTMLButtonElement>(null);
-  const addButtonRef = React.useRef<HTMLButtonElement>(null);
   const [isMobile, setIsMobile] = React.useState(isMobileNow());
 
   // Make mobile detection reactive to viewport changes
@@ -408,7 +405,6 @@ function SearchResultCard({
   const currentList = libraryEntry?.list || Library.getCurrentList(enrichedItem.id, enrichedItem.mediaType);
   const isInList = !!currentList || !!libraryEntry;
   // Only show tip on first card that's not in a list
-  const showSearchTip = !getSearchTipDismissed() && !isInList && index === 0;
 
   // Fetch network information when component mounts
   React.useEffect(() => {
@@ -740,7 +736,7 @@ function SearchResultCard({
         <div
           className={`font-bold ${isMobile ? "text-base" : "text-lg"} mb-1 flex items-center gap-2 flex-wrap`}
         >
-          <span>{title}</span>
+          <span className="line-clamp-2 min-h-[2.5em] leading-tight" title={title}>{title}</span>
           {isMobile && enrichedItem.voteAverage && (
             <span className="text-muted-foreground text-xs font-normal">
               ⭐ {enrichedItem.voteAverage.toFixed(1)}/10
@@ -825,76 +821,14 @@ function SearchResultCard({
         {isMobile ? (
           // Mobile: Compact actions with primary button + More menu
           <div className="mt-auto flex gap-2 items-center">
-            {/* Primary Action Button or Status Pill */}
-            {!isInList ? (
-              <div className="flex-1 relative">
-                <button
-                  ref={addButtonRef}
-                  data-onboarding-id={
-                    index === 0 ? "search-add-button" : undefined
-                  }
-                  onClick={() => {
-                    handleAction("currently-watching");
-                    // Dismiss tip when button is clicked
-                    if (showSearchTip) {
-                      window.dispatchEvent(
-                        new CustomEvent("onboarding:searchTipDismissed")
-                      );
-                    }
-                  }}
-                  className="w-full px-3 py-2 text-xs font-medium rounded-lg bg-accent text-white hover:opacity-90 transition-opacity min-h-[36px] flex items-center justify-center"
-                  disabled={pressedButtons.has(`currently-watching-${item.id}`)}
-                >
-                  {pressedButtons.has(`currently-watching-${item.id}`) ? (
-                    <div className="flex items-center justify-center">
-                      <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-1.5"></div>
-                      <span className="text-xs">Adding...</span>
-                    </div>
-                  ) : (
-                    translations.currentlyWatchingAction || "Currently Watching"
-                  )}
-                </button>
-                {showSearchTip && addButtonRef.current && (
-                  <SearchTip
-                    targetRef={addButtonRef}
-                    onDismiss={() => {
-                      window.dispatchEvent(
-                        new CustomEvent("onboarding:searchTipDismissed")
-                      );
-                    }}
-                  />
-                )}
-              </div>
-            ) : (
-              // Show status pill with Manage button if already in list
-              <>
-                <div
-                  className="flex-1 px-3 py-2 text-xs font-medium rounded-lg bg-muted min-h-[36px] flex items-center justify-center"
-                  style={{ color: "var(--text)" }}
-                >
-                  {currentList === "watching"
-                    ? translations.currentlyWatchingAction || "Watching"
-                    : currentList === "wishlist"
-                      ? translations.wantToWatchAction || "Want"
-                      : currentList === "watched"
-                        ? translations.watchedAction || "Watched"
-                        : "In List"}
-                </div>
-                <button
-                  onClick={() => setShowManageSheet(true)}
-                  className="px-3 py-2 text-xs font-medium rounded-lg bg-accent text-white hover:opacity-90 transition-opacity min-h-[36px]"
-                >
-                  Manage
-                </button>
-              </>
-            )}
+            {isInList && <button onClick={() => setShowManageSheet(true)} className="px-3 py-2 text-xs font-medium rounded-lg bg-accent text-white min-h-[44px]">Manage</button>}
 
             {/* More Menu Button */}
             <div className="relative">
               <button
                 ref={moreButtonRef}
                 onClick={() => setShowMoreMenu(!showMoreMenu)}
-                className="px-3 py-2 text-xs font-medium rounded-lg bg-muted hover:bg-muted/80 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+                className="px-3 py-2 text-xs font-medium rounded-lg bg-muted hover:bg-muted/80 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
                 style={{ color: "var(--text)" }}
                 aria-label="More actions"
                 aria-haspopup="menu"
@@ -962,24 +896,6 @@ function SearchResultCard({
                           </button>
                           <button
                             onClick={() => {
-                              handleAction("not-interested");
-                              setShowMoreMenu(false);
-                            }}
-                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors"
-                            style={{ color: "var(--text)" }}
-                          >
-                            {translations.notInterestedAction}
-                          </button>
-                          <div
-                            className="h-px bg-line my-1"
-                            style={{ backgroundColor: "var(--line)" }}
-                          ></div>
-                        </>
-                      )}
-                      {isInList && (
-                        <>
-                          <button
-                            onClick={() => {
                               handleAction("want");
                               setShowMoreMenu(false);
                             }}
@@ -987,26 +903,6 @@ function SearchResultCard({
                             style={{ color: "var(--text)" }}
                           >
                             {translations.wantToWatchAction}
-                          </button>
-                          <button
-                            onClick={() => {
-                              handleAction("watched");
-                              setShowMoreMenu(false);
-                            }}
-                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors"
-                            style={{ color: "var(--text)" }}
-                          >
-                            {translations.watchedAction}
-                          </button>
-                          <button
-                            onClick={() => {
-                              handleAction("not-interested");
-                              setShowMoreMenu(false);
-                            }}
-                            className="w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors"
-                            style={{ color: "var(--text)" }}
-                          >
-                            {translations.notInterestedAction}
                           </button>
                           <div
                             className="h-px bg-line my-1"
