@@ -516,7 +516,7 @@ export default function OnboardingCoachmarks() {
         return {
           stepNumber: 3,
           title: "Add it to your list",
-          body: "Tap the 'Currently Watching' button to save it to your list. You can always move it later.",
+          body: "Tap the 'Watching' button to save it to your list. You can always move it later.",
           primaryAction: null,
           secondaryAction: {
             label: "Skip for now",

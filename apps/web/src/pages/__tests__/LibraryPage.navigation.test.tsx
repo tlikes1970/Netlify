@@ -36,7 +36,7 @@ describe('Library destination removal', () => {
       ['Want to Watch, 1 item', 'Wanted Show'],
       ['Watched, 1 item', 'Watched Show'],
       ['Custom Lists, 7 items', 'My Lists'],
-      ['Currently Watching, 1 item', 'Watching Show'],
+      ['Watching, 1 item', 'Watching Show'],
     ]) {
       const tab = screen.getByRole('tab', { name });
       fireEvent.click(tab);

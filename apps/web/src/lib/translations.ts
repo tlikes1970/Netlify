@@ -13,7 +13,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
 
     // Actions
     wantToWatchAction: "Want to Watch",
-    currentlyWatchingAction: "Currently Watching",
+    currentlyWatchingAction: "Watching",
     manageCurrentlyWatchingAction: "Manage Currently Watching",
     watchedAction: "Watched",
     notInterestedAction: "Not Interested",
@@ -240,7 +240,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     noPoster: "No poster",
 
     // Statistics
-    currentlyWatchingCount: "Currently Watching",
+    currentlyWatchingCount: "Watching",
     wantToWatchCount: "Want to Watch",
     watchedCount: "Watched",
     totalCount: "Total",

@@ -1,3 +1,4 @@
+import { setPrimaryStatus } from './statusTransitions';
 /**
  * Process: Swipe Maps
  * Purpose: Centralized swipe action configuration per tab type
@@ -44,7 +45,7 @@ export function getSwipeConfig(
           }
         },
         rightAction: {
-          label: 'Wishlist',
+          label: 'Want to Watch',
           action: () => {
             if (item.id && item.mediaType) {
               Library.move(item.id, item.mediaType, 'wishlist');
@@ -64,7 +65,7 @@ export function getSwipeConfig(
           }
         },
         rightAction: {
-          label: 'Wishlist',
+          label: 'Want to Watch',
           action: () => {
             if (item.id && item.mediaType) {
               Library.move(item.id, item.mediaType, 'wishlist');
@@ -176,7 +177,9 @@ export function getAllSwipeActions(
         },
         {
           label: 'Start Watching',
-          action: (item: MediaItem) => actions?.onWant?.(item)
+          action: (item: MediaItem) => {
+            if (item.id && item.mediaType) setPrimaryStatus(item, 'watching');
+          }
         },
         {
           label: 'Mark as Watched',
@@ -199,14 +202,6 @@ export function getAllSwipeActions(
  * @returns Object with leftLabel and rightLabel for swipe hints
  */
 export function getSwipeLabels(tabKey: 'watching' | 'watched' | 'wishlist') {
-  switch (tabKey) {
-    case 'watching':
-      return { leftLabel: 'Move to Wishlist', rightLabel: '' };
-    case 'watched':
-      return { leftLabel: 'Move to Wishlist', rightLabel: '' };
-    case 'wishlist':
-      return { leftLabel: 'Mark Watched', rightLabel: '' };
-    default:
-      return { leftLabel: '', rightLabel: '' };
-  }
+  const config = getSwipeConfig(tabKey, { id: 'hint', mediaType: 'movie', title: '' });
+  return { leftLabel: config.leftAction?.label ?? '', rightLabel: config.rightAction?.label ?? '' };
 }

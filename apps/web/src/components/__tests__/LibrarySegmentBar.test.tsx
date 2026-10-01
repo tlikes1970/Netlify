@@ -15,7 +15,7 @@ describe('LibrarySegmentBar', () => {
       <LibrarySegmentBar segment="watching" counts={counts} onChange={() => {}} />
     );
 
-    expect(screen.getByRole('tab', { name: /Currently Watching, 5 items/i })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: /Watching, 5 items/i })).toBeTruthy();
     expect(screen.getByRole('tab', { name: /Want to Watch, 2 items/i })).toBeTruthy();
     expect(screen.getByRole('tab', { name: /Watched, 10 items/i })).toBeTruthy();
     expect(screen.getAllByRole('tab')).toHaveLength(4);

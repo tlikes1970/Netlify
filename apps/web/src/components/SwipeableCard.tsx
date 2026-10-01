@@ -65,7 +65,7 @@ export default function SwipeableCard({
           },
           {
             id: 'watching',
-            label: 'Currently Watching',
+            label: 'Watching',
             icon: '',
             color: '#ffffff',
             backgroundColor: '#3b82f6',
@@ -85,7 +85,7 @@ export default function SwipeableCard({
           },
           {
             id: 'watching',
-            label: 'Currently Watching',
+            label: 'Watching',
             icon: '',
             color: '#ffffff',
             backgroundColor: '#3b82f6',
@@ -111,7 +111,7 @@ export default function SwipeableCard({
         return [
           {
             id: 'watching',
-            label: 'Currently Watching',
+            label: 'Watching',
             icon: '',
             color: '#ffffff',
             backgroundColor: '#3b82f6',

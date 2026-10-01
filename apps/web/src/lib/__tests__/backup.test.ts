@@ -352,6 +352,13 @@ describe("legacy 2.0 compatibility", () => {
     },
     user: { uid: "foreign", displayName: "Provider" },
   });
+  it('accepts the legacy want bucket and preserves optional Not Interested records', () => {
+    const backup: any = legacy();
+    backup.watchlists.movies.want = backup.watchlists.movies.wishlist;
+    delete backup.watchlists.movies.wishlist;
+    backup.watchlists.movies.not = [{id: 11, title: 'Hidden'}];
+    expect(parseBackup(JSON.stringify(backup)).library).toEqual(expect.arrayContaining([expect.objectContaining({id: 11, list: 'not'})]));
+  });
   it("normalizes names and additive memberships without importing identity/access", () => {
     const b = parseBackup(JSON.stringify(legacy()));
     expect(b.preferredName).toBe("Travis");
@@ -392,3 +399,12 @@ describe("legacy 2.0 compatibility", () => {
     ).toBeNull();
   });
 });
+
+ describe('watch status backup compatibility', () => {
+  it.each(['watching', 'wishlist', 'watched', 'not', 'want'])('restores %s without losing content or membership', (status) => {
+    const backup = fixture();
+    backup.library[0].list = status as typeof backup.library[0]['list'];
+    const restored = validateBackup(backup);
+    expect(restored.library[0]).toMatchObject({list: status === 'want' ? 'wishlist' : status, customListIds: ['family'], userNotes: 'Keep these notes', tags: ['family']});
+  });
+ });

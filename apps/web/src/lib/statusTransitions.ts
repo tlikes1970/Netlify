@@ -1,3 +1,4 @@
+import { WATCH_STATUS_LABELS } from './watchStatus';
 import type { MediaItem } from '@/components/cards/card.types';
 import type { ListName } from '@/state/library.types';
 import { getGlobalToastCallback } from './toastBridge';
@@ -8,9 +9,9 @@ import { readStoredEpisodeProgress, writeStoredEpisodeProgress } from '@/utils/e
 export type PrimaryStatus = 'watching' | 'wishlist' | 'watched';
 
 export const PRIMARY_STATUS_LABELS: Record<PrimaryStatus, string> = {
-  watching: 'Currently Watching',
-  wishlist: 'Want to Watch',
-  watched: 'Watched',
+  watching: WATCH_STATUS_LABELS.watching,
+  wishlist: WATCH_STATUS_LABELS.wishlist,
+  watched: WATCH_STATUS_LABELS.watched,
 };
 
 async function completeCurrentAvailableSeason(item: MediaItem): Promise<void> {

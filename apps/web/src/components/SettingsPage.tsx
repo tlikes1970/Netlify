@@ -716,7 +716,7 @@ function SharingModal({ onClose }: { onClose: () => void }) {
       selectedTabs.watching &&
       itemsToShare.some((item) => watchingItems.some((w) => w.id === item.id))
     ) {
-      text += `▶️ Currently Watching\n`;
+      text += `▶️ Watching\n`;
       text += `${"─".repeat(30)}\n`;
       const watchingItemsToShare = itemsToShare.filter((item) =>
         watchingItems.some((w) => w.id === item.id)

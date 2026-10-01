@@ -1,3 +1,4 @@
+import { getListDisplayName } from "../lib/storage";
 import React, { useEffect, useState, useRef } from "react";
 // import CardV2 from '../components/cards/CardV2'; // Unused
 import type { MediaItem, CardActionHandlers } from "../components/cards/card.types";
@@ -963,7 +964,7 @@ export function SearchResultCard({
                       </h3>
                       {currentList && (
                         <p className="text-sm text-muted-foreground mt-1">
-                          In: {currentList === "watching" ? "Currently Watching" : currentList === "wishlist" ? "Want to Watch" : currentList === "watched" ? "Watched" : currentList}
+                          In: {getListDisplayName(currentList ?? libraryEntry!.list)}
                         </p>
                       )}
                     </div>
@@ -1045,7 +1046,7 @@ export function SearchResultCard({
                     className="inline-block px-3 py-1 text-xs font-medium rounded-lg bg-muted"
                     style={{ color: "var(--text)" }}
                   >
-                    In list: {currentList === "watching" ? "Currently Watching" : currentList === "wishlist" ? "Want to Watch" : currentList === "watched" ? "Watched" : currentList}
+                    In list: {getListDisplayName(currentList ?? libraryEntry!.list)}
                   </span>
                 </div>
                 {/* Library management actions */}

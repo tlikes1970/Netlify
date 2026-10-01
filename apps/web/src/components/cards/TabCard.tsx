@@ -133,7 +133,7 @@ export default function TabCard({
                 border: "1px solid",
               }}
             >
-              {isCondensed ? "Want" : translations.wantToWatchAction}
+              {translations.wantToWatchAction}
             </button>
             <button
               onClick={() => actions?.onWatched?.(item)}
@@ -157,7 +157,7 @@ export default function TabCard({
                 border: "1px solid",
               }}
             >
-              {isCondensed ? "Not" : translations.notInterestedAction}
+              {translations.notInterestedAction}
             </button>
             {!isCondensed && (
               <button
@@ -215,7 +215,7 @@ export default function TabCard({
                 border: "1px solid",
               }}
             >
-              {isCondensed ? "Watching" : translations.currentlyWatchingAction}
+              {translations.currentlyWatchingAction}
             </button>
             <button
               onClick={() => actions?.onWatched?.(item)}
@@ -239,7 +239,7 @@ export default function TabCard({
                 border: "1px solid",
               }}
             >
-              {isCondensed ? "Not" : translations.notInterestedAction}
+              {translations.notInterestedAction}
             </button>
             {!isCondensed && (
               <button
@@ -292,7 +292,7 @@ export default function TabCard({
                 border: "1px solid",
               }}
             >
-              {isCondensed ? "Want" : translations.wantToWatchAction}
+              {translations.wantToWatchAction}
             </button>
             <button
               onClick={() => {
@@ -309,7 +309,7 @@ export default function TabCard({
                 border: "1px solid",
               }}
             >
-              {isCondensed ? "Watching" : translations.currentlyWatchingAction}
+              {translations.currentlyWatchingAction}
             </button>
             <button
               onClick={() => actions?.onNotInterested?.(item)}
@@ -321,7 +321,7 @@ export default function TabCard({
                 border: "1px solid",
               }}
             >
-              {isCondensed ? "Not" : translations.notInterestedAction}
+              {translations.notInterestedAction}
             </button>
             {!isCondensed && (
               <button
@@ -374,7 +374,7 @@ export default function TabCard({
                 border: "1px solid",
               }}
             >
-              {isCondensed ? "Want" : translations.wantToWatchAction}
+              {translations.wantToWatchAction}
             </button>
             <button
               onClick={() => {
@@ -388,7 +388,7 @@ export default function TabCard({
                 border: "1px solid",
               }}
             >
-              {isCondensed ? "Watching" : translations.currentlyWatchingAction}
+              {translations.currentlyWatchingAction}
             </button>
             <button
               onClick={() => actions?.onWatched?.(item)}
@@ -412,7 +412,7 @@ export default function TabCard({
                 border: "1px solid",
               }}
             >
-              {isCondensed ? "Not" : translations.notInterestedAction}
+              {translations.notInterestedAction}
             </button>
           </>
         );

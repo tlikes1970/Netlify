@@ -13,8 +13,8 @@ const SEGMENTS: {
   label: string;
   shortLabel: string;
 }[] = [
-  { id: 'watching', label: 'Currently Watching', shortLabel: 'Watching' },
-  { id: 'want', label: 'Want to Watch', shortLabel: 'Want' },
+  { id: 'watching', label: 'Watching', shortLabel: 'Watching' },
+  { id: 'want', label: 'Want to Watch', shortLabel: 'Want to Watch' },
   { id: 'watched', label: 'Watched', shortLabel: 'Watched' },
   { id: 'mylists', label: 'Custom Lists', shortLabel: 'Lists' },
 ];

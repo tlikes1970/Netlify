@@ -16,7 +16,7 @@ export const HOME_RAILS: RailSpec[] = [
 ];
 
 export const TABS: TabSpec[] = [
-  { id: 'watching', title: 'Currently Watching' },
+  { id: 'watching', title: 'Watching' },
   { id: 'want',     title: 'Want to Watch' },
   { id: 'watched',  title: 'Watched' },
   { id: 'discovery',title: 'Discovery' }

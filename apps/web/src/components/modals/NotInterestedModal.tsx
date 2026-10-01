@@ -107,7 +107,7 @@ export default function NotInterestedModal({ isOpen, onClose }: NotInterestedMod
                             className="px-3 py-1.5 text-sm rounded-lg transition-colors"
                             style={{ backgroundColor: '#ef4444', color: 'white' }}
                           >
-                            🗑️ Remove
+                            🗑️ Remove from Library
                           </button>
                         </div>
                       </div>

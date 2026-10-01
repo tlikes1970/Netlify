@@ -58,3 +58,32 @@ describe("custom membership survives primary status changes", () => {
     expect(counts).not.toHaveBeenCalled();
   });
 });
+
+describe('complete watch status transition matrix', () => {
+  const statuses = ['watching', 'wishlist', 'watched', 'not'] as const;
+  for (const from of statuses) {
+    it.each(statuses.filter(to => to !== from))(`${from} → %s preserves two memberships and rating`, (to) => {
+      Library.upsert(item, from);
+      Library.addToCustomList(item, 'one');
+      Library.addToCustomList(item, 'two');
+      counts.mockClear();
+      Library.move(item.id, item.mediaType, to);
+      expect(Library.getEntry(item.id, item.mediaType)).toMatchObject({list: to, customListIds: ['one', 'two'], userRating: 4, userNotes: 'Notes', tags: ['family']});
+      expect(counts).not.toHaveBeenCalled();
+    });
+  }
+  it.each(['move', 'upsert'] as const)('%s preserves legacy membership when marking Not Interested', method => {
+    Library.upsert(item, 'custom:legacy');
+    counts.mockClear();
+    if (method === 'move') Library.move(item.id, item.mediaType, 'not');
+    else Library.upsert(item, 'not');
+    expect(Library.getEntry(item.id, item.mediaType)).toMatchObject({list: 'not', customListIds: ['legacy']});
+    expect(counts).not.toHaveBeenCalled();
+  });
+  it('normalizes the confirmed legacy alias during reload without dropping fields', () => {
+    localStorage.setItem('flicklet.library.v2', JSON.stringify({'movie:8': {...item, list: 'want', addedAt: 123, customListIds: ['one', 'two']}}));
+    Library.reloadFromStorage();
+    expect(Library.getEntry(item.id, item.mediaType)).toMatchObject({list: 'wishlist', customListIds: ['one', 'two'], userRating: 4});
+    expect(JSON.parse(localStorage.getItem('flicklet.library.v2')!)['movie:8'].list).toBe('wishlist');
+  });
+});

@@ -78,7 +78,7 @@ export default function LibraryPage({
           {segment === 'watching' && (
             <div data-page="lists" data-list="watching">
               <ListPage
-                title="Currently Watching"
+                title="Watching"
                 items={watchingItems}
                 mode="watching"
                 {...listHandlers}

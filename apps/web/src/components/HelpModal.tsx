@@ -144,7 +144,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   recommendations
                 </li>
                 <li>
-                  <strong>Currently Watching:</strong> everything you're mid-way
+                  <strong>Watching:</strong> everything you're mid-way
                   through
                 </li>
                 <li>
@@ -182,7 +182,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   in your <em>Want to Watch</em> list.
                 </li>
                 <li>
-                  You can move it to <em>Currently Watching</em> once you start
+                  You can move it to <em>Watching</em> once you start
                   it.
                 </li>
               </ol>
@@ -196,7 +196,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
               <h4 className="font-semibold mb-2">Your Lists Explained</h4>
               <ul className="list-disc list-inside space-y-2 ml-4">
                 <li>
-                  <strong>Currently Watching:</strong> active shows and movies
+                  <strong>Watching:</strong> active shows and movies
                   you're tracking.
                 </li>
                 <li>

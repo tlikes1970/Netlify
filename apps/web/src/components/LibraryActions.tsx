@@ -79,7 +79,7 @@ export default function LibraryActions({
               border: "1px solid",
             }}
           >
-            {isCondensed ? "Want" : translations.wantToWatchAction}
+            {translations.wantToWatchAction}
           </button>,
           <button
             key="watched"
@@ -105,7 +105,7 @@ export default function LibraryActions({
               border: "1px solid",
             }}
           >
-            {isCondensed ? "Not" : translations.notInterestedAction}
+            {translations.notInterestedAction}
           </button>
         );
         break;
@@ -126,7 +126,7 @@ export default function LibraryActions({
               border: "1px solid",
             }}
           >
-            {isCondensed ? "Watching" : translations.currentlyWatchingAction}
+            {translations.currentlyWatchingAction}
           </button>,
           <button
             key="watched"
@@ -152,7 +152,7 @@ export default function LibraryActions({
               border: "1px solid",
             }}
           >
-            {isCondensed ? "Not" : translations.notInterestedAction}
+            {translations.notInterestedAction}
           </button>
         );
         break;
@@ -169,7 +169,7 @@ export default function LibraryActions({
               border: "1px solid",
             }}
           >
-            {isCondensed ? "Want" : translations.wantToWatchAction}
+            {translations.wantToWatchAction}
           </button>,
           <button
             key="watching"
@@ -186,7 +186,7 @@ export default function LibraryActions({
               border: "1px solid",
             }}
           >
-            {isCondensed ? "Watching" : translations.currentlyWatchingAction}
+            {translations.currentlyWatchingAction}
           </button>,
           <button
             key="not"
@@ -199,7 +199,7 @@ export default function LibraryActions({
               border: "1px solid",
             }}
           >
-            {isCondensed ? "Not" : translations.notInterestedAction}
+            {translations.notInterestedAction}
           </button>
         );
         break;
@@ -217,7 +217,7 @@ export default function LibraryActions({
               border: "1px solid",
             }}
           >
-            {isCondensed ? "Want" : translations.wantToWatchAction}
+            {translations.wantToWatchAction}
           </button>,
           <button
             key="watching"
@@ -234,7 +234,7 @@ export default function LibraryActions({
               border: "1px solid",
             }}
           >
-            {isCondensed ? "Watching" : translations.currentlyWatchingAction}
+            {translations.currentlyWatchingAction}
           </button>,
           <button
             key="watched"

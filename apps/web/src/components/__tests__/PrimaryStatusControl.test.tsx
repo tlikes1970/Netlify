@@ -11,7 +11,7 @@ describe('PrimaryStatusControl', () => {
     const options = screen.getAllByRole('option').map((option) => option.textContent);
     expect(options).toEqual([
       'Set watch status…',
-      'Currently Watching',
+      'Watching',
       'Want to Watch',
       'Watched',
     ]);

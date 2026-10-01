@@ -1,3 +1,4 @@
+import { normalizeWatchStatus, WATCH_STATUS_LABELS } from "./watchStatus";
 import { recoverLocalRestore } from './restoreRecovery';
 import { isRestoring } from './restoreBarrier';
 import React from "react";
@@ -59,7 +60,7 @@ function migrateOldData(): State {
       if (item.id && item.kind && item.status) {
         const key = `${item.kind}:${item.id}`;
         const listName =
-          item.status === "want" ? "wishlist" : (item.status as ListName);
+          normalizeWatchStatus(item.status) ?? (item.status as ListName);
         newState[key] = {
           id: item.id,
           mediaType: item.kind,
@@ -84,11 +85,24 @@ function migrateOldData(): State {
 }
 
 type State = Record<string, LibraryEntry>;
+function normalizeStoredStatuses(stored: State): State {
+  let changed = false;
+  for (const entry of Object.values(stored)) {
+    const normalized = normalizeWatchStatus(entry.list);
+    if (normalized && normalized !== entry.list) {
+      entry.list = normalized;
+      changed = true;
+    }
+  }
+  if (changed) localStorage.setItem(KEY, JSON.stringify(stored));
+  return stored;
+}
+
 const state: State = (() => {
   recoverLocalRestore();
   try {
     const existing = JSON.parse(localStorage.getItem(KEY) || "{}");
-    if (Object.keys(existing).length > 0) return existing;
+    if (Object.keys(existing).length > 0) return normalizeStoredStatuses(existing);
     return migrateOldData();
   } catch {
     return migrateOldData();
@@ -197,13 +211,13 @@ if (typeof window !== "undefined") {
 export function getListDisplayName(listName: ListName): string {
   switch (listName) {
     case "watching":
-      return "Currently Watching";
+      return WATCH_STATUS_LABELS.watching;
     case "wishlist":
-      return "Want to Watch";
+      return WATCH_STATUS_LABELS.wishlist;
     case "watched":
-      return "Watched";
+      return WATCH_STATUS_LABELS.watched;
     case "not":
-      return "Not Interested";
+      return WATCH_STATUS_LABELS.not;
     default:
       if (listName.startsWith("custom:")) {
         const listId = listName.replace("custom:", "");
@@ -267,6 +281,10 @@ export const Library = {
     if (!guardMutation()) return;
     const key = k(item.id, item.mediaType);
     const oldEntry = state[key];
+    const preserveCustom = oldEntry?.list.startsWith("custom:") && normalizeWatchStatus(list) !== null;
+    const customListIds = preserveCustom
+      ? [...new Set([...(oldEntry.customListIds ?? []), oldEntry.list.slice(7)])]
+      : oldEntry?.customListIds;
 
     // Filter out undefined values from item to preserve existing data
     // This ensures synopsis, notes, tags etc. aren't accidentally cleared
@@ -310,6 +328,7 @@ export const Library = {
       mediaType: item.mediaType,
       list,
       addedAt: oldEntry?.addedAt ?? Date.now(),
+      ...(customListIds ? { customListIds } : {}),
     };
 
     console.log(`📦 Library.upsert stored:`, {
@@ -326,7 +345,7 @@ export const Library = {
     // Update custom list item counts
     if (oldEntry && oldEntry.list !== list) {
       // Moving from one list to another
-      if (oldEntry.list.startsWith("custom:")) {
+      if (oldEntry.list.startsWith("custom:") && !preserveCustom) {
         const oldListId = oldEntry.list.replace("custom:", "");
         customListManager.updateItemCount(oldListId, -1);
       }
@@ -367,7 +386,7 @@ export const Library = {
     // Legacy custom-primary records already represent membership; retain it
     // using the existing additive field when assigning a normal watch status.
     const preserveCustom = oldList.startsWith("custom:") &&
-      ["watching", "wishlist", "watched"].includes(list);
+      normalizeWatchStatus(list) !== null;
     const customListIds = preserveCustom
       ? [...new Set([...(curr.customListIds ?? []), oldList.slice(7)])]
       : curr.customListIds;
@@ -692,7 +711,7 @@ export const Library = {
       Object.keys(state).forEach((key) => delete state[key]);
 
       // Load new state
-      Object.assign(state, stored);
+      Object.assign(state, normalizeStoredStatuses(stored));
 
       console.log(
         "🔄 Library.reloadFromStorage - after:",

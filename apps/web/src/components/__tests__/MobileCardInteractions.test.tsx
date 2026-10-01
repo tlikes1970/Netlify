@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock("@/lib/statusTransitions", () => ({ setPrimaryStatus: mocks.move }));
 vi.mock("@/lib/storage", () => ({
+  getListDisplayName: (list: string) => ({watching: "Watching", wishlist: "Want to Watch", watched: "Watched", not: "Not Interested"})[list as "watching"],
   Library: {
     getEntry: () => mocks.entry,
     getCurrentList: () => mocks.entry?.list ?? null,
@@ -22,16 +23,10 @@ vi.mock("@/lib/storage", () => ({
   },
   addToListWithConfirmation: mocks.add,
 }));
-vi.mock("@/lib/membership", () => ({
-  getMembershipInfo: () => ({
-    list: mocks.entry?.list ?? null,
-    displayName: mocks.entry?.list === "watched" ? "Watched" : null,
-  }),
-}));
 vi.mock("@/lib/language", () => ({
   useTranslations: () => ({
     wantToWatchAction: "Want to Watch",
-    currentlyWatchingAction: "Currently Watching",
+    currentlyWatchingAction: "Watching",
     watchedAction: "Watched",
     notInterestedAction: "Not Interested",
     manageCurrentlyWatchingAction: "Manage Currently Watching",
@@ -154,12 +149,12 @@ describe("mobile Search", () => {
   it("untracked title has no permanent status buttons and offers add destinations in overflow", () => {
     render(<SearchResultCard item={item} index={0} onRemove={() => {}} />);
     expect(
-      screen.queryByRole("button", { name: "Currently Watching" }),
+      screen.queryByRole("button", { name: "Watching" }),
     ).toBeNull();
     expect(screen.queryByRole("button", { name: "Manage" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "More actions" }));
     for (const name of [
-      "Currently Watching",
+      "Watching",
       "Want to Watch",
       "Watched",
       "Custom Lists +",
@@ -202,4 +197,11 @@ describe("mobile Search", () => {
     );
     expect(screen.queryByText("Remove from List")).toBeNull();
   });
+});
+
+it.each([['watching', 'Watching'], ['wishlist', 'Want to Watch'], ['watched', 'Watched'], ['not', 'Not Interested']])('Search displays canonical %s status', (list, label) => {
+  mocks.entry = {...item, list};
+  render(<SearchResultCard item={item} index={0} onRemove={() => {}} />);
+  expect(screen.getByText('Status: ' + label)).toBeInTheDocument();
+  expect(screen.getByRole('button', {name: 'Manage'})).toBeInTheDocument();
 });

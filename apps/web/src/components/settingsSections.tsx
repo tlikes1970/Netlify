@@ -176,7 +176,7 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
               style={{ color: "var(--muted)" }}
             >
               <div>
-                {translations.currentlyWatching}: {tvStats.watching}
+                {translations.currentlyWatchingAction}: {tvStats.watching}
               </div>
               <div>
                 {translations.wantToWatch}: {tvStats.wishlist}
@@ -204,7 +204,7 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
               style={{ color: "var(--muted)" }}
             >
               <div>
-                {translations.currentlyWatching}: {movieStats.watching}
+                {translations.currentlyWatchingAction}: {movieStats.watching}
               </div>
               <div>
                 {translations.wantToWatch}: {movieStats.wishlist}

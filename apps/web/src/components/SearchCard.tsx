@@ -35,7 +35,7 @@ export default function SearchCard({ id, kind, title, poster }: Props) {
         <div className="text-[11px] text-neutral-200 line-clamp-2">{title}</div>
         <div className="grid grid-cols-1 gap-1">
           <button className="btn" onClick={want} title="Want to Watch">Want to Watch</button>
-          <button className="btn" onClick={watching} title="Currently Watching">Currently Watching</button>
+          <button className="btn" onClick={watching} title="Watching">Watching</button>
           <button className="btn" onClick={notInt} title="Not Interested">Not Interested</button>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { setPrimaryStatus } from '../../lib/statusTransitions';
 import { flag } from '../../lib/flags';
 import { isCompactMobileV1 } from '../../lib/mobileFlags';
 import { dlog } from '../../lib/log';
@@ -58,9 +59,8 @@ export function getPrimaryAction(item: ActionItem, context: ActionContext, actio
         onClick: () => {
           if (actions?.onWatching) {
             actions.onWatching(mediaItem);
-          } else if (actions?.onWant) {
-            // Fallback: if onWatching not available, use onWant
-            actions.onWant(mediaItem);
+          } else if (mediaItem.mediaType === 'movie' || mediaItem.mediaType === 'tv') {
+            setPrimaryStatus(mediaItem, 'watching', { feedback: true });
           } else {
             dlog('Start watching (no handler):', item.id);
           }
@@ -123,7 +123,7 @@ export function getAllActions(item: ActionItem, context: ActionContext): ActionD
         },
         {
           id: 'mark-want',
-          label: 'Move to Want List',
+          label: 'Move to Want to Watch',
           onClick: () => dlog('Move to want list:', item.id)
         },
         {

@@ -1,3 +1,4 @@
+import { normalizeWatchStatus } from "./watchStatus";
 import { RESTORE_JOURNAL_KEY, type RestoreJournal } from "./restoreRecovery";
 import type { LibraryEntry } from "./storage";
 
@@ -141,7 +142,8 @@ function libraryItem(value: unknown): LibraryEntry {
     fail("invalid title ID.");
   if (!["movie", "tv"].includes(text(s.mediaType, "media type")))
     fail("unsupported media type.");
-  const list = text(s.list, "watch status");
+  const rawList = text(s.list, "watch status");
+  const list = normalizeWatchStatus(rawList) ?? rawList;
   if (!["watching", "wishlist", "watched", "not"].includes(list)) {
     if (!list.startsWith("custom:")) fail("unsupported watch status.");
     identifier(list.slice(7));
@@ -521,7 +523,9 @@ function legacyBackup(source: ObjectValue): Backup {
   ]) {
     const g = object(w[group], `legacy ${group}`);
     for (const status of ["watching", "wishlist", "watched"])
-      array(g[status], `legacy ${status}`).forEach((v) => add(v, type, status));
+      array(g[status] ?? (status === "wishlist" ? g.want : undefined), `legacy ${status}`).forEach((v) => add(v, type, status));
+    if (g.not !== undefined)
+      array(g.not, "legacy not interested").forEach((v) => add(v, type, "not"));
   }
   const customLists = array(w.customLists, "legacy custom lists");
   for (const [id, items] of Object.entries(

@@ -309,7 +309,7 @@ class CustomListManager {
     }
 
     const standardNames: Record<string, string> = {
-      watching: "Currently Watching",
+      watching: "Watching",
       wishlist: "Want to Watch",
       watched: "Watched",
       not: "Not Interested",
