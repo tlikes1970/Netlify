@@ -9,24 +9,32 @@ import { shareListWithFallback } from '../lib/shareLinks';
 import { getToastCallback } from '../state/actions';
 import { setPrimaryStatus } from '../lib/statusTransitions';
 
-export default function MyListsPage() {
+export default function MyListsPage({onBack}: {onBack?: () => void} = {}) {
   const userLists = useCustomLists();
-  const [selectedListId, setSelectedListId] = useState<string>('');
+  const [selectedListId, setSelectedListId] = useState<string>(() => customListManager.getSelectedList?.()?.id || '');
   const translations = useTranslations();
   const settings = useSettings();
 
   // Get items for the selected list
   const selectedList = selectedListId ? customListManager.getListById(selectedListId) : null;
   const listName = selectedList ? `custom:${selectedListId}` as ListName : null;
-  const items = useLibrary(`custom:${selectedListId}`, { includeItemUpdates: true });
+  // Subscribe to changes; read the selected list synchronously so switching cannot
+  // render the previous list's cards under the new heading before effects run.
+  useLibrary(`custom:${selectedListId}`, { includeItemUpdates: true });
+  const items = listName ? Library.getByList(listName) : [];
 
-  // Set default selected list if none selected
+  // Resolve lost/deleted selections against the current list definitions.
   React.useEffect(() => {
-    if (!selectedListId && userLists.customLists.length > 0) {
-      const defaultList = userLists.customLists.find(list => list.isDefault) || userLists.customLists[0];
-      setSelectedListId(defaultList.id);
+    const storedSelection = userLists.customLists.find(list => list.id === userLists.selectedListId);
+    if (storedSelection) {
+      if (selectedListId !== storedSelection.id) setSelectedListId(storedSelection.id);
+      return;
     }
-  }, [selectedListId, userLists.customLists]);
+    if (userLists.customLists.some(list => list.id === selectedListId)) return;
+    const next = userLists.customLists.find(list => list.isDefault) || userLists.customLists[0];
+    setSelectedListId(next?.id || '');
+    if (next) customListManager.setSelectedList(next.id);
+  }, [selectedListId, userLists.customLists, userLists.selectedListId]);
 
   // Handle deep link to select a specific list
   React.useEffect(() => {
@@ -71,7 +79,7 @@ export default function MyListsPage() {
 
     try {
       const newList = customListManager.createList(name.trim());
-      setSelectedListId(newList.id);
+      handleListChange(newList.id);
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Failed to create list');
     }
@@ -87,13 +95,12 @@ export default function MyListsPage() {
     
     if (confirmed) {
       try {
-        customListManager.deleteList(listId);
-        // Select another list if we deleted the current one
+        if (!customListManager.deleteList(listId)) return;
         if (selectedListId === listId) {
-          const remainingLists = userLists.customLists.filter(l => l.id !== listId);
-          if (remainingLists.length > 0) {
-            setSelectedListId(remainingLists[0].id);
-          }
+          const remaining = customListManager.getUserLists().customLists;
+          const next = remaining.find(list => list.isDefault) || remaining[0];
+          setSelectedListId(next?.id || '');
+          if (next) customListManager.setSelectedList(next.id);
         }
       } catch (error) {
         alert(error instanceof Error ? error.message : 'Failed to delete list');
@@ -177,8 +184,9 @@ export default function MyListsPage() {
   };
 
   return (
-    <section className="px-4 py-4">
-      <div className="flex items-center justify-between mb-6">
+    <section className="px-4 py-4 custom-lists-page">
+      {onBack && <button type="button" onClick={onBack} className="mb-3 min-h-[44px]">← Back</button>}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h1 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>
           Custom Lists
         </h1>
@@ -203,18 +211,19 @@ export default function MyListsPage() {
             {userLists.customLists.map(list => (
               <div
                 key={list.id}
-                className={`px-4 py-2 rounded-lg cursor-pointer transition-colors ${
+                className={`custom-list-selector rounded-lg transition-colors ${
                   selectedListId === list.id ? 'ring-2 ring-blue-500' : ''
                 }`}
                 style={{
                   backgroundColor: selectedListId === list.id ? 'var(--accent)' : 'var(--btn)',
                   color: 'var(--text)'
                 }}
-                onClick={() => handleListChange(list.id)}
               >
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{list.name}</span>
-                  <span className="text-xs opacity-75">({list.itemCount})</span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <button type="button" aria-pressed={selectedListId === list.id} onClick={() => handleListChange(list.id)} className="custom-list-select">
+                    <span className="font-medium">{list.name}</span>{' '}
+                    <span className="text-xs opacity-75">({list.itemCount})</span>
+                  </button>
                   
                   <div className="flex gap-1 ml-2">
                     <button
@@ -222,7 +231,8 @@ export default function MyListsPage() {
                         e.stopPropagation();
                         handleRenameList(list.id);
                       }}
-                      className="text-xs opacity-60 hover:opacity-100"
+                      className="custom-list-action text-xs opacity-60 hover:opacity-100"
+                      aria-label={`Rename ${list.name}`}
                       title={translations.rename || 'Rename'}
                     >
                       ✏️
@@ -232,7 +242,8 @@ export default function MyListsPage() {
                         e.stopPropagation();
                         handleDeleteList(list.id);
                       }}
-                      className="text-xs opacity-60 hover:opacity-100"
+                      className="custom-list-action text-xs opacity-60 hover:opacity-100"
+                      aria-label={`Delete ${list.name}`}
                       title={translations.delete || 'Delete'}
                     >
                       🗑️
@@ -248,8 +259,8 @@ export default function MyListsPage() {
       {/* Items Display */}
       {selectedList ? (
         <>
-          <div className="mb-4 flex items-center justify-between">
-            <div>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="min-w-0 break-words flex-1">
               <h2 className="text-lg font-medium" style={{ color: 'var(--text)' }}>
                 {selectedList.name}
                 {selectedList.description && (
@@ -264,7 +275,7 @@ export default function MyListsPage() {
             </div>
             <button
               onClick={() => handleShareList(selectedListId)}
-              className="px-4 py-2 rounded-lg transition-colors text-sm flex items-center gap-2"
+              className="px-4 py-2 rounded-lg transition-colors text-sm flex items-center gap-2 shrink-0 min-h-[44px]"
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', border: '1px solid var(--line)' }}
               title="Share this list"
             >

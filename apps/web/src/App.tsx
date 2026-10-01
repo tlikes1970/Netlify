@@ -77,6 +77,7 @@ import {
   readStoredLibrarySegment,
   writeStoredLibrarySegment,
 } from "@/lib/navigation";
+import { useCustomListsNavigation } from "@/hooks/useCustomListsNavigation";
 type SearchType = "all" | "movies-tv" | "people";
 type SearchState = {
   q: string;
@@ -232,6 +233,12 @@ export default function App() {
     setLibrarySegment(segment);
     writeStoredLibrarySegment(segment);
   }, []);
+
+  const backFromCustomLists = useCustomListsNavigation(view, librarySegment, ({view: nextView, segment}) => {
+    setView(nextView);
+    setLibrarySegment(segment);
+    writeStoredLibrarySegment(segment);
+  });
 
   // Handle onboarding navigation to search
   useEffect(() => {
@@ -1077,6 +1084,7 @@ export default function App() {
                     }
                   >
                     <LibraryPage
+                      onBackFromCustomLists={backFromCustomLists}
                       segment={librarySegment}
                       onSegmentChange={handleLibrarySegmentChange}
                       watchingItems={watchingVisible}

@@ -1245,3 +1245,8 @@ input:focus-visible {
     min-height: 44px;
   }
 }
+
+/* Named list navigation wraps independently from its list-level actions. */
+.custom-list-selector { max-width: 100%; min-width: 0; padding: 4px; }
+.custom-list-select { min-width: 0; min-height: 44px; padding: 4px 8px; text-align: left; overflow-wrap: anywhere; }
+.custom-list-action { min-width: 44px; min-height: 44px; }

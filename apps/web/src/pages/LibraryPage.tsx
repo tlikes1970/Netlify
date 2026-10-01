@@ -9,6 +9,7 @@ import MyListsPage from '@/pages/MyListsPage';
 import PullToRefreshWrapper from '@/components/PullToRefreshWrapper';
 
 export type LibraryPageProps = {
+  onBackFromCustomLists?: () => void;
   segment: LibrarySegment;
   onSegmentChange: (segment: LibrarySegment) => void;
   watchingItems: LibraryEntry[];
@@ -26,6 +27,7 @@ export type LibraryPageProps = {
 
 export default function LibraryPage({
   segment,
+  onBackFromCustomLists,
   onSegmentChange,
   watchingItems,
   wishlistItems,
@@ -71,7 +73,7 @@ export default function LibraryPage({
 
       {segment === 'mylists' ? (
         <div data-page="lists" data-list="mylists" className="px-1 md:px-0">
-          <MyListsPage />
+          <MyListsPage onBack={onBackFromCustomLists || (() => onSegmentChange("watching"))} />
         </div>
       ) : (
         <PullToRefreshWrapper onRefresh={onRefresh}>

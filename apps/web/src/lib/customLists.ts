@@ -39,7 +39,7 @@ class CustomListManager {
 
     // Listen for library cleared events (when user signs out)
     window.addEventListener("library:cleared", () => {
-      this.userLists = DEFAULT_USER_LISTS;
+      this.userLists = { ...DEFAULT_USER_LISTS, customLists: [] };
       this.updateMaxLists();
       this.saveUserLists();
       this.emitChange();
@@ -85,7 +85,7 @@ class CustomListManager {
     } catch (e) {
       console.error("Failed to load custom lists from localStorage", e);
     }
-    return DEFAULT_USER_LISTS;
+    return { ...DEFAULT_USER_LISTS, customLists: [] };
   }
 
   private saveUserLists(): void {
@@ -102,7 +102,7 @@ class CustomListManager {
   getUserLists(): UserLists {
     // Always update maxLists based on current Pro status before returning
     this.updateMaxLists();
-    return { ...this.userLists };
+    return { ...this.userLists, customLists: this.userLists.customLists.map(list => ({ ...list })) };
   }
 
   subscribe(callback: () => void): () => void {
@@ -189,7 +189,7 @@ class CustomListManager {
       const defaultList = this.userLists.customLists.find(
         (list) => list.isDefault
       );
-      this.userLists.selectedListId = defaultList?.id;
+      this.userLists.selectedListId = defaultList?.id || this.userLists.customLists[0]?.id;
     }
 
     // If we deleted the default list, make the first remaining list the default
@@ -338,6 +338,8 @@ export function useCustomLists(): UserLists {
       const prevLength = prevListsRef.current.customLists.length;
       const newLength = newLists.customLists.length;
       const hasChanged =
+        prevListsRef.current.selectedListId !== newLists.selectedListId ||
+        prevListsRef.current.maxLists !== newLists.maxLists ||
         prevLength !== newLength ||
         newLists.customLists.some((list, idx) => {
           const prevList = prevListsRef.current.customLists[idx];
