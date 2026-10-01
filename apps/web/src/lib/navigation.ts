@@ -8,19 +8,17 @@ export type LibrarySegment =
   | 'watching'
   | 'want'
   | 'watched'
-  | 'returning'
   | 'mylists';
 
 /** Legacy list tab ids still emitted by deep links and navigate-to-tab events. */
 export type LegacyListView = LibrarySegment;
 
-export type NavTarget = AppView | LegacyListView;
+export type NavTarget = AppView | LegacyListView | 'returning' | 'up-next';
 
 const LIBRARY_SEGMENTS: LibrarySegment[] = [
   'watching',
   'want',
   'watched',
-  'returning',
   'mylists',
 ];
 
@@ -32,6 +30,9 @@ export function resolveNavigation(
   target: NavTarget,
   currentSegment: LibrarySegment
 ): { view: AppView; segment: LibrarySegment } {
+  if (target === 'returning' || target === 'up-next') {
+    return { view: 'home', segment: currentSegment };
+  }
   if (target === 'home') {
     return { view: 'home', segment: currentSegment };
   }

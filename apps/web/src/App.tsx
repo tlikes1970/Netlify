@@ -37,7 +37,7 @@ import { useForYouContent } from "@/hooks/useGenreContent";
 import { useServiceWorker } from "@/hooks/useServiceWorker";
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { flushSync } from "react-dom";
-import { Library, useLibrary, type LibraryEntry } from "@/lib/storage";
+import { Library, useLibrary } from "@/lib/storage";
 import { mountActionBridge, setToastCallback } from "@/state/actions";
 import {
   useSettings,
@@ -61,8 +61,6 @@ import { getOnboardingCompleted } from "@/lib/onboarding";
 import { backfillShowStatus } from "@/utils/backfillShowStatus";
 import { backfillSynopsis } from "@/utils/backfillSynopsis";
 import DebugAuthHUD from "@/components/DebugAuthHUD";
-import { useReturningShows } from "@/state/selectors/useReturningShows";
-import { trackTabOpenedReturning } from "@/lib/analytics";
 import { googleLogin } from "@/lib/authLogin";
 import { isCapacitorNative } from "@/lib/capacitorEnv";
 import { reconcileSeriesReminders } from "@/lib/seriesReminders";
@@ -91,8 +89,6 @@ export default function App() {
   useEntitlements();
 
 
-  // Computed smart views
-  const returning = useReturningShows();
   const [view, setView] = useState<AppView>("home");
   /** Defer below-fold Home content until after first paint so library rails commit sooner. */
   const [afterFirstPaintReady, setAfterFirstPaintReady] = useState(false);
@@ -279,6 +275,10 @@ export default function App() {
       const detail = (e as CustomEvent<{ tab: string }>).detail;
       const tab = detail?.tab;
       if (!tab) return;
+      if (tab === "returning" || tab === "up-next") {
+        navigateTo(tab);
+        return;
+      }
       if (tab === "home" || tab === "discovery" || tab === "library") {
         navigateTo(tab as NavTarget);
         return;
@@ -544,18 +544,11 @@ export default function App() {
   );
 
   // Show all watching items in the tab (no filtering)
-  // Note: The "Returning" tab is a separate smart view for returning shows
   // Users should see all their watching items in the Currently Watching tab
   const watchingVisible = useMemo(() => {
     return watching; // Show all items - don't filter out returning shows
   }, [watching]);
 
-  // Analytics for Returning segment open
-  useEffect(() => {
-    if (view === "library" && librarySegment === "returning") {
-      trackTabOpenedReturning(Array.isArray(returning) ? returning.length : 0);
-    }
-  }, [view, librarySegment, returning]);
 
   /**
    * Settings shell follows the current viewport. Opening on one side of the
@@ -1088,7 +1081,6 @@ export default function App() {
                       watchingItems={watchingVisible}
                       wishlistItems={wishlist}
                       watchedItems={watched}
-                      returningItems={returning as LibraryEntry[]}
                       onRefresh={handleRefresh}
                       onNotesEdit={handleNotesEdit}
                       onTagsEdit={handleTagsEdit}

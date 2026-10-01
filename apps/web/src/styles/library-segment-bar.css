@@ -1,5 +1,5 @@
 /**
- * Library in-tab segment control — compact 5-up grid on mobile, sticky below search.
+ * Library in-tab segment control — compact 4-up grid on mobile, sticky below search.
  * Sticky offset uses --flicklet-sticky-search-height from tokens.css (matches FlickletHeader).
  */
 
@@ -30,7 +30,7 @@ html.capacitor-native .library-segment-bar {
 
 .library-segment-bar__grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.25rem;
   width: 100%;
   max-width: 48rem;

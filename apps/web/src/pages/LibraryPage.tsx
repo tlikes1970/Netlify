@@ -14,7 +14,6 @@ export type LibraryPageProps = {
   watchingItems: LibraryEntry[];
   wishlistItems: LibraryEntry[];
   watchedItems: LibraryEntry[];
-  returningItems: LibraryEntry[];
   onRefresh: () => void | Promise<void>;
   onNotesEdit?: (item: MediaItem) => void;
   onTagsEdit?: (item: MediaItem) => void;
@@ -31,7 +30,6 @@ export default function LibraryPage({
   watchingItems,
   wishlistItems,
   watchedItems,
-  returningItems,
   onRefresh,
   onNotesEdit,
   onTagsEdit,
@@ -47,7 +45,6 @@ export default function LibraryPage({
     watching: watchingItems.length,
     want: wishlistItems.length,
     watched: watchedItems.length,
-    returning: returningItems.length,
     mylists: userLists.customLists.reduce(
       (sum, list) => sum + (list.itemCount ?? 0),
       0
@@ -104,16 +101,6 @@ export default function LibraryPage({
                 title="Watched"
                 items={watchedItems}
                 mode="watched"
-                {...listHandlers}
-              />
-            </div>
-          )}
-          {segment === 'returning' && (
-            <div data-page="lists" data-list="returning">
-              <ListPage
-                title="Up Next"
-                items={returningItems}
-                mode="returning"
                 {...listHandlers}
               />
             </div>

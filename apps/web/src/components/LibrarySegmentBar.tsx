@@ -16,7 +16,6 @@ const SEGMENTS: {
   { id: 'watching', label: 'Currently Watching', shortLabel: 'Watching' },
   { id: 'want', label: 'Want to Watch', shortLabel: 'Want' },
   { id: 'watched', label: 'Watched', shortLabel: 'Watched' },
-  { id: 'returning', label: 'Up Next', shortLabel: 'Up Next' },
   { id: 'mylists', label: 'Custom Lists', shortLabel: 'Lists' },
 ];
 
@@ -26,7 +25,7 @@ function formatCount(count: number): string {
 }
 
 /**
- * In-library segment control (not bottom nav). Compact 5-column grid on mobile;
+ * In-library segment control (not bottom nav). Compact 4-column grid on mobile;
  * sticky below the app search bar while scrolling.
  */
 export default function LibrarySegmentBar({
