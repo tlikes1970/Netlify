@@ -287,8 +287,8 @@
 .card-mobile {
   display: flex;
   align-items: flex-start;
-  gap: var(--space-3);
-  padding: var(--space-3);
+  gap: var(--space-3, 12px);
+  padding: var(--space-3, 12px);
   border-radius: var(--radius-lg, 12px);
   background: var(--card, #171a21);
   border: 1px solid var(--line, #242a33);
@@ -362,7 +362,7 @@
 
 .card-mobile-title-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--card-mobile-overflow-size, 44px);
+  grid-template-columns: minmax(0, 1fr);
   column-gap: var(--space-1, 4px);
   align-items: start;
   width: 100%;
@@ -384,6 +384,9 @@
 }
 
 .card-mobile-overflow-slot {
+  position: absolute;
+  top: 0;
+  right: 0;
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -462,6 +465,7 @@
 }
 /* Reserve two title lines and keep rating glyphs compact without shrinking targets. */
 .card-mobile-title { min-height: 2.6em; }
+.card-mobile [data-testid="context-status-actions"] button { overflow-wrap: anywhere; }
 .compact-user-rating { gap: 0 !important; flex-wrap: wrap; }
 .compact-user-rating button { width: 24px !important; height: 44px !important; min-width: 24px !important; }
 .compact-user-rating button svg { width: 18px !important; height: 18px !important; margin: auto; }

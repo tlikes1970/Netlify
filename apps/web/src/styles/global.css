@@ -1250,3 +1250,29 @@ input:focus-visible {
 .custom-list-selector { max-width: 100%; min-width: 0; padding: 4px; }
 .custom-list-select { min-width: 0; min-height: 44px; padding: 4px 8px; text-align: left; overflow-wrap: anywhere; }
 .custom-list-action { min-width: 44px; min-height: 44px; }
+
+/* Keep existing native inset offsets; paint their protected areas opaquely. */
+@media (max-width: 1024px) {
+  html.capacitor-native .flicklet-sticky-search::before {
+    content: "";
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: var(--safe-top, 0px);
+    background: var(--bg);
+    pointer-events: none;
+  }
+  .mobile-nav::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    height: var(--safe-bottom, 0px);
+    background: var(--bg);
+    pointer-events: none;
+  }
+}
+.cardv2-top-overflow { position: absolute; top: 4px; right: 4px; z-index: 2; }
+.cardv2-top-overflow .compact-overflow-trigger { margin-top: 0 !important; }

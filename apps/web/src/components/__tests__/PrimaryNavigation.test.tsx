@@ -18,6 +18,8 @@ describe('primary navigation remains unchanged', () => {
       .toEqual(['Home', 'Library', 'Discovery', 'Open Settings']);
     for (const label of ['Home', 'Library', 'Discovery']) fireEvent.click(screen.getByRole('button', { name: label }));
     expect(onChange.mock.calls.map(call => call[0])).toEqual(['home', 'library', 'discovery']);
+    expect(screen.getByRole('button', { name: 'Open Settings' }).querySelector('svg')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Library' })).toHaveAttribute('aria-current','page');
     fireEvent.click(screen.getByRole('button', { name: 'Open Settings' }));
     expect(onSettingsClick).toHaveBeenCalledOnce();
   });

@@ -102,6 +102,7 @@ export default function CardV2({
   const settings = useSettings();
 
   const isCustomList = propCurrentListContext?.startsWith("custom:") ?? false;
+  const topOverflow = isCustomList || secondaryWatching;
   const simplified =
     context === "tab-foryou" || context === "home" || isCustomList;
   const showMyListBtn =
@@ -237,10 +238,14 @@ export default function CardV2({
             className="mt-0 flex items-center justify-between"
             style={{ fontSize: "var(--font-sm, 11px)", color: "var(--muted)" }}
           >
-            <span>{year || "TBA"}</span>
+            <span>{year || "TBA"}{secondaryWatching ? ` • ${item.mediaType === "tv" ? "TV Show" : "Movie"}` : ""}</span>
             {showRating && <span aria-label="rating">{rating || "—"}</span>}
           </div>
         </div>
+
+        {secondaryWatching && item.synopsis?.trim() && (
+          <p className="discovery-card-overview line-clamp-3 break-words px-1 pb-1 text-xs" style={{color: "var(--muted)"}}>{item.synopsis}</p>
+        )}
 
         {/* Actions per context */}
         {ratingOpportunity ||
@@ -263,7 +268,7 @@ export default function CardV2({
 
         {/* Discovery and mobile custom-list secondary actions stay available independently of compact flags. */}
         <div
-          className="compact-actions-container"
+          className={`compact-actions-container${topOverflow ? " cardv2-top-overflow" : ""}`}
           style={{
             padding: "var(--space-1, 4px)",
             display: (isCustomList && !isDesktop.isDesktop) || secondaryWatching ? "block" : undefined,

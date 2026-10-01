@@ -358,6 +358,7 @@ export async function getSmartRecommendations(
           : "",
         year,
         isFavorite: favoriteSet.has(cardKey),
+        overview: typeof candidate.overview === "string" ? candidate.overview.trim() : undefined,
       };
 
       const score = scoreRecommendation(cardData, preferences, candidate);

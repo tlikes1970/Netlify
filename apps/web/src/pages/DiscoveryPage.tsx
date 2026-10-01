@@ -63,6 +63,7 @@ export default function DiscoveryPage() {
         mediaType: rec.item.kind,
         title: rec.item.title,
         posterUrl: rec.item.poster,
+        synopsis: rec.item.overview,
         year: rec.item.year?.toString(),
         genre_ids: [],
         score: rec.score,
@@ -280,6 +281,7 @@ export default function DiscoveryPage() {
                   mediaType: normalizedMediaType,
                   title: (it.title as string) || "Untitled",
                   posterUrl: it.posterUrl as string | undefined,
+                  synopsis: it.synopsis,
                   year: it.year as string | undefined,
                   voteAverage: it.voteAverage as number | undefined,
                 };

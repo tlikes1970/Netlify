@@ -174,6 +174,10 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
               />
               <div className="flex-1">
                 <div className="font-medium">{list.name}</div>
+                {(Library.getEntry(item.id, item.mediaType)?.customListIds?.includes(list.id)
+                  || Library.getEntry(item.id, item.mediaType)?.list === `custom:${list.id}`) && (
+                  <span className="text-xs" style={{color:'var(--muted)'}}>Already added</span>
+                )}
                 {list.description && (
                   <div className="text-sm opacity-75">{list.description}</div>
                 )}

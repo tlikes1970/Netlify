@@ -542,7 +542,7 @@ export function CompactOverflowMenu({
     if (secondaryWatching && handlers.onWatching) {
       menuItems.push({id: "watching", label: "Watching", onClick: handlers.onWatching});
     }
-    menuItems.push({ id: "custom-lists", label: "Custom Lists", onClick: () => setShowLists(true) });
+    menuItems.push({ id: "custom-lists", label: customListContext ? "Add to Lists" : "Custom Lists", onClick: () => setShowLists(true) });
     if (customListContext && handlers.onWatched) menuItems.push({id:"watched",label:"Watched",onClick:handlers.onWatched});
     return menuItems.filter(action => !hideStatusActions || !["want", "watching", "watched"].includes(action.id) || (customListContext && action.id === "watched") || (secondaryWatching && action.id === "watching"));
   }

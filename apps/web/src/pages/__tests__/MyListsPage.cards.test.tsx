@@ -70,7 +70,7 @@ describe('mobile Custom List cards', async () => {
     expect(screen.getByRole('menuitem',{name:'Not Interested',exact:true})).toBeInTheDocument();
     expect(screen.getByRole('menuitem',{name:'Remove from this List',exact:true})).toBeInTheDocument();
     expect(screen.queryByRole('button',{name:'Remove from Library'})).toBeNull();
-    fireEvent.click(screen.getByRole('menuitem',{name:'Custom Lists',exact:true}));
+    fireEvent.click(screen.getByRole('menuitem',{name:'Add to Lists',exact:true}));
     expect(screen.getByRole('dialog')).toHaveTextContent('Membership management');
   });
   it('secondary status actions keep both memberships', async () => {

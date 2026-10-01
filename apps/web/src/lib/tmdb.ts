@@ -29,6 +29,7 @@ export type CardData = {
   poster: string;
   year?: number;
   isFavorite?: boolean;
+  overview?: string;
 };
 
 export type Theater = {

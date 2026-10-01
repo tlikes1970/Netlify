@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import DiscoveryPage from '../DiscoveryPage';
 import { Library } from '@/lib/storage';
-const mocks = vi.hoisted(() => ({uid: 'user-a' as string | null, count: vi.fn(), toast: vi.fn(), canWrite:true, loading:false, error:null as string | null, recs:[{item:{id:'10',kind:'movie',title:'Discovery Movie',poster:'',year:2025},score:0.7,reasons:[]}] }));
+const mocks = vi.hoisted(() => ({uid: 'user-a' as string | null, count: vi.fn(), toast: vi.fn(), canWrite:true, loading:false, error:null as string | null, recs:[{item:{id:'10',kind:'movie',title:'Discovery Movie',poster:'',year:2025,overview:undefined as string | undefined},score:0.7,reasons:[]}] }));
 vi.mock('@/lib/auth', () => ({authManager: {getCurrentUser: () => mocks.uid ? {uid: mocks.uid} : null}}));
 vi.mock('@/lib/readOnlyGuard', () => ({guardMutation: () => mocks.canWrite, notifyReadOnlyBlocked: vi.fn()}));
 vi.mock('@/lib/customLists', async () => {
@@ -27,7 +27,7 @@ beforeEach(() => {
   window.dispatchEvent(new Event('library:cleared'));
   localStorage.clear(); vi.clearAllMocks();
   mocks.uid='user-a';mocks.canWrite=true;mocks.loading=false;mocks.error=null;
-  mocks.recs=[{item:{id:'10',kind:'movie',title:'Discovery Movie',poster:'',year:2025},score:0.7,reasons:[]}];
+  mocks.recs=[{item:{id:'10',kind:'movie',title:'Discovery Movie',poster:'',year:2025,overview:undefined as string | undefined},score:0.7,reasons:[]}];
   vi.spyOn(HTMLElement.prototype,'offsetHeight','get').mockReturnValue(240);
   vi.spyOn(HTMLElement.prototype,'offsetWidth','get').mockReturnValue(200);
 });
@@ -48,6 +48,19 @@ describe('Discovery real card behavior', () => {
     const trigger=screen.getByRole('button',{name:'More options'});
     expect(trigger.style.backgroundColor).toBe('transparent');
     expect(trigger.querySelectorAll('circle')).toHaveLength(3);
+  });
+  it('shows the existing overview without invented TV state or movie placeholders', () => {
+    mocks.recs[0].item.overview='Existing concise synopsis';render(<DiscoveryPage/>);
+    expect(screen.getByText('Existing concise synopsis')).toHaveClass('line-clamp-3');
+    expect(screen.getByText('2025 • Movie')).toBeInTheDocument();
+    expect(screen.queryByText(/RETURNING|ENDED|Next episode/)).toBeNull();
+    expect(screen.getByRole('button',{name:'More options'}).closest('.cardv2-top-overflow')).not.toBeNull();
+  });
+  it('omits missing overview and does not invent TV episode or production state', () => {
+    mocks.recs[0].item.kind='tv';render(<DiscoveryPage/>);
+    expect(screen.getByText('2025 • TV Show')).toBeInTheDocument();
+    expect(document.querySelector('.discovery-card-overview')).toBeNull();
+    expect(screen.queryByText(/RETURNING|ENDED|Next episode/)).toBeNull();
   });
   it('Want to Watch saves wishlist and filters immediately without rating', () => {
     render(<DiscoveryPage/>);
