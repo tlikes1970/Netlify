@@ -17,7 +17,7 @@ export default function DiscoveryPage() {
     isLoading: discoveryLoading,
     error: discoveryError,
   } = useSmartDiscovery();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   const [libraryVersion, setLibraryVersion] = useState(0);
   const [ratingOpportunities, setRatingOpportunities] = useState<
@@ -32,13 +32,24 @@ export default function DiscoveryPage() {
     );
 
   useEffect(() => {
+    setRatingOpportunities([]);
+  }, [isAuthenticated, user?.uid]);
+
+  useEffect(() => {
     const handleLibraryChange = () => {
       setLibraryVersion((prev) => prev + 1);
+      setRatingOpportunities(current => {
+        const pending = current.filter(({item}) => Library.getCurrentList(item.id, item.mediaType) === "watched");
+        return pending.length === current.length ? current : pending;
+      });
     };
 
+    const unsubscribe = Library.subscribe(handleLibraryChange);
     window.addEventListener("library:changed", handleLibraryChange);
-    return () =>
+    return () => {
+      unsubscribe();
       window.removeEventListener("library:changed", handleLibraryChange);
+    };
   }, []);
 
   const items = useMemo(() => {
@@ -202,7 +213,7 @@ export default function DiscoveryPage() {
           </p>
         </div>
 
-        {!items.length && !isLoading && !isAuthenticated && (
+        {!items.length && !isAuthenticated && (
           <div className="text-center py-8">
             <div className="text-4xl mb-4">🔐</div>
             <h3 className="text-lg font-medium text-neutral-200 mb-2">
@@ -223,7 +234,7 @@ export default function DiscoveryPage() {
           </div>
         )}
 
-        {!items.length && !isLoading && isAuthenticated && (
+        {!items.length && !isLoading && !hasError && isAuthenticated && (
           <div className="text-center py-8">
             <div className="text-4xl mb-4">🎬</div>
             <h3 className="text-lg font-medium text-neutral-200 mb-2">
@@ -236,13 +247,13 @@ export default function DiscoveryPage() {
           </div>
         )}
 
-        {isLoading && (
+        {isLoading && isAuthenticated && (
           <div className="text-xs text-neutral-500 mb-3">
             Loading recommendations…
           </div>
         )}
 
-        {hasError && (
+        {hasError && isAuthenticated && (
           <div className="text-center py-8">
             <div className="text-4xl mb-4">❌</div>
             <h3 className="text-lg font-medium text-neutral-200 mb-2">
@@ -282,6 +293,7 @@ export default function DiscoveryPage() {
                       item={mediaItem}
                       context="tab-foryou"
                       actions={actions}
+                      secondaryWatching
                       ratingOpportunity={
                         ratingOpportunities.some(
                           ({ item }) =>
@@ -310,7 +322,9 @@ export default function DiscoveryPage() {
                                   mediaItem.mediaType,
                                   rating,
                                 );
-                                dismissRating(mediaItem);
+                                if (Library.getEntry(mediaItem.id, mediaItem.mediaType)?.userRating === rating) {
+                                  dismissRating(mediaItem);
+                                }
                               }}
                             />
                             <button

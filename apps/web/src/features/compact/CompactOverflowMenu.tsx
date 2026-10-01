@@ -23,6 +23,7 @@ interface CompactOverflowMenuProps {
   context: ActionContext;
   actions?: CardActionHandlers; // Add actions prop for real functionality
   hideStatusActions?: boolean;
+  secondaryWatching?: boolean;
   customListContext?: boolean;
   showText?: boolean; // Show "More" text or just ellipses icon (default: true)
 }
@@ -33,6 +34,7 @@ export function CompactOverflowMenu({
   actions,
   showText = true,
   hideStatusActions = false,
+  secondaryWatching = false,
   customListContext = false,
 }: CompactOverflowMenuProps) {
   const [showLists, setShowLists] = useState(false);
@@ -52,7 +54,7 @@ export function CompactOverflowMenu({
   // Build real menu actions from provided handlers (before positioning hooks)
   const menuActions = useMemo(
     () => (actions ? buildMenuActions(item, context, actions) : []),
-    [actions, item, context, settings, hasFullAccess, addToast, hideStatusActions, customListContext]
+    [actions, item, context, settings, hasFullAccess, addToast, hideStatusActions, customListContext, secondaryWatching]
   );
 
   const updateMenuPosition = useCallback(() => {
@@ -537,9 +539,12 @@ export function CompactOverflowMenu({
           });
     }
 
+    if (secondaryWatching && handlers.onWatching) {
+      menuItems.push({id: "watching", label: "Watching", onClick: handlers.onWatching});
+    }
     menuItems.push({ id: "custom-lists", label: "Custom Lists", onClick: () => setShowLists(true) });
     if (customListContext && handlers.onWatched) menuItems.push({id:"watched",label:"Watched",onClick:handlers.onWatched});
-    return menuItems.filter(action => !hideStatusActions || !["want", "watching", "watched"].includes(action.id) || (customListContext && action.id === "watched"));
+    return menuItems.filter(action => !hideStatusActions || !["want", "watching", "watched"].includes(action.id) || (customListContext && action.id === "watched") || (secondaryWatching && action.id === "watching"));
   }
 
   return (

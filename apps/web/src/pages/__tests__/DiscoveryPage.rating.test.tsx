@@ -30,6 +30,7 @@ vi.mock("@/hooks/useSmartDiscovery", () => ({
 }));
 vi.mock("@/lib/storage", () => ({
   Library: {
+    subscribe: () => () => {},
     has: (id: string) => state.entries.has(id),
     getEntry: (id: string) => state.entries.get(id),
     getCurrentList: (id: string) => state.entries.get(id)?.list,

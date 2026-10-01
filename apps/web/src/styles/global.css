@@ -1238,3 +1238,10 @@ input:focus-visible {
     transform: translateX(0) !important;
   }
 }
+
+/* Discovery destinations retain compact styling with mobile-sized touch targets. */
+@media (max-width: 768px) {
+  .discovery-results-grid [data-testid="cardv2-actions"] button {
+    min-height: 44px;
+  }
+}

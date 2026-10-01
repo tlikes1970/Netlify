@@ -21,6 +21,7 @@ import {
 export type CardV2Props = {
   item: MediaItem;
   ratingOpportunity?: React.ReactNode;
+  secondaryWatching?: boolean;
   context: CardContext;
   actions?: CardActionHandlers;
   // optional presentation flags
@@ -86,6 +87,7 @@ export default function CardV2({
   compact,
   showRating = true,
   ratingOpportunity,
+  secondaryWatching = false,
   disableSwipe = false,
   disableOverflow = false,
   currentListContext: propCurrentListContext,
@@ -259,12 +261,12 @@ export default function CardV2({
             <CardActions context={context} item={item} actions={actions} />
           ))}
 
-        {/* Mobile custom-list secondary actions stay available independently of compact flags. */}
+        {/* Discovery and mobile custom-list secondary actions stay available independently of compact flags. */}
         <div
           className="compact-actions-container"
           style={{
             padding: "var(--space-1, 4px)",
-            display: isCustomList && !isDesktop.isDesktop ? "block" : undefined,
+            display: (isCustomList && !isDesktop.isDesktop) || secondaryWatching ? "block" : undefined,
           }}
         >
           {context !== "home-cw-preview" &&
@@ -289,6 +291,7 @@ export default function CardV2({
                     : "tab"
               }
               actions={actions}
+              secondaryWatching={secondaryWatching}
               hideStatusActions={simplified}
               customListContext={isCustomList}
               showText={false}

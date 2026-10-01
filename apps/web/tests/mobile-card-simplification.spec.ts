@@ -20,7 +20,9 @@ test.beforeAll(async () => {
     "lib/proUpgrade": `export function startProUpgrade(){}`,
     "lib/settings": `export function useSettings(){return {layout:{episodeTracking:false}}} export function getPersonalityText(){return ""} export const DEFAULT_PERSONALITY="Zen"`,
     "lib/language": `export function useTranslations(){return {currentlyWatchingAction:"Watching",notInterestedAction:"Not Interested",wantToWatchAction:"Want to Watch",watchedAction:"Watched",manageCurrentlyWatchingAction:"Manage Currently Watching"}}`,
-    "lib/storage": `export function getListDisplayName(list){return {watching:"Watching",wishlist:"Want to Watch",watched:"Watched",not:"Not Interested"}[list]} export const Library={getEntry:(id)=>id==="tracked"?{id,mediaType:"movie",title:"Tracked title",list:"watched",userRating:3}:null,getCurrentList:(id)=>id==="tracked"?"watched":id==="custom-watching"?"watching":id==="custom-want"?"wishlist":id==="custom-watched"?"watched":id==="custom-not"?"not":null,subscribe:()=>()=>{},getAll:()=>[]};export function addToListWithConfirmation(){}`,
+    "hooks/useAuth": `export function useAuth(){return {isAuthenticated:true,user:{uid:"browser-test"}}}`,
+    "hooks/useSmartDiscovery": `export function useSmartDiscovery(){return {recommendations:[{item:{id:"d1",kind:"movie",title:"Short",poster:"",year:2025}},{item:{id:"d2",kind:"tv",title:"A very long Discovery title that needs more than two lines to display",poster:""}},{item:{id:"d3",kind:"movie",title:"Want title",poster:"",year:2024}}],isLoading:false,error:null}}`,
+    "lib/storage": `export function getListDisplayName(list){return {watching:"Watching",wishlist:"Want to Watch",watched:"Watched",not:"Not Interested"}[list]} const entries=new Map();const subs=new Set();export const Library={has:(id)=>entries.has(id),upsert:(item,list)=>{entries.set(item.id,{...item,list});subs.forEach(fn=>fn());},updateRating:(id,type,rating)=>{entries.get(id).userRating=rating;subs.forEach(fn=>fn());},getEntry:(id)=>entries.get(id)||(id==="tracked"?{id,mediaType:"movie",title:"Tracked title",list:"watched",userRating:3}:null),getCurrentList:(id)=>entries.get(id)?.list||(id==="tracked"?"watched":id==="custom-watching"?"watching":id==="custom-want"?"wishlist":id==="custom-watched"?"watched":id==="custom-not"?"not":null),subscribe:(fn)=>{subs.add(fn);return ()=>subs.delete(fn)},getAll:()=>[]};export function addToListWithConfirmation(){}`,
     "lib/membership": `export function getMembershipInfo(item){return item.id==="tracked"?{list:"watched",displayName:"Watched"}:{list:null,displayName:null}}`,
     "lib/statusTransitions": `export function setPrimaryStatus(){}`,
     "hooks/useDeviceDetection": `export function useIsDesktop(){return {isDesktop:false,ready:true}}`,
@@ -29,7 +31,7 @@ test.beforeAll(async () => {
     "lib/shareLinks": `export function shareShowWithFallback(){}`,
     "lib/seriesReminders": `export function isSeriesReminderEnabled(){return false}`,
     "components/ListSelectorModal": `import React from 'react'; export default function Modal(){return React.createElement('div',{role:'dialog'},'Custom list picker')}`,
-    "components/OptimizedImage": `import React from 'react';export function OptimizedImage(props){return React.createElement('img',{className:props.className,alt:props.alt,src:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="112" height="168"/>'})}`,
+    "components/OptimizedImage": `import React from 'react';export function OptimizedImage(props){return React.createElement('img',{className:props.className,alt:props.alt,src:props.src || 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="112" height="168"/>'})}`,
     "tmdb/tv": `export async function fetchCurrentEpisodeInfo(){return {season:1,episode:2}} export async function fetchNextAirDate(){} export async function fetchShowStatus(){}`,
     "lib/isMobile": `export function isMobileNow(){return true} export function onMobileChange(){return ()=>{}}`,
     "search/cache": `export function cachedSearchMulti(){}`,
@@ -43,7 +45,7 @@ test.beforeAll(async () => {
   };
   const result = await build({
     stdin: {
-      contents: `import React from 'react';import {createRoot} from 'react-dom/client';import Card from './src/components/cards/CardV2';import LibrarySegmentBar from './src/components/LibrarySegmentBar';import UpNext from './src/components/cards/UpNextCard';import {MovieCardMobile} from './src/components/cards/mobile/MovieCardMobile';import {SearchResultCard} from './src/search/SearchResults';const names=['Short','A much longer title that wraps across two lines'];const item=(name,id)=>({id,mediaType:'movie',title:name,year:'2025',synopsis:'Existing short summary',userRating:3});const actions={onWant:()=>{},onWatched:()=>{},onNotInterested:()=>{},onDelete:()=>{},onRatingChange:()=>{}};createRoot(document.getElementById('root')).render(<><LibrarySegmentBar segment="watching" counts={{watching:1,want:2,watched:3,mylists:4}} onChange={()=>{}}/><div data-testid="cw" style={{display:'flex',gap:12,overflowX:'auto'}}>{names.map((n,i)=><Card key={i} item={item(n,i)} context="home-cw-preview" disableOverflow/>)}</div><div data-testid="up-next" style={{display:'flex',gap:12,overflowX:'auto'}}>{names.map((n,i)=><UpNext key={i} item={{...item(n,i),mediaType:'tv',nextAirDate:'2026-11-10',showStatus:'Returning Series'}}/>)}</div><div data-testid="for-you" style={{display:'flex',gap:12,overflowX:'auto'}}>{names.map((n,i)=><Card key={i} item={item(n,i)} context="tab-foryou" actions={actions}/>)}</div><div data-testid="library">{names.map((n,i)=><MovieCardMobile key={i} item={item(n,i)} tabKey={window.testTab || "watching"} actions={actions}/>)}</div><div data-testid="custom" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(154px,1fr))",gap:12}}>{["custom-watching","custom-want","custom-watched","custom-not"].map((id,i)=><Card key={id} item={item(names[i%2],id)} context="tab-watching" currentListContext="custom:family" actions={actions}/>)}</div><div data-testid="search-tracked"><SearchResultCard item={item("A tracked title with a long name", "tracked")} index={0} onRemove={()=>{}} actions={actions}/></div><div data-testid="search-untracked"><SearchResultCard item={item("An untracked title with a long name", "untracked")} index={1} onRemove={()=>{}} actions={actions}/></div></>);`,
+      contents: `import React from 'react';import {createRoot} from 'react-dom/client';import Card from './src/components/cards/CardV2';import DiscoveryPage from './src/pages/DiscoveryPage';import LibrarySegmentBar from './src/components/LibrarySegmentBar';import UpNext from './src/components/cards/UpNextCard';import {MovieCardMobile} from './src/components/cards/mobile/MovieCardMobile';import {SearchResultCard} from './src/search/SearchResults';const names=['Short','A much longer title that wraps across two lines'];const item=(name,id)=>({id,mediaType:'movie',title:name,year:'2025',synopsis:'Existing short summary',userRating:3});const actions={onWant:()=>{},onWatched:()=>{},onNotInterested:()=>{},onDelete:()=>{},onRatingChange:()=>{}};createRoot(document.getElementById('root')).render(<><LibrarySegmentBar segment="watching" counts={{watching:1,want:2,watched:3,mylists:4}} onChange={()=>{}}/><div data-testid="cw" style={{display:'flex',gap:12,overflowX:'auto'}}>{names.map((n,i)=><Card key={i} item={item(n,i)} context="home-cw-preview" disableOverflow/>)}</div><div data-testid="up-next" style={{display:'flex',gap:12,overflowX:'auto'}}>{names.map((n,i)=><UpNext key={i} item={{...item(n,i),mediaType:'tv',nextAirDate:'2026-11-10',showStatus:'Returning Series'}}/>)}</div><div data-testid="for-you" style={{display:'flex',gap:12,overflowX:'auto'}}>{names.map((n,i)=><Card key={i} item={item(n,i)} context="tab-foryou" actions={actions}/>)}</div><div data-testid="library">{names.map((n,i)=><MovieCardMobile key={i} item={item(n,i)} tabKey={window.testTab || "watching"} actions={actions}/>)}</div><div data-testid="custom" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(154px,1fr))",gap:12}}>{["custom-watching","custom-want","custom-watched","custom-not"].map((id,i)=><Card key={id} item={item(names[i%2],id)} context="tab-watching" currentListContext="custom:family" actions={actions}/>)}</div><div data-testid="discovery"><DiscoveryPage/></div><div data-testid="search-tracked"><SearchResultCard item={item("A tracked title with a long name", "tracked")} index={0} onRemove={()=>{}} actions={actions}/></div><div data-testid="search-untracked"><SearchResultCard item={item("An untracked title with a long name", "untracked")} index={1} onRemove={()=>{}} actions={actions}/></div></>);`,
       resolveDir: appRoot,
       loader: "tsx",
     },
@@ -246,6 +248,32 @@ for (const width of [320, 360, 390, 768, 1280]) {
           .locator(".fixed.inset-0")
           .click({ position: { x: 1, y: 1 } });
       }
+      const discovery = page.getByTestId('discovery');
+      await expect(discovery.locator('article')).toHaveCount(3);
+      await expect(discovery.getByRole('slider')).toHaveCount(0);
+      await expect(discovery.getByRole('combobox')).toHaveCount(0);
+      for (const name of ['Watching','Not Interested','Delete','Custom Lists +']) await expect(discovery.getByRole('button',{name,exact:true})).toHaveCount(0);
+      const discoveryBounds = await discovery.locator('article').evaluateAll(els => els.map(el => ({width:el.getBoundingClientRect().width,title:el.querySelector('h3')!.getBoundingClientRect().height,poster:el.querySelector('img')!.getBoundingClientRect().height,clipped:el.scrollWidth>el.clientWidth})));
+      expect(Math.max(...discoveryBounds.map(b=>b.width))-Math.min(...discoveryBounds.map(b=>b.width))).toBeLessThanOrEqual(1);
+      expect(Math.max(...discoveryBounds.map(b=>b.title))-Math.min(...discoveryBounds.map(b=>b.title))).toBeLessThanOrEqual(1);
+      expect(Math.max(...discoveryBounds.map(b=>b.poster))-Math.min(...discoveryBounds.map(b=>b.poster))).toBeLessThanOrEqual(1);
+      expect(discoveryBounds.every(b=>!b.clipped)).toBe(true);
+      expect(await discovery.locator('article img').first().getAttribute('src')).toContain('data:image/svg+xml');
+      const discoveryButtons = await discovery.getByRole('button',{name:'Want to Watch',exact:true}).evaluateAll(els=>els.map(el=>el.getBoundingClientRect().height));
+      expect(discoveryButtons.every(h=>h >= (width <= 768 ? 44 : 36))).toBe(true);
+      await discovery.locator('article').nth(2).getByRole('button',{name:'Want to Watch',exact:true}).click();
+      await expect(discovery.locator('article')).toHaveCount(2);
+      await discovery.locator('article').first().getByRole('button',{name:'Watched',exact:true}).click();
+      await expect(discovery.getByRole('slider')).toBeVisible();
+      await expect(discovery.locator('article')).toHaveCount(2);
+      if (width === 390 && tab === 'watching') await discovery.screenshot({path:test.info().outputPath('discovery-rating-390.png')});
+      await discovery.getByRole('button',{name:'Not now'}).click();
+      await expect(discovery.locator('article')).toHaveCount(1);
+      await discovery.getByRole('button',{name:'More options'}).click();
+      await expect(page.getByRole('menuitem',{name:'Not Interested',exact:true})).toBeVisible();
+      await expect(page.getByRole('menuitem',{name:'Custom Lists',exact:true})).toBeVisible();
+      await page.getByRole('menuitem',{name:'Watching',exact:true}).click();
+      await expect(discovery.locator('article')).toHaveCount(0);
       const stars = page
         .getByTestId("library")
         .locator('[role="slider"] button svg')
