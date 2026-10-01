@@ -25,12 +25,15 @@ export function ContextStatusActions({
     watched: "Watched",
   };
   return (
-    <div className="flex flex-wrap gap-1" data-testid="context-status-actions">
+    <div
+      className="grid grid-cols-2 gap-1"
+      data-testid="context-status-actions"
+    >
       {targets.map((target) => (
         <button
           key={target}
           type="button"
-          className="min-h-[44px] rounded-lg border px-2 py-1 text-xs"
+          className="min-h-[44px] min-w-0 rounded-lg border px-1 py-1 text-[11px] leading-tight"
           style={{
             backgroundColor: "var(--btn)",
             color: "var(--text)",
@@ -38,7 +41,7 @@ export function ContextStatusActions({
           }}
           onClick={() => setPrimaryStatus(item, target, { feedback: true })}
         >
-          {tabKey ? `Move to ${labels[target]}` : labels[target]}
+          {labels[target]}
         </button>
       ))}
     </div>

@@ -49,7 +49,6 @@ export function CardMobileInfoSection({
         {item.mediaType === 'tv' && settings.layout.episodeTracking && (
           <EpisodeProgressDisplay showId={Number(item.id)} compact />
         )}
-        <ContextStatusActions item={item} tabKey={tabKey} />
         {item.networks && item.networks.length > 0 && (
           <ProviderBadges
             providers={item.networks}
@@ -74,6 +73,7 @@ export function CardMobileInfoSection({
             className="compact-user-rating"
           />
         </div>
+        <ContextStatusActions item={item} tabKey={tabKey} />
       </div>
     </div>
   );

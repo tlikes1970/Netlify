@@ -734,7 +734,7 @@ export function SearchResultCard({
       >
         {/* Title with Rating inline on mobile */}
         <div
-          className={`font-bold ${isMobile ? "text-base" : "text-lg"} mb-1 flex items-center gap-2 flex-wrap`}
+          className={`font-bold ${isMobile ? "text-base pr-11" : "text-lg"} mb-1 flex items-center gap-2 flex-wrap`}
         >
           <span className="line-clamp-2 min-h-[2.5em] leading-tight" title={title}>{title}</span>
           {isMobile && enrichedItem.voteAverage && (
@@ -824,18 +824,18 @@ export function SearchResultCard({
             {isInList && <button onClick={() => setShowManageSheet(true)} className="px-3 py-2 text-xs font-medium rounded-lg bg-accent text-white min-h-[44px]">Manage</button>}
 
             {/* More Menu Button */}
-            <div className="relative">
+            <div className="absolute top-2 right-2">
               <button
                 ref={moreButtonRef}
                 onClick={() => setShowMoreMenu(!showMoreMenu)}
-                className="px-3 py-2 text-xs font-medium rounded-lg bg-muted hover:bg-muted/80 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="w-11 h-11 bg-transparent flex items-center justify-center"
                 style={{ color: "var(--text)" }}
                 aria-label="More actions"
                 aria-haspopup="menu"
                 aria-expanded={showMoreMenu}
               >
                 <svg
-                  className="w-5 h-5"
+                  className="w-4 h-4"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -860,14 +860,16 @@ export function SearchResultCard({
                       zIndex: 10003,
                       backgroundColor: "var(--card)",
                       borderColor: "var(--line)",
-                      bottom: moreButtonRef.current
-                        ? `${window.innerHeight - moreButtonRef.current.getBoundingClientRect().top + 8}px`
-                        : "80px",
+                      top: moreButtonRef.current
+                        ? `${Math.max(8, Math.min(moreButtonRef.current.getBoundingClientRect().bottom + 8, window.innerHeight - Math.min(window.innerHeight * 0.6, 360) - 8))}px`
+                        : "56px",
                       right: moreButtonRef.current
                         ? `${window.innerWidth - moreButtonRef.current.getBoundingClientRect().right}px`
                         : "16px",
                       minWidth: "160px",
                       maxWidth: "90vw",
+                      maxHeight: "min(60vh, 360px)",
+                      overflowY: "auto",
                     }}
                     onPointerDown={(e) => e.stopPropagation()}
                   >

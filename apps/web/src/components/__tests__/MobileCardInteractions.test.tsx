@@ -94,17 +94,17 @@ describe("contextual status buttons", () => {
   it.each([
     [
       "watching",
-      "Move to Want to Watch",
+      "Want to Watch",
       "wishlist",
-      "Move to Watched",
+      "Watched",
       "watched",
     ],
-    ["want", "Move to Watching", "watching", "Move to Watched", "watched"],
+    ["want", "Watching", "watching", "Watched", "watched"],
     [
       "watched",
-      "Move to Watching",
+      "Watching",
       "watching",
-      "Move to Want to Watch",
+      "Want to Watch",
       "wishlist",
     ],
   ] as const)(
