@@ -65,6 +65,7 @@ import { googleLogin } from "@/lib/authLogin";
 import { isCapacitorNative } from "@/lib/capacitorEnv";
 import { reconcileSeriesReminders } from "@/lib/seriesReminders";
 import { TrialStatusBanner } from "@/components/TrialStatusBanner";
+import HomeGreeting from "@/components/HomeGreeting";
 import { PersonalityBanner } from "@/components/PersonalityBanner";
 import { useScreenshotMode } from "@/hooks/useScreenshotMode";
 import { useEntitlements } from "@/hooks/useEntitlements";
@@ -953,6 +954,7 @@ export default function App() {
         {afterFirstPaintReady && (
           <>
             <TrialStatusBanner />
+            {!screenshotMode && view === "home" && !searchActive && <HomeGreeting />}
             {!screenshotMode && (view !== "home" || searchActive) && (
               <PersonalityBanner />
             )}

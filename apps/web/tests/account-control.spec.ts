@@ -16,7 +16,7 @@ let css: string;
 test.beforeAll(async () => {
   const mocks: Record<string, string> = {
     "hooks/useAuth": `export function useAuth(){ return {user:window.testUser,isAuthenticated:!!window.testUser,signOut:async()=>{window.logoutCalls=(window.logoutCalls||0)+1}} }`,
-    "hooks/useUsername": `export function useUsername(){return {username:null,usernamePrompted:true,loading:false}}`,
+    "hooks/usePreferredName": `export function usePreferredName(){return {uid:null,preferredName:"",loading:false,error:null}}`,
     "hooks/useDeviceDetection": `export function useIsMobileScreen(){return window.innerWidth<768}`,
     "lib/auth": `export const authManager={getCurrentUser:()=>null}`,
     "lib/language": `export function useTranslations(){return {search:'Search',clear:'Clear',searchPlaceholder:'Search movies, shows, people...'}}`,
@@ -25,7 +25,7 @@ test.beforeAll(async () => {
     "pwa/useInstall": `export function useCanInstallPWA(){return false}`,
     "pwa/installSignal": `export function promptInstall(){}`,
     "components/AuthModal": `export default function AuthModal(){return null}`,
-    "components/UsernamePromptModal": `export default function UsernamePromptModal(){return null}`,
+    "components/PreferredNamePromptModal": `export default function PreferredNamePromptModal(){return null}`,
     "components/SearchSuggestions": `export function addSearchToHistory(){} export default function SearchSuggestions(){return null}`,
     "components/VoiceSearch": `export default function VoiceSearch(){return null}`,
   };

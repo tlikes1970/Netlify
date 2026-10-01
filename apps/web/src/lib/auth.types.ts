@@ -8,6 +8,10 @@ export interface AuthUser {
 }
 
 export interface UserSettings {
+  /** Private, non-unique answer to “What should Flicklet call you?” */
+  preferredName?: string;
+  /** Legacy user-entered name; never a provider profile name. */
+  displayName?: string;
   username?: string;
   usernamePrompted?: boolean;
   theme?: 'light' | 'dark';

@@ -1114,7 +1114,7 @@ export function getPersonalityText(
   
   // Replace {username} placeholder if provided
   if (context?.username) {
-    text = text.replace(/\{username\}/g, context.username);
+    text = text.replace(/\{username\}/g, () => context.username!);
   } else {
     // Remove {username} placeholder if no username provided
     text = text.replace(/\{username\},?\s*/g, '').replace(/\s+/g, ' ').trim();

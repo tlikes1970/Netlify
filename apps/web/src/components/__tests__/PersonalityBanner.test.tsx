@@ -5,8 +5,8 @@ import { PersonalityBanner } from '../PersonalityBanner';
 const mockResolveFlickletLine = vi.fn(() => 'Test personality line');
 const mockSubscribe = vi.fn(() => () => {});
 
-vi.mock('../../hooks/useUsername', () => ({
-  useUsername: () => ({ username: '', loading: false }),
+vi.mock('../../hooks/usePreferredName', () => ({
+  usePreferredName: () => ({ preferredName: '', loading: false }),
 }));
 
 vi.mock('../../lib/settings', () => ({

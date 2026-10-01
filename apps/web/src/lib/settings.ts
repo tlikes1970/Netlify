@@ -13,6 +13,8 @@
 
 import React from 'react';
 import { authManager } from './auth';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from './firebaseBootstrap';
 import { guardMutation } from './readOnlyGuard';
 import type { UserSettings } from './auth.types';
 
@@ -237,7 +239,11 @@ class SettingsManager {
           fullSettings: this.settings,
         };
 
-        await authManager.updateUserSettings(currentUser.uid, firebaseSettings);
+        // Update only this manager's fields. Replacing the whole settings map
+        // could overwrite a preferred-name save made while this sync is pending.
+        await updateDoc(doc(db, 'users', currentUser.uid), Object.fromEntries(
+          Object.entries(firebaseSettings).map(([key, value]) => [`settings.${key}`, value])
+        ));
         console.log('✅ Settings synced to Firebase');
       } catch (error) {
         // Don't block UI on sync failure - settings are saved locally

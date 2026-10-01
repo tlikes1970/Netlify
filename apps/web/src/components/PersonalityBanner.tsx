@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useUsername } from "../hooks/useUsername";
+import { usePreferredName } from "../hooks/usePreferredName";
 import { useSettings, resolveFlickletLine } from "../lib/settings";
 import { Library } from "../lib/storage";
 
@@ -8,7 +8,7 @@ import { Library } from "../lib/storage";
  * Scrolls with content; not sticky.
  */
 export function PersonalityBanner() {
-  const { username } = useUsername();
+  const { preferredName } = usePreferredName();
   const settings = useSettings();
   const [, setLibraryBump] = useState(0);
 
@@ -23,7 +23,7 @@ export function PersonalityBanner() {
 
   const line =
     resolveFlickletLine("home.header", settings.personalityLevel, {
-      username: username || undefined,
+      username: preferredName || undefined,
     }) || "Back again. Your lists are here.";
 
   return (

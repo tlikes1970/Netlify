@@ -2,11 +2,10 @@ import React, { useEffect, useState } from "react";
 import { APP_VERSION } from "../version";
 import { useTranslations } from "../lib/language";
 import AccountButton from "./AccountButton";
-import UsernamePromptModal from "./UsernamePromptModal";
-import { useUsername } from "../hooks/useUsername";
+import PreferredNamePromptModal from "./PreferredNamePromptModal";
+import { usePreferredName } from "../hooks/usePreferredName";
 import { useCanInstallPWA } from "../pwa/useInstall";
 import { promptInstall } from "../pwa/installSignal";
-import { authManager } from "../lib/auth";
 import SearchSuggestions, { addSearchToHistory } from "./SearchSuggestions";
 import VoiceSearch from "./VoiceSearch";
 import Portal from "./Portal";
@@ -62,38 +61,14 @@ export default function FlickletHeader({
   onSettingsOpen,
   onNavigateHome,
 }: FlickletHeaderProps) {
-  const {
-    username,
-    usernamePrompted,
-    loading: usernameLoading,
-  } = useUsername();
-  const [showUsernamePrompt, setShowUsernamePrompt] = useState(false);
-
-  // Session guard: Track if we've already shown the prompt this session
-  // This prevents re-showing the modal due to race conditions during navigation
-  const SESSION_KEY = 'flicklet.usernamePrompt.shownThisSession';
-
-  // Non-blocking prompt check
-  // Onboarding gating: Don't show username prompt if onboarding was already completed
-  // Config: onboarding.ts - shouldShowOnboarding()
+  const { uid, preferredName, loading, error } = usePreferredName();
+  const [dismissedUid, setDismissedUid] = useState<string | null>(null);
+  // Dismissal is per sign-in, not a permanent substitute for supplying a name.
   useEffect(() => {
-    // Skip if username already exists or prompt was shown
-    if (usernameLoading) return;
-
-    const currentUser = authManager.getCurrentUser();
-    const needsPrompt = !!(currentUser?.uid && !username && !usernamePrompted);
-
-    // Session guard: Don't re-show if we already showed it this session
-    // This prevents race conditions from briefly resetting state during navigation
-    const alreadyShownThisSession = sessionStorage.getItem(SESSION_KEY) === 'true';
-
-    // Check if onboarding was completed - if so, don't show "Welcome to Flicklet" modal
-    // The username prompt can still show, but without the welcome message
-    if (needsPrompt && !showUsernamePrompt && !alreadyShownThisSession) {
-      setShowUsernamePrompt(true);
-      sessionStorage.setItem(SESSION_KEY, 'true');
-    }
-  }, [username, usernamePrompted, usernameLoading, showUsernamePrompt]);
+    if (!uid) setDismissedUid(null);
+  }, [uid]);
+  const showPreferredNamePrompt =
+    !!uid && !loading && !error && !preferredName && dismissedUid !== uid;
 
   return (
     <>
@@ -175,9 +150,9 @@ export default function FlickletHeader({
       </div>
 
       {/* Modal overlay - doesn't block UI */}
-      <UsernamePromptModal
-        isOpen={showUsernamePrompt}
-        onClose={() => setShowUsernamePrompt(false)}
+      <PreferredNamePromptModal
+        isOpen={showPreferredNamePrompt}
+        onClose={() => setDismissedUid(uid)}
       />
     </>
   );

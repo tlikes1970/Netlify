@@ -6,7 +6,7 @@
  * Dependencies: settingsConfig.ts, settings.ts, proStatus.ts, useAdminRole.ts
  */
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   useSettings,
   settingsManager,
@@ -26,7 +26,7 @@ import { PRO_FEATURES_AVAILABLE } from "./settingsProConfig";
 import { UpgradeToProCTA } from "./UpgradeToProCTA";
 import { useFullAccessProduct } from "../hooks/useFullAccessProduct";
 import { useCustomLists, customListManager } from "../lib/customLists";
-import { useUsername } from "../hooks/useUsername";
+import PreferredNameEditor from "./PreferredNameEditor";
 import { useLibrary } from "../lib/storage";
 import { useAdminRole } from "../hooks/useAdminRole";
 // PersonalityExamples removed - inline preview is sufficient
@@ -92,10 +92,6 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
   const wishlistItems = useLibrary("wishlist");
   const watchedItems = useLibrary("watched");
   const notItems = useLibrary("not");
-  const { username, updateUsername } = useUsername();
-  const [displayName, setDisplayName] = useState(username);
-  const [showWarning, setShowWarning] = useState(false);
-
   // Calculate stats by media type
   const tvStats = {
     watching: watchingItems.filter((item) => item.mediaType === "tv").length,
@@ -109,36 +105,6 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
     wishlist: wishlistItems.filter((item) => item.mediaType === "movie").length,
     watched: watchedItems.filter((item) => item.mediaType === "movie").length,
     not: notItems.filter((item) => item.mediaType === "movie").length,
-  };
-
-  useEffect(() => {
-    setDisplayName(username);
-  }, [username]);
-
-  const handleDisplayNameChange = (newName: string) => {
-    setDisplayName(newName);
-    if (newName !== username) {
-      setShowWarning(true);
-    } else {
-      setShowWarning(false);
-    }
-  };
-
-  const saveDisplayName = async () => {
-    if (showWarning) {
-      const confirmed = window.confirm(
-        `${translations.areYouSureChangeDisplayName} ${translations.thisWillUpdateYourProfile}`
-      );
-      if (confirmed) {
-        try {
-          await updateUsername(displayName);
-          setShowWarning(false);
-        } catch (error) {
-          console.error("Failed to update username:", error);
-          alert(translations.usernameUpdateFailed);
-        }
-      }
-    }
   };
 
   return (
@@ -182,43 +148,7 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
         </div>
       </div>
 
-      {/* Display Name */}
-      <div>
-        <label
-          className="block text-sm font-medium mb-2"
-          style={{ color: "var(--text)" }}
-        >
-          {translations.username}
-        </label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={displayName}
-            onChange={(e) => handleDisplayNameChange(e.target.value)}
-            className="flex-1 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            style={{
-              backgroundColor: "var(--card)",
-              borderColor: "var(--line)",
-              color: "var(--text)",
-              border: "1px solid",
-            }}
-            placeholder={translations.username}
-          />
-          {showWarning && (
-            <button
-              onClick={saveDisplayName}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors"
-            >
-              {translations.save}
-            </button>
-          )}
-        </div>
-        {showWarning && (
-          <p className="mt-1 text-sm text-yellow-400">
-            ⚠️ Changing your display name will update your profile
-          </p>
-        )}
-      </div>
+      <PreferredNameEditor />
 
       {/* My Statistics */}
       <div>
@@ -365,9 +295,7 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
           </p>
           <p className="text-sm mt-1" style={{ color: "var(--text)" }}>
             &ldquo;
-            {resolveFlickletLine("home.header", settings.personalityLevel, {
-              username: settings.displayName || "Guest",
-            }) || "Your lists are here."}
+            {resolveFlickletLine("home.header", settings.personalityLevel) || "Your lists are here."}
             &rdquo;
           </p>
         </div>
