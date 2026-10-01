@@ -12,7 +12,8 @@ import { useToast } from "../../components/Toast";
 import { isSeriesReminderEnabled } from "../../lib/seriesReminders";
 import {
   computeOverflowMenuPlacement,
-  estimateOverflowMenuHeight,
+  resolveOverflowMenuHeight,
+  type MenuPlacement,
   getMenuViewportBounds,
 } from "./overflowMenuPlacement";
 interface CompactOverflowMenuProps {
@@ -22,12 +23,6 @@ interface CompactOverflowMenuProps {
   showText?: boolean; // Show "More" text or just ellipses icon (default: true)
 }
 
-interface MenuPosition {
-  top: number;
-  left: number;
-  direction: "up" | "down";
-}
-
 export function CompactOverflowMenu({
   item,
   context,
@@ -35,11 +30,8 @@ export function CompactOverflowMenu({
   showText = true,
 }: CompactOverflowMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [menuPosition, setMenuPosition] = useState<MenuPosition>({
-    top: 0,
-    left: 0,
-    direction: "down",
-  });
+  const [menuPosition, setMenuPosition] = useState<MenuPlacement | null>(null);
+  const [positionReady, setPositionReady] = useState(false);
   const menuPanelRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);  const settings = useSettings();
   const { hasFullAccess, isReadOnlyMode } = useEntitlements();
@@ -56,19 +48,33 @@ export function CompactOverflowMenu({
 
     const buttonRect = buttonRef.current.getBoundingClientRect();
     const menuEl = menuPanelRef.current;
-    const menuHeight = Math.max(
-      menuEl.offsetHeight,
-      estimateOverflowMenuHeight(menuActions.length)
-    );
-    const menuWidth = menuEl.offsetWidth || 200;
-
-    setMenuPosition(
-      computeOverflowMenuPlacement({
-        buttonRect,
-        menuWidth,
-        menuHeight,
-        viewport: getMenuViewportBounds(),
-      })
+    const viewport = getMenuViewportBounds();
+    // Measure against the current viewport, including when it expands again.
+    // Restore live styles before scheduling React's final placement so an open
+    // panel cannot briefly expand at its old coordinates during repositioning.
+    const previousLimits = {
+      maxHeight: menuEl.style.maxHeight,
+      maxWidth: menuEl.style.maxWidth,
+      minWidth: menuEl.style.minWidth,
+    };
+    menuEl.style.maxHeight = `min(56vh, 420px, ${Math.max(0, viewport.bottom - viewport.top)}px)`;
+    menuEl.style.maxWidth = `min(90vw, 320px, ${Math.max(0, viewport.right - viewport.left)}px)`;
+    menuEl.style.minWidth = `min(200px, ${Math.max(0, viewport.right - viewport.left)}px)`;
+    const actualHeight = menuEl.offsetHeight;
+    const actualWidth = menuEl.offsetWidth;
+    Object.assign(menuEl.style, previousLimits);
+    const menuHeight = resolveOverflowMenuHeight(actualHeight, menuActions.length);
+    const menuWidth = actualWidth || 200;
+    const placement = computeOverflowMenuPlacement({
+      buttonRect,
+      menuWidth,
+      menuHeight,
+      viewport,
+    });
+    setMenuPosition(placement);
+    setPositionReady(
+      actualHeight > 0 && actualWidth > 0 &&
+      placement.maxHeight > 0 && placement.maxWidth > 0
     );
   }, [menuActions.length]);
 
@@ -99,6 +105,12 @@ export function CompactOverflowMenu({
       window.visualViewport?.removeEventListener("scroll", handleReposition);
     };
   }, [isOpen, updateMenuPosition]);
+  useEffect(() => {
+    if (!isOpen) return;
+    const close = () => setIsOpen(false);
+    window.addEventListener('flicklet:overflow-open', close);
+    return () => window.removeEventListener('flicklet:overflow-open', close);
+  }, [isOpen]);
   // Close menu on escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -158,6 +170,12 @@ export function CompactOverflowMenu({
   }
 
   const handleToggle = () => {
+    if (!isOpen) {
+      // Notify other card menus before opening this one.
+      window.dispatchEvent(new Event('flicklet:overflow-open'));
+      setPositionReady(false);
+      setMenuPosition(null);
+    }
     setIsOpen(!isOpen);
   };
 
@@ -589,21 +607,25 @@ export function CompactOverflowMenu({
             ref={menuPanelRef}
             role="menu"
             className="menu-portal compact-overflow-menu"
-            data-dir={menuPosition.direction}
+            data-dir={menuPosition?.direction ?? "down"}
+            aria-hidden={!positionReady}
             style={{
               position: "fixed",
-              top: `${menuPosition.top}px`,
-              left: `${menuPosition.left}px`,
-              minWidth: "200px",
-              maxWidth: "min(90vw, 320px)",
-              maxHeight: "min(56vh, 420px)",
+              top: `${menuPosition?.top ?? 0}px`,
+              left: `${menuPosition?.left ?? 0}px`,
+              minWidth: `min(200px, ${menuPosition?.maxWidth ?? 200}px)`,
+              maxWidth: `min(90vw, 320px, ${menuPosition?.maxWidth ?? 320}px)`,
+              maxHeight: `min(56vh, 420px, ${menuPosition?.maxHeight ?? 420}px)`,
+              visibility: positionReady ? "visible" : "hidden",
+              pointerEvents: positionReady ? "auto" : "none",
+              animation: positionReady ? undefined : "none",
               overflowY: "auto",
               backgroundColor: "var(--surface-elevated, var(--card, #1a1d24))",
               border: "1px solid var(--line, rgba(255, 255, 255, 0.1))",
               borderRadius: "var(--radius-lg, 12px)",
               boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05)",
               transformOrigin:
-                menuPosition.direction === "up" ? "bottom left" : "top left",
+                menuPosition?.direction === "up" ? "bottom left" : "top left",
             }}
           >            {menuActions.map((action, index) => (
               <button
