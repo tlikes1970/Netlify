@@ -14,8 +14,8 @@ export default function HomeGreeting() {
   return (
     <div
       data-testid="home-greeting"
-      className="w-full border-b py-2 text-center text-sm"
-      style={{ color: "var(--muted)", borderColor: "var(--line)" }}
+      className="min-w-0 text-left text-xs leading-snug md:text-sm break-words line-clamp-2"
+      style={{ color: "var(--muted)" }}
     >
       {greeting || `Hello, ${preferredName}`}
     </div>

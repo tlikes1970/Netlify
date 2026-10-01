@@ -11,7 +11,7 @@ import { authManager } from "./auth";
 import { db } from "./firebaseBootstrap";
 import { firebaseSyncManager } from "./firebaseSync";
 import { settingsManager, mergeSettingsFromPayload } from "./settings";
-import { Library, flushPendingSaves } from "./storage";
+import { Library, flushPendingSaves, type LibraryEntry } from "./storage";
 import { APP_VERSION } from "../version";
 import {
   applyRestore,
@@ -27,6 +27,22 @@ import { notificationManager } from "./notifications";
 import { changeLanguage } from "./language";
 import { beginRestore } from "./restoreBarrier";
 import { normalizeRows } from "./forYouRowsStorage";
+
+/** Export-only repair of stale references. Imported snapshots remain strictly validated. */
+export function normalizeExportMemberships(entries: LibraryEntry[], definitions: unknown[]): LibraryEntry[] {
+  const ids = new Set(definitions.map(definition => object(definition, "custom list").id));
+  return entries.map(source => {
+    const item = structuredClone(source);
+    if (item.customListIds !== undefined) {
+      item.customListIds = [...new Set(item.customListIds.filter(id => ids.has(id)))];
+    }
+    if (item.list.startsWith("custom:") && !ids.has(item.list.slice(7))) {
+      // Keep the title and its user data even if its sole list was deleted.
+      item.list = item.customListIds?.length ? `custom:${item.customListIds[0]}` : "wishlist";
+    }
+    return item;
+  });
+}
 
 export async function createBackup(): Promise<Backup> {
   const uid = authManager.getCurrentUser()?.uid ?? null;
@@ -53,7 +69,7 @@ export async function createBackup(): Promise<Backup> {
     schemaVersion: 1,
     createdAt: new Date().toISOString(),
     appVersion: APP_VERSION,
-    library: Library.getAll(),
+    library: normalizeExportMemberships(Library.getAll(), lists.customLists as unknown[] ?? []),
     customLists: lists.customLists ?? [],
     settings,
     preferredName: account

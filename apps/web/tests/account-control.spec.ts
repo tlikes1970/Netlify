@@ -16,8 +16,9 @@ let css: string;
 test.beforeAll(async () => {
   const mocks: Record<string, string> = {
     "hooks/useAuth": `export function useAuth(){ return {user:window.testUser,isAuthenticated:!!window.testUser,signOut:async()=>{window.logoutCalls=(window.logoutCalls||0)+1}} }`,
-    "hooks/usePreferredName": `export function usePreferredName(){return {uid:null,preferredName:"",loading:false,error:null}}`,
+    "hooks/usePreferredName": `export function usePreferredName(){return {uid:window.testUser?"one":null,preferredName:window.testUser?"Dr. Travis Likes":"",loading:false,error:null}}`,
     "hooks/useDeviceDetection": `export function useIsMobileScreen(){return window.innerWidth<768}`,
+    "lib/settings": `export function useSettings(){return {personality:"Zen"}}`,
     "lib/auth": `export const authManager={getCurrentUser:()=>null}`,
     "lib/language": `export function useTranslations(){return {search:'Search',clear:'Clear',searchPlaceholder:'Search movies, shows, people...'}}`,
     "lib/capacitorEnv": `export function isCapacitorNative(){return true} export function isCapacitorAndroid(){return true}`,
@@ -95,7 +96,7 @@ for (const width of [320, 360, 390, 768, 1280]) {
       }, signedIn);
       await page.addScriptTag({ content: headerBundle });
       const account = page.getByTestId("account-button");
-      await expect(account).toHaveText(signedIn ? "👤Account" : "👤Log In");
+      await expect(account).toHaveText(signedIn ? "👤Log Out" : "👤Log In");
       await expect(account).toBeVisible();
       const bounds = await account.boundingBox();
       expect(bounds!.x).toBeGreaterThanOrEqual(0);
@@ -109,21 +110,19 @@ for (const width of [320, 360, 390, 768, 1280]) {
           bounds!.x >= title!.x + title!.width,
       ).toBe(true);
       if (signedIn) {
+        const greeting = page.locator("header").getByTestId("home-greeting");
+        await expect(greeting).toHaveCount(1);
+        const position = await greeting.boundingBox();
+        expect(position!.x).toBeLessThan(bounds!.x);
+        const search = await page.getByTestId("search-row").boundingBox();
+        expect(position!.y + position!.height).toBeLessThanOrEqual(search!.y);
+
         await account.click();
-        await expect(
-          page.getByRole("dialog", { name: "Account" }),
-        ).toBeVisible();
-        await page
-          .getByRole("button", { name: "Log Out", exact: true })
-          .click();
         await expect(
           page.getByRole("alertdialog", { name: "Log out?" }),
         ).toBeVisible();
         await page.getByRole("button", { name: "Cancel", exact: true }).click();
-        await expect(
-          page.getByRole("dialog", { name: "Account" }),
-        ).toBeVisible();
-        await page.keyboard.press("Escape");
+        await expect(page.getByRole("alertdialog")).toHaveCount(0);
         await expect(account).toBeFocused();
       }
     });

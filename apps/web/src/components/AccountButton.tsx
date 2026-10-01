@@ -5,9 +5,9 @@ import AuthModal from "./AuthModal";
 import ModalPortal from "./ModalPortal";
 
 export default function AccountButton() {
-  const { user, signOut, isAuthenticated } = useAuth();
+  const { signOut, isAuthenticated } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [surface, setSurface] = useState<"account" | "confirm" | null>(null);
+  const [surface, setSurface] = useState<"confirm" | null>(null);
   const [loggingOut, setLoggingOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pending = useRef(false);
@@ -20,7 +20,7 @@ export default function AccountButton() {
   const dismiss = useCallback(() => {
     if (pending.current) return;
     setError(null);
-    setSurface((current) => (current === "confirm" ? "account" : null));
+    setSurface(null);
   }, []);
   useAndroidBackDismiss(open, dismiss);
   useEffect(() => {
@@ -102,7 +102,7 @@ export default function AccountButton() {
         ref={buttonRef}
         type="button"
         onClick={() =>
-          isAuthenticated ? setSurface("account") : setShowAuthModal(true)
+          isAuthenticated ? setSurface("confirm") : setShowAuthModal(true)
         }
         className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap px-2 py-1 md:px-3 md:py-2 rounded-lg text-xs md:text-sm min-h-[44px] transition-colors"
         style={buttonStyle}
@@ -112,7 +112,7 @@ export default function AccountButton() {
         data-role="avatar"
       >
         <span aria-hidden="true">👤</span>
-        <span>{isAuthenticated ? "Account" : "Log In"}</span>
+        <span>{isAuthenticated ? "Log Out" : "Log In"}</span>
       </button>
       {open && (
         <ModalPortal>
@@ -124,10 +124,10 @@ export default function AccountButton() {
           >
             <div
               ref={panelRef}
-              role={surface === "confirm" ? "alertdialog" : "dialog"}
+              role="alertdialog"
               aria-modal="true"
               aria-labelledby={titleId}
-              aria-describedby={surface === "confirm" ? bodyId : undefined}
+              aria-describedby={bodyId}
               className="w-full max-w-sm min-w-0 rounded-xl p-6 shadow-xl"
               style={{
                 backgroundColor: "var(--card)",
@@ -138,78 +138,40 @@ export default function AccountButton() {
               onClick={(event) => event.stopPropagation()}
             >
               <h2 id={titleId} className="text-lg font-semibold mb-3">
-                {surface === "confirm" ? "Log out?" : "Account"}
+                Log out?
               </h2>
-              {surface === "account" ? (
-                <>
-                  {user?.displayName && (
-                    <p className="font-medium break-words">
-                      {user.displayName}
-                    </p>
-                  )}
-                  {user?.email && (
-                    <p
-                      className="text-sm break-all mt-1"
-                      style={{ color: "var(--muted)" }}
-                    >
-                      {user.email}
-                    </p>
-                  )}
-                  <div className="flex justify-end gap-3 mt-6">
-                    <button
-                      type="button"
-                      onClick={dismiss}
-                      className={actionClass}
-                      style={buttonStyle}
-                    >
-                      Close
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSurface("confirm")}
-                      className={actionClass}
-                      style={buttonStyle}
-                    >
-                      Log Out
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <p
-                    id={bodyId}
-                    className="text-sm mb-6"
-                    style={{ color: "var(--muted)" }}
-                  >
-                    Are you sure you want to log out?
-                  </p>
-                  {error && (
-                    <p role="alert" className="text-sm mb-3">
-                      {error}
-                    </p>
-                  )}
-                  <div className="flex justify-end gap-3">
-                    <button
-                      type="button"
-                      disabled={loggingOut}
-                      onClick={dismiss}
-                      className={actionClass}
-                      style={buttonStyle}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      disabled={loggingOut}
-                      onClick={confirmSignOut}
-                      className={actionClass}
-                      style={{ backgroundColor: "#dc2626", color: "#fff" }}
-                    >
-                      {loggingOut ? "Logging out…" : "Log Out"}
-                    </button>
-                  </div>
-                </>
+              <p
+                id={bodyId}
+                className="text-sm mb-6"
+                style={{ color: "var(--muted)" }}
+              >
+                Are you sure you want to log out?
+              </p>
+              {error && (
+                <p role="alert" className="text-sm mb-3">
+                  {error}
+                </p>
               )}
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  disabled={loggingOut}
+                  onClick={dismiss}
+                  className={actionClass}
+                  style={buttonStyle}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={loggingOut}
+                  onClick={confirmSignOut}
+                  className={actionClass}
+                  style={{ backgroundColor: "#dc2626", color: "#fff" }}
+                >
+                  {loggingOut ? "Logging out…" : "Log Out"}
+                </button>
+              </div>
             </div>
           </div>
         </ModalPortal>

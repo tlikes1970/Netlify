@@ -115,7 +115,7 @@ vi.mock("../../features/username/usernameFlow", () => ({
   ensureUsernameChosen: mocks.reserve,
 }));
 import { createBackup, restoreBackup } from "../backupPersistence";
-import { type Backup } from "../backup";
+import { validateBackup, type Backup } from "../backup";
 import { FirebaseSyncManager } from "../firebaseSync";
 import { loadEpisodeProgressFromFirebase } from "../episodeProgressSync";
 import HomeGreeting from "../../components/HomeGreeting";
@@ -223,6 +223,24 @@ beforeEach(() => {
 });
 afterEach(() => cleanup());
 describe("current backup creation", () => {
+  it.each(["additive", "primary", "sole-primary"])("exports stale %s memberships without changing live data", async kind => {
+    const item=mocks.entries[0];
+    item.customListIds=["family","deleted-list"];
+    if(kind!=="additive")item.list="custom:deleted-list";
+    if(kind==="sole-primary")item.customListIds=["deleted-list"];
+    const before=structuredClone(mocks.entries);
+    const stored=Object.fromEntries(Object.keys(localStorage).map(k=>[k,localStorage.getItem(k)]));
+    const backup=await createBackup();
+    expect(backup.customLists[0].id).toBe("family");
+    expect(backup.library[0].customListIds).toEqual(kind==="sole-primary"?[]:["family"]);
+    expect(backup.library[0].list).toBe(kind==="additive"?"watching":kind==="primary"?"custom:family":"wishlist");
+    expect(mocks.entries).toEqual(before);
+    expect(Object.fromEntries(Object.keys(localStorage).map(k=>[k,localStorage.getItem(k)]))).toEqual(stored);
+    expect(validateBackup(backup).library).toEqual(backup.library);
+    await restoreBackup(backup);
+    expect(JSON.parse(localStorage.getItem("flicklet.library.v2")!)["tv:10"].list).toBe(backup.library[0].list);
+  });
+
   it("exports live library/current preferences and the authoritative cloud preferred name", async () => {
     localStorage.setItem(
       "flicklet-settings",

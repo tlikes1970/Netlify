@@ -98,10 +98,21 @@ beforeEach(() => {
 });
 
 describe("preferred-name workflow", () => {
+  it("renders one personalized greeting inside the header, before Search", async () => {
+    mocks.user = {uid:"header-user", displayName:"Google name", email:"google@example.com",photoURL:null};
+    mocks.read.mockResolvedValue({preferredName:"Travis"});
+    const {container}=render(<FlickletHeader />);
+    const greeting=await screen.findByTestId("home-greeting");
+    expect(container.querySelector("header")!.contains(greeting)).toBe(true);
+    expect(screen.getAllByTestId("home-greeting")).toHaveLength(1);
+    expect(greeting).toHaveTextContent("Travis");
+    expect(greeting).not.toHaveClass("text-center", "border-b");
+  });
+
   it("first sign-in saves a non-unique name and immediately greets; returning users are not prompted", async () => {
     const view = render(
       <>
-        <FlickletHeader />
+        <FlickletHeader showGreeting={false} />
         <HomeGreeting />
       </>,
     );
@@ -123,7 +134,7 @@ describe("preferred-name workflow", () => {
     mocks.read.mockResolvedValue({ preferredName: "Travis" });
     render(
       <>
-        <FlickletHeader />
+        <FlickletHeader showGreeting={false} />
         <HomeGreeting />
       </>,
     );
@@ -164,7 +175,7 @@ describe("preferred-name workflow", () => {
     mocks.read.mockResolvedValue({ username: "Mom", usernamePrompted: true });
     render(
       <>
-        <FlickletHeader />
+        <FlickletHeader showGreeting={false} />
         <HomeGreeting />
       </>,
     );
@@ -183,7 +194,7 @@ describe("preferred-name workflow", () => {
     mocks.migratedName = "TJ";
     render(
       <>
-        <FlickletHeader />
+        <FlickletHeader showGreeting={false} />
         <HomeGreeting />
       </>,
     );
@@ -195,7 +206,7 @@ describe("preferred-name workflow", () => {
     mocks.read.mockResolvedValue({ preferredName: "Pam" });
     render(
       <>
-        <FlickletHeader />
+        <FlickletHeader showGreeting={false} />
         <HomeGreeting />
       </>,
     );
@@ -212,7 +223,7 @@ describe("preferred-name workflow", () => {
     });
     render(
       <>
-        <FlickletHeader />
+        <FlickletHeader showGreeting={false} />
         <HomeGreeting />
       </>,
     );
@@ -264,7 +275,7 @@ describe("preferred-name workflow", () => {
     mocks.write.mockRejectedValueOnce(new Error("Offline"));
     render(
       <>
-        <FlickletHeader />
+        <FlickletHeader showGreeting={false} />
         <HomeGreeting />
       </>,
     );
@@ -280,7 +291,7 @@ describe("preferred-name workflow", () => {
     expect(await screen.findByTestId("home-greeting")).toHaveTextContent("Pam");
   });
   it("dismissal does not establish a name and resets on next sign-in", async () => {
-    render(<FlickletHeader />);
+    render(<FlickletHeader showGreeting={false} />);
     await screen.findByRole("dialog");
     fireEvent.click(screen.getByRole("button", { name: "Not now" }));
     expect(screen.queryByRole("dialog")).toBeNull();
@@ -291,7 +302,7 @@ describe("preferred-name workflow", () => {
   });
   it("first sign-in waits for background document creation and then prompts", async () => {
     mocks.read.mockResolvedValueOnce(null).mockResolvedValueOnce({});
-    render(<FlickletHeader />);
+    render(<FlickletHeader showGreeting={false} />);
     await waitFor(() => expect(mocks.read).toHaveBeenCalledTimes(1));
     await act(async () => {});
     expect(screen.queryByRole("dialog")).toBeNull();
@@ -304,7 +315,7 @@ describe("preferred-name workflow", () => {
       .mockResolvedValueOnce({ preferredName: "Mom" });
     render(
       <>
-        <FlickletHeader />
+        <FlickletHeader showGreeting={false} />
         <PreferredNameEditor />
         <HomeGreeting />
       </>,

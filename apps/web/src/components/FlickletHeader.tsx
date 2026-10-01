@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { APP_VERSION } from "../version";
 import { useTranslations } from "../lib/language";
+import HomeGreeting from "./HomeGreeting";
 import AccountButton from "./AccountButton";
 import PreferredNamePromptModal from "./PreferredNamePromptModal";
 import { usePreferredName } from "../hooks/usePreferredName";
@@ -40,6 +41,7 @@ const POPULAR_GENRES = [
 ];
 
 export type FlickletHeaderProps = {
+  showGreeting?: boolean;
   appName?: string;
   onSearch?: (
     query: string,
@@ -54,6 +56,7 @@ export type FlickletHeaderProps = {
 };
 
 export default function FlickletHeader({
+  showGreeting = true,
   appName = "Flicklet",
   onSearch,
   onClear,
@@ -78,11 +81,11 @@ export default function FlickletHeader({
         style={{ backgroundColor: "var(--bg)" }}
       >
         <div className="mx-auto w-full max-w-screen-2xl px-3 py-3 md:px-6 md:py-6">
-          <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 md:grid md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-4">
-            <div className="hidden min-w-0 md:block" aria-hidden="true" />
-            {/* Center: title */}
-            <div className="min-w-min text-center">
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+            {/* Left: logo and personalized greeting */}
+            <div className="min-w-0 flex-1 basis-28 text-left">
               <AppTitle text={appName} onClick={onNavigateHome} />
+              {showGreeting && <HomeGreeting />}
             </div>
             {/* Right: version + help + optional show toggle + auth */}
             <div className="flex min-w-0 items-center justify-end gap-1 md:gap-2">
@@ -186,7 +189,6 @@ function InstallButtonSlot() {
 
   // Reserve space: match the button width so header doesn't shift
   const style: React.CSSProperties = {
-    display: "inline-block",
     width: "64px",
     textAlign: "center",
   };
@@ -195,6 +197,7 @@ function InstallButtonSlot() {
     return (
       <span
         id="install-slot"
+        className="hidden md:inline-block"
         data-role="install"
         style={style}
         aria-hidden="true"

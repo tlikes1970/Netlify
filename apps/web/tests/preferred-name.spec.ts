@@ -30,7 +30,7 @@ test.beforeAll(async () => {
   };
   const result = await build({
     stdin: {
-      contents: `import React from 'react';import {createRoot} from 'react-dom/client';import Header from './src/components/FlickletHeader';import Editor from './src/components/PreferredNameEditor';import Greeting from './src/components/HomeGreeting';function App(){const [settings,setSettings]=React.useState(false);return <><Header/><Greeting/><button onClick={()=>setSettings(!settings)}>Open name settings</button>{settings&&<Editor/>}</>};createRoot(document.getElementById('root')).render(<App/>);`,
+      contents: `import React from 'react';import {createRoot} from 'react-dom/client';import Header from './src/components/FlickletHeader';import Editor from './src/components/PreferredNameEditor';function App(){const [settings,setSettings]=React.useState(false);return <><Header/><button onClick={()=>setSettings(!settings)}>Open name settings</button>{settings&&<Editor/>}</>};createRoot(document.getElementById('root')).render(<App/>);`,
       resolveDir: appRoot,
       loader: "tsx",
     },
@@ -108,7 +108,10 @@ for (const width of [320, 360, 390, 768, 1280]) {
     await dialog.getByLabel("Flicklet preferred name").fill("Travis");
     await dialog.getByRole("button", { name: "Save", exact: true }).click();
     await expect(dialog).toHaveCount(0);
-    await expect(page.getByTestId("home-greeting")).toContainText("Travis");
+    await expect(
+      page.locator("header").getByTestId("home-greeting"),
+    ).toContainText("Travis");
+    await expect(page.getByTestId("home-greeting")).toHaveCount(1);
     await page.getByRole("button", { name: "Open name settings" }).click();
     await expect(page.getByLabel("Flicklet preferred name")).toHaveValue(
       "Travis",

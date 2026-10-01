@@ -400,7 +400,7 @@ describe("preference-only reset", () => {
     settingsManager.updateSettings(fixture());
     render(
       <>
-        <FlickletHeader />
+        <FlickletHeader showGreeting={false} />
         <HomeGreeting />
       </>,
     );

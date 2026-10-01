@@ -42,12 +42,8 @@ function signedIn() {
   };
   return render(<AccountButton />);
 }
-function openAccount() {
-  fireEvent.click(screen.getByRole("button", { name: "Account" }));
-}
 function openConfirmation() {
-  openAccount();
-  fireEvent.click(screen.getByRole("button", { name: "Log Out" }));
+  fireEvent.click(screen.getByTestId("account-button"));
 }
 
 describe("account control", () => {
@@ -106,26 +102,19 @@ describe("account control", () => {
     },
   );
 
-  it("shows Account, opens identity information and does not log out on first click", () => {
+  it("shows Log Out and opens confirmation directly without an Account dialog", () => {
     signedIn();
-    expect(screen.getByRole("button", { name: "Account" })).toBeVisible();
-    openAccount();
-    expect(screen.getByRole("dialog", { name: "Account" })).toBeInTheDocument();
-    expect(screen.getByText("Test User")).toBeInTheDocument();
-    expect(screen.getByText("test@example.com")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Log Out" })).toBeInTheDocument();
+    expect(screen.getByTestId("account-button")).toHaveTextContent("Log Out");
+    openConfirmation();
+    expect(
+      screen.getByRole("alertdialog", { name: "Log out?" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("dialog", { name: "Account" })).toBeNull();
+    expect(screen.queryByText("Test User")).toBeNull();
     expect(mocks.signOut).not.toHaveBeenCalled();
   });
 
-  it("supports email-only identity without manufacturing profile fields", () => {
-    signedIn();
-    mocks.user!.displayName = null;
-    openAccount();
-    expect(screen.getByText("test@example.com")).toBeInTheDocument();
-    expect(screen.queryByText("Test User")).toBeNull();
-  });
-
-  it("requires confirmation, and Cancel returns to Account without signing out", () => {
+  it("requires confirmation, and Cancel returns to the app without signing out", () => {
     signedIn();
     openConfirmation();
     expect(
@@ -137,7 +126,7 @@ describe("account control", () => {
     expect(mocks.signOut).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     expect(screen.queryByRole("alertdialog")).toBeNull();
-    expect(screen.getByRole("dialog", { name: "Account" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).toBeNull();
     expect(mocks.signOut).not.toHaveBeenCalled();
   });
 
@@ -151,7 +140,10 @@ describe("account control", () => {
     );
     const { rerender } = signedIn();
     openConfirmation();
-    const confirm = screen.getByRole("button", { name: "Log Out" });
+    const confirm = within(screen.getByRole("alertdialog")).getByRole(
+      "button",
+      { name: "Log Out" },
+    );
     fireEvent.click(confirm);
     fireEvent.click(confirm);
     expect(mocks.signOut).toHaveBeenCalledOnce();
@@ -167,35 +159,37 @@ describe("account control", () => {
     mocks.signOut.mockRejectedValueOnce(new Error("network error"));
     signedIn();
     openConfirmation();
-    fireEvent.click(screen.getByRole("button", { name: "Log Out" }));
+    fireEvent.click(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "Log Out",
+      }),
+    );
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Could not log out. Please try again.",
     );
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-    expect(screen.getByRole("dialog", { name: "Account" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("supports Escape, keyboard focus containment and restores focus when closed", async () => {
     signedIn();
-    openAccount();
-    const close = screen.getByRole("button", { name: "Close" });
-    await waitFor(() => expect(close).toHaveFocus());
+    openConfirmation();
+    const cancel = screen.getByRole("button", { name: "Cancel" });
+    await waitFor(() => expect(cancel).toHaveFocus());
     fireEvent.keyDown(window, { key: "Tab", shiftKey: true });
-    expect(screen.getByRole("button", { name: "Log Out" })).toHaveFocus();
+    expect(
+      within(screen.getByRole("alertdialog")).getByRole("button", {
+        name: "Log Out",
+      }),
+    ).toHaveFocus();
     fireEvent.keyDown(window, { key: "Tab" });
-    expect(close).toHaveFocus();
-    fireEvent.click(screen.getByRole("button", { name: "Log Out" }));
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Cancel" })).toHaveFocus(),
-    );
+    expect(cancel).toHaveFocus();
     fireEvent.keyDown(window, { key: "Escape" });
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-    fireEvent.keyDown(window, { key: "Escape" });
-    expect(screen.queryByRole("dialog")).toBeNull();
-    expect(screen.getByRole("button", { name: "Account" })).toHaveFocus();
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(screen.getByTestId("account-button")).toHaveFocus();
   });
 
-  it("consumes Android Back, dismissing confirmation before Account", () => {
+  it("consumes Android Back, dismissing confirmation to the app", () => {
     signedIn();
     openConfirmation();
     const back = () => {
@@ -209,18 +203,16 @@ describe("account control", () => {
     };
     back();
     expect(screen.queryByRole("alertdialog")).toBeNull();
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-    back();
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(mocks.signOut).not.toHaveBeenCalled();
   });
 
   it("dismisses by backdrop and closes when authentication changes externally", () => {
     const { rerender } = signedIn();
-    openAccount();
+    openConfirmation();
     fireEvent.click(screen.getByRole("presentation"));
     expect(screen.queryByRole("dialog")).toBeNull();
-    openAccount();
+    openConfirmation();
     mocks.user = null;
     rerender(<AccountButton />);
     expect(screen.queryByRole("dialog")).toBeNull();

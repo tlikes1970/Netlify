@@ -57,6 +57,15 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 describe("Backup/Restore confirmation and errors", () => {
+  it("leaves data and controls unchanged when the platform picker is cancelled", async () => {
+    fireEvent.click(screen.getByRole("button", {name:/Restore from Backup/}));
+    fireEvent(input,new Event("cancel"));
+    await act(async()=>fireEvent.change(input,{target:{files:[]}}));
+    expect(mocks.restore).not.toHaveBeenCalled();
+    expect(window.confirm).not.toHaveBeenCalled();
+    expect(localStorage.getItem("flicklet.library.v2")).toBe("original");
+    expect(screen.getByRole("button",{name:/Restore from Backup/})).not.toBeDisabled();
+  });
   it("validates a malformed file before confirmation and reports the error", async () => {
     await choose("{bad");
     await waitFor(() =>
