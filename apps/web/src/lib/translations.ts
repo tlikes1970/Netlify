@@ -51,7 +51,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     accountAndProfile: "Account & Profile",
     resetSettingsToDefaults: "Reset Settings to Defaults",
     confirmResetSettings:
-      "Are you sure you want to reset your local settings to defaults? This only affects this device.",
+      "Reset app preferences to their defaults? Your account, preferred name, library, lists, and access will be kept. If signed in, synced preferences will also reset on your account.",
     resetSettingsSuccess: "Your settings have been reset to defaults.",
 
     // General Settings
@@ -408,7 +408,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     resetSettingsToDefaults:
       "Restablecer configuración a valores predeterminados",
     confirmResetSettings:
-      "¿Estás seguro de que quieres restablecer la configuración local a valores predeterminados? Esto solo afecta a este dispositivo.",
+      "¿Restablecer las preferencias de la app a sus valores predeterminados? Se conservarán tu cuenta, nombre preferido, biblioteca, listas y acceso. Si has iniciado sesión, las preferencias sincronizadas también se restablecerán en tu cuenta.",
     resetSettingsSuccess:
       "Tu configuración se ha restablecido a los valores predeterminados.",
 

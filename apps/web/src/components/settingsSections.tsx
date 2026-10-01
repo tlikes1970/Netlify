@@ -27,6 +27,7 @@ import { UpgradeToProCTA } from "./UpgradeToProCTA";
 import { useFullAccessProduct } from "../hooks/useFullAccessProduct";
 import { useCustomLists, customListManager } from "../lib/customLists";
 import PreferredNameEditor from "./PreferredNameEditor";
+import ResetSettingsButton from "./ResetSettingsButton";
 import { useLibrary } from "../lib/storage";
 import { useAdminRole } from "../hooks/useAdminRole";
 // PersonalityExamples removed - inline preview is sufficient
@@ -302,18 +303,7 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
       </div>
 
       {/* Reset to Defaults */}
-      <div>
-        <button
-          onClick={() => {
-            if (window.confirm(translations.confirmResetSettings)) {
-              settingsManager.resetToDefaults();
-            }
-          }}
-          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
-        >
-          {translations.resetSettingsToDefaults}
-        </button>
-      </div>
+      <ResetSettingsButton />
     </div>
   );
 }

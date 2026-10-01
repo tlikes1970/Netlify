@@ -13,9 +13,10 @@
 
 import React from 'react';
 import { authManager } from './auth';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, runTransaction, updateDoc } from 'firebase/firestore';
 import { db } from './firebaseBootstrap';
 import { guardMutation } from './readOnlyGuard';
+import { changeLanguage } from './language';
 import type { UserSettings } from './auth.types';
 
 // Settings data model based on design document
@@ -124,26 +125,69 @@ export function stripLegacySettingsFields<T extends SettingsPayload>(raw: T): Om
 }
 
 export function mergeSettingsFromPayload(source: SettingsPayload): Settings {
+  const defaults = structuredClone(DEFAULT_SETTINGS);
   const cleaned = stripLegacySettingsFields(source);
   return {
-    ...DEFAULT_SETTINGS,
+    ...defaults,
     ...cleaned,
     notifications: {
-      ...DEFAULT_SETTINGS.notifications,
+      ...defaults.notifications,
       ...(cleaned.notifications || {}),
     },
     layout: {
-      ...DEFAULT_SETTINGS.layout,
+      ...defaults.layout,
       ...(cleaned.layout || {}),
     },
     pro: {
-      ...DEFAULT_SETTINGS.pro,
+      ...defaults.pro,
       ...(cleaned.pro || {}),
       features: {
-        ...DEFAULT_SETTINGS.pro.features,
+        ...defaults.pro.features,
         ...(cleaned.pro?.features || {}),
       },
     },
+  };
+}
+
+/** Only named preferences reset. New identity/unknown fields survive by default. */
+export function resetPreferences<T extends Settings>(current: T): T {
+  const defaults = structuredClone(DEFAULT_SETTINGS);
+  return {
+    ...current,
+    personality: defaults.personality,
+    personalityLevel: defaults.personalityLevel,
+    notifications: {
+      ...current.notifications,
+      upcomingEpisodes: defaults.notifications.upcomingEpisodes,
+      weeklyDiscover: defaults.notifications.weeklyDiscover,
+      monthlyStats: defaults.notifications.monthlyStats,
+    },
+    layout: {
+      ...current.layout,
+      condensedView: defaults.layout.condensedView,
+      theme: defaults.layout.theme,
+      homePageLists: defaults.layout.homePageLists,
+      forYouGenres: defaults.layout.forYouGenres,
+      episodeTracking: defaults.layout.episodeTracking,
+      discoveryLimit: defaults.layout.discoveryLimit,
+    },
+  };
+}
+
+function resetPreferenceFields(settings: Settings): Record<string, unknown> {
+  return {
+    personality: settings.personality,
+    personalityLevel: settings.personalityLevel,
+    'notifications.upcomingEpisodes': settings.notifications.upcomingEpisodes,
+    'notifications.weeklyDiscover': settings.notifications.weeklyDiscover,
+    'notifications.monthlyStats': settings.notifications.monthlyStats,
+    'layout.condensedView': settings.layout.condensedView,
+    'layout.theme': settings.layout.theme,
+    'layout.homePageLists': settings.layout.homePageLists,
+    'layout.forYouGenres': settings.layout.forYouGenres,
+    'layout.episodeTracking': settings.layout.episodeTracking,
+    'layout.discoveryLimit': settings.layout.discoveryLimit,
+    theme: settings.layout.theme, // Legacy cloud alias.
   };
 }
 
@@ -163,11 +207,12 @@ type FirebaseUserSettings = UserSettings & Partial<{
 const KEY = 'flicklet.settings.v2';
 
 // Settings state management
-class SettingsManager {
+export class SettingsManager {
   private settings: Settings;
   private subscribers: Set<() => void> = new Set();
   private syncTimeout: ReturnType<typeof setTimeout> | null = null;
   private isSyncing = false;
+  private syncInFlight: Promise<void> | null = null;
 
   constructor() {
     this.settings = this.loadSettings();
@@ -184,7 +229,7 @@ class SettingsManager {
     } catch (error) {
       console.warn('Failed to load settings:', error);
     }
-    return { ...DEFAULT_SETTINGS };
+    return mergeSettingsFromPayload({});
   }
 
   private saveSettings(): void {
@@ -241,15 +286,17 @@ class SettingsManager {
 
         // Update only this manager's fields. Replacing the whole settings map
         // could overwrite a preferred-name save made while this sync is pending.
-        await updateDoc(doc(db, 'users', currentUser.uid), Object.fromEntries(
+        this.syncInFlight = updateDoc(doc(db, 'users', currentUser.uid), Object.fromEntries(
           Object.entries(firebaseSettings).map(([key, value]) => [`settings.${key}`, value])
         ));
+        await this.syncInFlight;
         console.log('✅ Settings synced to Firebase');
       } catch (error) {
         // Don't block UI on sync failure - settings are saved locally
         console.warn('Failed to sync settings to Firebase:', error);
       } finally {
         this.isSyncing = false;
+        this.syncInFlight = null;
       }
     }, 1000); // 1 second debounce
   }
@@ -382,9 +429,47 @@ class SettingsManager {
     this.saveSettings();
   }
 
-  resetToDefaults(): void {
-    this.settings = { ...DEFAULT_SETTINGS };
-    this.saveSettings();
+  async resetToDefaults(): Promise<void> {
+    if (!guardMutation()) return;
+    const uid = authManager.getCurrentUser()?.uid;
+    // An older queued/in-flight full-settings sync must finish before reset.
+    if (this.syncTimeout) clearTimeout(this.syncTimeout);
+    this.syncTimeout = null;
+    await this.syncInFlight?.catch(() => undefined);
+    if (authManager.getCurrentUser()?.uid !== uid) throw new Error('The signed-in account changed. Please try again.');
+    const next = resetPreferences(this.settings);
+    if (uid) {
+      await runTransaction(db, async (transaction) => {
+        const reference = doc(db, 'users', uid);
+        const snapshot = await transaction.get(reference);
+        if (!snapshot.exists()) throw new Error('Settings could not be reset. Please try again.');
+        const fields = resetPreferenceFields(next);
+        const updates: Record<string, unknown> = {};
+        const hasMirror = !!snapshot.data().settings?.fullSettings;
+        for (const [path, value] of Object.entries(fields)) {
+          updates[`settings.${path}`] = value;
+          // Do not create a partial mirror over legacy account/access settings.
+          if (hasMirror && path !== 'theme') updates[`settings.fullSettings.${path}`] = value;
+        }
+        transaction.update(reference, updates);
+      });
+      if (authManager.getCurrentUser()?.uid !== uid) throw new Error('The signed-in account changed. Please try again.');
+    }
+    // Preserve non-preference values changed while cloud persistence was pending.
+    // Retired fields may be omitted by the normal loader; reset is not a purge.
+    let stored: Partial<Settings> = {};
+    try {
+      const raw = JSON.parse(localStorage.getItem(KEY) || '{}');
+      if (raw && typeof raw === 'object' && !Array.isArray(raw)) stored = raw;
+    } catch { /* Invalid JSON has no recoverable fields; retain the live values. */ }
+    const latest = resetPreferences({ ...stored, ...this.settings });
+    localStorage.setItem(KEY, JSON.stringify(latest));
+    this.settings = latest;
+    this.applyTheme(latest.layout.theme);
+    changeLanguage('en'); // Existing device-local language preference/default.
+    clearVariantCache();
+    clearFlickletPersonalitySession();
+    this.notifySubscribers();
   }
 
   subscribe(callback: () => void): () => void {
