@@ -1,3 +1,4 @@
+import { Library } from "../../../lib/storage";
 import type { MediaItem } from "../card.types";
 import {
   setPrimaryStatus,
@@ -7,9 +8,11 @@ import {
 export function ContextStatusActions({
   item,
   tabKey,
+  omitCurrentStatus = false,
 }: {
   item: MediaItem;
   tabKey?: "watching" | "want" | "watched";
+  omitCurrentStatus?: boolean;
 }) {
   const targets: PrimaryStatus[] =
     tabKey === "watching"
@@ -29,7 +32,9 @@ export function ContextStatusActions({
       className="grid grid-cols-2 gap-1"
       data-testid="context-status-actions"
     >
-      {targets.map((target) => (
+      {targets.filter(target =>
+        !omitCurrentStatus || target !== Library.getCurrentList(item.id, item.mediaType)
+      ).map((target) => (
         <button
           key={target}
           type="button"

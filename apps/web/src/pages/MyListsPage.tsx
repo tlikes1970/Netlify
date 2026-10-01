@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import CardV2 from '../components/cards/CardV2';
 import { useCustomLists, customListManager } from '../lib/customLists';
-import { Library } from '../lib/storage';
+import { Library, useLibrary } from '../lib/storage';
 import { useTranslations } from '../lib/language';
 import { useSettings, getPersonalityText, DEFAULT_PERSONALITY } from '../lib/settings';
 import type { ListName } from '../state/library.types';
@@ -18,7 +18,7 @@ export default function MyListsPage() {
   // Get items for the selected list
   const selectedList = selectedListId ? customListManager.getListById(selectedListId) : null;
   const listName = selectedList ? `custom:${selectedListId}` as ListName : null;
-  const items = listName ? Library.getByList(listName) : [];
+  const items = useLibrary(`custom:${selectedListId}`, { includeItemUpdates: true });
 
   // Set default selected list if none selected
   React.useEffect(() => {

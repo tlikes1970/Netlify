@@ -87,3 +87,27 @@ describe('complete watch status transition matrix', () => {
     expect(JSON.parse(localStorage.getItem('flicklet.library.v2')!)['movie:8'].list).toBe('wishlist');
   });
 });
+
+describe('removing one custom membership', () => {
+  it.each(['watching', 'wishlist', 'watched', 'not'] as const)('preserves %s, the other list and user content through reload', status => {
+    Library.upsert(item, status);
+    Library.addToCustomList(item, 'one');
+    Library.addToCustomList(item, 'two');
+    counts.mockClear();
+    Library.removeFromCustomList(item.id, item.mediaType, 'one');
+    Library.reloadFromStorage();
+    expect(Library.getEntry(item.id, item.mediaType)).toMatchObject({list: status, customListIds: ['two'], userRating: 4, userNotes: 'Notes', tags: ['family']});
+    expect(Library.getByList('custom:one')).toHaveLength(0);
+    expect(Library.getByList('custom:two')).toHaveLength(1);
+    expect(counts).toHaveBeenCalledOnce();
+    expect(counts).toHaveBeenCalledWith('one', -1);
+  });
+  it('retains another membership on a legacy custom-primary record', () => {
+    Library.upsert(item, 'custom:one');
+    Library.addToCustomList(item, 'two');
+    Library.removeFromCustomList(item.id, item.mediaType, 'one');
+    expect(Library.has(item.id, item.mediaType)).toBe(true);
+    expect(Library.getEntry(item.id, item.mediaType)).toMatchObject({list: 'custom:two', customListIds: ['two'], userRating: 4});
+    expect(Library.getByList('custom:one')).toHaveLength(0);
+  });
+});

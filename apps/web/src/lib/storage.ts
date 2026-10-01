@@ -619,6 +619,12 @@ export const Library = {
     customListManager.updateItemCount(listId, -1);
     save(state);
     emit();
+    const currentUser = getCurrentFirebaseUser();
+    if (currentUser) {
+      window.dispatchEvent(new CustomEvent("library:changed", {
+        detail: { uid: currentUser.uid, operation: "customListRemove" },
+      }));
+    }
   },
   has(id: string | number, mediaType: MediaType) {
     return !!state[k(id, mediaType)];
@@ -751,7 +757,8 @@ export const Library = {
   },
 };
 
-export function useLibrary(list: ListName) {
+// Custom-list cards opt into immutable entry updates so rating/status changes render.
+export function useLibrary(list: ListName, { includeItemUpdates = false } = {}) {
   // ⚠️ REMOVED: Diagnostics disabled
 
   const [items, setItems] = React.useState(() => {
@@ -773,7 +780,10 @@ export function useLibrary(list: ListName) {
     const newItems = Library.getByList(list);
     const itemsChanged =
       newItems.length !== prevItemsRef.current.length ||
-      newItems.some((item, idx) => item.id !== prevItemsRef.current[idx]?.id);
+      newItems.some((item, idx) =>
+        item.id !== prevItemsRef.current[idx]?.id ||
+        (includeItemUpdates && item !== prevItemsRef.current[idx])
+      );
 
     if (itemsChanged) {
       console.log(
@@ -799,7 +809,8 @@ export function useLibrary(list: ListName) {
       const hasChanged =
         updatedItems.length !== prevItemsRef.current.length ||
         updatedItems.some(
-          (item, idx) => item.id !== prevItemsRef.current[idx]?.id
+          (item, idx) => item.id !== prevItemsRef.current[idx]?.id ||
+            (includeItemUpdates && item !== prevItemsRef.current[idx])
         );
 
       if (hasChanged) {
@@ -824,7 +835,7 @@ export function useLibrary(list: ListName) {
     return () => {
       unsub();
     };
-  }, [list]);
+  }, [list, includeItemUpdates]);
 
   // ⚠️ FIXED: Removed render logging - was causing console noise
   // Only log when items actually change (handled in subscription callback)

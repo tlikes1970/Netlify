@@ -20,7 +20,7 @@ test.beforeAll(async () => {
     "lib/proUpgrade": `export function startProUpgrade(){}`,
     "lib/settings": `export function useSettings(){return {layout:{episodeTracking:false}}} export function getPersonalityText(){return ""} export const DEFAULT_PERSONALITY="Zen"`,
     "lib/language": `export function useTranslations(){return {currentlyWatchingAction:"Watching",notInterestedAction:"Not Interested",wantToWatchAction:"Want to Watch",watchedAction:"Watched",manageCurrentlyWatchingAction:"Manage Currently Watching"}}`,
-    "lib/storage": `export function getListDisplayName(list){return {watching:"Watching",wishlist:"Want to Watch",watched:"Watched",not:"Not Interested"}[list]} export const Library={getEntry:(id)=>id==="tracked"?{id,mediaType:"movie",title:"Tracked title",list:"watched",userRating:3}:null,getCurrentList:(id)=>id==="tracked"?"watched":null,subscribe:()=>()=>{},getAll:()=>[]};export function addToListWithConfirmation(){}`,
+    "lib/storage": `export function getListDisplayName(list){return {watching:"Watching",wishlist:"Want to Watch",watched:"Watched",not:"Not Interested"}[list]} export const Library={getEntry:(id)=>id==="tracked"?{id,mediaType:"movie",title:"Tracked title",list:"watched",userRating:3}:null,getCurrentList:(id)=>id==="tracked"?"watched":id==="custom-watching"?"watching":id==="custom-want"?"wishlist":id==="custom-watched"?"watched":id==="custom-not"?"not":null,subscribe:()=>()=>{},getAll:()=>[]};export function addToListWithConfirmation(){}`,
     "lib/membership": `export function getMembershipInfo(item){return item.id==="tracked"?{list:"watched",displayName:"Watched"}:{list:null,displayName:null}}`,
     "lib/statusTransitions": `export function setPrimaryStatus(){}`,
     "hooks/useDeviceDetection": `export function useIsDesktop(){return {isDesktop:false,ready:true}}`,
@@ -43,7 +43,7 @@ test.beforeAll(async () => {
   };
   const result = await build({
     stdin: {
-      contents: `import React from 'react';import {createRoot} from 'react-dom/client';import Card from './src/components/cards/CardV2';import LibrarySegmentBar from './src/components/LibrarySegmentBar';import UpNext from './src/components/cards/UpNextCard';import {MovieCardMobile} from './src/components/cards/mobile/MovieCardMobile';import {SearchResultCard} from './src/search/SearchResults';const names=['Short','A much longer title that wraps across two lines'];const item=(name,id)=>({id,mediaType:'movie',title:name,year:'2025',synopsis:'Existing short summary',userRating:3});const actions={onWant:()=>{},onWatched:()=>{},onRatingChange:()=>{}};createRoot(document.getElementById('root')).render(<><LibrarySegmentBar segment="watching" counts={{watching:1,want:2,watched:3,mylists:4}} onChange={()=>{}}/><div data-testid="cw" style={{display:'flex',gap:12,overflowX:'auto'}}>{names.map((n,i)=><Card key={i} item={item(n,i)} context="home-cw-preview" disableOverflow/>)}</div><div data-testid="up-next" style={{display:'flex',gap:12,overflowX:'auto'}}>{names.map((n,i)=><UpNext key={i} item={{...item(n,i),mediaType:'tv',nextAirDate:'2026-11-10',showStatus:'Returning Series'}}/>)}</div><div data-testid="for-you" style={{display:'flex',gap:12,overflowX:'auto'}}>{names.map((n,i)=><Card key={i} item={item(n,i)} context="tab-foryou" actions={actions}/>)}</div><div data-testid="library">{names.map((n,i)=><MovieCardMobile key={i} item={item(n,i)} tabKey={window.testTab || "watching"} actions={actions}/>)}</div><div data-testid="search-tracked"><SearchResultCard item={item("A tracked title with a long name", "tracked")} index={0} onRemove={()=>{}} actions={actions}/></div><div data-testid="search-untracked"><SearchResultCard item={item("An untracked title with a long name", "untracked")} index={1} onRemove={()=>{}} actions={actions}/></div></>);`,
+      contents: `import React from 'react';import {createRoot} from 'react-dom/client';import Card from './src/components/cards/CardV2';import LibrarySegmentBar from './src/components/LibrarySegmentBar';import UpNext from './src/components/cards/UpNextCard';import {MovieCardMobile} from './src/components/cards/mobile/MovieCardMobile';import {SearchResultCard} from './src/search/SearchResults';const names=['Short','A much longer title that wraps across two lines'];const item=(name,id)=>({id,mediaType:'movie',title:name,year:'2025',synopsis:'Existing short summary',userRating:3});const actions={onWant:()=>{},onWatched:()=>{},onNotInterested:()=>{},onDelete:()=>{},onRatingChange:()=>{}};createRoot(document.getElementById('root')).render(<><LibrarySegmentBar segment="watching" counts={{watching:1,want:2,watched:3,mylists:4}} onChange={()=>{}}/><div data-testid="cw" style={{display:'flex',gap:12,overflowX:'auto'}}>{names.map((n,i)=><Card key={i} item={item(n,i)} context="home-cw-preview" disableOverflow/>)}</div><div data-testid="up-next" style={{display:'flex',gap:12,overflowX:'auto'}}>{names.map((n,i)=><UpNext key={i} item={{...item(n,i),mediaType:'tv',nextAirDate:'2026-11-10',showStatus:'Returning Series'}}/>)}</div><div data-testid="for-you" style={{display:'flex',gap:12,overflowX:'auto'}}>{names.map((n,i)=><Card key={i} item={item(n,i)} context="tab-foryou" actions={actions}/>)}</div><div data-testid="library">{names.map((n,i)=><MovieCardMobile key={i} item={item(n,i)} tabKey={window.testTab || "watching"} actions={actions}/>)}</div><div data-testid="custom" style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(154px,1fr))",gap:12}}>{["custom-watching","custom-want","custom-watched","custom-not"].map((id,i)=><Card key={id} item={item(names[i%2],id)} context="tab-watching" currentListContext="custom:family" actions={actions}/>)}</div><div data-testid="search-tracked"><SearchResultCard item={item("A tracked title with a long name", "tracked")} index={0} onRemove={()=>{}} actions={actions}/></div><div data-testid="search-untracked"><SearchResultCard item={item("An untracked title with a long name", "untracked")} index={1} onRemove={()=>{}} actions={actions}/></div></>);`,
       resolveDir: appRoot,
       loader: "tsx",
     },
@@ -115,6 +115,36 @@ for (const width of [320, 360, 390, 768, 1280]) {
       const wantTab = page.getByRole('tab', {name: 'Want to Watch, 2 items', exact: true});
       await expect(wantTab).toBeVisible();
       expect(await wantTab.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
+      const custom = page.getByTestId('custom');
+      await expect(custom.locator('article')).toHaveCount(4);
+      await expect(custom.getByRole('combobox')).toHaveCount(0);
+      await expect(custom.getByRole('button', {name:'Custom Lists +',exact:true})).toHaveCount(0);
+      await expect(custom.getByRole('slider')).toHaveCount(4);
+      const ratingSizes = await custom.getByRole('slider').evaluateAll(els => els.map(el => ({fits:el.scrollWidth <= el.clientWidth,svg:el.querySelector('svg')!.getBoundingClientRect().width,touchHeight:el.querySelector('button')!.getBoundingClientRect().height})));
+      for (const rating of ratingSizes) {
+        expect(rating.fits).toBe(true);
+        expect(rating.svg).toBeLessThanOrEqual(18);
+        expect(rating.touchHeight).toBeGreaterThanOrEqual(44);
+      }
+      await expect(custom.locator('article').nth(0).getByRole('button',{name:'Watching',exact:true})).toHaveCount(0);
+      await expect(custom.locator('article').nth(1).getByRole('button',{name:'Want to Watch',exact:true})).toHaveCount(0);
+      if (width === 390 && tab === 'watching') await custom.screenshot({path:test.info().outputPath('custom-390.png')});
+      const customTitles = await custom.locator('h3').evaluateAll(els => els.map(el => el.getBoundingClientRect().height));
+      expect(Math.max(...customTitles)-Math.min(...customTitles)).toBeLessThanOrEqual(1);
+      const customTriggers = custom.getByRole('button',{name:'More options'});
+      await expect(customTriggers).toHaveCount(4);
+      const styles = await customTriggers.evaluateAll(els => els.map(el => ({width:el.getBoundingClientRect().width,height:el.getBoundingClientRect().height,background:getComputedStyle(el).backgroundColor})));
+      for (const style of styles) {
+        expect(style.width).toBeGreaterThanOrEqual(44);
+        expect(style.height).toBeGreaterThanOrEqual(44);
+        expect(style.background).toBe('rgba(0, 0, 0, 0)');
+      }
+      await customTriggers.first().click();
+      await expect(page.getByRole('menuitem',{name:'Watched',exact:true})).toBeVisible();
+      await expect(page.getByRole('menuitem',{name:'Not Interested',exact:true})).toBeVisible();
+      await expect(page.getByRole('menuitem',{name:'Remove from this List',exact:true})).toBeVisible();
+      await expect(page.getByRole('menuitem',{name:'Custom Lists',exact:true})).toBeVisible();
+      await page.keyboard.press('Escape');
       for (const rail of ["cw", "up-next", "for-you"]) {
         const cards = page.getByTestId(rail).locator("article");
         await expect(cards).toHaveCount(2);

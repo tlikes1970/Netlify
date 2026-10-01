@@ -312,7 +312,7 @@ export function CompactOverflowMenu({
         if (handlers.onDelete)
           menuItems.push({
             id: "delete",
-            label: customListContext ? "Remove from Custom List" : "Delete",
+            label: customListContext ? "Remove from this List" : "Delete",
             onClick: handlers.onDelete,
           });
         break;
@@ -379,7 +379,7 @@ export function CompactOverflowMenu({
         if (handlers.onDelete)
           menuItems.push({
             id: "delete",
-            label: customListContext ? "Remove from Custom List" : "Delete",
+            label: customListContext ? "Remove from this List" : "Delete",
             onClick: handlers.onDelete,
           });
         break;
@@ -446,7 +446,7 @@ export function CompactOverflowMenu({
         if (handlers.onDelete)
           menuItems.push({
             id: "delete",
-            label: customListContext ? "Remove from Custom List" : "Delete",
+            label: customListContext ? "Remove from this List" : "Delete",
             onClick: handlers.onDelete,
           });
         break;
@@ -532,7 +532,7 @@ export function CompactOverflowMenu({
         if (handlers.onDelete)
           menuItems.push({
             id: "delete",
-            label: customListContext ? "Remove from Custom List" : "Delete",
+            label: customListContext ? "Remove from this List" : "Delete",
             onClick: handlers.onDelete,
           });
     }

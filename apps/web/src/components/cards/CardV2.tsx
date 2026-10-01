@@ -244,7 +244,10 @@ export default function CardV2({
         {ratingOpportunity ||
           (isCustomList ? (
             <div className="p-2">
-              <ContextStatusActions item={item} />
+              <ContextStatusActions
+                item={item}
+                omitCurrentStatus={!isDesktop.isDesktop}
+              />
               <StarRating
                 value={item.userRating || 0}
                 onChange={(rating) => actions?.onRatingChange?.(item, rating)}
@@ -256,10 +259,13 @@ export default function CardV2({
             <CardActions context={context} item={item} actions={actions} />
           ))}
 
-        {/* Compact Actions - only visible when gate and flag are enabled (hidden for home-cw-preview) */}
+        {/* Mobile custom-list secondary actions stay available independently of compact flags. */}
         <div
           className="compact-actions-container"
-          style={{ padding: "var(--space-1, 4px)" }}
+          style={{
+            padding: "var(--space-1, 4px)",
+            display: isCustomList && !isDesktop.isDesktop ? "block" : undefined,
+          }}
         >
           {context !== "home-cw-preview" &&
             !simplified &&
