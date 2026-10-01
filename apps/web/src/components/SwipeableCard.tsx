@@ -206,7 +206,7 @@ export default function SwipeableCard({
   };
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="group/swipe-card relative overflow-hidden">
       {/* Swipe Action Overlays */}
       {previewAction && (
         <>
@@ -291,7 +291,7 @@ export default function SwipeableCard({
       
       {/* Swipe Instructions (only show on mobile) */}
       {!swipeState.isSwipeActive && !isDesktopDevice && (
-        <div className="absolute top-2 right-2 z-20 opacity-0 hover:opacity-100 transition-opacity duration-200">
+        <div className="pointer-events-none absolute top-2 right-2 z-20 opacity-0 group-hover/swipe-card:opacity-100 transition-opacity duration-200">
           <div className="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
             <div className="flex items-center gap-1">
               <span>👆</span>
