@@ -2,6 +2,7 @@
  * Blocks library/settings mutations when trial expired (read-only mode).
  */
 
+import { isRestoring } from './restoreBarrier';
 import type { SettingsSectionId } from '../components/settingsConfig';
 import { READ_ONLY_PRIMARY } from './copy/access';
 import { getEntitlementsSync } from './entitlements';
@@ -33,6 +34,7 @@ export function notifyReadOnlyBlocked(): boolean {
 
 /** Returns true if the mutation may proceed. */
 export function guardMutation(): boolean {
+  if (isRestoring()) return false;
   if (notifyReadOnlyBlocked()) return false;
   return true;
 }

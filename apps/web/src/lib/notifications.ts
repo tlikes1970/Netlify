@@ -94,6 +94,12 @@ class NotificationManager {
     }, 1000); // 1 second debounce
   }
 
+  reloadAfterRestore(): void {
+    if (this.syncTimeout) clearTimeout(this.syncTimeout);
+    this.syncTimeout = null;
+    this.settings = this.loadSettings();
+  }
+
   // Settings Management
   loadSettings(): NotificationSettings {
     try {

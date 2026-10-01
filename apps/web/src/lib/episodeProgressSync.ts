@@ -1,3 +1,4 @@
+import { trackedWrite } from './restoreBarrier';
 /**
  * Process: Episode Progress Sync
  * Purpose: Sync episode progress tracking to/from Firebase for cross-device synchronization
@@ -6,7 +7,7 @@
  * Dependencies: Firebase Firestore, authManager
  */
 
-import { doc, setDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, setDoc as firestoreWrite, collection, getDocs } from 'firebase/firestore';
 import { db } from './firebaseBootstrap';
 import { authManager } from './auth';
 
@@ -14,6 +15,8 @@ import { authManager } from './auth';
  * Sync episode progress to Firebase
  * Called when episode progress is saved
  */
+const setDoc = trackedWrite(firestoreWrite);
+
 export async function syncEpisodeProgressToFirebase(showId: number): Promise<void> {
   try {
     const currentUser = authManager.getCurrentUser();
@@ -39,6 +42,7 @@ export async function syncEpisodeProgressToFirebase(showId: number): Promise<voi
       showId: showId,
       episodes: progressData.episodes || {},
       totalEpisodes: progressData.totalEpisodes || 0,
+      ...(progressData.seasons ? { seasons: progressData.seasons } : {}),
       lastUpdated: new Date().toISOString(),
     }, { merge: true });
 
@@ -94,6 +98,7 @@ export async function loadEpisodeProgressFromFirebase(uid: string): Promise<void
           
           localStorage.setItem(localKey, JSON.stringify({
             episodes: mergedEpisodes,
+        ...((progressData.seasons ?? localData.seasons) ? { seasons: progressData.seasons ?? localData.seasons } : {}),
             totalEpisodes: totalEpisodes,
           }));
           
@@ -107,6 +112,7 @@ export async function loadEpisodeProgressFromFirebase(uid: string): Promise<void
         localStorage.setItem(localKey, JSON.stringify({
           episodes: progressData.episodes || {},
           totalEpisodes: progressData.totalEpisodes || 0,
+      ...(progressData.seasons ? { seasons: progressData.seasons } : {}),
         }));
         
         loadedCount++;

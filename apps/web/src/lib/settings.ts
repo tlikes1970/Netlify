@@ -1,3 +1,5 @@
+import { recoverLocalRestore } from './restoreRecovery';
+import { trackedWrite } from './restoreBarrier';
 /**
  * Process: Settings Management with Cross-Device Sync
  * Purpose: Manage user settings with localStorage persistence and Firebase sync for cross-device synchronization
@@ -13,7 +15,7 @@
 
 import React from 'react';
 import { authManager } from './auth';
-import { doc, runTransaction, updateDoc } from 'firebase/firestore';
+import { doc, runTransaction, updateDoc as firestoreWrite } from 'firebase/firestore';
 import { db } from './firebaseBootstrap';
 import { guardMutation } from './readOnlyGuard';
 import { changeLanguage } from './language';
@@ -31,6 +33,8 @@ export {
   clearFlickletPersonalitySession,
   FLICKLET_VOICE_ID,
 } from './flickletPersonality';
+
+const updateDoc = trackedWrite(firestoreWrite);
 
 export type Theme = 'light' | 'dark';
 export type TargetList = 'watching' | 'wishlist';
@@ -215,6 +219,7 @@ export class SettingsManager {
   private syncInFlight: Promise<void> | null = null;
 
   constructor() {
+    recoverLocalRestore();
     this.settings = this.loadSettings();
     this.applyTheme(this.settings.layout.theme);
   }
@@ -427,6 +432,20 @@ export class SettingsManager {
       extrasAccess: isPro,
     };
     this.saveSettings();
+  }
+
+  reloadAfterRestore(): void {
+    this.settings = this.loadSettings();
+    this.applyTheme(this.settings.layout.theme);
+    clearVariantCache();
+    clearFlickletPersonalitySession();
+    this.notifySubscribers();
+  }
+
+  async prepareRestore(): Promise<void> {
+    if (this.syncTimeout) clearTimeout(this.syncTimeout);
+    this.syncTimeout = null;
+    await this.syncInFlight?.catch(() => undefined);
   }
 
   async resetToDefaults(): Promise<void> {

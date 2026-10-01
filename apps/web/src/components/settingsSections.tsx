@@ -34,7 +34,8 @@ import { useAdminRole } from "../hooks/useAdminRole";
 import ForYouGenreConfig from "./ForYouGenreConfig";
 import type { Language } from "../lib/language.types";
 import type { SettingsSectionId } from "./settingsConfig";
-import type { ListName } from "../state/library.types";
+import { createBackup, restoreBackup } from "../lib/backupPersistence";
+import { parseBackup } from "../lib/backup";
 import { lazy, Suspense } from "react";
 
 // Lazy load heavy components
@@ -934,365 +935,46 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
 function DataSection({ onShowSharingModal }: SettingsSectionProps) {
   /**
    * Process: User Data Backup & Restore
-   * Purpose: Manual, local-only backup/restore plus share-entry surface in Settings
-   * Data Source: localStorage keys prefixed with flicklet.*
+   * Purpose: Validated portable backup and safe replacement using current persistence paths
+   * Data Source: Current library, settings, profile and allowlisted user data
    * Update Path: DataSection in settingsSections.tsx
    * Dependencies: Library storage helpers, Sharing modal flow
    */
   const [showSharingModal, setShowSharingModal] = useState(false);
 
+  const [backupBusy, setBackupBusy] = useState(false);
   const handleBackup = async () => {
+    setBackupBusy(true);
     try {
-      const libraryData = JSON.parse(
-        localStorage.getItem("flicklet.library.v2") || "{}"
-      );
-
-      const watchlists = {
-        movies: {
-          watching: [] as any[],
-          wishlist: [] as any[],
-          watched: [] as any[],
-        },
-        tv: {
-          watching: [] as any[],
-          wishlist: [] as any[],
-          watched: [] as any[],
-        },
-        customLists: [] as any[],
-        customItems: {} as Record<string, any[]>,
-      };
-
-      Object.values(libraryData).forEach((item: any) => {
-        const mediaItem = {
-          id: item.id,
-          mediaType: item.mediaType,
-          title: item.title || "Untitled",
-          year: item.year,
-          posterUrl: item.posterUrl,
-          voteAverage: item.voteAverage,
-          userRating: item.userRating,
-          runtimeMins: item.runtimeMins,
-          synopsis: item.synopsis,
-          nextAirDate: item.nextAirDate,
-          showStatus: item.showStatus,
-          lastAirDate: item.lastAirDate,
-          userNotes: item.userNotes,
-          tags: item.tags,
-          networks: item.networks,
-          productionCompanies: item.productionCompanies,
-        };
-
-        if (item.list?.startsWith("custom:")) {
-          const customListId = item.list.replace("custom:", "");
-          if (!watchlists.customItems[customListId]) {
-            watchlists.customItems[customListId] = [];
-          }
-          watchlists.customItems[customListId].push(mediaItem);
-        } else if (
-          item.list &&
-          ["watching", "wishlist", "watched"].includes(item.list)
-        ) {
-          if (
-            item.mediaType === "movie" &&
-            watchlists.movies[item.list as keyof typeof watchlists.movies]
-          ) {
-            (
-              watchlists.movies[
-                item.list as keyof typeof watchlists.movies
-              ] as any[]
-            ).push(mediaItem);
-          } else if (
-            item.mediaType === "tv" &&
-            watchlists.tv[item.list as keyof typeof watchlists.tv]
-          ) {
-            (
-              watchlists.tv[
-                item.list as keyof typeof watchlists.tv
-              ] as any[]
-            ).push(mediaItem);
-          }
-        }
-      });
-
-      const customListsData = localStorage.getItem("flicklet.customLists.v2");
-      if (customListsData) {
-        try {
-          const customLists = JSON.parse(customListsData);
-          watchlists.customLists = customLists.customLists || [];
-        } catch (error) {
-          console.warn("Failed to parse custom lists:", error);
-        }
-      }
-
-      const settings = JSON.parse(
-        localStorage.getItem("flicklet-settings") || "{}"
-      );
-      const user = JSON.parse(localStorage.getItem("flicklet-user") || "{}");
-
-      const userData = {
-        watchlists,
-        settings,
-        user,
-        timestamp: new Date().toISOString(),
-        version: "2.0",
-      };
-
-      const dataStr = JSON.stringify(userData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: "application/json" });
-      const url = URL.createObjectURL(dataBlob);
-
+      const backup = await createBackup();
+      const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" }));
       const link = document.createElement("a");
       link.href = url;
-      link.download = `flicklet-backup-${new Date()
-        .toISOString()
-        .split("T")[0]}.json`;
+      link.download = `flicklet-backup-${backup.createdAt.slice(0, 10)}.json`;
       document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      alert("✅ Backup downloaded successfully!");
+      try { link.click(); } finally { link.remove(); URL.revokeObjectURL(url); }
     } catch (error) {
-      console.error("Backup failed:", error);
-      alert("❌ Backup failed. Please try again.");
-    }
+      alert(`Backup failed: ${error instanceof Error ? error.message : "Please try again."}`);
+    } finally { setBackupBusy(false); }
   };
-
   const handleRestore = () => {
     const input = document.createElement("input");
     input.type = "file";
-    input.accept = ".json";
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
+    input.accept = ".json,application/json";
+    input.onchange = async () => {
+      const file = input.files?.[0];
       if (!file) return;
-
-      let userData: any;
+      setBackupBusy(true);
       try {
-        const text = await file.text();
-        userData = JSON.parse(text);
+        if (file.size > 10 * 1024 * 1024) throw new Error("The backup exceeds 10 MB.");
+        const backup = parseBackup(await file.text());
+        if (!window.confirm(`Restore the Flicklet backup from ${new Date(backup.createdAt).toLocaleString()}? Your current library, custom lists and backed-up preferences will be replaced. Your login, account handle and access will stay unchanged.`)) return;
+        const warning = await restoreBackup(backup);
+        alert(warning || "Backup restored successfully. Flicklet will reload to show your restored data.");
+        window.location.reload();
       } catch (error) {
-        console.error("Restore failed to parse file:", error);
-        alert(
-          "❌ Restore failed: Unable to read the backup file. Please select a Flicklet backup."
-        );
-        return;
-      }
-
-      if (
-        !userData?.watchlists ||
-        typeof userData.watchlists !== "object" ||
-        !(
-          userData.watchlists.movies ||
-          userData.watchlists.tv ||
-          userData.watchlists.customLists
-        )
-      ) {
-        alert(
-          "❌ Restore failed: The backup file is missing watchlist data. Please choose a valid Flicklet backup."
-        );
-        return;
-      }
-
-      const backupDate = userData.timestamp
-        ? new Date(userData.timestamp)
-        : null;
-      const formattedDate = backupDate
-        ? backupDate.toLocaleString(undefined, {
-            dateStyle: "medium",
-            timeStyle: "short",
-          })
-        : "unknown date";
-      const backupVersion = userData.version || "unknown version";
-      const confirmed = window.confirm(
-        `⚠️ This will overwrite ALL local data on this device with the backup from ${formattedDate} (version ${backupVersion}). This action cannot be undone. Continue?`
-      );
-
-      if (!confirmed) return;
-
-      const safeSetItem = (key: string, value: string) => {
-        try {
-          localStorage.setItem(key, value);
-          return true;
-        } catch (error) {
-          console.error(`Failed to write ${key}:`, error);
-          return false;
-        }
-      };
-
-      try {
-        localStorage.removeItem("flicklet.library.v2");
-
-        let restoredCount = 0;
-        const { Library } = await import("../lib/storage");
-
-        // Process movies
-        if (userData.watchlists.movies) {
-          const lists: Array<{ list: ListName; items: any[] }> = [
-            {
-              list: "watching",
-              items: userData.watchlists.movies.watching || [],
-            },
-            {
-              list: "wishlist",
-              items: userData.watchlists.movies.wishlist || [],
-            },
-            {
-              list: "watched",
-              items: userData.watchlists.movies.watched || [],
-            },
-          ];
-
-          lists.forEach(({ list, items }) => {
-            items.forEach((item: any) => {
-              if (item && item.id) {
-                const mediaItem = {
-                  id: item.id,
-                  mediaType: "movie" as const,
-                  title: item.title || item.name || "Untitled",
-                  year: item.year,
-                  posterUrl: item.posterUrl || item.poster_path,
-                  voteAverage: item.voteAverage || item.vote_average,
-                  userRating: item.userRating || item.user_rating,
-                  runtimeMins: item.runtimeMins || item.runtime,
-                  synopsis: item.synopsis || item.overview,
-                  userNotes: item.userNotes || item.notes,
-                  tags: item.tags || [],
-                  productionCompanies: item.productionCompanies || [],
-                };
-                Library.upsert(mediaItem, list);
-                restoredCount++;
-              }
-            });
-          });
-        }
-
-        // Process TV shows
-        if (userData.watchlists.tv) {
-          const lists: Array<{ list: ListName; items: any[] }> = [
-            {
-              list: "watching",
-              items: userData.watchlists.tv.watching || [],
-            },
-            {
-              list: "wishlist",
-              items: userData.watchlists.tv.wishlist || [],
-            },
-            {
-              list: "watched",
-              items: userData.watchlists.tv.watched || [],
-            },
-          ];
-
-          lists.forEach(({ list, items }) => {
-            items.forEach((item: any) => {
-              if (item && item.id) {
-                const mediaItem = {
-                  id: item.id,
-                  mediaType: "tv" as const,
-                  title: item.title || item.name || "Untitled",
-                  year: item.year || item.first_air_date?.substring(0, 4),
-                  posterUrl: item.posterUrl || item.poster_path,
-                  voteAverage: item.voteAverage || item.vote_average,
-                  userRating: item.userRating || item.user_rating,
-                  synopsis: item.synopsis || item.overview,
-                  nextAirDate: item.nextAirDate,
-                  showStatus: item.showStatus || item.status,
-                  lastAirDate: item.lastAirDate || item.last_air_date,
-                  userNotes: item.userNotes || item.notes,
-                  tags: item.tags || [],
-                  networks: item.networks || [],
-                };
-                Library.upsert(mediaItem, list);
-                restoredCount++;
-              }
-            });
-          });
-        }
-
-        // Restore custom lists
-        if (
-          userData.watchlists.customLists &&
-          Array.isArray(userData.watchlists.customLists)
-        ) {
-          const customListsData = {
-            customLists: userData.watchlists.customLists,
-            selectedListId: userData.watchlists.selectedListId || null,
-            maxLists: userData.watchlists.maxLists || 10,
-          };
-          if (
-            !safeSetItem(
-              "flicklet.customLists.v2",
-              JSON.stringify(customListsData)
-            )
-          ) {
-            throw new Error("Unable to restore custom lists.");
-          }
-        }
-
-        if (
-          userData.watchlists.customItems &&
-          typeof userData.watchlists.customItems === "object"
-        ) {
-          Object.entries(userData.watchlists.customItems).forEach(
-            ([listId, items]: [string, any]) => {
-              if (Array.isArray(items)) {
-                items.forEach((item: any) => {
-                  if (item && item.id) {
-                    const mediaItem = {
-                      id: item.id,
-                      mediaType: (item.mediaType || "movie") as "movie" | "tv",
-                      title: item.title || item.name || "Untitled",
-                      year: item.year,
-                      posterUrl: item.posterUrl || item.poster_path,
-                      voteAverage: item.voteAverage || item.vote_average,
-                      userRating: item.userRating || item.user_rating,
-                      synopsis: item.synopsis || item.overview,
-                      userNotes: item.userNotes || item.notes,
-                      tags: item.tags || [],
-                    };
-                    Library.upsert(mediaItem, `custom:${listId}` as ListName);
-                    restoredCount++;
-                  }
-                });
-              }
-            }
-          );
-        }
-
-        if (userData.settings) {
-          if (
-            !safeSetItem(
-              "flicklet-settings",
-              JSON.stringify(userData.settings)
-            )
-          ) {
-            throw new Error("Unable to restore settings.");
-          }
-        }
-
-        if (userData.user) {
-          if (
-            !safeSetItem("flicklet-user", JSON.stringify(userData.user))
-          ) {
-            throw new Error("Unable to restore user data.");
-          }
-        }
-
-        alert(
-          `✅ Data restored from ${formattedDate} (version ${backupVersion}). A reload will ensure the restored data appears. ${restoredCount} items restored.`
-        );
-
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-      } catch (error) {
-        console.error("Restore failed:", error);
-        alert(
-          `❌ Restore failed: ${
-            error instanceof Error ? error.message : "Unknown error"
-          }. Please check the backup file and try again.`
-        );
-      }
+        alert(`Restore failed: ${error instanceof Error ? error.message : "Please try again."}`);
+      } finally { setBackupBusy(false); }
     };
     input.click();
   };
@@ -1423,9 +1105,10 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
                 💾 Backup Data
               </h5>
               <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
-                Download a local JSON file that includes your watchlists, custom lists, and settings. The file is saved to your device only and never uploaded to the cloud.
+                Download a portable snapshot of your library, lists, progress, preferences and Flicklet preferred name. Login credentials and paid access are excluded.
               </p>
               <button
+                disabled={backupBusy}
                 onClick={handleBackup}
                 className="px-3 py-2 rounded-lg text-sm transition-colors"
                 style={{ backgroundColor: "var(--accent)", color: "white" }}
@@ -1447,9 +1130,10 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
                 📥 Restore Data
               </h5>
               <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
-                Upload a Flicklet backup file to overwrite data on this device only. This restores the library, lists, and settings from the chosen snapshot.
+                Restore your library, lists, progress and backed-up preferences. When signed in, supported cloud data is replaced too. Your login, handle and access are preserved.
               </p>
               <button
+                disabled={backupBusy}
                 onClick={handleRestore}
                 className="px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:opacity-90"
                 style={{ 
@@ -1479,6 +1163,7 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
                 Permanently delete ALL your data. This action cannot be undone.
               </p>
               <button
+                disabled={backupBusy}
                 onClick={handleSystemWipe}
                 className="px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:opacity-90"
                 style={{ 

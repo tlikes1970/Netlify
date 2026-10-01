@@ -1,3 +1,5 @@
+import { recoverLocalRestore } from './restoreRecovery';
+import { isRestoring } from './restoreBarrier';
 import React from "react";
 import type { MediaItem, MediaType } from "../components/cards/card.types";
 import type { ListName } from "../state/library.types";
@@ -83,6 +85,7 @@ function migrateOldData(): State {
 
 type State = Record<string, LibraryEntry>;
 const state: State = (() => {
+  recoverLocalRestore();
   try {
     const existing = JSON.parse(localStorage.getItem(KEY) || "{}");
     if (Object.keys(existing).length > 0) return existing;
@@ -113,6 +116,7 @@ function k(id: string | number, mediaType: MediaType) {
 }
 
 function save(s: State) {
+  if (isRestoring()) return;
   localStorage.setItem(KEY, JSON.stringify(s));
 }
 

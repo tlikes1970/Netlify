@@ -46,7 +46,7 @@ function isValidRow(row: unknown): row is ForYouRow {
   return genre.subgenres.some((sg) => sg.id === r.subGenre);
 }
 
-function normalizeRows(rows: ForYouRow[]): ForYouRow[] | null {
+export function normalizeRows(rows: ForYouRow[]): ForYouRow[] | null {
   if (!Array.isArray(rows) || rows.length < 1 || rows.length > 3) return null;
   if (!rows.every(isValidRow)) return null;
   return rows.map((row) => ({ ...row }));

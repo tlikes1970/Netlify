@@ -1,3 +1,5 @@
+import { recoverLocalRestore } from './restoreRecovery';
+import { isRestoring } from './restoreBarrier';
 import { useEffect, useState } from "react";
 import * as React from "react";
 import type { CustomList, UserLists, ListName } from "../state/library.types";
@@ -19,6 +21,7 @@ class CustomListManager {
   private lastSyncedCounts: Map<string, number> = new Map();
 
   constructor() {
+    recoverLocalRestore();
     this.userLists = this.loadUserLists();
     // Update maxLists based on current Pro status
     this.updateMaxLists();
@@ -86,6 +89,7 @@ class CustomListManager {
   }
 
   private saveUserLists(): void {
+    if (isRestoring()) return;
     localStorage.setItem(CUSTOM_LISTS_KEY, JSON.stringify(this.userLists));
     this.emitChange();
   }

@@ -1,3 +1,4 @@
+import { trackedWrite } from './restoreBarrier';
 /**
  * Process: Game Stats Cloud Sync
  * Purpose: Sync game statistics to/from Firebase Firestore
@@ -6,9 +7,11 @@
  * Dependencies: firebaseBootstrap.ts, firebaseSync.ts
  */
 
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc as firestoreWrite, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebaseBootstrap';
 import { getFlickWordStatsKey, getTriviaStatsKey } from './cacheKeys';
+
+const setDoc = trackedWrite(firestoreWrite);
 
 export interface GameStats {
   flickword?: {

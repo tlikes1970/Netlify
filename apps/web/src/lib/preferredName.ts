@@ -1,7 +1,10 @@
-import { doc, runTransaction, updateDoc } from "firebase/firestore";
+import { trackedWrite } from "./restoreBarrier";
+import { doc, runTransaction, updateDoc as firestoreWrite } from "firebase/firestore";
 import { authManager } from "./auth";
 import { db } from "./firebaseBootstrap";
 import type { AuthUser, UserSettings } from "./auth.types";
+
+const updateDoc = trackedWrite(firestoreWrite);
 
 export function resolvePreferredName(settings: UserSettings): string {
   // An explicit new field, including an empty value, takes precedence forever.

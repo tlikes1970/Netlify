@@ -1,3 +1,4 @@
+import { trackedWrite } from './restoreBarrier';
 /**
  * Process: Notification Settings Sync
  * Purpose: Sync notification settings to/from Firebase for cross-device synchronization
@@ -6,7 +7,7 @@
  * Dependencies: Firebase Firestore, authManager, notifications.ts
  */
 
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc as firestoreWrite, getDoc } from 'firebase/firestore';
 import { db } from './firebaseBootstrap';
 import { authManager } from './auth';
 import type { NotificationSettings } from './notifications';
@@ -15,6 +16,8 @@ import type { NotificationSettings } from './notifications';
  * Sync notification settings to Firebase
  * Called when notification settings are saved
  */
+const setDoc = trackedWrite(firestoreWrite);
+
 export async function syncNotificationSettingsToFirebase(settings: NotificationSettings): Promise<void> {
   try {
     const currentUser = authManager.getCurrentUser();

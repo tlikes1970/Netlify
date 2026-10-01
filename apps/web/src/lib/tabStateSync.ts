@@ -1,3 +1,4 @@
+import { trackedWrite } from './restoreBarrier';
 /**
  * Process: Tab State Sync
  * Purpose: Sync tab state (sort, filters, custom order) to/from Firebase for cross-device synchronization
@@ -6,7 +7,7 @@
  * Dependencies: Firebase Firestore, authManager, tabState.ts
  */
 
-import { doc, setDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, setDoc as firestoreWrite, collection, getDocs } from 'firebase/firestore';
 import { db } from './firebaseBootstrap';
 import { authManager } from './auth';
 import type { TabState } from './tabState';
@@ -15,6 +16,8 @@ import type { TabState } from './tabState';
  * Sync tab state to Firebase
  * Called when tab state is saved
  */
+const setDoc = trackedWrite(firestoreWrite);
+
 export async function syncTabStateToFirebase(tabKey: string, state: TabState): Promise<void> {
   try {
     const currentUser = authManager.getCurrentUser();

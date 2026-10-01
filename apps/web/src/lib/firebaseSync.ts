@@ -1,4 +1,6 @@
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { hasPendingCloudRestore, resolveCloudRestore } from './restoreRecovery';
+import { trackedWrite } from './restoreBarrier';
+import { doc, setDoc as firestoreWrite, getDoc, getDocFromServer, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebaseBootstrap';
 import type { LibraryEntry } from './storage';
 
@@ -8,10 +10,19 @@ import type { LibraryEntry } from './storage';
  * Based on V1 implementation with size limits and data pruning
  */
 
+const setDoc = trackedWrite(firestoreWrite);
+
 export class FirebaseSyncManager {
   private static instance: FirebaseSyncManager;
   private isInitialized = false;
   private syncInProgress = false;
+  private pendingWrite: Promise<void> | null = null;
+
+  async prepareRestore(): Promise<void> {
+    if (this.syncTimeout) clearTimeout(this.syncTimeout);
+    this.syncTimeout = null;
+    await this.pendingWrite;
+  }
   private syncTimeout: ReturnType<typeof setTimeout> | null = null;
 
   static getInstance(): FirebaseSyncManager {
@@ -67,23 +78,30 @@ export class FirebaseSyncManager {
       networks: item.networks || null, // V2 addition
       production_companies: item.productionCompanies || null, // V2 addition
       custom_list_ids: item.customListIds || [],
+      is_favorite: item.isFavorite ?? false,
+      rating_updated_at: item.ratingUpdatedAt ?? null,
+      runtime_mins: item.runtimeMins ?? null,
+      releaseDate: item.releaseDate ?? null,
+      voteCount: item.voteCount ?? null,
     };
   }
 
   /**
    * Create lean watchlists structure for Firebase
    */
-  private createLeanWatchlists(): any {
+  createLeanWatchlists(library?: Record<string, LibraryEntry>, definitions?: unknown[]): any {
     const watchlists = {
       movies: {
         watching: [],
         wishlist: [],
         watched: [],
+        not: [],
       },
       tv: {
         watching: [],
         wishlist: [],
         watched: [],
+        not: [],
       },
       customLists: [], // Add custom list definitions
       customItems: {}, // FIXED: Store custom list items separately
@@ -91,7 +109,7 @@ export class FirebaseSyncManager {
 
     // Get Library data from localStorage to avoid circular import
     try {
-      const libraryData = JSON.parse(localStorage.getItem('flicklet.library.v2') || '{}');
+      const libraryData = library ?? JSON.parse(localStorage.getItem('flicklet.library.v2') || '{}');
       
       // Group by media type and list
       Object.values(libraryData).forEach((item: any) => {
@@ -128,7 +146,7 @@ export class FirebaseSyncManager {
       });
       
       // Add custom list definitions
-      const customListsData = localStorage.getItem('flicklet.customLists.v2');
+      const customListsData = definitions ? null : localStorage.getItem('flicklet.customLists.v2');
       if (customListsData) {
         try {
           const customLists = JSON.parse(customListsData);
@@ -142,6 +160,7 @@ export class FirebaseSyncManager {
       console.warn('Failed to read Library data from localStorage:', error);
     }
 
+    if (definitions) (watchlists as any).customLists = definitions;
     return watchlists;
   }
 
@@ -187,7 +206,8 @@ export class FirebaseSyncManager {
       const firebaseDb = this.getFirebaseDb();
       
       const userRef = doc(firebaseDb, 'users', uid);
-      await setDoc(userRef, payload, { merge: true });
+      this.pendingWrite = setDoc(userRef, payload, { merge: true });
+      await this.pendingWrite;
 
       console.log(`✅ Firebase sync successful: ${sizeKB.toFixed(1)} KB`);
       return true;
@@ -197,6 +217,7 @@ export class FirebaseSyncManager {
       return false;
     } finally {
       this.syncInProgress = false;
+      this.pendingWrite = null;
     }
   }
 
@@ -210,7 +231,7 @@ export class FirebaseSyncManager {
       const firebaseDb = this.getFirebaseDb();
 
       const userRef = doc(firebaseDb, 'users', uid);
-      const userDoc = await getDoc(userRef);
+      const userDoc = await (hasPendingCloudRestore(uid) ? getDocFromServer(userRef) : getDoc(userRef));
 
       if (!userDoc.exists()) {
         console.log('📭 No Firebase data found for user');
@@ -218,6 +239,7 @@ export class FirebaseSyncManager {
       }
 
       const cloudData = userDoc.data();
+      resolveCloudRestore(uid, cloudData.restoreRevision);
       console.log('☁️ Cloud data loaded:', cloudData);
 
       if (!cloudData.watchlists) {
@@ -268,7 +290,7 @@ export class FirebaseSyncManager {
    * Merge cloud data with local Library
    */
   private async mergeCloudData(cloudWatchlists: any): Promise<void> {
-    const lists = ['watching', 'wishlist', 'watched'] as const;
+    const lists = ['watching', 'wishlist', 'watched', 'not'] as const;
     
     // Get current Library data from localStorage
     const libraryData = JSON.parse(localStorage.getItem('flicklet.library.v2') || '{}');
@@ -314,12 +336,18 @@ export class FirebaseSyncManager {
               year: cloudItem.release_date,
               posterUrl: cloudItem.poster_path,
               voteAverage: cloudItem.vote_average,
-              userRating: cloudItem.user_rating || undefined,
+              userRating: cloudItem.user_rating ?? undefined,
               userNotes: cloudItem.user_notes || undefined,
               tags: cloudItem.user_tags || undefined,
               synopsis: cloudItem.synopsis || '',
               list: list,
-              addedAt: Date.now(),
+              addedAt: cloudItem.added_date ? Date.parse(cloudItem.added_date) : Date.now(),
+              isFavorite: cloudItem.is_favorite,
+              ratingUpdatedAt: cloudItem.rating_updated_at ?? undefined,
+              runtimeMins: cloudItem.runtime_mins ?? undefined,
+              releaseDate: cloudItem.releaseDate ?? undefined,
+              voteCount: cloudItem.voteCount ?? undefined,
+              customListIds: cloudItem.custom_list_ids || [],
             };
             
             cleanedData[key] = localItem;
@@ -331,6 +359,8 @@ export class FirebaseSyncManager {
             if (cleanedData[existingKey]) {
               cleanedData[existingKey] = {
                 ...cleanedData[existingKey],
+                ...(cloudItem.is_favorite !== undefined ? { isFavorite: cloudItem.is_favorite } : {}),
+                ...(cloudItem.rating_updated_at != null ? { ratingUpdatedAt: cloudItem.rating_updated_at } : {}),
                 // Update user data from cloud (preserve local if cloud doesn't have it)
                 userRating: cloudItem.user_rating !== null && cloudItem.user_rating !== undefined 
                   ? cloudItem.user_rating 
@@ -363,7 +393,7 @@ export class FirebaseSyncManager {
               year: cloudItem.release_date,
               posterUrl: cloudItem.poster_path,
               voteAverage: cloudItem.vote_average,
-              userRating: cloudItem.user_rating || undefined,
+              userRating: cloudItem.user_rating ?? undefined,
               userNotes: cloudItem.user_notes || undefined,
               tags: cloudItem.user_tags || undefined,
               synopsis: cloudItem.synopsis || '',
@@ -373,7 +403,13 @@ export class FirebaseSyncManager {
               networks: cloudItem.networks,
               productionCompanies: cloudItem.production_companies,
               list: list,
-              addedAt: Date.now(),
+              addedAt: cloudItem.added_date ? Date.parse(cloudItem.added_date) : Date.now(),
+              isFavorite: cloudItem.is_favorite,
+              ratingUpdatedAt: cloudItem.rating_updated_at ?? undefined,
+              runtimeMins: cloudItem.runtime_mins ?? undefined,
+              releaseDate: cloudItem.releaseDate ?? undefined,
+              voteCount: cloudItem.voteCount ?? undefined,
+              customListIds: cloudItem.custom_list_ids || [],
             };
             
             cleanedData[key] = localItem;
@@ -385,6 +421,8 @@ export class FirebaseSyncManager {
             if (cleanedData[existingKey]) {
               cleanedData[existingKey] = {
                 ...cleanedData[existingKey],
+                ...(cloudItem.is_favorite !== undefined ? { isFavorite: cloudItem.is_favorite } : {}),
+                ...(cloudItem.rating_updated_at != null ? { ratingUpdatedAt: cloudItem.rating_updated_at } : {}),
                 // Update user data from cloud (preserve local if cloud doesn't have it)
                 userRating: cloudItem.user_rating !== null && cloudItem.user_rating !== undefined 
                   ? cloudItem.user_rating 
@@ -420,7 +458,7 @@ export class FirebaseSyncManager {
                 year: cloudItem.release_date || cloudItem.first_air_date,
                 posterUrl: cloudItem.poster_path,
                 voteAverage: cloudItem.vote_average,
-                userRating: cloudItem.user_rating || undefined,
+                userRating: cloudItem.user_rating ?? undefined,
                 userNotes: cloudItem.user_notes || undefined,
                 tags: cloudItem.user_tags || undefined,
                 synopsis: cloudItem.synopsis || '',
@@ -430,8 +468,13 @@ export class FirebaseSyncManager {
                 networks: cloudItem.networks,
                 productionCompanies: cloudItem.production_companies,
                 list: `custom:${customListId}`,
-                customListIds: [customListId],
-                addedAt: Date.now(),
+                addedAt: cloudItem.added_date ? Date.parse(cloudItem.added_date) : Date.now(),
+                isFavorite: cloudItem.is_favorite,
+                ratingUpdatedAt: cloudItem.rating_updated_at ?? undefined,
+                runtimeMins: cloudItem.runtime_mins ?? undefined,
+                releaseDate: cloudItem.releaseDate ?? undefined,
+                voteCount: cloudItem.voteCount ?? undefined,
+                customListIds: cloudItem.custom_list_ids || [],
               };
               
               cleanedData[key] = localItem;
@@ -443,6 +486,8 @@ export class FirebaseSyncManager {
               if (cleanedData[existingKey]) {
                 cleanedData[existingKey] = {
                   ...cleanedData[existingKey],
+                ...(cloudItem.is_favorite !== undefined ? { isFavorite: cloudItem.is_favorite } : {}),
+                ...(cloudItem.rating_updated_at != null ? { ratingUpdatedAt: cloudItem.rating_updated_at } : {}),
                   // Update user data from cloud (preserve local if cloud doesn't have it)
                   userRating: cloudItem.user_rating !== null && cloudItem.user_rating !== undefined 
                     ? cloudItem.user_rating 
