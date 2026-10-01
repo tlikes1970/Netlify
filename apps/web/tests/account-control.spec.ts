@@ -16,7 +16,7 @@ let css: string;
 test.beforeAll(async () => {
   const mocks: Record<string, string> = {
     "hooks/useAuth": `export function useAuth(){ return {user:window.testUser,isAuthenticated:!!window.testUser,signOut:async()=>{window.logoutCalls=(window.logoutCalls||0)+1}} }`,
-    "hooks/usePreferredName": `export function usePreferredName(){return {uid:window.testUser?"one":null,preferredName:window.testUser?"Dr. Travis Likes":"",loading:false,error:null}}`,
+    "hooks/usePreferredName": `export function usePreferredName(){return {uid:window.testUser?"one":null,preferredName:window.testUser?"Dr. Travis Likes with a very long preferred name for narrow screen wrapping":"",loading:false,error:null}}`,
     "hooks/useDeviceDetection": `export function useIsMobileScreen(){return window.innerWidth<768}`,
     "lib/settings": `export function useSettings(){return {personality:"Zen"}}`,
     "lib/auth": `export const authManager={getCurrentUser:()=>null}`,
@@ -85,7 +85,7 @@ for (const width of [320, 360, 390, 768, 1280]) {
         }),
       );
       await page.goto("https://account-test.local/");
-      await page.addStyleTag({ content: css });
+      await page.addStyleTag({ content: css + ":root { --safe-top: 24px; }" });
       await page.evaluate((signedIn) => {
         (window as unknown as { testUser: unknown }).testUser = signedIn
           ? {
@@ -104,7 +104,8 @@ for (const width of [320, 360, 390, 768, 1280]) {
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth),
       ).toBeLessThanOrEqual(width);
-      const title = await page.getByTestId("app-title").boundingBox();
+      const title = await page.getByTestId("app-title").locator("span").boundingBox();
+      expect(Math.abs(title!.x + title!.width / 2 - width / 2)).toBeLessThanOrEqual(1);
       expect(
         bounds!.y >= title!.y + title!.height ||
           bounds!.x >= title!.x + title!.width,
@@ -113,7 +114,11 @@ for (const width of [320, 360, 390, 768, 1280]) {
         const greeting = page.locator("header").getByTestId("home-greeting");
         await expect(greeting).toHaveCount(1);
         const position = await greeting.boundingBox();
-        expect(position!.x).toBeLessThan(bounds!.x);
+        expect(position!.x).toBeLessThanOrEqual(40);
+        expect(position!.y).toBeGreaterThanOrEqual(24);
+        expect(position!.y + position!.height).toBeLessThanOrEqual(title!.y);
+        expect(position!.height).toBeLessThanOrEqual(40);
+        await expect(greeting).toHaveCSS("text-align", "left");
         const search = await page.getByTestId("search-row").boundingBox();
         expect(position!.y + position!.height).toBeLessThanOrEqual(search!.y);
 

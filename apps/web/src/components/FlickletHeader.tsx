@@ -81,14 +81,14 @@ export default function FlickletHeader({
         style={{ backgroundColor: "var(--bg)" }}
       >
         <div className="mx-auto w-full max-w-screen-2xl px-3 py-3 md:px-6 md:py-6">
-          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
-            {/* Left: logo and personalized greeting */}
-            <div className="min-w-0 flex-1 basis-28 text-left">
+          {showGreeting && <HomeGreeting />}
+          <div className="grid grid-cols-1 items-center gap-y-1 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-x-2">
+            {/* Equal desktop side columns keep the logo centered on the screen. */}
+            <div className="min-w-0 text-center md:col-start-2">
               <AppTitle text={appName} onClick={onNavigateHome} />
-              {showGreeting && <HomeGreeting />}
             </div>
             {/* Right: version + help + optional show toggle + auth */}
-            <div className="flex min-w-0 items-center justify-end gap-1 md:gap-2">
+            <div className="flex min-w-0 flex-wrap items-center justify-end gap-1 md:col-start-3 md:gap-2">
               <span
                 className="select-none text-[10px] md:text-[11px] leading-none text-muted-foreground"
                 title="App version"
