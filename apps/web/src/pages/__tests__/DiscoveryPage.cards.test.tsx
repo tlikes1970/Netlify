@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import DiscoveryPage from '../DiscoveryPage';
+import CardV2 from '@/components/cards/CardV2';
 import { Library } from '@/lib/storage';
 const mocks = vi.hoisted(() => ({uid: 'user-a' as string | null, count: vi.fn(), toast: vi.fn(), canWrite:true, loading:false, error:null as string | null, recs:[{item:{id:'10',kind:'movie',title:'Discovery Movie',poster:'',year:2025,overview:undefined as string | undefined},score:0.7,reasons:[]}] }));
 vi.mock('@/lib/auth', () => ({authManager: {getCurrentUser: () => mocks.uid ? {uid: mocks.uid} : null}}));
@@ -61,6 +62,15 @@ describe('Discovery real card behavior', () => {
     expect(screen.getByText('2025 • TV Show')).toBeInTheDocument();
     expect(document.querySelector('.discovery-card-overview')).toBeNull();
     expect(screen.queryByText(/RETURNING|ENDED|Next episode/)).toBeNull();
+  });
+  it('groups available TV state and providers without inventing missing information', () => {
+    render(<CardV2 item={{id:'tv-state',mediaType:'tv',title:'TV title',showStatus:'Returning Series',networks:['Seven Network'],synopsis:'Existing overview',voteAverage:8}} context="tab-foryou" secondaryWatching />);
+    const row=document.querySelector('.discovery-state-providers');expect(row).toHaveTextContent('RETURNING');expect(row).toHaveTextContent('On Seven Network');
+    expect(screen.getByLabelText('rating')).toHaveTextContent('8');expect(screen.getByText('Existing overview')).toHaveClass('line-clamp-3');
+  });
+  it('has no state/provider row for movies without reliable state and empty providers', () => {
+    render(<CardV2 item={{id:'movie',mediaType:'movie',title:'Movie title',showStatus:'Returning Series',networks:[]}} context="tab-foryou" secondaryWatching />);
+    expect(document.querySelector('.discovery-state-providers')).toBeNull();expect(screen.queryByText('RETURNING')).toBeNull();
   });
   it('Want to Watch saves wishlist and filters immediately without rating', () => {
     render(<DiscoveryPage/>);

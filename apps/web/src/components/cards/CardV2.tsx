@@ -12,6 +12,8 @@ import { CompactOverflowMenu } from "../../features/compact/CompactOverflowMenu"
 import { EpisodeProgressDisplay } from "../EpisodeProgressDisplay";
 import { ContextStatusActions } from "./mobile/ContextStatusActions";
 import StarRating from "./StarRating";
+import { ProviderBadges } from "./ProviderBadge";
+import { getShowStatusInfo } from "../../utils/showStatus";
 import { ListMembershipBadge } from "../ListMembershipBadge";
 import {
   POSTER_PLACEHOLDER,
@@ -103,6 +105,7 @@ export default function CardV2({
 
   const isCustomList = propCurrentListContext?.startsWith("custom:") ?? false;
   const topOverflow = isCustomList || secondaryWatching;
+  const statusInfo = secondaryWatching && item.mediaType === "tv" ? getShowStatusInfo(item.showStatus) : null;
   const simplified =
     context === "tab-foryou" || context === "home" || isCustomList;
   const showMyListBtn =
@@ -114,13 +117,13 @@ export default function CardV2({
   // Card content (shared between mobile and desktop)
   const cardContent = (
     <article
-      className="curated-card v2 group select-none"
+      className={`curated-card v2 group select-none${secondaryWatching ? " discovery-detail-card" : ""}${topOverflow ? " cardv2-content-menu" : ""}${isCustomList ? " custom-list-detail-card" : ""}`}
       data-testid="cardv2"
       aria-label={title}
       style={{ width: "var(--poster-w-desktop, var(--poster-w, 160px))" }}
     >
       <div
-        className="relative border shadow-sm overflow-hidden"
+        className="cardv2-shell relative border shadow-sm overflow-hidden"
         style={{
           backgroundColor: "var(--card)",
           borderColor: "var(--line)",
@@ -167,6 +170,7 @@ export default function CardV2({
           )}
         </div>
 
+        <div className="cardv2-content">
         {/* Meta */}
         <div className="p-1">
           <div className="flex items-start gap-1 min-w-0">
@@ -243,6 +247,12 @@ export default function CardV2({
           </div>
         </div>
 
+        {secondaryWatching && (statusInfo || !!item.networks?.length) && (
+          <div className="discovery-state-providers">
+            {statusInfo && <span className="badge card-mobile-status-badge" style={{color:statusInfo.color,backgroundColor:statusInfo.backgroundColor}}>{statusInfo.badge}</span>}
+            {!!item.networks?.length && <ProviderBadges providers={item.networks} maxVisible={2} mediaType={item.mediaType === "tv" ? "tv" : "movie"}/>}
+          </div>
+        )}
         {secondaryWatching && item.synopsis?.trim() && (
           <p className="discovery-card-overview line-clamp-3 break-words px-1 pb-1 text-xs" style={{color: "var(--muted)"}}>{item.synopsis}</p>
         )}
@@ -302,6 +312,7 @@ export default function CardV2({
               showText={false}
             />
           )}
+        </div>
         </div>
       </div>
     </article>

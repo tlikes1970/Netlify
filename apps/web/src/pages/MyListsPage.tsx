@@ -285,7 +285,7 @@ export default function MyListsPage({onBack}: {onBack?: () => void} = {}) {
           </div>
 
           {items.length > 0 ? (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(154px,1fr))] gap-3">
+            <div className="custom-list-cards grid grid-cols-[repeat(auto-fill,minmax(154px,1fr))] gap-3">
               {items.map(item => (
                 <CardV2
                   key={`${item.mediaType}:${item.id}`}

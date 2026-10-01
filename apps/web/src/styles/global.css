@@ -1259,7 +1259,8 @@ input:focus-visible {
     left: 0;
     right: 0;
     top: 0;
-    height: var(--safe-top, 0px);
+    /* Paint across fractional-pixel joins; this does not change layout/insets. */
+    height: calc(var(--safe-top, 0px) + 1px);
     background: var(--bg);
     pointer-events: none;
   }
@@ -1274,5 +1275,28 @@ input:focus-visible {
     pointer-events: none;
   }
 }
-.cardv2-top-overflow { position: absolute; top: 4px; right: 4px; z-index: 2; }
+.cardv2-content { position: relative; min-width: 0; }
+.cardv2-top-overflow { position: absolute; top: 0; right: 0; z-index: 2; }
+.cardv2-content-menu .cardv2-content > .p-1 { padding-right: 52px; }
 .cardv2-top-overflow .compact-overflow-trigger { margin-top: 0 !important; }
+
+/* Pair the existing Discovery poster with its content; never stretch the poster. */
+.discovery-state-providers { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; padding: 0 4px 4px; min-width: 0; }
+.discovery-state-providers .provider-badges-container { margin: 0; min-width: 0; }
+@media (max-width: 768px) {
+  .discovery-results-grid, .custom-list-cards { grid-template-columns: minmax(0, 1fr); }
+  .discovery-detail-card, .custom-list-detail-card { width: 100% !important; }
+  .discovery-detail-card .cardv2-shell, .custom-list-detail-card .cardv2-shell { display: flex; align-items: flex-start; gap: 8px; padding: 4px; }
+  .discovery-detail-card .poster-wrap, .custom-list-detail-card .poster-wrap { width: var(--poster-w-desktop, var(--poster-w, 160px)); flex-shrink: 0; }
+  .discovery-detail-card .cardv2-content, .custom-list-detail-card .cardv2-content { flex: 1; }
+  .discovery-detail-card .cardv2-content { container-type: inline-size; }
+  .discovery-detail-card .discovery-card-overview { margin: 0; }
+  .custom-list-detail-card [data-testid="context-status-actions"] button { overflow-wrap: anywhere; }
+  .discovery-detail-card [data-testid="cardv2-actions"] button { min-width: 0; min-height: 44px; padding: 4px; overflow-wrap: anywhere; }
+  .discovery-detail-card [data-testid="cardv2-actions"] button span { overflow-wrap: anywhere; }
+}
+
+@container (max-width: 160px) {
+  .discovery-detail-card [data-testid="cardv2-actions"] { grid-template-columns: minmax(0, 1fr); }
+  .discovery-detail-card [data-testid="cardv2-actions"] button span { overflow-wrap: normal; }
+}
