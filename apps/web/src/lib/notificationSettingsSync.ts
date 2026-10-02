@@ -1,4 +1,4 @@
-import { trackedWrite } from './restoreBarrier';
+import { isRestoring, trackedWrite } from './restoreBarrier';
 /**
  * Process: Notification Settings Sync
  * Purpose: Sync notification settings to/from Firebase for cross-device synchronization
@@ -55,6 +55,7 @@ export async function loadNotificationSettingsFromFirebase(uid: string): Promise
     const settingsRef = doc(firebaseDb, 'users', uid, 'notificationSettings', 'main');
     const settingsDoc = await getDoc(settingsRef);
 
+    if (isRestoring()) return null;
     if (!settingsDoc.exists()) {
       console.log('📭 No notification settings found in Firebase');
       return null;

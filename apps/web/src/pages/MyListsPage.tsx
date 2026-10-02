@@ -90,7 +90,7 @@ export default function MyListsPage({onBack}: {onBack?: () => void} = {}) {
     if (!list) return;
 
     const confirmed = window.confirm(
-      `${translations.confirmDeleteList || 'Are you sure you want to delete'} "${list.name}"? ${translations.thisActionCannotBeUndone || 'This action cannot be undone.'}`
+      `${translations.confirmDeleteList || 'Are you sure you want to delete'} "${list.name}"? Titles will stay in your Library.`
     );
     
     if (confirmed) {

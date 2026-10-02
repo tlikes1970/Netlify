@@ -1,3 +1,4 @@
+import { persistLocalContent } from "./restoreBarrier";
 /**
  * Process: Onboarding State Management
  * Purpose: Single source of truth for onboarding completion status
@@ -46,7 +47,7 @@ export const getOnboardingCompleted = (): boolean => {
  */
 export const setOnboardingCompleted = (): void => {
   try {
-    localStorage.setItem(ONBOARDING_KEY, "true");
+    persistLocalContent(ONBOARDING_KEY, "true");
     console.log("[Onboarding] Marked as completed in localStorage");
   } catch {
     // Silently fail if localStorage is unavailable
@@ -92,7 +93,7 @@ export const getSearchTipDismissed = (): boolean => {
 
 export const setSearchTipDismissed = (): void => {
   try {
-    localStorage.setItem("flicklet.searchTipDismissed", "true");
+    persistLocalContent("flicklet.searchTipDismissed", "true");
   } catch {
     // Silently fail if localStorage is unavailable
   }

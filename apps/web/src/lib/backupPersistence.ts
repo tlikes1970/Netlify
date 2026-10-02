@@ -24,7 +24,7 @@ import {
 } from "./backup";
 import { preferredNameStore, resolvePreferredName } from "./preferredName";
 import { notificationManager } from "./notifications";
-import { changeLanguage } from "./language";
+import { languageManager } from "./language";
 import { beginRestore } from "./restoreBarrier";
 import { normalizeRows } from "./forYouRowsStorage";
 
@@ -86,6 +86,7 @@ export async function prepareCloudRestore(
   backup: Backup,
   uid: string,
   revision: string,
+  startOver = false,
 ): Promise<() => Promise<void>> {
   const ref = doc(db, "users", uid);
   const snapshot = await getDocFromServer(ref);
@@ -138,6 +139,16 @@ export async function prepareCloudRestore(
         : {}),
     };
   }
+  if (startOver) {
+    addSetting("displayName", "Guest");
+    updates["settings.lang"] = "en";
+    if (!mirror) {
+      const full = object(updates["settings.fullSettings"], "settings mirror");
+      full.displayName = "Guest";
+      delete object(full.layout, "layout").themePack;
+      delete object(full.notifications, "notifications").alertConfig;
+    }
+  }
   const modern = !isLegacyBackup(backup);
   if (modern) {
     if (!("themePack" in layout)) addSetting("layout.themePack", deleteField());
@@ -171,11 +182,12 @@ export async function prepareCloudRestore(
   batch.update(ref, updates);
   let operations = 1;
   if (modern) {
-    for (const group of ["episodeProgress", "tabState"]) {
+    for (const group of startOver ? ["episodeProgress", "tabState", "notificationSettings"] : ["episodeProgress", "tabState"]) {
       const existing = await getDocsFromServer(
         collection(db, "users", uid, group),
       );
       existing.forEach((d) => {
+        if (startOver && group === "notificationSettings" && d.id === "main") return;
         batch.delete(d.ref);
         operations++;
       });
@@ -283,7 +295,7 @@ export async function restoreBackup(input: Backup): Promise<string | null> {
     settingsManager.reloadAfterRestore();
     notificationManager.reloadAfterRestore();
     const language = backup.local["flicklet.language.v2"];
-    if (language === "en" || language === "es") changeLanguage(language);
+    if (language === "en" || language === "es") languageManager.reloadAfterRestore();
     if (uid) preferredNameStore.retry();
     window.dispatchEvent(new CustomEvent("customLists:updated"));
     Library.notifyUpdate();
@@ -303,10 +315,8 @@ export async function restoreBackup(input: Backup): Promise<string | null> {
       );
       if (removed.length) {
         try {
-          const { disableSeriesReminder } = await import("./seriesReminders");
-          await Promise.all(
-            removed.map(([id]) => disableSeriesReminder(Number(id))),
-          );
+          const { cancelSeriesReminderSchedules } = await import("./seriesReminders");
+          await cancelSeriesReminderSchedules(removed.map(([id]) => Number(id)));
         } catch {
           warning =
             "Your data was restored, but device reminder cancellation could not finish. Check Android reminders.";

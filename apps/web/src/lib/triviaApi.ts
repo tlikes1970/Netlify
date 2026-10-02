@@ -1,3 +1,4 @@
+import { persistLocalContent } from "./restoreBarrier";
 // Trivia API Service
 // Provides trivia questions from external APIs with fallback
 // Daily content is keyed off UTC date so users share the same daily content globally
@@ -277,7 +278,7 @@ function updateRecentFallbackIds(contextKey: string, questionIds: string[]): voi
       idsArray.splice(0, idsArray.length - 50);
     }
     
-    localStorage.setItem(key, JSON.stringify(idsArray));
+    persistLocalContent(key, JSON.stringify(idsArray));
   } catch (e) {
     console.warn('Failed to update recent fallback IDs:', e);
   }
@@ -567,7 +568,7 @@ export async function getCachedTrivia(
       // Cache healthy sets (20+ API questions)
       const questionsToCache = finalQuestions.slice(0, 30);
       
-      localStorage.setItem(cacheKey, JSON.stringify({
+      persistLocalContent(cacheKey, JSON.stringify({
         date: today,
         questions: questionsToCache,
         apiQuestionCount: apiQuestionCount,

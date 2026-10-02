@@ -1,3 +1,4 @@
+import { persistLocalContent } from "../../lib/restoreBarrier";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useEntitlements } from "../../hooks/useEntitlements";
 import { getCachedTrivia } from "../../lib/triviaApi";
@@ -115,7 +116,7 @@ export default function TriviaGame({
     try {
       const today = getDailySeedDate(); // UTC-based date
       const key = getTriviaGamesCompletedKey(today);
-      localStorage.setItem(key, String(count));
+      persistLocalContent(key, String(count));
     } catch (error) {
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
         console.error("❌ localStorage quota exceeded. Cannot save games completed count.");
@@ -166,8 +167,8 @@ export default function TriviaGame({
         trivia: newStats,
       };
 
-      localStorage.setItem("flicklet-data", JSON.stringify(updatedData));
-      localStorage.setItem(getTriviaStatsKey(), JSON.stringify(newStats));
+      persistLocalContent("flicklet-data", JSON.stringify(updatedData));
+      persistLocalContent(getTriviaStatsKey(), JSON.stringify(newStats));
 
       // Sync to Firebase if user is authenticated
       const currentUser = authManager.getCurrentUser();

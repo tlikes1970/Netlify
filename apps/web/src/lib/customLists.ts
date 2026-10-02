@@ -1,3 +1,4 @@
+import { Library } from "./storage";
 import { recoverLocalRestore } from './restoreRecovery';
 import { isRestoring } from './restoreBarrier';
 import { useEffect, useState } from "react";
@@ -201,6 +202,7 @@ class CustomListManager {
     }
 
     this.saveUserLists();
+    Library.removeCustomListMemberships(id);
     return true;
   }
 

@@ -1,4 +1,4 @@
-import { trackedWrite } from './restoreBarrier';
+import { isRestoring, trackedWrite } from './restoreBarrier';
 /**
  * Process: Episode Progress Sync
  * Purpose: Sync episode progress tracking to/from Firebase for cross-device synchronization
@@ -62,6 +62,7 @@ export async function loadEpisodeProgressFromFirebase(uid: string): Promise<void
     const progressCollection = collection(firebaseDb, 'users', uid, 'episodeProgress');
     const progressSnapshot = await getDocs(progressCollection);
 
+    if (isRestoring()) return;
     if (progressSnapshot.empty) {
       console.log('📭 No episode progress found in Firebase');
       return;

@@ -7,6 +7,7 @@ vi.mock("../firebaseBootstrap", () => ({ db: {} }));
 vi.mock("firebase/firestore", () => ({
   doc: () => "users/one",
   updateDoc: mocks.write,
+  runTransaction: vi.fn(),
 }));
 vi.mock("../auth", () => ({
   authManager: { getCurrentUser: () => ({ uid: "one" }) },

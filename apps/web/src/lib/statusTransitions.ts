@@ -1,3 +1,4 @@
+import { isRestoring } from "./restoreBarrier";
 import { WATCH_STATUS_LABELS } from './watchStatus';
 import type { MediaItem } from '@/components/cards/card.types';
 import type { ListName } from '@/state/library.types';
@@ -20,6 +21,7 @@ async function completeCurrentAvailableSeason(item: MediaItem): Promise<void> {
   if (!Number.isFinite(showId)) return;
   try {
     const details = await getTVShowDetails(showId);
+    if (isRestoring()) return;
     const today = new Date().toISOString().slice(0, 10);
     const available = details.seasons
       .filter((season) => season.season_number > 0)
@@ -59,6 +61,7 @@ export function setPrimaryStatus(
   target: PrimaryStatus,
   options: { feedback?: boolean } = {},
 ): void {
+  if (isRestoring()) return;
   const previous = Library.getCurrentList(item.id, item.mediaType);
   const previousProgress = item.mediaType === 'tv'
     ? localStorage.getItem(`episode-progress-${Number(item.id)}`)
@@ -76,6 +79,7 @@ export function setPrimaryStatus(
       {
         label: 'Undo',
         onClick: () => {
+          if (isRestoring()) return;
           if (previous) Library.move(item.id, item.mediaType, previous as ListName);
           else Library.remove(item.id, item.mediaType);
           if (item.mediaType === 'tv') {

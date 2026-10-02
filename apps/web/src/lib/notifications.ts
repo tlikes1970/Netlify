@@ -1,3 +1,4 @@
+import { isRestoring } from "./restoreBarrier";
 import { getEntitlementsSync } from './entitlements';
 import { guardMutation } from './readOnlyGuard';
 import { API_BASE } from './apiConfig';
@@ -77,7 +78,7 @@ class NotificationManager {
 
     // Debounce sync calls (1 second delay)
     this.syncTimeout = setTimeout(async () => {
-      if (this.isSyncing) {
+      if (isRestoring() || this.isSyncing) {
         return; // Skip if sync already in progress
       }
 
@@ -94,10 +95,16 @@ class NotificationManager {
     }, 1000); // 1 second debounce
   }
 
+  async prepareReplacement(): Promise<void> {
+    if (this.syncTimeout) clearTimeout(this.syncTimeout);
+    this.syncTimeout = null;
+  }
+
   reloadAfterRestore(): void {
     if (this.syncTimeout) clearTimeout(this.syncTimeout);
     this.syncTimeout = null;
     this.settings = this.loadSettings();
+    this.log = this.loadLog();
   }
 
   // Settings Management
@@ -126,6 +133,7 @@ class NotificationManager {
   }
 
   saveSettings(): void {
+    if (isRestoring()) return;
     try {
       localStorage.setItem('notification-settings', JSON.stringify(this.settings));
       
@@ -164,6 +172,7 @@ class NotificationManager {
 
   // Show-specific settings
   updateShowSettings(showId: number, settings: ShowNotificationSettings): void {
+    if (isRestoring()) return;
     this.settings.showOverrides[showId.toString()] = settings;
     this.saveSettings();
   }
@@ -186,6 +195,7 @@ class NotificationManager {
   }
 
   saveLog(): void {
+    if (isRestoring()) return;
     try {
       localStorage.setItem('notification-log', JSON.stringify(this.log));
     } catch (error) {
@@ -194,6 +204,7 @@ class NotificationManager {
   }
 
   addLogEntry(entry: Omit<NotificationLogEntry, 'id'>): void {
+    if (isRestoring()) return;
     const newEntry: NotificationLogEntry = {
       ...entry,
       id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,

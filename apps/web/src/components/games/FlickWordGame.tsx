@@ -1,3 +1,4 @@
+import { persistLocalContent } from "../../lib/restoreBarrier";
 /**
  * Process: FlickWord Game Component
  * Purpose: Wordle-style word guessing game with daily word challenges
@@ -96,7 +97,7 @@ function saveGameState(game: GameState, date: string, gameNumber?: number): void
       date,
       gameNumber,
     };
-    localStorage.setItem(getFlickWordGameStateKey(), JSON.stringify(savedState));
+    persistLocalContent(getFlickWordGameStateKey(), JSON.stringify(savedState));
     console.log("💾 Game state saved:", {
       target: game.target,
       guesses: game.guesses.length,
@@ -259,7 +260,7 @@ export default function FlickWordGame({
     try {
       const today = getDailySeedDate(); // UTC-based date
       const key = getFlickWordGamesCompletedKey(today);
-      localStorage.setItem(key, String(count));
+      persistLocalContent(key, String(count));
     } catch (e) {
       if (e instanceof DOMException && e.name === 'QuotaExceededError') {
         console.error("❌ localStorage quota exceeded. Cannot save games completed count.");
@@ -974,7 +975,7 @@ export default function FlickWordGame({
     }));
     // Also try to set search via localStorage for App to pick up
     try {
-      localStorage.setItem('flickword:search-word', game.target);
+      persistLocalContent('flickword:search-word', game.target);
     } catch (e) {
       console.warn('Failed to set search word:', e);
     }

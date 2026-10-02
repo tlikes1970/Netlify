@@ -1,3 +1,4 @@
+import { isRestoring } from "./restoreBarrier";
 /**
  * Process: Tab State Management
  * Purpose: Unified utilities for saving/restoring tab state (sort, filters, custom order) with guardrails
@@ -117,6 +118,7 @@ export function restoreTabState(tabKey: string, _availableItemIds?: Set<string>)
  * Save tab state to localStorage and sync to Firebase
  */
 export async function saveTabState(tabKey: string, state: Partial<TabState>): Promise<void> {
+  if (isRestoring()) return;
   try {
     // Get current state to merge with partial update
     const currentState = restoreTabState(tabKey);

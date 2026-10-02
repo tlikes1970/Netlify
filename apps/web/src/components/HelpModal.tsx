@@ -477,8 +477,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   summary of your lists.
                 </li>
                 <li>
-                  <strong>Reset All Data:</strong> wipes everything back to
-                  defaults (careful).
+                  <strong>Start Over:</strong> clears Flicklet content and resets preferences while keeping your login, account handle and access. You can download a backup first.
                 </li>
               </ul>
             </div>

@@ -1,4 +1,4 @@
-import { trackedWrite } from './restoreBarrier';
+import { isRestoring, trackedWrite } from './restoreBarrier';
 /**
  * Process: Tab State Sync
  * Purpose: Sync tab state (sort, filters, custom order) to/from Firebase for cross-device synchronization
@@ -54,6 +54,7 @@ export async function loadTabStateFromFirebase(uid: string): Promise<void> {
     const tabStateCollection = collection(firebaseDb, 'users', uid, 'tabState');
     const tabStateSnapshot = await getDocs(tabStateCollection);
 
+    if (isRestoring()) return;
     if (tabStateSnapshot.empty) {
       console.log('📭 No tab state found in Firebase');
       return;

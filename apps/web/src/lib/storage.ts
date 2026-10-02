@@ -150,6 +150,7 @@ let pendingCustomOrder: { tabKey: string; orderIds: string[] } | null = null;
 
 // Idempotent save function (guarantees one write per burst)
 function performSave() {
+  if (isRestoring()) return;
   if (isSaving) {
     // Already saving, skip to prevent duplicate writes
     if (import.meta.env.DEV) {
@@ -440,6 +441,23 @@ export const Library = {
       console.warn("Failed to reset custom order:", e);
     }
   },
+  removeCustomListMemberships(listId: string) {
+    if (!guardMutation()) return;
+    for (const entry of Object.values(state)) {
+      const remaining = (entry.customListIds ?? []).filter(id => id !== listId);
+      if (entry.list !== `custom:${listId}` && remaining.length === (entry.customListIds ?? []).length) continue;
+      entry.customListIds = remaining;
+      if (entry.list === `custom:${listId}`) {
+        // Same conservative fallback used by #6 export: retain custom-only titles.
+        entry.list = remaining.length ? `custom:${remaining[0]}` : "wishlist";
+      }
+    }
+    save(state);
+    emit();
+    const currentUser = getCurrentFirebaseUser();
+    if (currentUser) window.dispatchEvent(new CustomEvent("library:changed", { detail: { uid: currentUser.uid, operation: "customListDelete" } }));
+  },
+
   remove(id: string | number, mediaType: MediaType) {
     if (!guardMutation()) return;
     const key = k(id, mediaType);

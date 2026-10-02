@@ -1,3 +1,4 @@
+import { persistLocalContent } from "../lib/restoreBarrier";
 // Episode progress utilities
 export interface EpisodeProgress {
   watched: number;
@@ -28,7 +29,7 @@ export function readStoredEpisodeProgress(showId: number): StoredEpisodeProgress
 }
 
 export function writeStoredEpisodeProgress(showId: number, data: StoredEpisodeProgress): void {
-  localStorage.setItem(`episode-progress-${showId}`, JSON.stringify(data));
+  persistLocalContent(`episode-progress-${showId}`, JSON.stringify(data));
   window.dispatchEvent(new CustomEvent('episode-progress:updated', { detail: { showId } }));
 }
 
@@ -147,7 +148,7 @@ export function cleanupInvalidEpisodeKeys(showId: number, validEpisodeKeys: stri
         totalEpisodes: data.totalEpisodes
       };
       
-      localStorage.setItem(`episode-progress-${showId}`, JSON.stringify(cleanedData));
+      persistLocalContent(`episode-progress-${showId}`, JSON.stringify(cleanedData));
       console.log(`Cleaned episode progress for show ${showId}`);
     }
   } catch (error) {

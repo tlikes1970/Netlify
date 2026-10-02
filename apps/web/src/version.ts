@@ -399,4 +399,5 @@
 // - Fixed CommunityPanel: memoized to prevent unnecessary re-renders from parent
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
-export const APP_VERSION = "2.0.20";
+// 2.0.21 — coordinated Start Over, identity/access preservation and custom-list deletion.
+export const APP_VERSION = "2.0.21";

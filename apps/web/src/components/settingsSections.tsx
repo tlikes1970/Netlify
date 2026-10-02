@@ -1,3 +1,5 @@
+import StartOverControl from "./StartOverControl";
+import { downloadBackup } from "../lib/downloadBackup";
 /**
  * Process: Settings Section Components
  * Purpose: Shared section rendering logic used by both desktop and mobile Settings UIs
@@ -429,7 +431,7 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
       }
 
       const confirmed = window.confirm(
-        `${translations.confirmDeleteList || "Are you sure you want to delete"} "${list.name}"? ${translations.thisActionCannotBeUndone || "This action cannot be undone."}`
+        `${translations.confirmDeleteList || "Are you sure you want to delete"} "${list.name}"? Titles will stay in your Library.`
       );
 
       if (confirmed) {
@@ -947,12 +949,7 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
     setBackupBusy(true);
     try {
       const backup = await createBackup();
-      const url = URL.createObjectURL(new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" }));
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `flicklet-backup-${backup.createdAt.slice(0, 10)}.json`;
-      document.body.appendChild(link);
-      try { link.click(); } finally { link.remove(); URL.revokeObjectURL(url); }
+      downloadBackup(backup);
     } catch (error) {
       alert(`Backup failed: ${error instanceof Error ? error.message : "Please try again."}`);
     } finally { setBackupBusy(false); }
@@ -977,63 +974,6 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
       } finally { setBackupBusy(false); }
     };
     input.click();
-  };
-
-  const handleSystemWipe = () => {
-    try {
-      const confirmed = confirm(
-        "🚨 NUCLEAR OPTION: This will permanently delete ALL your data including:\n\n" +
-          "• All watchlists (movies & TV)\n" +
-          "• All settings\n" +
-          "• All user preferences\n" +
-          "• Everything stored locally\n\n" +
-          "This action CANNOT be undone. Are you absolutely sure?"
-      );
-
-      if (!confirmed) return;
-
-      const doubleConfirmed = confirm(
-        "⚠️ FINAL WARNING: This will completely wipe your Flicklet data.\n\n" +
-          'Type "DELETE" in the next prompt to confirm.'
-      );
-
-      if (!doubleConfirmed) return;
-
-      const finalCheck = prompt('Type "DELETE" to confirm system wipe:');
-
-      if (finalCheck !== "DELETE") {
-        alert(
-          '❌ System wipe cancelled. You must type exactly "DELETE" to confirm.'
-        );
-        return;
-      }
-
-      const keys = Object.keys(localStorage).filter((key) =>
-        key.startsWith("flicklet-")
-      );
-      keys.forEach((key) => localStorage.removeItem(key));
-
-      const allKeys = Object.keys(localStorage);
-      const flickletKeys = allKeys.filter(
-        (key) =>
-          key.toLowerCase().includes("flicklet") ||
-          key.toLowerCase().includes("library") ||
-          key.startsWith("flag:")
-      );
-      flickletKeys.forEach((key) => localStorage.removeItem(key));
-
-      alert("💥 System wiped successfully! The page will refresh.");
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-    } catch (error) {
-      console.error("System wipe failed:", error);
-      alert(
-        "❌ System wipe failed: " +
-          (error instanceof Error ? error.message : String(error))
-      );
-    }
   };
 
   const handleShowSharing = () => {
@@ -1147,35 +1087,7 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
               </button>
             </div>
 
-            {/* System Wipe */}
-            <div
-              className="p-4 rounded-lg"
-              style={{
-                backgroundColor: "var(--card)",
-                borderColor: "var(--error)",
-                border: "1px solid",
-              }}
-            >
-              <h5 className="font-medium mb-2" style={{ color: "var(--error)" }}>
-                🚨 System Wipe
-              </h5>
-              <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
-                Permanently delete ALL your data. This action cannot be undone.
-              </p>
-              <button
-                disabled={backupBusy}
-                onClick={handleSystemWipe}
-                className="px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:opacity-90"
-                style={{ 
-                  backgroundColor: "#ef4444", 
-                  color: "white",
-                  border: "none",
-                  cursor: "pointer"
-                }}
-              >
-                🚨 Nuclear Option
-              </button>
-            </div>
+            <StartOverControl disabled={backupBusy} />
           </div>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { persistLocalContent } from "./restoreBarrier";
 /**
  * Process: Trivia Question Deduplication
  * Purpose: Centralized system ensuring NO duplicate questions appear within a day or across a 14-day window.
@@ -100,7 +101,7 @@ function saveHistory(records: DailyQuestionRecord[]): void {
       return recordDate >= cutoffDate;
     });
     
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(pruned));
+    persistLocalContent(STORAGE_KEY, JSON.stringify(pruned));
   } catch (e) {
     console.warn('[TriviaDedup] Failed to save history:', e);
   }

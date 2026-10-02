@@ -1,5 +1,5 @@
 import { hasPendingCloudRestore, resolveCloudRestore } from './restoreRecovery';
-import { trackedWrite } from './restoreBarrier';
+import { isRestoring, trackedWrite } from './restoreBarrier';
 import { doc, setDoc as firestoreWrite, getDoc, getDocFromServer, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebaseBootstrap';
 import type { LibraryEntry } from './storage';
@@ -238,6 +238,7 @@ export class FirebaseSyncManager {
         return false;
       }
 
+      if (isRestoring()) return false;
       const cloudData = userDoc.data();
       resolveCloudRestore(uid, cloudData.restoreRevision);
       console.log('☁️ Cloud data loaded:', cloudData);
@@ -549,6 +550,7 @@ export class FirebaseSyncManager {
    */
   async syncToFirebase(uid: string): Promise<void> {
     console.log('🔄 syncToFirebase called for uid:', uid);
+    if (isRestoring()) return;
     if (!this.isInitialized) {
       console.log('⚠️ FirebaseSyncManager not initialized');
       return;

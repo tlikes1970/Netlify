@@ -25,3 +25,8 @@ export async function beginRestore(): Promise<() => void> {
     restoring = false;
   };
 }
+
+/** User-content writers share the replacement barrier, including mounted game effects. */
+export function persistLocalContent(key: string, value: string): void {
+  if (!restoring) localStorage.setItem(key, value);
+}

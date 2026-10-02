@@ -1,3 +1,4 @@
+import { persistLocalContent } from "./restoreBarrier";
 /**
  * Versioned, validated local storage for Home "For You" genre rows.
  * Migrates legacy `flicklet:forYouRows` and resets invalid/stale payloads.
@@ -81,7 +82,7 @@ function writeKey(key: string, rows: ForYouRow[]): void {
     version: FOR_YOU_ROWS_STORAGE_VERSION,
     rows,
   };
-  localStorage.setItem(key, JSON.stringify(payload));
+  persistLocalContent(key, JSON.stringify(payload));
 }
 
 const GUEST_STORAGE_KEY = storageKey(null);

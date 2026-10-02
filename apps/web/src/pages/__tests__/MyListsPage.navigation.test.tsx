@@ -82,7 +82,7 @@ describe('Custom Lists navigation', () => {
   it('deletes the selected list and selects another without removing Library data', () => {
     Library.addToCustomList({id:'1',mediaType:'movie',title:'Only A'},'b');render(<MyListsPage/>);fireEvent.click(screen.getByRole('button',{name:'Delete List A'}));
     expect(screen.getByRole('heading',{level:2})).toHaveTextContent('List B');expect(customListManager.getSelectedList()?.id).toBe('b');
-    expect(Library.getEntry('1','movie')).toMatchObject({list:'watching',customListIds:['a','b']});expect(Library.getByList('custom:b')).toHaveLength(2);
+    expect(Library.getEntry('1','movie')).toMatchObject({list:'watching',customListIds:['b']});expect(Library.getByList('custom:b')).toHaveLength(2);
   });
   it('recovers when the active list is invalidated externally', () => {
     load([a,b],'b');render(<MyListsPage/>);act(() => load([a]));expect(screen.getByRole('heading',{level:2})).toHaveTextContent('List A');

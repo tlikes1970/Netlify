@@ -103,11 +103,11 @@ vi.mock("../settings", () => ({
     layout: { ...defaults.layout, ...s.layout },
   }),
 }));
-vi.mock("../seriesReminders", () => ({ disableSeriesReminder: mocks.cancel }));
+vi.mock("../seriesReminders", () => ({ cancelSeriesReminderSchedules: async (ids: number[]) => Promise.all(ids.map(id => mocks.cancel(id))) }));
 vi.mock("../notifications", () => ({
   notificationManager: { reloadAfterRestore: vi.fn() },
 }));
-vi.mock("../language", () => ({ changeLanguage: vi.fn() }));
+vi.mock("../language", () => ({ languageManager: { reloadAfterRestore: vi.fn() } }));
 vi.mock("../forYouRowsStorage", () => ({
   normalizeRows: (v: unknown) => (Array.isArray(v) ? v : null),
 }));

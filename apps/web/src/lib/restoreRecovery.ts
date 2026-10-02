@@ -70,3 +70,8 @@ if (typeof window !== "undefined")
     // Signing out must never revive the previous account's private local snapshot.
     localStorage.removeItem(RESTORE_JOURNAL_KEY);
   });
+
+/** Any incomplete operation must be resolved before a new destructive replacement. */
+export function hasPendingRestore(): boolean {
+  return localStorage.getItem(RESTORE_JOURNAL_KEY) !== null;
+}

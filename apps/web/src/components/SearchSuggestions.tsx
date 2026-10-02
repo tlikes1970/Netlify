@@ -1,3 +1,4 @@
+import { persistLocalContent } from "../lib/restoreBarrier";
 import { useState, useEffect, useRef } from 'react';
 import { fetchEnhancedAutocomplete } from '../search/enhancedAutocomplete';
 import type { MediaItem } from './cards/card.types';
@@ -81,7 +82,7 @@ function getSearchHistory(): string[] {
 
 function saveSearchHistoryEntries(entries: HistoryEntry[]): void {
   try {
-    localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(entries));
+    persistLocalContent(SEARCH_HISTORY_KEY, JSON.stringify(entries));
   } catch (error) {
     console.warn('Failed to save search history:', error);
   }
@@ -284,7 +285,7 @@ export default function SearchSuggestions({
   
   const clearHistory = () => {
     setSearchHistory([]);
-    localStorage.setItem('searchHistory', JSON.stringify([]));
+    persistLocalContent('searchHistory', JSON.stringify([]));
   };
   
   // Mobile: Show only Recent History + TMDB (hide Popular)

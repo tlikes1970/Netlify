@@ -1,3 +1,4 @@
+import { persistLocalContent } from "../../lib/restoreBarrier";
 import { useState, useEffect, useRef, useCallback } from "react";
 import FlickWordGame from "./FlickWordGame";
 import FlickWordStats from "./FlickWordStats";
@@ -245,8 +246,8 @@ export default function FlickWordModal({
         flickword: newStats,
       };
 
-      localStorage.setItem("flicklet-data", JSON.stringify(updatedData));
-      localStorage.setItem(getFlickWordStatsKey(), JSON.stringify(newStats));
+      persistLocalContent("flicklet-data", JSON.stringify(updatedData));
+      persistLocalContent(getFlickWordStatsKey(), JSON.stringify(newStats));
       console.log("💾 FlickWord stats saved:", newStats);
 
       // Sync to Firebase if user is authenticated

@@ -1,9 +1,10 @@
 import { trackedWrite } from "./restoreBarrier";
-import { doc, runTransaction, updateDoc as firestoreWrite } from "firebase/firestore";
+import { doc, runTransaction as firestoreTransaction, updateDoc as firestoreWrite } from "firebase/firestore";
 import { authManager } from "./auth";
 import { db } from "./firebaseBootstrap";
 import type { AuthUser, UserSettings } from "./auth.types";
 
+const runTransaction = trackedWrite(firestoreTransaction);
 const updateDoc = trackedWrite(firestoreWrite);
 
 export function resolvePreferredName(settings: UserSettings): string {
@@ -112,6 +113,10 @@ export class PreferredNameStore {
         });
     }
   }
+  resetAfterStartOver = () => {
+    this.generation++;
+    this.publish({ ...this.snapshot, preferredName: "", loading: false, error: null });
+  };
   retry = () => {
     const uid = this.snapshot.uid;
     if (!uid || this.saving) return;

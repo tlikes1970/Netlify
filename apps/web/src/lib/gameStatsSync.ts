@@ -1,4 +1,4 @@
-import { trackedWrite } from './restoreBarrier';
+import { isRestoring, trackedWrite } from './restoreBarrier';
 /**
  * Process: Game Stats Cloud Sync
  * Purpose: Sync game statistics to/from Firebase Firestore
@@ -101,6 +101,7 @@ export async function loadGameStatsFromFirebase(uid: string): Promise<boolean> {
     const userRef = doc(db, 'users', uid);
     const userDoc = await getDoc(userRef);
 
+    if (isRestoring()) return false;
     if (!userDoc.exists()) {
       console.log('📭 No Firebase data found for user');
       return false;

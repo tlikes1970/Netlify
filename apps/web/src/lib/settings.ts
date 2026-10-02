@@ -1,5 +1,5 @@
 import { recoverLocalRestore } from './restoreRecovery';
-import { trackedWrite } from './restoreBarrier';
+import { isRestoring, trackedWrite } from './restoreBarrier';
 /**
  * Process: Settings Management with Cross-Device Sync
  * Purpose: Manage user settings with localStorage persistence and Firebase sync for cross-device synchronization
@@ -15,7 +15,7 @@ import { trackedWrite } from './restoreBarrier';
 
 import React from 'react';
 import { authManager } from './auth';
-import { doc, runTransaction, updateDoc as firestoreWrite } from 'firebase/firestore';
+import { doc, runTransaction as firestoreTransaction, updateDoc as firestoreWrite } from 'firebase/firestore';
 import { db } from './firebaseBootstrap';
 import { guardMutation } from './readOnlyGuard';
 import { changeLanguage } from './language';
@@ -34,6 +34,7 @@ export {
   FLICKLET_VOICE_ID,
 } from './flickletPersonality';
 
+const runTransaction = trackedWrite(firestoreTransaction);
 const updateDoc = trackedWrite(firestoreWrite);
 
 export type Theme = 'light' | 'dark';
@@ -84,7 +85,7 @@ export interface Settings {
 }
 
 // Default settings
-const DEFAULT_SETTINGS: Settings = {
+export const DEFAULT_SETTINGS: Settings = {
   displayName: 'Guest',
   personalityLevel: 2, // 1=Minimal, 2=Standard (default), 3=Maximum
   personality: DEFAULT_PERSONALITY, // New: defaults to 'Zen'
@@ -238,6 +239,7 @@ export class SettingsManager {
   }
 
   private saveSettings(): void {
+    if (isRestoring()) return;
     if (!guardMutation()) return;
     try {
       localStorage.setItem(KEY, JSON.stringify(this.settings));
@@ -315,6 +317,7 @@ export class SettingsManager {
     try {
       const firebaseSettings = (await authManager.getUserSettings(uid)) as FirebaseUserSettings | null;
       
+      if (isRestoring()) return false;
       if (!firebaseSettings) {
         // No settings in Firebase, keep local settings
         return false;
@@ -377,22 +380,26 @@ export class SettingsManager {
   }
 
   updateSettings(updates: Partial<Settings>): void {
+    if (isRestoring()) return;
     this.settings = { ...this.settings, ...updates };
     this.saveSettings();
   }
 
   updateDisplayName(name: string): void {
+    if (isRestoring()) return;
     this.settings.displayName = name;
     this.saveSettings();
   }
 
   updatePersonalityLevel(level: PersonalityLevel): void {
+    if (isRestoring()) return;
     this.settings.personalityLevel = level;
     clearFlickletPersonalitySession();
     this.saveSettings();
   }
 
   updatePersonality(personality: PersonalityName): void {
+    if (isRestoring()) return;
     this.settings.personality = personality;
     // Clear variant cache so new personality gets fresh variants
     clearVariantCache();
@@ -400,6 +407,7 @@ export class SettingsManager {
   }
 
   updateTheme(theme: Theme): void {
+    if (isRestoring()) return;
     this.settings.layout.theme = theme;
     this.applyTheme(theme);
     this.saveSettings();
@@ -412,16 +420,19 @@ export class SettingsManager {
   }
 
   toggleEpisodeTracking(): void {
+    if (isRestoring()) return;
     this.settings.layout.episodeTracking = !this.settings.layout.episodeTracking;
     this.saveSettings();
   }
 
   updateDiscoveryLimit(limit: 25 | 50 | 75 | 100): void {
+    if (isRestoring()) return;
     this.settings.layout.discoveryLimit = limit;
     this.saveSettings();
   }
 
   updateProStatus(isPro: boolean): void {
+    if (isRestoring()) return;
     this.settings.pro.isPro = isPro;
     // Update feature flags based on Pro status
     this.settings.pro.features = {

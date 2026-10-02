@@ -1,3 +1,4 @@
+import { isRestoring } from "./restoreBarrier";
 import { useEffect, useState, useMemo } from 'react';
 import * as React from 'react';
 import type { Language } from './language.types';
@@ -82,7 +83,13 @@ class LanguageManager {
     return this.currentLanguage;
   }
 
+  reloadAfterRestore(): void {
+    this.currentLanguage = this.loadLanguage();
+    this.emitChange();
+  }
+
   setLanguage(language: Language): void {
+    if (isRestoring()) return;
     this.currentLanguage = language;
     this.saveLanguage();
     

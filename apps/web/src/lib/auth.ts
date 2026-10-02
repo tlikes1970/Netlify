@@ -1,3 +1,4 @@
+import { trackedWrite } from "./restoreBarrier";
 import { 
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -8,11 +9,13 @@ import {
 } from 'firebase/auth';
 import { 
   doc, 
-  setDoc, 
+  setDoc as firestoreSetDoc,
   getDoc, 
-  updateDoc, 
+  updateDoc as firestoreUpdateDoc,
   serverTimestamp 
 } from 'firebase/firestore';
+const setDoc = trackedWrite(firestoreSetDoc);
+const updateDoc = trackedWrite(firestoreUpdateDoc);
 import { logger } from './logger';
 import { auth, db, firebaseReady, firebaseConfig } from './firebaseBootstrap';
 import { firebaseSyncManager } from './firebaseSync';

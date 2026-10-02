@@ -1,3 +1,4 @@
+import { persistLocalContent } from "./restoreBarrier";
 /**
  * Process: Game Review Storage
  * Purpose: Store and retrieve completed games for review
@@ -50,7 +51,7 @@ export function saveCompletedFlickWordGame(game: CompletedFlickWordGame): void {
     // Sort by gameNumber
     filtered.sort((a, b) => a.gameNumber - b.gameNumber);
     
-    localStorage.setItem(key, JSON.stringify(filtered));
+    persistLocalContent(key, JSON.stringify(filtered));
     console.log(`💾 Saved completed FlickWord game ${game.gameNumber} for review`);
   } catch (error) {
     if (error instanceof DOMException && error.name === 'QuotaExceededError') {
@@ -92,7 +93,7 @@ export function saveCompletedTriviaGame(game: CompletedTriviaGame): void {
     // Sort by gameNumber
     filtered.sort((a, b) => a.gameNumber - b.gameNumber);
     
-    localStorage.setItem(key, JSON.stringify(filtered));
+    persistLocalContent(key, JSON.stringify(filtered));
     console.log(`💾 Saved completed Trivia game ${game.gameNumber} for review`);
   } catch (error) {
     if (error instanceof DOMException && error.name === 'QuotaExceededError') {

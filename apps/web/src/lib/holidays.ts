@@ -1,3 +1,4 @@
+import { persistLocalContent } from "./restoreBarrier";
 const HOLIDAYS_KEY = 'flicklet:v2:holidays';
 const ASSIGN_KEY  = 'flicklet:v2:holidayAssignments'; // { [holidayId]: Array<{id,kind,title,poster}> }
 
@@ -15,7 +16,7 @@ function read<T>(k: string, fallback: T): T {
   try { return JSON.parse(localStorage.getItem(k) || '') as T; } catch { return fallback; }
 }
 function write<T>(k: string, v: T) {
-  localStorage.setItem(k, JSON.stringify(v));
+  persistLocalContent(k, JSON.stringify(v));
 }
 
 export function getHolidays(): Holiday[] {
