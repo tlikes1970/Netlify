@@ -2,13 +2,14 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import MyListsPage from '../MyListsPage';
 import { customListManager } from '@/lib/customLists';
+import { shareListWithFallback } from '@/lib/shareLinks';
 import { Library } from '@/lib/storage';
 
 vi.mock('@/lib/proConfig', () => ({ getMaxCustomLists: () => 3 }));
 vi.mock('@/lib/auth', () => ({authManager: {getCurrentUser: () => null}}));
 vi.mock('@/lib/readOnlyGuard', () => ({guardMutation: () => true}));
 vi.mock('@/lib/settings', () => ({useSettings: () => ({personality:'Zen'}), getPersonalityText: () => 'Empty list', DEFAULT_PERSONALITY:'Zen'}));
-vi.mock('@/lib/language', () => ({useTranslations: () => ({})}));
+vi.mock('@/lib/language', () => ({useTranslations: () => ({sharingAction:"Share"})}));
 vi.mock('@/lib/shareLinks', () => ({shareListWithFallback: vi.fn()}));
 vi.mock('@/state/actions', () => ({getToastCallback: () => vi.fn()}));
 vi.mock('@/components/cards/CardV2', () => ({default: ({item}: {item:{title:string}}) => <article>{item.title}</article>}));
@@ -98,4 +99,18 @@ describe('Custom Lists navigation', () => {
   it('keeps snapshot selection, names and counts independent of manager mutations', () => {
     const snapshot=customListManager.getUserLists();const original={...snapshot.customLists[0]};customListManager.updateList('a',{name:'Renamed'});customListManager.updateItemCount('a',1);customListManager.setSelectedList('b');expect(snapshot.customLists[0]).toEqual(original);expect(snapshot.selectedListId).toBeUndefined();
   });
+});
+
+it('header shares the entire list through the privacy-safe helper without altering content or memberships', async () => {
+  vi.mocked(shareListWithFallback).mockClear();
+  Library.upsert({id:'1',mediaType:'movie',title:'Only A',voteAverage:8,userRating:2,userNotes:'private',tags:['private']},'watching');
+  const before = JSON.stringify(Library.getAll());
+  const listsBefore = JSON.stringify(customListManager.getUserLists());
+  render(<MyListsPage/>);
+  fireEvent.click(screen.getByRole('button',{name:'🔗 Share'}));
+  expect(shareListWithFallback).toHaveBeenCalledOnce();
+  expect(vi.mocked(shareListWithFallback).mock.calls[0][0]).toEqual({name:'List A'});
+  expect(vi.mocked(shareListWithFallback).mock.calls[0][1]).toEqual([{title:'Only A',mediaType:'movie',voteAverage:8}]);
+  expect(JSON.stringify(Library.getAll())).toBe(before);
+  expect(JSON.stringify(customListManager.getUserLists())).toBe(listsBefore);
 });

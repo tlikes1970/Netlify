@@ -57,7 +57,7 @@ export function CompactOverflowMenu({
   // Build real menu actions from provided handlers (before positioning hooks)
   const menuActions = useMemo(
     () => (actions ? buildMenuActions(item, context, actions) : []),
-    [translations.notesAndTags, actions, item, context, settings, hasFullAccess, addToast, hideStatusActions, customListContext, secondaryWatching]
+    [translations, actions, item, context, settings, hasFullAccess, addToast, hideStatusActions, customListContext, secondaryWatching]
   );
 
   const updateMenuPosition = useCallback(() => {
@@ -238,16 +238,16 @@ export function CompactOverflowMenu({
       await shareShowWithFallback(
         {
           tmdbId: showItem.id,
-          titleId: (showItem as any).titleId,
+          mediaType: showItem.mediaType,
           title: showItem.title ?? "this show",
         },
         {
-          onSuccess: () => {
-            addToast("Share link copied to clipboard!", "success");
+          onSuccess: (outcome) => {
+            addToast(outcome === "shared" ? translations.sharingShared : translations.sharingCopied, "success");
           },
           onError: (error) => {
             console.error("Share failed:", error);
-            addToast("Failed to share", "error");
+            addToast(translations.sharingFailed, "error");
           },
         }
       );
@@ -266,7 +266,7 @@ export function CompactOverflowMenu({
         // Share this show
         menuItems.push({
           id: "share",
-          label: "Share this show",
+          label: translations.sharingAction,
           onClick: handleShareShow,
         });
         if (handlers.onWant)
@@ -333,7 +333,7 @@ export function CompactOverflowMenu({
         // Share this show
         menuItems.push({
           id: "share",
-          label: "Share this show",
+          label: translations.sharingAction,
           onClick: handleShareShow,
         });
         if (handlers.onWant)
@@ -400,7 +400,7 @@ export function CompactOverflowMenu({
         // Share this show
         menuItems.push({
           id: "share",
-          label: "Share this show",
+          label: translations.sharingAction,
           onClick: handleShareShow,
         });
         if (handlers.onWatched)
@@ -469,7 +469,7 @@ export function CompactOverflowMenu({
         // Share this show
         menuItems.push({
           id: "share",
-          label: "Share this show",
+          label: translations.sharingAction,
           onClick: handleShareShow,
         });
         if (handlers.onWant)

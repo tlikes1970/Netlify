@@ -18,7 +18,7 @@ service cloud.firestore {
 
     // Users and per-user subcollections (library sync, settings, tabs, notifications, billing)
     match /users/{userId} {
-      allow read: if isAuthenticated();
+      allow read: if isOwner(userId);
       allow create: if isOwner(userId)
         && request.resource.data.uid == request.auth.uid;
       allow update: if isOwner(userId)
@@ -76,7 +76,11 @@ service cloud.firestore {
     }
 
     // Admin access to remaining collections (e.g. titles, diagnostics)
-    match /{document=**} {
+    match /{collection}/{docId} {
+      allow read: if isAdmin() && collection != 'users';
+      allow write: if isAdmin();
+    }
+    match /{collection}/{docId}/{subcollection}/{document=**} {
       allow read, write: if isAdmin();
     }
 

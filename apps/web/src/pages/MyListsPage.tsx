@@ -138,22 +138,21 @@ export default function MyListsPage({onBack, onNotesEdit}: {onBack?: () => void;
           title: item.title,
           mediaType: item.mediaType,
           voteAverage: item.voteAverage,
-          userRating: item.userRating,
         })),
         {
-          onSuccess: () => {
+          onSuccess: (outcome) => {
             const toast = getToastCallback();
-            toast?.("List copied — paste into your message!", "success");
+            toast?.(outcome === "shared" ? translations.sharingShared : translations.sharingCopied, "success");
           },
           onError: () => {
             const toast = getToastCallback();
-            toast?.("Could not copy list — try again", "error");
+            toast?.(translations.sharingFailed, "error");
           },
         }
       );
     } catch {
       const toast = getToastCallback();
-      toast?.("Failed to share list", "error");
+      toast?.(translations.sharingFailed, "error");
     }
   };
 
@@ -278,10 +277,10 @@ export default function MyListsPage({onBack, onNotesEdit}: {onBack?: () => void;
               onClick={() => handleShareList(selectedListId)}
               className="px-4 py-2 rounded-lg transition-colors text-sm flex items-center gap-2 shrink-0 min-h-[44px]"
               style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', border: '1px solid var(--line)' }}
-              title="Share this list"
+              title={translations.sharingAction}
             >
               <span>🔗</span>
-              <span>Share</span>
+              <span>{translations.sharingAction}</span>
             </button>
           </div>
 

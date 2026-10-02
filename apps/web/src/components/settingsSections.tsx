@@ -1,3 +1,4 @@
+import SharingModal from "./modals/SharingModal";
 import StartOverControl from "./StartOverControl";
 import { downloadBackup } from "../lib/downloadBackup";
 /**
@@ -935,6 +936,7 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
 }
 
 function DataSection({ onShowSharingModal }: SettingsSectionProps) {
+  const translations = useTranslations();
   /**
    * Process: User Data Backup & Restore
    * Purpose: Validated portable backup and safe replacement using current persistence paths
@@ -994,7 +996,7 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
         {/* Share with Friends */}
         <div>
           <h4 className="text-lg font-medium mb-3" style={{ color: "var(--text)" }}>
-            📤 Share Your Lists
+            📤 {translations.sharingTitle}
           </h4>
           <div className="space-y-3">
             <div
@@ -1006,21 +1008,21 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
               }}
             >
               <h5 className="font-medium mb-2" style={{ color: "var(--text)" }}>
-                Share your lists
+                {translations.sharingTitle}
               </h5>
               <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
-                Generate a text snapshot of your lists that you can paste into messages or social posts.
+                {translations.sharingDescription}
               </p>
               <button
                 onClick={handleShowSharing}
-                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:opacity-90"
+                className="min-h-[44px] px-3 py-2 rounded-lg text-sm font-medium transition-colors hover:opacity-90"
                 style={{
                   backgroundColor: "var(--accent)",
                   color: "white",
                   border: "none",
                 }}
               >
-                📤 Share your lists
+                📤 {translations.sharingTitle}
               </button>
             </div>
           </div>
@@ -1092,31 +1094,8 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
         </div>
       </div>
 
-      {/* Sharing fallback for contexts without a global SharingModal */}
       {showSharingModal && !onShowSharingModal && (
-        <div
-          className="p-4 rounded-lg mt-4"
-          style={{
-            backgroundColor: "var(--card)",
-            borderColor: "var(--line)",
-            border: "1px solid",
-          }}
-        >
-          <p className="text-sm" style={{ color: "var(--text)" }}>
-            The sharing experience is managed by the parent view in this layout.
-            Please open Settings from the main app to share your lists.
-          </p>
-          <button
-            onClick={() => setShowSharingModal(false)}
-            className="mt-3 px-3 py-1 text-xs font-medium rounded-lg transition-colors"
-            style={{
-              backgroundColor: "var(--btn)",
-              color: "var(--text)",
-            }}
-          >
-            Close
-          </button>
-        </div>
+        <SharingModal onClose={() => setShowSharingModal(false)} />
       )}
     </>
   );

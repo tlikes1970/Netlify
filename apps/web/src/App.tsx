@@ -1,3 +1,4 @@
+import SharedTitleExperience from "@/components/SharedTitleExperience";
 import Tabs from "@/components/Tabs";
 import MobileTabs, { useViewportOffset } from "@/components/MobileTabs";
 import { mobileContentPaddingBottom } from "@/lib/mobileViewportLayout";
@@ -90,6 +91,7 @@ export default function App() {
   useEntitlements();
 
 
+  const [sharedTitleQuery, setSharedTitleQuery] = useState<string | null>(null);
   const [view, setView] = useState<AppView>("home");
   /** Defer below-fold Home content until after first paint so library rails commit sooner. */
   const [afterFirstPaintReady, setAfterFirstPaintReady] = useState(false);
@@ -202,6 +204,7 @@ export default function App() {
       mediaTypeFilter?: "tv" | "movie" | null,
     ) => {
       const nextQ = q.trim();
+      setSharedTitleQuery(null);
       setSearch({ q: nextQ, genre, type, mediaTypeFilter });
     },
     [],
@@ -212,6 +215,7 @@ export default function App() {
 
   const navigateTo = useCallback(
     (target: NavTarget, options?: { clearSearch?: boolean }) => {
+      setSharedTitleQuery(null);
       const shouldClear = options?.clearSearch !== false;
       if (shouldClear) {
         handleClear();
@@ -678,7 +682,7 @@ export default function App() {
      *
      * Supported deep-link formats:
      * - ?view=list&listId=... - Opens list detail in My Lists view
-     * - ?view=title&tmdbId=... - Navigates to search/discovery for the show
+     * - ?view=title&tmdbId=...&mediaType=... - Resolves the exact public title
      * - ?view=title&titleId=... - Navigates to search/discovery for the show
      */
     const handleQueryParams = () => {
@@ -711,80 +715,13 @@ export default function App() {
         }
         // If listId is missing or empty, app boots normally (no deep-link action)
       }
-      // Handle show deep links - navigates to appropriate view based on where show exists
-      // Note: There is no in-app detail modal, so we navigate to the tab where the show
-      // appears in the user's library, or to discovery if not found. This reuses the
-      // same navigation as clicking a card in the UI.
       else if (viewParam === "title") {
-        const tmdbId = urlParams.get("tmdbId");
-        const titleId = urlParams.get("titleId");
-
-        // Validate: proceed if at least one ID is present and not empty
-        const hasValidTmdbId = tmdbId && tmdbId.trim() !== "";
-        const hasValidTitleId = titleId && titleId.trim() !== "";
-
-        if (hasValidTmdbId || hasValidTitleId) {
-          // Try to find the show in the user's library
-          // Check both tv and movie media types since we don't know which it is
-          let foundList: "watching" | "want" | "watched" | null = null;
-          const idToCheck = hasValidTmdbId ? tmdbId : titleId;
-
-          if (idToCheck) {
-            // Try to find in library (check both tv and movie)
-            const numericId = hasValidTmdbId
-              ? parseInt(idToCheck, 10)
-              : idToCheck;
-            if (!isNaN(numericId as number) || typeof numericId === "string") {
-              const tvList = Library.getCurrentList(numericId, "tv");
-              const movieList = Library.getCurrentList(numericId, "movie");
-
-              if (
-                tvList === "watching" ||
-                tvList === "wishlist" ||
-                tvList === "watched"
-              ) {
-                foundList = tvList === "wishlist" ? "want" : tvList;
-              } else if (
-                movieList === "watching" ||
-                movieList === "wishlist" ||
-                movieList === "watched"
-              ) {
-                foundList = movieList === "wishlist" ? "want" : movieList;
-              }
-            }
-          }
-
-          // Navigate to the appropriate view
-          if (foundList) {
-            // Show is in user's library - navigate to that tab (same as clicking a card)
-            navigateTo(foundList, { clearSearch: false });
-          } else {
-            // Show not in library - navigate to discovery where user can find it
-            navigateTo("discovery", { clearSearch: false });
-          }
-
-          // Store the ID in localStorage for potential use by search/discovery
-          // This allows search to potentially look up the show if needed
-          try {
-            if (hasValidTmdbId) {
-              localStorage.setItem("flicklet:shareTmdbId", tmdbId);
-            }
-            if (hasValidTitleId) {
-              localStorage.setItem("flicklet:shareTitleId", titleId);
-            }
-          } catch (e) {
-            console.warn("Failed to store title share params:", e);
-          }
-
-          // Clean up URL
-          const newUrl = new URL(window.location.href);
-          newUrl.searchParams.delete("view");
-          newUrl.searchParams.delete("tmdbId");
-          newUrl.searchParams.delete("titleId");
-          window.history.replaceState({}, "", newUrl.toString());
-        }
-        // If both IDs are missing or empty, app boots normally (no deep-link action)
+        setSharedTitleQuery(window.location.search);
+        const newUrl = new URL(window.location.href);
+        for (const key of ["view", "tmdbId", "mediaType", "titleId"]) newUrl.searchParams.delete(key);
+        window.history.replaceState({}, "", newUrl.toString());
       }
+
     };
 
     // Check hash on load
@@ -946,7 +883,7 @@ export default function App() {
         }}
       >
         <FlickletHeader
-          showGreeting={!screenshotMode && view === "home" && !searchActive}
+          showGreeting={!screenshotMode && view === "home" && !searchActive && !sharedTitleQuery}
           appName="Flicklet"
           onSearch={(q, g, t, m) =>
             handleSearch(q, g ?? null, (t as SearchType) ?? "all", m)
@@ -979,7 +916,7 @@ export default function App() {
           />
         </div>
 
-        {searchActive ? (
+        {sharedTitleQuery ? (<SharedTitleExperience queryString={sharedTitleQuery} onBackToHome={() => { setSharedTitleQuery(null); navigateTo("home"); }} onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onSimpleReminder={handleSimpleReminder} onNotificationToggle={handleSimpleReminder} onBloopersOpen={handleBloopersOpen} onGoofsOpen={handleGoofsOpen} onExtrasOpen={handleExtrasOpen} />) : searchActive ? (
           <PullToRefreshWrapper onRefresh={handleRefresh}>
             <SearchResults
               query={search.q}

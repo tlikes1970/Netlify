@@ -31,6 +31,7 @@ type SearchResultWithPagination = {
 
 export default function SearchResults({
   query,
+  resolvedItems,
   genre,
   searchType = "all",
   mediaTypeFilter,
@@ -45,6 +46,7 @@ export default function SearchResults({
   onEpisodeTracking,
 }: {
   query: string;
+  resolvedItems?: MediaItem[];
   genre?: number | null;
   searchType?: "all" | "movies-tv" | "people";
   mediaTypeFilter?: "tv" | "movie" | null;
@@ -58,6 +60,7 @@ export default function SearchResults({
   onExtrasOpen?: (item: MediaItem) => void;
   onEpisodeTracking?: (item: MediaItem) => void;
 }) {
+  const translations = useTranslations();
   // Create actions object using Library methods and passed handlers
   const actions: CardActionHandlers = {
     onWant: (item: MediaItem) => {
@@ -131,6 +134,7 @@ export default function SearchResults({
   const settings = useSettings();
 
   useEffect(() => {
+    if (resolvedItems) { setItems(resolvedItems); setTotalPages(1); setCurrentPage(1); setError(null); setIsLoading(false); return; }
     // reset on any input change
     abortRef.current?.abort();
     setItems([]);
@@ -139,7 +143,7 @@ export default function SearchResults({
     setError(null);
     void fetchPage(1, true);
     // eslint-disable-next-line
-  }, [query, genre, searchType, mediaTypeFilter]);
+  }, [query, genre, searchType, mediaTypeFilter, resolvedItems]);
 
   // Setup intersection observer for infinite scroll
   useEffect(() => {
@@ -237,7 +241,7 @@ export default function SearchResults({
   }
 
   // Allow rendering if there's a query OR a genre selected (for genre-only search)
-  if (!query && !genre) return null;
+  if (!query && !genre && !resolvedItems) return null;
 
   const isMobile = isMobileNow();
 
@@ -277,7 +281,7 @@ export default function SearchResults({
       )}
 
       <h2 id="search-results-heading" className="text-base font-semibold mb-6">
-        {query.startsWith("tag:")
+        {resolvedItems ? translations.sharedTitleHeading : query.startsWith("tag:")
           ? `Tag search results for "${query.substring(4)}"`
           : !query.trim() && genre != null
             ? `Genre results`

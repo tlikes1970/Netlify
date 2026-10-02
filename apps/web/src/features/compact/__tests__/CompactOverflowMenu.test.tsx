@@ -136,7 +136,7 @@ describe('overflow measurement lifecycle', () => {
   it('preserves action ordering and callbacks', () => {
     render(<CompactOverflowMenu item={item} context="home" actions={actions}/>);
     open();
-    expect(screen.getAllByRole('menuitem').map(el=>el.textContent)).toEqual(['Open Details','Share this show','Custom Lists']);
+    expect(screen.getAllByRole('menuitem').map(el=>el.textContent)).toEqual(['Open Details','Share','Custom Lists']);
     fireEvent.click(screen.getByRole('menuitem',{name:'Open Details'}));
     expect(actions.onOpen).toHaveBeenCalledWith(item);
     expect(panel()).toBeNull();

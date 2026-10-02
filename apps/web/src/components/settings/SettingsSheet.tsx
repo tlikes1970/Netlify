@@ -1,3 +1,4 @@
+import SharingModal from "../modals/SharingModal";
 import { useCallback, useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { useFocusTrap } from '../../lib/a11y/useFocusTrap';
 import { useInertOutside } from '../../lib/a11y/useInertOutside';
@@ -187,7 +188,7 @@ export default function SettingsSheet({ onNotesEdit, notesEditorOpen = false }: 
 
   // Focus trap + Escape handling
   useEffect(() => {
-    if (!open) return;
+    if (!open || showSharingModal) return;
     const el = dialogRef.current;
     if (!el) return;
     function onKey(e: KeyboardEvent) {
@@ -198,13 +199,13 @@ export default function SettingsSheet({ onNotesEdit, notesEditorOpen = false }: 
     }
     el.addEventListener('keydown', onKey);
     return () => el.removeEventListener('keydown', onKey);
-  }, [open]);
+  }, [open, showSharingModal]);
 
   // Focus trap
   useFocusTrap(dialogRef.current, !!open && !notesEditorOpen, '[role="tab"][aria-selected="true"]');
 
   // Hide rest of app from screen readers
-  useInertOutside(dialogRef.current, !!open && !notesEditorOpen);
+  useInertOutside(dialogRef.current, !!open && !notesEditorOpen && !showSharingModal);
 
   // iOS soft keyboard: keep inputs visible
   useEffect(() => {
@@ -504,15 +505,8 @@ export default function SettingsSheet({ onNotesEdit, notesEditorOpen = false }: 
         </Suspense>
       )}
 
-      {/* TODO: SharingModal is defined inline in SettingsPage.tsx - consider extracting to shared component */}
-      {showSharingModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: "rgba(0,0,0,0.8)" }}>
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-4 max-w-md w-full">
-            <p>Sharing modal - TODO: Extract from SettingsPage or implement separately</p>
-            <button onClick={() => setShowSharingModal(false)}>Close</button>
-          </div>
-        </div>
-      )}
+      {showSharingModal && <SharingModal onClose={() => setShowSharingModal(false)} />}
+
     </div>
   );
 }

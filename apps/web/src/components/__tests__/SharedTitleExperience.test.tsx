@@ -1,0 +1,10 @@
+import { cleanup, render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { afterEach, expect, it, vi } from 'vitest';
+import SharedTitleExperience from '../SharedTitleExperience';
+vi.mock('../../lib/sharedTitle',async()=>{const actual=await vi.importActual<typeof import('../../lib/sharedTitle')>('../../lib/sharedTitle');return {...actual,resolveSharedTitle:vi.fn()};});
+vi.mock('../../search/SearchResults',()=>({default:({resolvedItems}: {resolvedItems:{id:number;mediaType:string;title:string}[]})=><div>{resolvedItems.map(item=><div key={`${item.mediaType}:${item.id}`}>{item.mediaType}:{item.id} {item.title}</div>)}</div>}));
+import { resolveSharedTitle } from '../../lib/sharedTitle';
+afterEach(()=>{cleanup();vi.clearAllMocks();});
+it.each(['movie','tv'])('recipient renders exact %s without using private Library membership',async(mediaType)=>{vi.mocked(resolveSharedTitle).mockResolvedValue({id:42,mediaType:mediaType as 'movie'|'tv',title:'Exact'});render(<SharedTitleExperience queryString={`?tmdbId=42&mediaType=${mediaType}`}/>);await waitFor(()=>expect(screen.getByText(`${mediaType}:42 Exact`)).toBeInTheDocument());expect(resolveSharedTitle).toHaveBeenCalledWith({id:42,mediaType});});
+it('legacy link is explained with no guessed media request',()=>{render(<SharedTitleExperience queryString="?tmdbId=42"/>);expect(screen.getByRole('alert')).toHaveTextContent('older link');expect(resolveSharedTitle).not.toHaveBeenCalled();});
+it('failed resolution displays an error and permits retry',async()=>{vi.mocked(resolveSharedTitle).mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce({id:42,mediaType:'tv',title:'Exact'});render(<SharedTitleExperience queryString="?tmdbId=42&mediaType=tv"/>);await waitFor(()=>expect(screen.getByRole('alert')).toBeInTheDocument());fireEvent.click(screen.getByRole('button',{name:/try again/i}));await waitFor(()=>expect(screen.getByText('tv:42 Exact')).toBeInTheDocument());});

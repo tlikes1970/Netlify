@@ -1,6 +1,33 @@
 export type Language = "en" | "es";
 
 export interface LanguageStrings {
+  sharingRetry: string;
+  sharingTitle: string;
+  sharingDescription: string;
+  sharingClose: string;
+  sharingLists: string;
+  sharingOptions: string;
+  sharingMovies: string;
+  sharingTV: string;
+  sharingRatings: string;
+  sharingAttribution: string;
+  sharingItems: string;
+  sharingSelectAll: string;
+  sharingSelectNone: string;
+  sharingNothingSelected: string;
+  sharingSnapshot: string;
+  sharingGenerate: string;
+  sharingShareOrCopy: string;
+  sharingShared: string;
+  sharingCopied: string;
+  sharingFailed: string;
+  sharingAction: string;
+  sharedTitleLoading: string;
+  sharedTitleInvalid: string;
+  sharedTitleLegacy: string;
+  sharedTitleUnavailable: string;
+  sharedTitleHeading: string;
+
   notesAndTags: string;
   notesLabel: string;
   tagsLabel: string;

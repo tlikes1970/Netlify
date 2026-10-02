@@ -1,0 +1,33 @@
+import { cleanup, render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import SharedTitleExperience from '../SharedTitleExperience';
+const state = vi.hoisted(()=>({ tracked: false }));
+vi.mock('../../lib/storage',()=>({getListDisplayName:(list:string)=>list,Library:{getEntry:(id:number,type:string)=>state.tracked?{id,mediaType:type,list:'watching'}:null,getCurrentList:()=>state.tracked?'watching':null,subscribe:()=>()=>{}},addToListWithConfirmation:vi.fn()}));
+vi.mock('../../search/smartSearch',()=>({smartSearch:vi.fn()}));
+vi.mock('../../search/cache',()=>({cachedSearchMulti:vi.fn()}));
+vi.mock('../../search/api',()=>({mapTMDBToMediaItem:(data:{id:number;media_type:string;name:string;title:string})=>({id:data.id,mediaType:data.media_type,title:data.media_type==='tv'?data.name:data.title}),discoverByGenre:vi.fn(),fetchNetworkInfo:async()=>({}),fetchFullMediaMetadata:async(item:unknown)=>item}));
+vi.mock('../../lib/tmdb',()=>({get:vi.fn(async(endpoint:string)=>({id:7,title:'Exact movie',name:'Exact series',endpoint})),getTVShowDetails:vi.fn()}));
+vi.mock('../../tmdb/tv',()=>({fetchNextAirDate:async()=>null,fetchShowStatus:async()=>null}));
+vi.mock('../../lib/settings',()=>({useSettings:()=>({layout:{episodeTracking:false},personality:'Zen'}),DEFAULT_PERSONALITY:'Zen',getPersonalityText:()=>''}));
+vi.mock('../../lib/statusTransitions',()=>({setPrimaryStatus:vi.fn(),setNotInterested:vi.fn()}));
+vi.mock('../../lib/confirmRemoveShow',()=>({removeMediaItemWithConfirmation:vi.fn()}));
+vi.mock('../../components/MyListToggle',()=>({default:()=>null}));
+vi.mock('../../components/LibraryActions',()=>({default:()=>null}));
+vi.mock('../../components/ListMembershipBadge',()=>({ListMembershipBadge:()=>null}));
+vi.mock('../../lib/isMobile',()=>({isMobileNow:()=>true,onMobileChange:()=>()=>{}}));
+import { get } from '../../lib/tmdb';
+import { smartSearch } from '../../search/smartSearch';
+beforeEach(()=>{vi.clearAllMocks();state.tracked=false;});afterEach(cleanup);
+it.each(['movie','tv'] as const)('untracked %s recipient sees exact resolved card and existing add controls',async mediaType=>{
+ render(<SharedTitleExperience queryString={`?view=title&tmdbId=7&mediaType=${mediaType}`}/>);
+ await screen.findByText(mediaType==='tv'?'Exact series':'Exact movie',{exact:true});
+ expect(get).toHaveBeenCalledWith(`/${mediaType}/7`);expect(smartSearch).not.toHaveBeenCalled();
+ fireEvent.click(screen.getByRole('button',{name:'More actions'}));
+ expect(screen.getByRole('button',{name:/Want to Watch/,exact:false})).toBeInTheDocument();
+});
+it.each(['movie','tv'] as const)('tracked %s recipient still resolves public title and shows existing Manage controls',async mediaType=>{
+ state.tracked=true;render(<SharedTitleExperience queryString={`?view=title&tmdbId=7&mediaType=${mediaType}`}/>);
+ await screen.findByText(mediaType==='tv'?'Exact series':'Exact movie',{exact:true});
+ await waitFor(()=>expect(screen.getByRole('button',{name:/Manage/})).toBeInTheDocument());
+ expect(get).toHaveBeenCalledWith(`/${mediaType}/7`);expect(smartSearch).not.toHaveBeenCalled();
+});
