@@ -30,6 +30,9 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     sharedTitleHeading: "Shared title",
 
     notesAndTags: "Notes & Tags",
+    viewTitleOnTmdb: "View {title} on TMDB",
+    noteIndicator: "Note",
+    tagsIndicator: "Tags",
     notesLabel: "Notes",
     tagsLabel: "Tags",
     notesPlaceholder: "Add your thoughts or notes about this title…",
@@ -446,6 +449,9 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     sharedTitleHeading: "Título compartido",
 
     notesAndTags: "Notas y etiquetas",
+    viewTitleOnTmdb: "Ver {title} en TMDB",
+    noteIndicator: "Nota",
+    tagsIndicator: "Etiquetas",
     notesLabel: "Notas",
     tagsLabel: "Etiquetas",
     notesPlaceholder: "Añade tus ideas o notas sobre este título…",

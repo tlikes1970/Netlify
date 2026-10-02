@@ -16,7 +16,9 @@ import { useSettings, getPersonalityText, DEFAULT_PERSONALITY } from "../lib/set
 import MyListToggle from "../components/MyListToggle";
 import { OptimizedImage } from "../components/OptimizedImage";
 import { searchTagsLocal } from "../lib/libraryIndex";
-import { isMobileNow, onMobileChange } from "../lib/isMobile";
+import { isMobileNow } from "../lib/isMobile";
+import { useIsDesktop } from "../hooks/useDeviceDetection";
+import { TitlePoster } from "../components/cards/TitlePoster";
 import Portal from "../components/Portal";
 import { ListMembershipBadge } from "../components/ListMembershipBadge";
 import LibraryActions from "../components/LibraryActions";
@@ -303,7 +305,7 @@ export default function SearchResults({
             item={item}
             index={index}
             onRemove={() =>
-              setItems((prev) => prev.filter((i) => i.id !== item.id))
+              setItems((prev) => prev.filter((i) => !(i.id === item.id && i.mediaType === item.mediaType)))
             }
             actions={actions}
           />
@@ -368,7 +370,7 @@ export function SearchResultCard({
 }) {
   const translations = useTranslations();
   const [enrichedItem, setEnrichedItem] = React.useState(item);
-  const { posterUrl, mediaType, synopsis } = enrichedItem;
+  const { mediaType, synopsis } = enrichedItem;
   const [pressedButtons, setPressedButtons] = React.useState<Set<string>>(
     new Set()
   );
@@ -380,12 +382,11 @@ export function SearchResultCard({
   const [showManageSheet, setShowManageSheet] = React.useState(false);
   const moreMenuRef = React.useRef<HTMLDivElement>(null);
   const moreButtonRef = React.useRef<HTMLButtonElement>(null);
-  const [isMobile, setIsMobile] = React.useState(isMobileNow());
+  const { isDesktop } = useIsDesktop();
+  const isMobile = !isDesktop;
 
   // Make mobile detection reactive to viewport changes
-  React.useEffect(() => {
-    return onMobileChange(setIsMobile);
-  }, []);
+
 
   // Store full library entry for management actions
   const [libraryEntry, setLibraryEntry] = React.useState<ReturnType<typeof Library.getEntry>>(null);
@@ -495,7 +496,7 @@ export function SearchResultCard({
 
   // Use actual data from TMDB or sensible defaults
   const genre = getGenreName((enrichedItem as any).genre_ids);
-  const mediaTypeLabel = mediaType === "movie" ? "Movie" : "TV Series";
+  const mediaTypeLabel = mediaType === "movie" ? "Movie" : "TV Show";
   const badges = ["NEW", "TRENDING"]; // TODO: Generate based on actual data
 
   // Get streaming service information
@@ -713,27 +714,7 @@ export function SearchResultCard({
       className={`relative flex bg-card border border-line rounded-xl overflow-hidden shadow-lg ${!isMobile ? "hover:transform hover:-translate-y-0.5 transition-transform" : ""}`}
     >
       {/* Poster - proper size */}
-      <a
-        href={`https://www.themoviedb.org/${mediaType}/${enrichedItem.id}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={`flex-shrink-0 bg-muted cursor-pointer ${isMobile ? "w-20 h-28" : "w-24 h-36"}`}
-        title={translations.opensInTmdb}
-      >
-        {posterUrl ? (
-          <OptimizedImage
-            src={posterUrl}
-            alt={title}
-            context="poster"
-            className="w-full h-full"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full bg-neutral-800 flex items-center justify-center text-sm text-muted-foreground">
-            No poster
-          </div>
-        )}
-      </a>
+      <TitlePoster item={enrichedItem} className={`flex-shrink-0 bg-muted ${isMobile ? 'w-20 h-28' : 'w-24 h-36'}`} />
 
       {/* Content - proper spacing and sizing */}
       <div
@@ -744,9 +725,9 @@ export function SearchResultCard({
           className={`font-bold ${isMobile ? "text-base pr-11" : "text-lg"} mb-1 flex items-center gap-2 flex-wrap`}
         >
           <span className="line-clamp-2 min-h-[2.5em] leading-tight" title={title}>{title}</span>
-          {isMobile && enrichedItem.voteAverage && (
+          {isMobile && typeof enrichedItem.voteAverage === "number" && Number.isFinite(enrichedItem.voteAverage) && enrichedItem.voteAverage > 0 && (
             <span className="text-muted-foreground text-xs font-normal">
-              ⭐ {enrichedItem.voteAverage.toFixed(1)}/10
+              TMDB {enrichedItem.voteAverage.toFixed(1)}/10
             </span>
           )}
         </div>
@@ -795,34 +776,7 @@ export function SearchResultCard({
           </div>
         )}
 
-        {/* Rating - desktop only (mobile shows inline with title) */}
-        {!isMobile && (
-          <div className="flex items-center gap-1 mb-4">
-            <span className="text-muted-foreground text-lg cursor-pointer">
-              ☆
-            </span>
-            <span className="text-muted-foreground text-lg cursor-pointer">
-              ☆
-            </span>
-            <span className="text-muted-foreground text-lg cursor-pointer">
-              ☆
-            </span>
-            <span className="text-muted-foreground text-lg cursor-pointer">
-              ☆
-            </span>
-            <span className="text-muted-foreground text-lg cursor-pointer">
-              ☆
-            </span>
-            <span className="text-muted-foreground text-xs ml-2">
-              (Your rating)
-            </span>
-            {enrichedItem.voteAverage && (
-              <span className="text-muted-foreground text-xs ml-4">
-                TMDB: {enrichedItem.voteAverage.toFixed(1)}/10
-              </span>
-            )}
-          </div>
-        )}
+        {!isMobile && typeof enrichedItem.voteAverage === 'number' && Number.isFinite(enrichedItem.voteAverage) && enrichedItem.voteAverage > 0 && <div className="text-xs mb-4">TMDB {enrichedItem.voteAverage.toFixed(1)}/10</div>}
 
         {/* Actions */}
         {isMobile ? (

@@ -124,3 +124,12 @@ it('custom-list Notes & Tags opens canonical editor and preserves status and mem
  fireEvent.click(screen.getByRole('menuitem',{name:'Notes & Tags'}));
  expect(edit).toHaveBeenCalled();expect(Library.getEntry(item.id,item.mediaType)).toMatchObject({userNotes:'New',tags:['Comedy'],list:'watching',customListIds:['a','b']});
 });
+
+it('uses the saved-title information and cues without a TMDB score or swipe',()=>{
+ const edit=vi.fn();Library.upsert({...item,year:'2025',synopsis:'Saved synopsis',voteAverage:8.3,userNotes:'Saved note',tags:['Family']},'watching');Library.addToCustomList(item,'a');
+ const {container}=render(<MyListsPage onNotesEdit={edit}/>);
+ expect(screen.getByText('2025 • Movie')).toBeInTheDocument();expect(screen.getByText('Saved synopsis')).toBeInTheDocument();
+ expect(screen.queryByText(/8\.3/)).toBeNull();expect(container.querySelector('.swipeable')).toBeNull();
+ fireEvent.click(screen.getByRole('button',{name:'Note: Notes & Tags'}));fireEvent.click(screen.getByRole('button',{name:'Tags: Notes & Tags'}));
+ expect(edit).toHaveBeenCalledTimes(2);expect(Library.getEntry('10','movie')).toMatchObject({list:'watching',customListIds:['a'],userNotes:'Saved note',tags:['Family']});
+});

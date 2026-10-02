@@ -6,13 +6,13 @@
  * Dependencies: CardBaseMobile, SwipeRowOverlay components
  */
 
-@media (max-width: 768px) {
+@media (max-width: 1023px) {
   .card-mobile {
     position: relative;
     background: var(--surface-0,#fff);
     border-radius: 12px;
     /* 8 left + (36 rail + 12 buffer + safe-area) right */
-    padding: 8px calc(36px + 12px + env(safe-area-inset-right, 0px)) 8px 8px;
+    padding: 12px;
     margin: 0 0 12px 0;
     box-shadow: none;
     overflow: hidden; /* keep swipe bg tidy */
@@ -470,3 +470,5 @@
 .compact-user-rating button { width: 24px !important; height: 44px !important; min-width: 24px !important; }
 .compact-user-rating button svg { width: 18px !important; height: 18px !important; margin: auto; }
 .compact-user-rating > span { font-size: 11px; }
+
+.card-mobile .poster-col, .card-mobile .poster-image { width: 112px; height: 168px; }

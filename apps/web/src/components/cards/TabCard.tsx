@@ -1,3 +1,7 @@
+import { CompactOverflowMenu } from '../../features/compact/CompactOverflowMenu';
+import { ContextStatusActions } from './mobile/ContextStatusActions';
+import { TitlePoster } from './TitlePoster';
+import { MetadataIndicators } from './MetadataIndicators';
 import React, { useState, useEffect } from "react";
 import type { CardActionHandlers, MediaItem } from "./card.types";
 import { getItemSynopsis } from "@/lib/itemSynopsis";
@@ -9,11 +13,8 @@ import StarRating from "./StarRating";
 import MyListToggle from "../MyListToggle";
 import { useIsDesktop } from "../../hooks/useDeviceDetection";
 import SwipeableCard from "../SwipeableCard";
-import { OptimizedImage } from "../OptimizedImage";
 import { trackOpenFromReturning } from "@/lib/analytics";
 import { getUpNextLabel } from "@/lib/upNextShows";
-import { isCompactMobileV1, isActionsSplit } from "../../lib/mobileFlags";
-import { isMobileNow } from "../../lib/isMobile";
 import { dlog } from "../../lib/log";
 import { TvCardMobile } from "./mobile/TvCardMobile";
 import { MovieCardMobile } from "./mobile/MovieCardMobile";
@@ -29,6 +30,7 @@ export type TabCardProps = {
   actions?: CardActionHandlers;
   tabType?: "watching" | "want" | "watched" | "returning" | "discovery";
   index?: number;
+  customListContext?: boolean;
   dragState?: {
     draggedItem: { id: string; index: number } | null;
     draggedOverIndex: number | null;
@@ -58,6 +60,7 @@ export default function TabCard({
   actions,
   tabType = "watching",
   index = 0,
+  customListContext = false,
   dragState,
   onDragStart,
   onDragEnd,
@@ -99,13 +102,9 @@ export default function TabCard({
     };
   }, [item.id, item.mediaType]);
 
-  const { title, year, posterUrl, voteAverage, mediaType } = item;
+  const { title, year, posterUrl, mediaType } = item;
   const synopsis = getItemSynopsis(item);
   const userRating = currentRating; // Use the latest rating
-  const rating =
-    typeof voteAverage === "number"
-      ? Math.round(voteAverage * 10) / 10
-      : undefined;
   const translations = useTranslations();
   const settings = useSettings();
   const { ready, isDesktop } = useIsDesktop(); // Device detection for conditional swipe
@@ -118,6 +117,7 @@ export default function TabCard({
   };
 
   const getTabSpecificActions = () => {
+    if (customListContext) return <ContextStatusActions item={item} omitCurrentStatus />;
     switch (tabType) {
       case "watching":
       case "returning":
@@ -159,7 +159,7 @@ export default function TabCard({
             >
               {translations.notInterestedAction}
             </button>
-            {!isCondensed && (
+            {!customListContext && !isCondensed && (
               <button
                 onClick={actions?.onNotesEdit ? () => actions.onNotesEdit?.(item) : undefined}
                 className={buttonClass}
@@ -241,7 +241,7 @@ export default function TabCard({
             >
               {translations.notInterestedAction}
             </button>
-            {!isCondensed && (
+            {!customListContext && !isCondensed && (
               <button
                 onClick={actions?.onNotesEdit ? () => actions.onNotesEdit?.(item) : undefined}
                 className={buttonClass}
@@ -256,7 +256,7 @@ export default function TabCard({
               </button>
             )}
             {/* Simple reminder for TV shows (Free feature) */}
-            {mediaType === "tv" && (
+            {!customListContext && mediaType === "tv" && (
               <button
                 onClick={() => {
                   dlog(
@@ -323,7 +323,7 @@ export default function TabCard({
             >
               {translations.notInterestedAction}
             </button>
-            {!isCondensed && (
+            {!customListContext && !isCondensed && (
               <button
                 onClick={actions?.onNotesEdit ? () => actions.onNotesEdit?.(item) : undefined}
                 className={buttonClass}
@@ -338,7 +338,7 @@ export default function TabCard({
               </button>
             )}
             {/* Simple reminder for TV shows (Free feature) */}
-            {mediaType === "tv" && (
+            {!customListContext && mediaType === "tv" && (
               <button
                 onClick={() => {
                   dlog(
@@ -456,11 +456,6 @@ export default function TabCard({
     ? "px-3 py-2 rounded-lg text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
     : "px-4 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md";
 
-  // Mobile detection for new mobile cards
-  const isMobileCompact = isCompactMobileV1();
-  const actionsSplit = isActionsSplit();
-  const isMobile = isMobileNow();
-
   // Convert tabType to tabKey for mobile components
   const getTabKey = (tabType: string): "watching" | "watched" | "want" => {
     switch (tabType) {
@@ -506,13 +501,11 @@ export default function TabCard({
     );
   }
 
-  // TEMPORARY: Force mobile components on mobile viewport (bypass flags for testing)
-  if (!isDesktop && isMobile) {
+  // Phone and tablet share the touch structure; desktop begins at 1024px.
+  if (!isDesktop) {
     dlog("📱 Mobile viewport detected, using mobile components:", {
       mediaType,
       title: item.title,
-      isMobileCompact,
-      isActionsSplit: actionsSplit,
     });
     if (mediaType === "tv") {
       return (
@@ -520,8 +513,9 @@ export default function TabCard({
           item={item}
           actions={actions}
           tabKey={getTabKey(tabType)}
+          customListContext={customListContext}
           index={index}
-          onDragStart={(e, idx) => {
+          onDragStart={customListContext ? undefined : (e, idx) => {
             // Convert TouchEvent to DragEvent-like for useDragAndDrop
             if ("touches" in e) {
               // Touch event - create synthetic drag event
@@ -549,8 +543,9 @@ export default function TabCard({
           item={item}
           actions={actions}
           tabKey={getTabKey(tabType)}
+          customListContext={customListContext}
           index={index}
-          onDragStart={(e, idx) => {
+          onDragStart={customListContext ? undefined : (e, idx) => {
             // Convert TouchEvent to DragEvent-like for useDragAndDrop
             if ("touches" in e) {
               // Touch event - create synthetic drag event
@@ -570,27 +565,6 @@ export default function TabCard({
           onDragEnd={() => onDragEnd?.({} as React.DragEvent)}
           onKeyboardReorder={onKeyboardReorder}
           isDragging={isBeingDragged}
-        />
-      );
-    }
-  }
-
-  // Use new mobile components when mobile flags are enabled (original logic)
-  if (isMobileCompact && actionsSplit && isMobile) {
-    if (mediaType === "tv") {
-      return (
-        <TvCardMobile
-          item={item}
-          actions={actions}
-          tabKey={getTabKey(tabType)}
-        />
-      );
-    } else if (mediaType === "movie") {
-      return (
-        <MovieCardMobile
-          item={item}
-          actions={actions}
-          tabKey={getTabKey(tabType)}
         />
       );
     }
@@ -652,41 +626,12 @@ export default function TabCard({
       {/* Poster Column */}
       <div
         className="poster-col"
-        role="img"
-        aria-label={title}
-        onClick={(e) => {
-          // Don't open TMDB if clicking on a button inside the poster
-          if ((e.target as HTMLElement).closest("button")) {
-            return;
-          }
-          if (item.id && item.mediaType) {
-            if (tabType === "returning") {
-              trackOpenFromReturning(item.id, item.title);
-            }
-            const tmdbUrl = `https://www.themoviedb.org/${item.mediaType}/${item.id}`;
-            window.open(tmdbUrl, "_blank", "noopener,noreferrer");
-          }
-        }}
+
       >
-        {posterUrl ? (
-          <OptimizedImage
-            src={posterUrl}
-            alt={title}
-            context="poster"
-            className="h-full w-full"
-            loading="lazy"
-          />
-        ) : (
-          <div
-            className="flex h-full w-full items-center justify-center text-xs"
-            style={{ color: "var(--muted)", minHeight: "240px" }}
-          >
-            {translations.noPoster}
-          </div>
-        )}
+        <TitlePoster item={item} className="h-full w-full" onOpen={() => { if (tabType === 'returning') trackOpenFromReturning(item.id, item.title); }} />
 
         {/* My List + button */}
-        <MyListToggle 
+        {!customListContext && <MyListToggle
           item={item} 
           currentListContext={
             tabType === "returning" || tabType === "watching" ? "watching" :
@@ -694,11 +639,12 @@ export default function TabCard({
             tabType === "watched" ? "watched" :
             undefined
           }
-        />
+        />}
       </div>
 
       {/* Info Column */}
-      <div className="info-col relative">
+      <div className={`info-col relative ${customListContext ? "pr-12" : ""}`}>
+        {customListContext && <div className="absolute top-0 right-0"><CompactOverflowMenu item={{...item,id:String(item.id)}} context="tab-watching" actions={actions} showText={false} hideStatusActions customListContext /></div>}
         <header>
           <h3>{title}</h3>
           <div className="flex items-center gap-2">
@@ -738,46 +684,17 @@ export default function TabCard({
             />
           )}
 
-          {/* Notes and Tags Indicators */}
-          <div className="flex gap-1">
-            {item.userNotes && item.userNotes.trim() && (
-              <span
-                  role={actions?.onNotesEdit ? "button" : undefined}
-                  tabIndex={actions?.onNotesEdit ? 0 : undefined}
-                  aria-label={actions?.onNotesEdit ? translations.notesAndTags : undefined}
-                  onKeyDown={event => { if (actions?.onNotesEdit && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); actions.onNotesEdit(item); } }}
-                  className={actions?.onNotesEdit ? "cursor-pointer inline-flex items-center justify-center" : "inline-flex items-center"}
-                title={`Notes: ${item.userNotes.substring(0, 100)}${item.userNotes.length > 100 ? "..." : ""}`}
-                onClick={actions?.onNotesEdit ? () => actions.onNotesEdit?.(item) : undefined}
-              >
-                📝
-              </span>
-            )}
-            {item.tags && item.tags.length > 0 && (
-              <span
-                  role={actions?.onNotesEdit ? "button" : undefined}
-                  tabIndex={actions?.onNotesEdit ? 0 : undefined}
-                  aria-label={actions?.onNotesEdit ? translations.notesAndTags : undefined}
-                  onKeyDown={event => { if (actions?.onNotesEdit && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); actions.onNotesEdit(item); } }}
-                  className={actions?.onNotesEdit ? "cursor-pointer inline-flex items-center justify-center" : "inline-flex items-center"}
-                title={`Tags: ${item.tags.join(", ")}`}
-                onClick={actions?.onNotesEdit ? () => actions.onNotesEdit?.(item) : undefined}
-              >
-                🏷️
-              </span>
-            )}
-          </div>
+          <MetadataIndicators item={item} actions={actions} />
         </header>
 
         {/* Rating Row */}
-        {(tabType === "watching" || tabType === "watched") && (
+        {(tabType === "watching" || tabType === "want" || tabType === "watched") && (
           <div className="rating-row">
             <StarRating
               value={userRating || 0}
               onChange={handleRatingChange}
               size="sm"
             />
-            {rating && <span className="rating-score ml-2">({rating}/10)</span>}
           </div>
         )}
 
@@ -798,7 +715,7 @@ export default function TabCard({
             {getTabSpecificActions()}
 
             {/* Episode tracking (conditional) */}
-            {mediaType === "tv" && (
+            {!customListContext && mediaType === "tv" && (
               <button
                 onClick={() => actions?.onEpisodeTracking?.(item)}
                 className={buttonClass}
@@ -817,7 +734,7 @@ export default function TabCard({
           </div>
 
           {/* Pro Strip - with dotted yellow border */}
-          {!isCondensed && (
+          {!customListContext && !isCondensed && (
             <div className="pro-buttons-row">
               <button
                 onClick={() => {
@@ -882,7 +799,7 @@ export default function TabCard({
         </div>
 
         {/* Drag handle - Desktop only, shows on hover/focus */}
-        {isDesktop && (
+        {!customListContext && isDesktop && (
           <div
             className={`handle absolute top-1/4 right-2 transform -translate-y-1/2 cursor-grab text-lg transition-all duration-200 ${
               isDragging ? "cursor-grabbing" : "cursor-grab"
@@ -937,7 +854,7 @@ export default function TabCard({
         )}
 
         {/* Delete button - bottom right */}
-        <button
+        {!customListContext && <button
           onClick={() => actions?.onDelete?.(item)}
           className="absolute bottom-3 right-3 px-4 py-2.5 rounded-lg text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md font-semibold"
           style={{
@@ -949,7 +866,7 @@ export default function TabCard({
           title="Delete this item"
         >
           🗑️ Delete
-        </button>
+        </button>}
       </div>
     </article>
   );

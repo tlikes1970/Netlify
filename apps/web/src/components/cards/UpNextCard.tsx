@@ -1,7 +1,6 @@
+import { TitlePoster } from './TitlePoster';
 import { useState, useEffect } from 'react';
 import type { MediaItem } from './card.types';
-import { useTranslations } from '../../lib/language';
-import { OptimizedImage } from '../OptimizedImage';
 import { fetchCurrentEpisodeInfo } from '../../tmdb/tv';
 import { getShowStatusInfo, formatLastAirDate } from '../../utils/showStatus';
 import { getNextAirDate, getValidatedNextAirDate, getNextAirStatus, getHumanizedAirDate, formatUpNextDate } from '../../lib/constants/metadata';
@@ -19,8 +18,7 @@ export type UpNextCardProps = {
  * - Matches the design mockup exactly
  */
 export default function UpNextCard({ item }: UpNextCardProps) {
-  const { title, year, posterUrl, nextAirDate, mediaType, id, showStatus, lastAirDate } = item;
-  const translations = useTranslations();
+  const { title, year, nextAirDate, mediaType, id, showStatus, lastAirDate } = item;
   const [episodeInfo, setEpisodeInfo] = useState<string | null>(null);
 
   // Debug: Log the nextAirDate prop and timezone info
@@ -135,31 +133,10 @@ export default function UpNextCard({ item }: UpNextCardProps) {
         <div 
           className="poster-wrap relative aspect-[2/3] cursor-pointer" 
           role="img" 
-          aria-label={title}
           style={{ backgroundColor: 'var(--muted)' }}
-          onClick={() => {
-            if (item.id && item.mediaType) {
-              const tmdbUrl = `https://www.themoviedb.org/${item.mediaType}/${item.id}`;
-              window.open(tmdbUrl, '_blank', 'noopener,noreferrer');
-            }
-          }}
+
         >
-          {posterUrl ? (
-            <OptimizedImage
-              src={posterUrl}
-              alt={title}
-              context="poster"
-              className="h-full w-full"
-              loading="lazy"
-            />
-          ) : (
-            <div 
-              className="flex h-full w-full items-center justify-center text-xs"
-              style={{ color: 'var(--muted)' }}
-            >
-              {translations.noPoster}
-            </div>
-          )}
+          <TitlePoster item={item} className="h-full w-full" />
         </div>
 
         {/* Content */}

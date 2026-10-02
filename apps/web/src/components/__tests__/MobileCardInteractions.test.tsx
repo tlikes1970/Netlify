@@ -1,8 +1,11 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ContextStatusActions } from "../cards/mobile/ContextStatusActions";
 import { SearchResultCard } from "../../search/SearchResults";
 import CardV2 from "../cards/CardV2";
+import SearchResults from "../../search/SearchResults";
+import { TitlePoster, getTitleResearchUrl } from "../cards/TitlePoster";
+import { MetadataIndicators } from "../cards/MetadataIndicators";
 import type { MediaItem } from "../cards/card.types";
 const mocks = vi.hoisted(() => ({
   entry: null as any,
@@ -205,4 +208,44 @@ it.each([['watching', 'Watching'], ['wishlist', 'Want to Watch'], ['watched', 'W
   render(<SearchResultCard item={item} index={0} onRemove={() => {}} />);
   expect(screen.getByText('Status: ' + label)).toBeInTheDocument();
   expect(screen.getByRole('button', {name: 'Manage'})).toBeInTheDocument();
+});
+
+describe('card consistency contract', () => {
+ it.each(['movie','tv'] as const)('poster keeps exact %s identity and keyboard link', mediaType => {
+  const open=vi.spyOn(window,'open').mockReturnValue(null);
+  render(<TitlePoster item={{...item,mediaType}}/>);
+  const link=screen.getByRole('link',{name:'View A title on TMDB'});
+  expect(link).toHaveAttribute('href',`https://www.themoviedb.org/${mediaType}/1`);
+  fireEvent.click(link);expect(open).toHaveBeenCalledWith(`https://www.themoviedb.org/${mediaType}/1`,'_blank','noopener,noreferrer');
+  open.mockRestore();
+ });
+ it.each(['0','-1','abc','1.5'])('does not invent research identity for %s', id=>{
+  expect(getTitleResearchUrl({...item,id})).toBeUndefined();
+ });
+ it('does not invent a destination for person media',()=>expect(getTitleResearchUrl({...item,mediaType:'person'})).toBeUndefined());
+ it.each([undefined,0,NaN,-1])('Search renders no missing/invalid TMDB score %s',voteAverage=>{
+  render(<SearchResultCard item={{...item,voteAverage}} index={0} onRemove={()=>{}}/>);
+  expect(screen.queryByText(/TMDB.*\/10/)).toBeNull();expect(screen.queryByText('0')).toBeNull();
+ });
+ it('Search labels meaningful TMDB score and omits personal metadata cues',()=>{
+  mocks.entry={...item,userNotes:'Saved note',tags:['Family'],list:'watched'};
+  render(<SearchResultCard item={{...item,voteAverage:7.3}} index={0} onRemove={()=>{}}/>);
+  expect(screen.getByText('TMDB 7.3/10')).toBeInTheDocument();
+  expect(screen.queryByRole('button',{name:/Note:|Tags:/})).toBeNull();
+ });
+ it.each([[undefined,undefined,0],['Note',undefined,1],[undefined,['Tag'],1],['Note',['Tag'],2]] as const)('only renders present metadata indicators', (userNotes,tags,count)=>{
+  const edit=vi.fn();render(<MetadataIndicators item={{...item,userNotes,tags:tags ? [...tags]:undefined}} actions={{onNotesEdit:edit}}/>);
+  expect(screen.queryAllByRole('button')).toHaveLength(count);
+  if(count){fireEvent.click(screen.getAllByRole('button')[0]);expect(edit).toHaveBeenCalledWith(expect.objectContaining({id:'1',mediaType:'movie'}));}
+ });
+ it('visible Search removal distinguishes a movie and TV with matching numeric ID', async()=>{
+  mocks.add.mockImplementation((_item,_list,done)=>done());
+  render(<SearchResults query="" resolvedItems={[{...item,id:'73',title:'Movie collision'},{...item,id:'73',mediaType:'tv',title:'TV collision'}]}/>);
+  await screen.findByText('Movie collision (2025)');
+  const card=screen.getByText('Movie collision (2025)').closest('.relative.flex')!;
+  fireEvent.click(within(card as HTMLElement).getByRole('button',{name:'More actions'}));
+  fireEvent.click(screen.getByRole('button',{name:'Want to Watch'}));
+  await waitFor(()=>expect(screen.queryByText('Movie collision (2025)')).toBeNull());
+  expect(screen.getByText('TV collision (2025)')).toBeInTheDocument();
+ });
 });

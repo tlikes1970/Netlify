@@ -7,11 +7,13 @@ import { getItemSynopsis } from '../../../lib/itemSynopsis';
 import type { ActionItem } from '../../../features/compact/actionsMap';
 import { useSettings } from '../../../lib/settings';
 import { EpisodeProgressDisplay } from '../../EpisodeProgressDisplay';
+import { MetadataIndicators } from '../MetadataIndicators';
 import { ContextStatusActions } from './ContextStatusActions';
 
 type CardMobileInfoSectionProps = {
   item: MediaItem;
   tabKey: 'watching' | 'watched' | 'want';
+  customListContext?: boolean;
   actions?: CardActionHandlers;
   metaLine: string;
   chips?: ReactNode;
@@ -22,6 +24,7 @@ type CardMobileInfoSectionProps = {
 export function CardMobileInfoSection({
   item,
   tabKey,
+  customListContext = false,
   actions,
   metaLine,
   chips,
@@ -43,6 +46,7 @@ export function CardMobileInfoSection({
           item={item as ActionItem}
           context={`tab-${tabKey}`}
           actions={actions}
+          customListContext={customListContext}
         />
         <span className="meta">{metaLine}</span>
         {chips}
@@ -73,7 +77,8 @@ export function CardMobileInfoSection({
             className="compact-user-rating"
           />
         </div>
-        <ContextStatusActions item={item} tabKey={tabKey} />
+        <MetadataIndicators item={item} actions={actions} />
+        <ContextStatusActions item={item} tabKey={customListContext ? undefined : tabKey} omitCurrentStatus={customListContext} />
       </div>
     </div>
   );

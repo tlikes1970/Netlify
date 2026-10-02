@@ -29,6 +29,9 @@ export interface LanguageStrings {
   sharedTitleHeading: string;
 
   notesAndTags: string;
+  viewTitleOnTmdb: string;
+  noteIndicator: string;
+  tagsIndicator: string;
   notesLabel: string;
   tagsLabel: string;
   notesPlaceholder: string;

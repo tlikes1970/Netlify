@@ -6,6 +6,7 @@ type CardMobileTitleRowProps = {
   item: ActionItem;
   context: ActionContext;
   actions?: CardActionHandlers;
+  customListContext?: boolean;
 };
 
 /** Title + overflow button row — prevents long titles from overlapping the menu tap target. */
@@ -14,6 +15,7 @@ export function CardMobileTitleRow({
   item,
   context,
   actions,
+  customListContext = false,
 }: CardMobileTitleRowProps) {
   return (
     <div className="card-mobile-title-row">
@@ -26,6 +28,7 @@ export function CardMobileTitleRow({
           context={context}
           actions={actions}
           showText={false}
+          customListContext={customListContext}
           hideStatusActions
         />
       </div>

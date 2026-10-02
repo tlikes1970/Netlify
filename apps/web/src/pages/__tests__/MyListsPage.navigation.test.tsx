@@ -12,7 +12,7 @@ vi.mock('@/lib/settings', () => ({useSettings: () => ({personality:'Zen'}), getP
 vi.mock('@/lib/language', () => ({useTranslations: () => ({sharingAction:"Share"})}));
 vi.mock('@/lib/shareLinks', () => ({shareListWithFallback: vi.fn()}));
 vi.mock('@/state/actions', () => ({getToastCallback: () => vi.fn()}));
-vi.mock('@/components/cards/CardV2', () => ({default: ({item}: {item:{title:string}}) => <article>{item.title}</article>}));
+vi.mock('@/components/cards/TabCard', () => ({default: ({item}: {item:{title:string}}) => <article>{item.title}</article>}));
 const a = {id:'a',name:'List A',itemCount:1,createdAt:1,isDefault:true};
 const b = {id:'b',name:'List B',itemCount:1,createdAt:2};
 function load(lists = [a,b], selectedListId?: string) {

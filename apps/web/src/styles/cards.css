@@ -136,7 +136,7 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
 }
 
 /* Desktop List Content Column - Centered layout for watching/want/watched tabs */
-@media (min-width: 769px) {
+@media (min-width: 1024px) {
   .list-content-column {
     max-width: 1200px;
     margin: 0 auto;
@@ -340,7 +340,7 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
 }
 
 /* Desktop only: Bring Delete button closer to content */
-@media (min-width: 769px) {
+@media (min-width: 1024px) {
   .card-desktop .info-col button[title="Delete this item"] {
     bottom: 0.5rem; /* Reduced from 0.75rem (bottom-3) - sits closer */
     right: 0.75rem; /* Keep right-3 spacing */
@@ -422,14 +422,14 @@ html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
 }
 
 /* Desktop: Show full provider names */
-@media (min-width: 769px) {
+@media (min-width: 1024px) {
   .provider-badge {
     font-size: var(--font-sm, 13px);
   }
 }
 
 /* Mobile: Compact badges */
-@media (max-width: 768px) {
+@media (max-width: 1023px) {
   .provider-badge {
     font-size: var(--font-xs, 12px);
   }

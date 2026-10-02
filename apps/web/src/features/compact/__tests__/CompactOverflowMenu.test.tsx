@@ -166,3 +166,16 @@ it('uses a compact vertical icon and omits status actions exposed on the card', 
   expect(screen.queryByRole('menuitem',{name:'Want to Watch'})).toBeNull();
   expect(screen.getByRole('menuitem',{name:'Custom Lists'})).toBeInTheDocument();
 });
+
+it('Want to Watch excludes the duplicate Watched action using stable status IDs', () => {
+ render(<CompactOverflowMenu item={item} context="tab-want" actions={{onWatched:vi.fn()}} showText={false} hideStatusActions/>);
+ fireEvent.click(screen.getByRole('button',{name:'More options'}));
+ expect(screen.queryByRole('menuitem',{name:'Mark Watched'})).toBeNull();
+});
+it('compact trigger returns to transparent after hover and retains focus styling',()=>{
+ render(<CompactOverflowMenu item={item} context="tab-want" actions={{onWatched:vi.fn()}} showText={false}/>);
+ const trigger=screen.getByRole('button',{name:'More options'});
+ fireEvent.mouseEnter(trigger);fireEvent.mouseLeave(trigger);
+ expect(trigger.style.backgroundColor).toBe('transparent');
+ expect(trigger.className).toContain('focus');
+});

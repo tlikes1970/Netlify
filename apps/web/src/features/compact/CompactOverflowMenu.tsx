@@ -557,7 +557,7 @@ export function CompactOverflowMenu({
         aria-expanded={isOpen}
         aria-haspopup="menu"
         aria-label={showText ? "More" : "More options"}
-        className="compact-overflow-trigger"
+        className="compact-overflow-trigger focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
         style={{
           padding: "var(--space-2, 8px)",
           borderRadius: "var(--radius, 12px)",
@@ -584,7 +584,7 @@ export function CompactOverflowMenu({
           e.currentTarget.style.opacity = "1";
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "var(--muted, rgba(255, 255, 255, 0.1))";
+          e.currentTarget.style.backgroundColor = "transparent";
           e.currentTarget.style.borderColor = "var(--line, rgba(255, 255, 255, 0.1))";
           e.currentTarget.style.opacity = "0.7";
         }}

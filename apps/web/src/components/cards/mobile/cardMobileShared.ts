@@ -72,9 +72,6 @@ export function formatMobileMetaLine(
 export function formatMovieCompactMeta(item: MediaItem): string | null {
   const parts: string[] = [];
 
-  if (typeof item.voteAverage === 'number' && !Number.isNaN(item.voteAverage)) {
-    parts.push(`${Math.round(item.voteAverage * 10) / 10}/10 TMDB`);
-  }
 
   if (item.runtimeMins && item.runtimeMins > 0) {
     const hours = Math.floor(item.runtimeMins / 60);

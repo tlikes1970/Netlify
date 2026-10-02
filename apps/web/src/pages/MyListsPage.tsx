@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import CardV2 from '../components/cards/CardV2';
+import TabCard from '../components/cards/TabCard';
 import { useCustomLists, customListManager } from '../lib/customLists';
 import { Library, useLibrary } from '../lib/storage';
 import { useTranslations } from '../lib/language';
@@ -285,16 +285,10 @@ export default function MyListsPage({onBack, onNotesEdit}: {onBack?: () => void;
           </div>
 
           {items.length > 0 ? (
-            <div className="custom-list-cards grid grid-cols-[repeat(auto-fill,minmax(154px,1fr))] gap-3">
-              {items.map(item => (
-                <CardV2
-                  key={`${item.mediaType}:${item.id}`}
-                  item={item}
-                  context="tab-watching"
-                  actions={actions}
-                  currentListContext={listName ?? undefined}
-                />
-              ))}
+            <div className="custom-list-cards flex flex-col gap-3">
+              {items.map(item => {
+                return <TabCard key={`${item.mediaType}:${item.id}`} item={item} actions={actions} customListContext />;
+              })}
             </div>
           ) : (
             <div className="text-center py-12">

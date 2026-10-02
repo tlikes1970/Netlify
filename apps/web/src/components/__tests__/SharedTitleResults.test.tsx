@@ -14,6 +14,7 @@ vi.mock('../../lib/confirmRemoveShow',()=>({removeMediaItemWithConfirmation:vi.f
 vi.mock('../../components/MyListToggle',()=>({default:()=>null}));
 vi.mock('../../components/LibraryActions',()=>({default:()=>null}));
 vi.mock('../../components/ListMembershipBadge',()=>({ListMembershipBadge:()=>null}));
+vi.mock('../../hooks/useDeviceDetection',()=>({useIsDesktop:()=>({isDesktop:false,ready:true})}));
 vi.mock('../../lib/isMobile',()=>({isMobileNow:()=>true,onMobileChange:()=>()=>{}}));
 import { get } from '../../lib/tmdb';
 import { smartSearch } from '../../search/smartSearch';

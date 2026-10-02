@@ -1,3 +1,4 @@
+import { TitlePoster } from './TitlePoster';
 import React from "react";
 import type { CardContext, CardActionHandlers, MediaItem } from "./card.types";
 import type { ListName } from "../../state/library.types";
@@ -6,7 +7,6 @@ import { useSettings } from "../../lib/settings";
 import { useIsDesktop } from "../../hooks/useDeviceDetection";
 import SwipeableCard from "../SwipeableCard";
 import MyListToggle from "../MyListToggle";
-import { OptimizedImage } from "../OptimizedImage";
 import { CompactPrimaryAction } from "../../features/compact/CompactPrimaryAction";
 import { CompactOverflowMenu } from "../../features/compact/CompactOverflowMenu";
 import { EpisodeProgressDisplay } from "../EpisodeProgressDisplay";
@@ -16,7 +16,6 @@ import { ProviderBadges } from "./ProviderBadge";
 import { getShowStatusInfo } from "../../utils/showStatus";
 import { ListMembershipBadge } from "../ListMembershipBadge";
 import {
-  POSTER_PLACEHOLDER,
   resolvePosterUrl,
 } from "../../lib/posterPlaceholder";
 
@@ -134,28 +133,10 @@ export default function CardV2({
         {/* Poster (2:3) */}
         <div
           className="poster-wrap relative aspect-[2/3] cursor-pointer"
-          role="img"
-          aria-label={title}
           style={{ backgroundColor: "var(--muted)" }}
-          onClick={(e) => {
-            // Don't open TMDB if clicking on a button inside the poster
-            if ((e.target as HTMLElement).closest("button")) {
-              return;
-            }
-            if (item.id && item.mediaType) {
-              const tmdbUrl = `https://www.themoviedb.org/${item.mediaType}/${item.id}`;
-              window.open(tmdbUrl, "_blank", "noopener,noreferrer");
-            }
-          }}
+
         >
-          <OptimizedImage
-            src={displayPosterUrl}
-            alt={title}
-            context="poster"
-            className="h-full w-full"
-            loading="lazy"
-            fallbackSrc={POSTER_PLACEHOLDER}
-          />
+          <TitlePoster item={{...item, posterUrl: displayPosterUrl}} className="h-full w-full" />
 
           {/* My List + */}
           {showMyListBtn && (

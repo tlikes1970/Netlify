@@ -36,7 +36,7 @@ describe('Home Up Next remains intact after Library destination removal', () => 
     expect(cards).toHaveLength(20);
     expect(cards.map(card => card.getAttribute('aria-label'))).toEqual(Array.from({ length: 20 }, (_, i) => `Show ${i + 1}`));
     const open = vi.spyOn(window, 'open').mockImplementation(() => null);
-    fireEvent.click(within(cards[0]).getByRole('img', { name: 'Show 1' }));
+    fireEvent.click(within(cards[0]).getByRole('link', { name: 'View Show 1 on TMDB' }));
     expect(open).toHaveBeenCalledWith('https://www.themoviedb.org/tv/1', '_blank', 'noopener,noreferrer');
     expect(within(cards[0]).getByText(/S02E03/)).toBeInTheDocument();
   });
