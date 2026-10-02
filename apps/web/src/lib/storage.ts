@@ -1,3 +1,5 @@
+import { applyCustomOrder, libraryIdentity, reorderedIdentities } from './libraryView';
+import { restoreTabState, saveTabState } from './tabState';
 import { normalizeWatchStatus, WATCH_STATUS_LABELS } from "./watchStatus";
 import { recoverLocalRestore } from './restoreRecovery';
 import { isRestoring } from './restoreBarrier';
@@ -188,12 +190,6 @@ function performSave() {
 
 // Debounced save function
 const debouncedSave = debounce(performSave, 150);
-
-// Queue a custom order save (debounced)
-function queueCustomOrderSave(tabKey: string, orderIds: string[]) {
-  pendingCustomOrder = { tabKey, orderIds };
-  debouncedSave();
-}
 
 // Export flush function for external use (e.g., on drop completion, beforeunload)
 export function flushPendingSaves() {
@@ -422,78 +418,16 @@ export const Library = {
       );
     }
   },
-  reorder(list: ListName, fromIndex: number, toIndex: number) {
-    if (!guardMutation()) return;
+  reorder(list: ListName, fromIndex: number, toIndex: number, visibleIds?: string[]) {
+    if (!guardMutation() || fromIndex === toIndex) return;
+    const tabKey = list === 'wishlist' ? 'want' : list;
     const items = Library.getByList(list);
-    if (
-      fromIndex < 0 ||
-      fromIndex >= items.length ||
-      toIndex < 0 ||
-      toIndex >= items.length
-    ) {
-      console.warn("🔄 Invalid reorder indices:", {
-        fromIndex,
-        toIndex,
-        listLength: items.length,
-      });
-      return;
-    }
-
-    if (fromIndex === toIndex) return;
-
-    // Create a copy of the items array
-    const reorderedItems = [...items];
-
-    // Remove item from fromIndex
-    const [movedItem] = reorderedItems.splice(fromIndex, 1);
-
-    // Insert item at toIndex
-    reorderedItems.splice(toIndex, 0, movedItem);
-
-    // Update the order by modifying the addedAt timestamps
-    // This ensures the items maintain their new order
-    const now = Date.now();
-    reorderedItems.forEach((item, index) => {
-      const key = k(item.id, item.mediaType);
-      if (state[key]) {
-        // Use a small offset to maintain order
-        state[key] = {
-          ...state[key],
-          addedAt: now + index,
-        };
-      }
-    });
-
-    // Queue debounced save for rapid reorders (performance optimization)
-    if (import.meta.env.DEV) {
-      console.info("[reorder] queued: save + emit");
-    }
-    debouncedSave();
-
-    // Queue custom order save (debounced, idempotent)
-    try {
-      const tabKey = list === "wishlist" ? "want" : list;
-      const orderIds = reorderedItems.map(
-        (item) => `${item.id}:${item.mediaType}`
-      );
-      queueCustomOrderSave(tabKey, orderIds);
-    } catch (e) {
-      console.warn("Failed to queue custom order save:", e);
-    }
-
-    console.log(
-      `🔄 Reordered ${list} list: moved item from ${fromIndex} to ${toIndex}`
-    );
-
-    // Trigger Firebase sync via event
-    const currentUser = getCurrentFirebaseUser();
-    if (currentUser) {
-      window.dispatchEvent(
-        new CustomEvent("library:changed", {
-          detail: { uid: currentUser.uid, operation: "reorder" },
-        })
-      );
-    }
+    const saved = restoreTabState(tabKey).order.ids ?? [];
+    const visible = visibleIds ?? applyCustomOrder(items, saved).map(libraryIdentity);
+    if (fromIndex < 0 || toIndex < 0 || fromIndex >= visible.length || toIndex >= visible.length) return;
+    const ids = reorderedIdentities(items, saved, visible, fromIndex, toIndex);
+    // Only ordering metadata changes. Library entries and their addition dates stay intact.
+    void saveTabState(tabKey, { sort: 'custom', order: { mode: 'custom', ids } });
   },
 
   // Reset custom order for a tab

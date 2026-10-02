@@ -35,7 +35,7 @@ describe('Library destination removal', () => {
     for (const [name, content] of [
       ['Want to Watch, 1 item', 'Wanted Show'],
       ['Watched, 1 item', 'Watched Show'],
-      ['Custom Lists, 7 items', 'My Lists'],
+      ['Custom Lists, 2 lists', 'My Lists'],
       ['Watching, 1 item', 'Watching Show'],
     ]) {
       const tab = screen.getByRole('tab', { name });

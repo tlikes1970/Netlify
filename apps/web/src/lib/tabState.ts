@@ -32,7 +32,7 @@ export function getTabKey(mode: string): string {
  * Restore tab state from localStorage with guardrails
  * Validates all state values and provides defaults for broken states
  */
-export function restoreTabState(tabKey: string, availableItemIds: Set<string>): TabState {
+export function restoreTabState(tabKey: string, _availableItemIds?: Set<string>): TabState {
   const defaultState: TabState = {
     sort: 'date-newest',
     filter: { type: 'all', providers: [] },
@@ -91,26 +91,10 @@ export function restoreTabState(tabKey: string, availableItemIds: Set<string>): 
           return { mode: 'default' };
         }
 
-        // Validate that all IDs in custom order still exist
-        const validIds = parsedIds.filter((id: string) => {
-          // Check if ID exists in available items
-          return availableItemIds.has(id) || 
-                 availableItemIds.has(id.split(':')[0]); // Handle "id:mediaType" format
-        });
-
-        // If less than 50% of IDs are valid, consider it stale and reset
-        if (validIds.length < parsedIds.length * 0.5) {
-          console.warn(`[TabState] Stale custom order detected for ${tabKey}, resetting`);
-          localStorage.removeItem(`flk.tab.${tabKey}.order.custom`);
-          return { mode: 'default' };
-        }
-
-        // If sort mode is custom, use the order; otherwise ignore it
-        if (sort === 'custom' && validIds.length > 0) {
-          return { mode: 'custom', ids: validIds };
-        }
-
-        return { mode: 'default' };
+        // Keep compatible IDs even when metadata is not loaded or another sort is active.
+        // Rendering ignores removed identities; ordinary saves must never prune the order.
+        const ids = [...new Set(parsedIds.filter((id: unknown): id is string => typeof id === 'string' && id.length > 0))];
+        return ids.length ? { mode: 'custom', ids } : { mode: 'default' };
       } catch {
         // Broken state - clear it
         try {
@@ -135,7 +119,7 @@ export function restoreTabState(tabKey: string, availableItemIds: Set<string>): 
 export async function saveTabState(tabKey: string, state: Partial<TabState>): Promise<void> {
   try {
     // Get current state to merge with partial update
-    const currentState = restoreTabState(tabKey, new Set());
+    const currentState = restoreTabState(tabKey);
     const mergedState: TabState = {
       sort: state.sort !== undefined ? state.sort : currentState.sort,
       filter: state.filter !== undefined ? state.filter : currentState.filter,
@@ -166,6 +150,8 @@ export async function saveTabState(tabKey: string, state: Partial<TabState>): Pr
         localStorage.removeItem(`flk.tab.${tabKey}.order.custom`);
       }
     }
+
+    notifyTabStateChanged(tabKey);
 
     // Sync to Firebase in background (non-blocking)
     try {
@@ -210,35 +196,28 @@ export function validateFilters(
   filters: ListFiltersState,
   availableProviders: string[]
 ): ListFiltersState {
-  // Filter out providers that no longer exist
-  const validProviders = filters.providers.filter((provider) =>
-    availableProviders.includes(provider)
-  );
-
+  const canonical = new Map(availableProviders.map(name => [name.toLowerCase(), name]));
+  const seen = new Set<string>();
   return {
     type: filters.type,
-    providers: validProviders,
+    providers: filters.providers.flatMap(name => {
+      const key = name.toLowerCase();
+      if (seen.has(key)) return [];
+      seen.add(key);
+      return [canonical.get(key) ?? name];
+    }),
   };
 }
 
+export const TAB_STATE_CHANGED = 'flicklet:tab-state-changed';
+export function notifyTabStateChanged(tabKey: string, source: 'local' | 'cloud' = 'local') {
+  window.dispatchEvent(new CustomEvent(TAB_STATE_CHANGED, { detail: { tabKey, source } }));
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export function networkOptions(names: string[]): string[] {
+  const canonical = new Map<string, string>();
+  for (const name of names) {
+    if (typeof name === 'string' && name.trim() && !canonical.has(name.toLowerCase())) canonical.set(name.toLowerCase(), name);
+  }
+  return [...canonical.values()].sort((a,b) => a.localeCompare(b));
+}

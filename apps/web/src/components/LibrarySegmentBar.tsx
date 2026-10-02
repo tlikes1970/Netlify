@@ -39,7 +39,7 @@ export default function LibrarySegmentBar({
         {SEGMENTS.map((item) => {
           const active = segment === item.id;
           const count = counts[item.id] ?? 0;
-          const ariaLabel = `${item.label}, ${count} ${count === 1 ? 'item' : 'items'}`;
+          const ariaLabel = `${item.label}, ${count} ${item.id === 'mylists' ? (count === 1 ? 'list' : 'lists') : (count === 1 ? 'item' : 'items')}`;
 
           return (
             <button

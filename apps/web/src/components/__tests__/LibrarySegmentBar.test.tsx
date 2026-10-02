@@ -20,7 +20,7 @@ describe('LibrarySegmentBar', () => {
     expect(screen.getByRole('tab', { name: /Watched, 10 items/i })).toBeTruthy();
     expect(screen.getAllByRole('tab')).toHaveLength(4);
     expect(screen.queryByRole('tab', { name: /Up Next|Returning/i })).toBeNull();
-    expect(screen.getByRole('tab', { name: /Custom Lists, 7 items/i })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: /Custom Lists, 7 lists/i })).toBeTruthy();
   });
 
   it('calls onChange when a segment is selected', () => {
@@ -29,7 +29,7 @@ describe('LibrarySegmentBar', () => {
       <LibrarySegmentBar segment="watching" counts={counts} onChange={onChange} />
     );
 
-    fireEvent.click(screen.getByRole('tab', { name: /Custom Lists, 7 items/i }));
+    fireEvent.click(screen.getByRole('tab', { name: /Custom Lists, 7 lists/i }));
     expect(onChange).toHaveBeenCalledWith('mylists');
   });
 });

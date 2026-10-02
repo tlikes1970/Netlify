@@ -26,6 +26,8 @@ vi.mock("@/lib/settings", () => ({
 }));
 
 vi.mock("@/lib/tabState", () => ({
+  TAB_STATE_CHANGED: "flicklet:tab-state-changed",
+  networkOptions: (names: string[]) => names,
   getTabKey: () => "returning",
   restoreTabState: () => ({
     sort: "date-newest",

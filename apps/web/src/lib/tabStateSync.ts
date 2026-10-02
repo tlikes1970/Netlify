@@ -10,7 +10,7 @@ import { trackedWrite } from './restoreBarrier';
 import { doc, setDoc as firestoreWrite, collection, getDocs } from 'firebase/firestore';
 import { db } from './firebaseBootstrap';
 import { authManager } from './auth';
-import type { TabState } from './tabState';
+import { notifyTabStateChanged, type TabState } from './tabState';
 
 /**
  * Sync tab state to Firebase
@@ -98,6 +98,7 @@ export async function loadTabStateFromFirebase(uid: string): Promise<void> {
         }
       }
       
+      notifyTabStateChanged(tabKey, 'cloud');
       loadedCount++;
       console.log(`➕ Loaded tab state for ${tabKey} from Firebase`);
     });

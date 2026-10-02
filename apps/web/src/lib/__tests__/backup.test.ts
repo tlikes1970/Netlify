@@ -408,3 +408,16 @@ describe("legacy 2.0 compatibility", () => {
     expect(restored.library[0]).toMatchObject({list: status === 'want' ? 'wishlist' : status, customListIds: ['family'], userNotes: 'Keep these notes', tags: ['family']});
   });
  });
+
+it('retains compatible custom order and network selections through backup validation and restore',()=>{
+  const backup=fixture();
+  backup.local['flk.tab.watching.sort']='custom';
+  backup.local['flk.tab.watching.filter.type']='tv';
+  backup.local['flk.tab.watching.filter.providers']=['NETFLIX'];
+  backup.local['flk.tab.watching.order.custom']=['10:tv','removed:movie'];
+  const validated=validateBackup(parseBackup(JSON.stringify(backup)));
+  const writes=restoreWrites(validated,localStorage,null);
+  expect(JSON.parse(writes.get('flk.tab.watching.order.custom')!)).toEqual(['10:tv','removed:movie']);
+  expect(JSON.parse(writes.get('flk.tab.watching.filter.providers')!)).toEqual(['NETFLIX']);
+  expect(writes.get('flk.tab.watching.sort')).toBe('custom');
+});

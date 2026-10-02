@@ -1300,3 +1300,13 @@ input:focus-visible {
   .discovery-detail-card [data-testid="cardv2-actions"] { grid-template-columns: minmax(0, 1fr); }
   .discovery-detail-card [data-testid="cardv2-actions"] button span { overflow-wrap: normal; }
 }
+
+/* Library filtering controls share the app's mobile touch target. */
+.library-filter-control { min-height: 44px; min-width: 44px; max-width: 100%; }
+.library-filter-control:focus-visible { outline: 2px solid var(--menu-focus); outline-offset: 2px; }
+
+.library-sort-control { max-width: 100%; min-width: 0; }
+.library-sort-control label { flex-shrink: 0; }
+.library-sort-control select { min-width: 0; flex: 1; }
+
+.library-filter-toolbar { max-width: 100%; min-width: 0; }

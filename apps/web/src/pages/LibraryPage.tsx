@@ -47,10 +47,7 @@ export default function LibraryPage({
     watching: watchingItems.length,
     want: wishlistItems.length,
     watched: watchedItems.length,
-    mylists: userLists.customLists.reduce(
-      (sum, list) => sum + (list.itemCount ?? 0),
-      0
-    ),
+    mylists: userLists.customLists.length,
   };
 
   const listHandlers = {

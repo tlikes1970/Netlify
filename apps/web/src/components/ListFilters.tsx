@@ -1,19 +1,10 @@
-/**
- * Process: List Filters Component
- * Purpose: Display type and provider filters for tabbed lists with persistence
- * Data Source: Filter state from props, localStorage for persistence
- * Update Path: N/A - controlled component
- * Dependencies: Filter state management in parent
- */
-
-import { useState } from 'react';
+import { networkOptions } from '@/lib/tabState';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 export type FilterType = 'all' | 'movie' | 'tv';
-export interface ListFiltersState {
-  type: FilterType;
-  providers: string[];
-}
-
+// Preserve the legacy persisted property; these names describe networks in the UI.
+export interface ListFiltersState { type: FilterType; providers: string[]; }
 interface ListFiltersProps {
   value: ListFiltersState;
   onChange: (filters: ListFiltersState) => void;
@@ -21,171 +12,59 @@ interface ListFiltersProps {
   disabled?: boolean;
 }
 
-export default function ListFilters({ 
-  value, 
-  onChange, 
-  availableProviders,
-  disabled = false 
-}: ListFiltersProps) {
-  const [isProviderMenuOpen, setIsProviderMenuOpen] = useState(false);
-
-  const handleTypeChange = (type: FilterType) => {
-    onChange({ ...value, type });
-  };
-
-  const handleProviderToggle = (provider: string) => {
-    const newProviders = value.providers.includes(provider)
-      ? value.providers.filter(p => p !== provider)
-      : [...value.providers, provider];
-    onChange({ ...value, providers: newProviders });
-  };
-
-  const handleClearAll = () => {
-    onChange({ type: 'all', providers: [] });
-    setIsProviderMenuOpen(false);
-  };
-
-  const activeFilterCount = (value.type !== 'all' ? 1 : 0) + value.providers.length;
-  const hasActiveFilters = activeFilterCount > 0;
-
-  return (
-    <div className="flex items-center gap-2 flex-wrap">
-      {/* Type Filter */}
-      <div className="flex items-center gap-2">
-        <label className="text-sm" style={{ color: 'var(--muted)' }}>
-          Type:
-        </label>
-        <select
-          value={value.type}
-          onChange={(e) => handleTypeChange(e.target.value as FilterType)}
-          disabled={disabled}
-          className="px-2 py-1 rounded text-sm border transition font-medium"
-          style={{
-            backgroundColor: 'var(--menu-bg)',
-            borderColor: value.type !== 'all' ? 'var(--accent-primary)' : 'var(--menu-border)',
-            color: disabled ? 'var(--menu-text-disabled)' : 'var(--menu-text)',
-            cursor: disabled ? 'not-allowed' : 'pointer',
-          }}
-        >
-          <option value="all">All</option>
-          <option value="movie">Movie</option>
-          <option value="tv">TV</option>
-        </select>
-      </div>
-
-      {/* Provider Filter */}
-      {availableProviders.length > 0 && (
-        <div className="relative">
-          <button
-            onClick={() => setIsProviderMenuOpen(!isProviderMenuOpen)}
-            disabled={disabled}
-            className="px-2 py-1 rounded text-sm border transition font-medium flex items-center gap-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-            style={{
-              backgroundColor: value.providers.length > 0 ? 'var(--accent-primary)' : 'var(--menu-bg)',
-              borderColor: value.providers.length > 0 ? 'var(--accent-primary)' : 'var(--menu-border)',
-              color: disabled 
-                ? 'var(--menu-text-disabled)' 
-                : value.providers.length > 0 
-                  ? 'white' 
-                  : 'var(--menu-text)',
-              cursor: disabled ? 'not-allowed' : 'pointer',
-              outlineColor: 'var(--menu-focus)',
-            }}
-          >
-            <span>Provider{value.providers.length > 0 ? ` (${value.providers.length})` : ''}</span>
-            <span className="text-xs">{isProviderMenuOpen ? '▲' : '▼'}</span>
-          </button>
-
-          {/* Provider Dropdown Menu */}
-          {isProviderMenuOpen && !disabled && (
-            <>
-              <div
-                className="fixed inset-0 z-40"
-                onClick={() => setIsProviderMenuOpen(false)}
-              />
-              <div
-                className="absolute top-full left-0 mt-1 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto min-w-[200px]"
-                style={{
-                  backgroundColor: 'var(--menu-bg)',
-                  border: '1px solid var(--menu-border)',
-                }}
-              >
-                <div className="p-2">
-                  <div className="text-xs font-medium mb-2" style={{ color: 'var(--menu-text-muted)' }}>
-                    Select providers:
-                  </div>
-                  <div className="space-y-1 max-h-48 overflow-y-auto">
-                    {availableProviders.map(provider => (
-                      <label
-                        key={provider}
-                        className="flex items-center gap-2 p-2 rounded cursor-pointer transition-colors"
-                        style={{ color: 'var(--menu-text)' }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = 'var(--menu-hover)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={value.providers.includes(provider)}
-                          onChange={() => handleProviderToggle(provider)}
-                          className="rounded"
-                          style={{ accentColor: 'var(--accent)' }}
-                        />
-                        <span className="text-sm">{provider}</span>
-                      </label>
-                    ))}
-                  </div>
-                  {value.providers.length > 0 && (
-                    <button
-                      onClick={() => onChange({ ...value, providers: [] })}
-                      className="w-full mt-2 px-2 py-1 text-xs rounded border border-dashed transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-                      style={{
-                        color: 'var(--menu-text-muted)',
-                        borderColor: 'var(--menu-border)',
-                        backgroundColor: 'transparent',
-                        outlineColor: 'var(--menu-focus)',
-                      }}
-                    >
-                      Clear Providers
-                    </button>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* Filters Active Pill */}
-      {hasActiveFilters && (
-        <div className="flex items-center gap-2">
-          <span
-            className="px-2 py-1 rounded-full text-xs font-medium"
-            style={{ backgroundColor: 'var(--accent-primary)', color: 'white' }}
-          >
-            Filters Active ({activeFilterCount})
-          </span>
-          <button
-            onClick={handleClearAll}
-            disabled={disabled}
-            className="text-xs px-2 py-1 rounded transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-            style={{
-              backgroundColor: 'var(--btn)',
-              color: disabled ? 'var(--menu-text-disabled)' : 'var(--text)',
-              borderColor: 'var(--line)',
-              border: '1px solid',
-              cursor: disabled ? 'not-allowed' : 'pointer',
-              outlineColor: 'var(--menu-focus)',
-            }}
-          >
-            Clear All
-          </button>
-        </div>
-      )}
+export default function ListFilters({value,onChange,availableProviders,disabled=false}: ListFiltersProps) {
+  const id=useId();
+  const trigger=useRef<HTMLButtonElement>(null);
+  const popup=useRef<HTMLDivElement>(null);
+  const [open,setOpen]=useState(false);
+  const [position,setPosition]=useState({left:8,top:8,width:240,maxHeight:256});
+  const close = (restoreFocus=false) => { setOpen(false); if(restoreFocus) trigger.current?.focus(); };
+  useLayoutEffect(() => {
+    if(!open) return;
+    const place=() => {
+      const rect=trigger.current?.getBoundingClientRect(); if(!rect) return;
+      const viewport=document.documentElement.getBoundingClientRect();
+      const width=Math.min(280,(document.documentElement.clientWidth || window.innerWidth)-16);
+      const below=window.innerHeight-rect.bottom-12;
+      const maxHeight=Math.max(44,Math.min(256, below>=160 ? below : rect.top-12));
+      const top=below>=160 ? rect.bottom+4 : Math.max(8,rect.top-maxHeight-4);
+      setPosition({left:Math.max(8,Math.min(rect.left-viewport.left,(document.documentElement.clientWidth || window.innerWidth)-width-8)),top,width,maxHeight});
+    };
+    place();
+    popup.current?.querySelector<HTMLInputElement>('input')?.focus();
+    window.addEventListener('resize',place);
+    window.addEventListener('scroll',place,true);
+    return () => {window.removeEventListener('resize',place);window.removeEventListener('scroll',place,true);};
+  },[open]);
+  const options=networkOptions([...availableProviders,...value.providers]);
+  const selected=(name:string) => value.providers.some(p=>p.toLowerCase()===name.toLowerCase());
+  return <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex items-center gap-2">
+      <label htmlFor={`${id}-type`} className="text-sm" style={{color:'var(--muted)'}}>Type:</label>
+      <select id={`${id}-type`} value={value.type} disabled={disabled} onChange={e=>onChange({...value,type:e.target.value as FilterType})}
+        className="library-filter-control px-2 rounded text-sm border" style={{backgroundColor:'var(--menu-bg)',color:'var(--menu-text)',borderColor:'var(--menu-border)'}}>
+        <option value="all">All</option><option value="movie">Movie</option><option value="tv">TV</option>
+      </select>
     </div>
-  );
+    {(availableProviders.length>0 || value.providers.length>0) && <button type="button" ref={trigger} disabled={disabled}
+      aria-expanded={open} aria-haspopup="dialog" aria-controls={`${id}-networks`} onClick={()=>setOpen(!open)}
+      className="library-filter-control px-2 rounded text-sm border" style={{backgroundColor:value.providers.length?'var(--accent-primary)':'var(--menu-bg)',color:value.providers.length?'white':'var(--menu-text)'}}>
+      Network{value.providers.length ? ` (${value.providers.length})` : ''} <span aria-hidden="true">{open?'▲':'▼'}</span>
+    </button>}
+    {open && !disabled && createPortal(<>
+      <div className="fixed inset-0 z-40" aria-hidden="true" onClick={()=>close(true)}/>
+      <div ref={popup} id={`${id}-networks`} role="dialog" aria-label="Select networks"
+        className="fixed z-50 rounded-lg shadow-lg overflow-y-auto p-2" style={{...position,boxSizing:'border-box',backgroundColor:'var(--menu-bg)',color:'var(--menu-text)',border:'1px solid var(--menu-border)'}}
+        onKeyDown={e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close(true);}}}
+        onBlur={e=>{if(e.relatedTarget && !e.currentTarget.contains(e.relatedTarget as Node) && e.relatedTarget!==trigger.current) close();}}>
+        <p className="text-xs mb-2">Select networks:</p>
+        {options.map(name=><label key={name.toLowerCase()} className="library-filter-control flex items-center gap-2 p-2 rounded cursor-pointer">
+          <input type="checkbox" checked={selected(name)} onChange={()=>onChange({...value,providers:selected(name)?value.providers.filter(p=>p.toLowerCase()!==name.toLowerCase()):[...value.providers,name]})}/>
+          <span className="text-sm min-w-0" style={{overflowWrap:'anywhere'}}>{name}</span>
+        </label>)}
+        {value.providers.length>0 && <button type="button" className="library-filter-control w-full text-sm border rounded" onClick={()=>onChange({...value,providers:[]})}>Clear Networks</button>}
+        <button type="button" className="library-filter-control w-full text-sm" onClick={()=>close(true)}>Done</button>
+      </div>
+    </>,document.body)}
+  </div>;
 }
-

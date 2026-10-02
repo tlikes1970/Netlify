@@ -1,3 +1,4 @@
+import { libraryIdentity, processLibraryItems } from '@/lib/libraryView';
 import TabCard from "@/components/cards/TabCard";
 import type { MediaItem } from "@/components/cards/card.types";
 import { getItemSynopsis } from "@/lib/itemSynopsis";
@@ -24,7 +25,8 @@ import {
   getTabKey,
   restoreTabState,
   saveTabState,
-  resetTabState,
+  TAB_STATE_CHANGED,
+  networkOptions,
   validateFilters,
   type TabState,
 } from "@/lib/tabState";
@@ -32,7 +34,6 @@ import {
   trackSortChange,
   trackFilterChange,
   trackReorderCompleted,
-  trackTabStateReset,
 } from "@/lib/analytics";
 import { flushPendingSaves } from "@/lib/storage";
 import { WatchingListWithBackdrop } from "@/components/WatchingListWithBackdrop";
@@ -115,48 +116,37 @@ export default function ListPage({
         });
       }
     });
-    return Array.from(providerSet).sort();
+    return networkOptions(Array.from(providerSet));
   }, [items]);
 
-  // Reload tab state when tab changes
+  // Both local reorder events and completed cloud restores refresh mounted tabs.
   useEffect(() => {
-    const restored = restoreTabState(tabKey, availableItemIds);
-    setTabStateInternal(restored);
-    setSortMode(restored.sort);
-    // Validate filters against available providers on mount
-    const validatedFilters = validateFilters(
-      restored.filter,
-      availableProviders
-    );
-    setFilters(validatedFilters);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tabKey]);
+    const restore = () => {
+      const restored = restoreTabState(tabKey, availableItemIds);
+      setTabStateInternal(restored);
+      setSortMode(restored.sort);
+      setFilters(validateFilters(restored.filter, availableProviders));
+    };
+    const handleRestore = (event: Event) => {
+      const detail = (event as CustomEvent<{tabKey: string; source?: string}>).detail;
+      if (detail?.tabKey !== tabKey) return;
+      if (detail.source === 'cloud') setSortByTag(false);
+      restore();
+    };
+    restore();
+    window.addEventListener(TAB_STATE_CHANGED, handleRestore);
+    return () => window.removeEventListener(TAB_STATE_CHANGED, handleRestore);
+  }, [tabKey, availableItemIds, availableProviders]);
 
   // Handler for sort mode change with confirmation
   const handleSortModeChange = useCallback(
     (newMode: SortMode) => {
-      // If changing from custom to another mode, confirm first
-      if (sortMode === "custom" && newMode !== "custom") {
-        const confirmed = window.confirm(
-          "Changing the sort mode will reset your custom order. Continue?"
-        );
-        if (!confirmed) {
-          return; // User cancelled
-        }
-        // Reset custom order
-        const listName = getListName(mode);
-        if (listName) {
-          Library.resetCustomOrder(listName);
-        }
-        trackSortChange(tabKey, newMode, sortMode);
-      } else if (newMode !== sortMode) {
-        trackSortChange(tabKey, newMode, sortMode);
-      }
-
+      if (newMode !== sortMode) trackSortChange(tabKey, newMode, sortMode);
+      setSortByTag(false);
       setSortMode(newMode);
       void saveTabState(tabKey, { sort: newMode });
     },
-    [sortMode, tabKey, mode]
+    [sortMode, tabKey]
   );
 
   // Handler for filter change with validation and telemetry
@@ -175,162 +165,9 @@ export default function ListPage({
     [tabKey, availableProviders]
   );
 
-  // Persist sort mode changes
-  useEffect(() => {
-    void saveTabState(tabKey, { sort: sortMode });
-  }, [sortMode, tabKey]);
-
-  // Persist filter changes (already handled by handleFilterChange, but keep for safety)
-  useEffect(() => {
-    void saveTabState(tabKey, { filter: filters });
-  }, [filters, tabKey]);
-
-  // Stable sort function with secondary sort key
-  const stableSort = useCallback(
-    (items: LibraryEntry[], mode: SortMode): LibraryEntry[] => {
-      if (mode === "custom") {
-        // Custom mode: maintain original order (as set by drag-and-drop)
-        return [...items];
-      }
-
-      // Create a copy with original indices for stable sorting
-      const itemsWithIndex = items.map((item, index) => ({
-        item,
-        originalIndex: index,
-      }));
-
-      // Sort based on mode
-      itemsWithIndex.sort((a, b) => {
-        let primaryComparison = 0;
-
-        switch (mode) {
-          case "date-newest":
-            // Newest first (larger addedAt first)
-            primaryComparison = (b.item.addedAt || 0) - (a.item.addedAt || 0);
-            break;
-          case "date-oldest":
-            // Oldest first (smaller addedAt first)
-            primaryComparison = (a.item.addedAt || 0) - (b.item.addedAt || 0);
-            break;
-          case "alphabetical-az":
-            // A to Z
-            primaryComparison = (a.item.title || "").localeCompare(
-              b.item.title || "",
-              undefined,
-              { sensitivity: "base" }
-            );
-            break;
-          case "alphabetical-za":
-            // Z to A
-            primaryComparison = (b.item.title || "").localeCompare(
-              a.item.title || "",
-              undefined,
-              { sensitivity: "base" }
-            );
-            break;
-          case "streaming-service": {
-            // Sort by first streaming service (alphabetically)
-            const aService =
-              a.item.networks && a.item.networks.length > 0
-                ? a.item.networks[0].toLowerCase()
-                : "zzz_no_service"; // Items without services go to end
-            const bService =
-              b.item.networks && b.item.networks.length > 0
-                ? b.item.networks[0].toLowerCase()
-                : "zzz_no_service";
-            primaryComparison = aService.localeCompare(bService, undefined, {
-              sensitivity: "base",
-            });
-            break;
-          }
-          default:
-            primaryComparison = 0;
-        }
-
-        // If primary sort is equal, use secondary sort key (item ID for stability)
-        if (primaryComparison === 0) {
-          const aId = String(a.item.id);
-          const bId = String(b.item.id);
-          return aId.localeCompare(bId);
-        }
-
-        return primaryComparison;
-      });
-
-      return itemsWithIndex.map(({ item }) => item);
-    },
-    []
-  );
-
-  // Filter and sort items
-  const processedItems = useMemo(() => {
-    if (mode === "returning") {
-      return items;
-    }
-
-    let result = items;
-
-    // Apply type filter (AND logic)
-    if (filters.type !== "all") {
-      result = result.filter((item) => item.mediaType === filters.type);
-    }
-
-    // Apply provider filter (AND logic - item must have at least one selected provider)
-    if (filters.providers.length > 0) {
-      result = result.filter((item) => {
-        if (
-          !item.networks ||
-          !Array.isArray(item.networks) ||
-          item.networks.length === 0
-        ) {
-          return false; // Items without providers are excluded when providers are selected
-        }
-        // Check if item has at least one of the selected providers
-        return filters.providers.some((provider) =>
-          item.networks!.some(
-            (network) =>
-              network &&
-              typeof network === "string" &&
-              network.toLowerCase() === provider.toLowerCase()
-          )
-        );
-      });
-    }
-
-    // Filter by selected tag (AND logic)
-    if (selectedTag) {
-      result = result.filter(
-        (item) => item.tags && item.tags.includes(selectedTag)
-      );
-    }
-
-    // Sort by tag if enabled (takes priority over sort mode)
-    if (sortByTag) {
-      result = [...result].sort((a, b) => {
-        const aHasTags = a.tags && a.tags.length > 0;
-        const bHasTags = b.tags && b.tags.length > 0;
-
-        // Items with tags come first
-        if (aHasTags && !bHasTags) return -1;
-        if (!aHasTags && bHasTags) return 1;
-
-        // If both have tags, sort alphabetically by first tag
-        if (aHasTags && bHasTags) {
-          const aFirstTag = a.tags![0].toLowerCase();
-          const bFirstTag = b.tags![0].toLowerCase();
-          return aFirstTag.localeCompare(bFirstTag);
-        }
-
-        // If neither has tags, maintain original order
-        return 0;
-      });
-    } else {
-      // Apply sort mode (only if not sorting by tag)
-      result = stableSort(result, sortMode);
-    }
-
-    return result;
-  }, [items, filters, selectedTag, sortByTag, sortMode, stableSort, mode]);
+  const processedItems = useMemo(() => mode === 'returning' ? items :
+    processLibraryItems(items, filters, selectedTag, sortByTag, sortMode, tabState.order?.ids),
+    [items, filters, selectedTag, sortByTag, sortMode, mode, tabState.order]);
 
   // Fetch missing TMDB overviews for Want/Watched items (common gap vs search adds)
   useEffect(() => {
@@ -376,7 +213,7 @@ export default function ListPage({
         const cardMap = cardRefs.current;
         const currentRects = new Map<string, DOMRect>();
         processedItems.forEach((item) => {
-          const el = cardMap.get(String(item.id));
+          const el = cardMap.get(libraryIdentity(item));
           if (el) {
             currentRects.set(String(item.id), el.getBoundingClientRect());
           }
@@ -391,10 +228,10 @@ export default function ListPage({
         });
 
         // When user manually reorders, switch to Custom mode
-        handleSortModeChange("custom");
+        setSortByTag(false);
         const listName = getListName(mode);
         if (listName) {
-          Library.reorder(listName, fromIndex, toIndex);
+          Library.reorder(listName, fromIndex, toIndex, processedItems.map(libraryIdentity));
         }
 
         // Track reorder completion
@@ -406,7 +243,7 @@ export default function ListPage({
         }, 500);
       }
     },
-    [mode, processedItems, handleSortModeChange, tabKey]
+    [mode, processedItems, tabKey]
   );
 
   const {
@@ -417,7 +254,7 @@ export default function ListPage({
     handleDragLeave,
     handleDrop,
   } = useDragAndDrop(
-    processedItems.map((item) => ({ ...item, id: String(item.id) })),
+    processedItems.map((item) => ({ ...item, id: libraryIdentity(item) })),
     handleReorder
   );
 
@@ -448,7 +285,7 @@ export default function ListPage({
   const getItemElement = useCallback(
     (index: number) => {
       const item = processedItems[index];
-      return item ? cardRefs.current.get(String(item.id)) || null : null;
+      return item ? cardRefs.current.get(libraryIdentity(item)) || null : null;
     },
     [processedItems]
   );
@@ -537,7 +374,7 @@ export default function ListPage({
     requestAnimationFrame(() => {
       // 3. Read new positions - track by item ID (after reorder)
       processedItems.forEach((item) => {
-        const el = cardMap.get(String(item.id));
+        const el = cardMap.get(libraryIdentity(item));
         if (el) {
           nextRects.set(String(item.id), el.getBoundingClientRect());
         }
@@ -828,50 +665,17 @@ export default function ListPage({
           )}
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap">
+        <div className="library-filter-toolbar flex items-center gap-3 flex-wrap">
           {/* Sort Dropdown - always shown for list tabs */}
           <>
             <SortDropdown
               value={sortMode}
               onChange={handleSortModeChange}
-              disabled={sortByTag}
+              disabled={false}
             />
-            {/* Unified Reset to Default button - shows when any custom state exists */}
-            {(sortMode === "custom" ||
-              filters.type !== "all" ||
-              filters.providers.length > 0) && (
-              <button
-                onClick={() => {
-                  const confirmed = window.confirm(
-                    "Reset sort, filters, and custom order to defaults?"
-                  );
-                  if (!confirmed) return;
-
-                  // Reset all state
-                  const defaultState = resetTabState(tabKey);
-                  const listName = getListName(mode);
-                  if (listName) {
-                    Library.resetCustomOrder(listName);
-                  }
-                  setSortMode(defaultState.sort);
-                  setFilters(defaultState.filter);
-
-                  // Track reset
-                  trackTabStateReset(tabKey);
-
-                  // Reload items to reflect default order
-                  window.location.reload();
-                }}
-                className="px-3 py-1.5 rounded text-xs font-medium transition-colors"
-                style={{
-                  backgroundColor: "var(--btn)",
-                  color: "var(--text)",
-                  border: "1px solid var(--line)",
-                }}
-                title="Reset to default (sort, filters, and order)"
-                aria-label="Reset to default sort, filters, and order"
-              >
-                Reset to Default
+            {(sortMode !== 'date-newest' || sortByTag) && (
+              <button type="button" className="library-filter-control px-3 rounded text-xs border" onClick={() => handleSortModeChange('date-newest')}>
+                Reset Sort to Newest
               </button>
             )}
           </>
@@ -881,14 +685,21 @@ export default function ListPage({
             value={filters}
             onChange={handleFilterChange}
             availableProviders={availableProviders}
-            disabled={sortByTag}
+            disabled={false}
           />
 
+          {(filters.type !== 'all' || filters.providers.length > 0 || selectedTag) && (
+            <button type="button" className="library-filter-control px-3 rounded text-sm border" onClick={() => {
+              setSelectedTag(null);
+              handleFilterChange({type: 'all', providers: []});
+            }}>Clear Filters</button>
+          )}
+
           {/* Tag Controls */}
-          {allTags.length > 0 && (
-            <div className="flex items-center gap-3">
+          {(allTags.length > 0 || selectedTag || sortByTag) && (
+            <div className="flex items-center gap-3 flex-wrap max-w-full">
               {/* Sort by Tag Toggle */}
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="library-filter-control flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={sortByTag}
@@ -912,9 +723,10 @@ export default function ListPage({
                   Filter by tag:
                 </span>
                 <select
+                  aria-label="Filter by tag"
                   value={selectedTag || ""}
                   onChange={(e) => setSelectedTag(e.target.value || null)}
-                  className="px-2 py-1 rounded text-sm border"
+                  className="library-filter-control px-2 py-1 rounded text-sm border"
                   style={{
                     backgroundColor: "var(--menu-bg)",
                     borderColor: "var(--menu-border)",
@@ -922,6 +734,7 @@ export default function ListPage({
                   }}
                 >
                   <option value="">All items</option>
+                  {selectedTag && !allTags.includes(selectedTag) && <option value={selectedTag}>{selectedTag}</option>}
                   {allTags.map((tag) => (
                     <option
                       key={tag}
@@ -935,23 +748,7 @@ export default function ListPage({
                     </option>
                   ))}
                 </select>
-                {(selectedTag || sortByTag) && (
-                  <button
-                    onClick={() => {
-                      setSelectedTag(null);
-                      setSortByTag(false);
-                    }}
-                    className="text-xs px-2 py-1 rounded"
-                    style={{
-                      backgroundColor: "var(--btn)",
-                      color: "var(--text)",
-                      borderColor: "var(--line)",
-                      border: "1px solid",
-                    }}
-                  >
-                    Clear All
-                  </button>
-                )}
+
               </div>
             </div>
           )}
@@ -1020,10 +817,10 @@ export default function ListPage({
 
                   return (
                     <div
-                      key={item.id}
+                      key={libraryIdentity(item)}
                       ref={(el) => {
-                        if (el) cardRefs.current.set(String(item.id), el);
-                        else cardRefs.current.delete(String(item.id));
+                        if (el) cardRefs.current.set(libraryIdentity(item), el);
+                        else cardRefs.current.delete(libraryIdentity(item));
                       }}
                       data-item-index={index}
                       className={`${isBeingDragged ? "is-dragging" : ""} ${isDropTarget ? "is-drop-target" : ""}`} // Add CSS classes for animations
@@ -1148,52 +945,12 @@ export default function ListPage({
       ) : (
         <div className="text-center py-8" style={{ color: "var(--muted)" }}>
           <p className="text-sm">
-            {(() => {
-              // Check what filters are active
-              const hasTypeFilter = filters.type !== "all";
-              const hasProviderFilter = filters.providers.length > 0;
-              const hasFilters = hasTypeFilter || hasProviderFilter;
-
-              if (selectedTag) {
-                return `No items found with tag "${selectedTag}"`;
-              }
-              if (sortByTag) {
-                return "No items with tags found";
-              }
-              if (hasFilters) {
-                const filterParts: string[] = [];
-                if (hasTypeFilter) {
-                  filterParts.push(
-                    filters.type === "movie" ? "movies" : "TV shows"
-                  );
-                }
-                if (hasProviderFilter) {
-                  filterParts.push(
-                    `providers: ${filters.providers.join(", ")}`
-                  );
-                }
-                return `No items match your filters (${filterParts.join(", ")})`;
-              }
-              return getEmptyText();
-            })()}
+            {items.length === 0 ? getEmptyText() : selectedTag && filters.type === 'all' && !filters.providers.length
+              ? `No items found with tag "${selectedTag}"`
+              : 'No items match your filters'}
           </p>
           <p className="text-xs mt-2">
-            {(() => {
-              const hasTypeFilter = filters.type !== "all";
-              const hasProviderFilter = filters.providers.length > 0;
-              const hasFilters = hasTypeFilter || hasProviderFilter;
-
-              if (selectedTag) {
-                return "Try selecting a different tag or clear the filter";
-              }
-              if (sortByTag) {
-                return "Add tags to items to see them when sorting by tag";
-              }
-              if (hasFilters) {
-                return 'Try adjusting your filters or click "Clear All" to see all items';
-              }
-              return "Add some shows to get started!";
-            })()}
+            {items.length === 0 ? 'Add some shows to get started!' : 'Adjust your filters or choose Clear Filters to see all items.'}
           </p>
         </div>
       )}

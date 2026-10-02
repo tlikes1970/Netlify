@@ -1,3 +1,4 @@
+import { useId } from 'react';
 /**
  * Process: Sort Dropdown Component
  * Purpose: Display sort options for tabbed lists with visual indicator
@@ -19,14 +20,15 @@ const sortOptions: Array<{ value: SortMode; label: string }> = [
   { value: 'date-oldest', label: 'Date Added (oldest → newest)' },
   { value: 'alphabetical-az', label: 'Alphabetical (A → Z)' },
   { value: 'alphabetical-za', label: 'Alphabetical (Z → A)' },
-  { value: 'streaming-service', label: 'Streaming Service' },
+  { value: 'streaming-service', label: 'Network' },
   { value: 'custom', label: 'Custom Order' },
 ];
 
 export default function SortDropdown({ value, onChange, disabled = false }: SortDropdownProps) {
+  const id = useId();
   return (
-    <div className="flex items-center gap-2">
-      <label className="text-sm" style={{ color: 'var(--muted)' }}>
+    <div className="library-sort-control flex items-center gap-2">
+      <label htmlFor={id} className="text-sm" style={{ color: 'var(--muted)' }}>
         Sort:
       </label>
       <>
@@ -59,10 +61,11 @@ export default function SortDropdown({ value, onChange, disabled = false }: Sort
           }
         `}</style>
         <select
+          id={id}
           value={value}
           onChange={(e) => onChange(e.target.value as SortMode)}
           disabled={disabled}
-          className="sort-dropdown-select px-3 py-1.5 rounded text-sm border transition font-medium"
+          className="sort-dropdown-select library-filter-control px-3 py-1.5 rounded text-sm border transition font-medium"
           style={{
             backgroundColor: 'var(--menu-bg)',
             borderColor: value === 'custom' ? 'var(--accent-primary)' : 'var(--menu-border)',

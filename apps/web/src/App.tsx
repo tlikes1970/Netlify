@@ -536,9 +536,9 @@ export default function App() {
   });
 
   // Lists - using new Library system with reactive updates
-  const watching = useLibrary("watching");
-  const wishlist = useLibrary("wishlist");
-  const watched = useLibrary("watched");
+  const watching = useLibrary("watching", { includeItemUpdates: true });
+  const wishlist = useLibrary("wishlist", { includeItemUpdates: true });
+  const watched = useLibrary("watched", { includeItemUpdates: true });
 
   const flickletMarqueeMessages = useMemo(
     () => getFlickletMarqueeMessages(settings.personalityLevel),
