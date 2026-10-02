@@ -51,13 +51,6 @@ export function CardMobileInfoSection({
         <div className="card-mobile-metadata">
           <span className="meta">{metaLine}</span>
           {chips}
-          {item.networks && item.networks.length > 0 && (
-            <ProviderBadges
-              providers={item.networks}
-              maxVisible={2}
-              mediaType={providerMediaType}
-            />
-          )}
         </div>
         {item.mediaType === 'tv' && settings.layout.episodeTracking && (
           <EpisodeProgressDisplay showId={Number(item.id)} compact />
@@ -65,8 +58,13 @@ export function CardMobileInfoSection({
       </header>
 
       <div className="card-mobile-info-body">
-        {synopsis ? (
-          <div className="synopsis">{synopsis}</div>
+        {synopsis || item.networks?.length ? (
+          <div className="synopsis">
+            {item.networks && item.networks.length > 0 && (
+              <ProviderBadges providers={item.networks} maxVisible={2} mediaType={providerMediaType} />
+            )}
+            {synopsis && <span>{synopsis}</span>}
+          </div>
         ) : fillLine ? (
           <div className="card-mobile-fill-meta">{fillLine}</div>
         ) : null}

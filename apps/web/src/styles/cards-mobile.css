@@ -464,7 +464,7 @@
   transform: scale(0.98);
 }
 /* Reserve two title lines and keep rating glyphs compact without shrinking targets. */
-.card-mobile-title { min-height: 2.6em; }
+.card-mobile-title { min-height: 1.3em; }
 .card-mobile [data-testid="context-status-actions"] button { overflow-wrap: anywhere; }
 .compact-user-rating { gap: 0 !important; flex-wrap: wrap; }
 .compact-user-rating button { width: 24px !important; height: 44px !important; min-width: 24px !important; }
@@ -492,3 +492,15 @@
   white-space: normal;
   overflow-wrap: anywhere;
 }
+
+/* Natural title height avoids an empty second line on short titles. Network
+   text shares the two-line summary budget instead of stretching TV cards. */
+.card-mobile .info-col { gap: 4px; }
+.card-mobile-info-body { flex: 0 0 auto; gap: 4px; }
+.card-mobile .synopsis { flex: none; min-height: 2.8em; }
+.card-mobile .synopsis .provider-badges-container {
+  display: inline;
+  margin: 0;
+}
+.card-mobile .synopsis .provider-badge { white-space: normal; overflow-wrap: anywhere; }
+.card-mobile .synopsis .provider-badge::after { content: " · "; color: var(--muted); }

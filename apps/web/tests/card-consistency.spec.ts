@@ -110,8 +110,10 @@ for (const width of [320,360,390,768,1023,1024,1280]) {
     const metadata = library.locator('.card-mobile-metadata');
     await expect(metadata.getByText('2025 • TV Show', {exact:true})).toBeVisible();
     await expect(metadata.getByText('RETURNING', {exact:true})).toBeVisible();
-    await expect(metadata.getByText('On Network', {exact:true})).toBeVisible();
-    expect(await metadata.locator('.provider-badges-container').evaluate(el => getComputedStyle(el).marginTop)).toBe('0px');
+    await expect(library.locator('.synopsis').getByText('On Network', {exact:true})).toBeVisible();
+    expect(await library.locator('.synopsis .provider-badges-container').evaluate(el => getComputedStyle(el).marginTop)).toBe('0px');
+    expect(await library.locator('.card-mobile-title').evaluate(el => {const s=getComputedStyle(el);return parseFloat(s.minHeight)/parseFloat(s.lineHeight)})).toBeCloseTo(1);
+    expect(await library.locator('.synopsis').evaluate(el => getComputedStyle(el).webkitLineClamp)).toBe('2');
     expect(await metadata.locator('.card-mobile-chips').evaluate(el => getComputedStyle(el).marginTop)).toBe('0px');
    }
    await expect(custom.locator(width<1024?'.card-mobile':'.tab-card')).toHaveCount(2);
