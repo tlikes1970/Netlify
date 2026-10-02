@@ -105,3 +105,5 @@ it('keeps a removed active tag visible and clearable',()=>{
  expect(screen.getByLabelText('Filter by tag')).toHaveValue('family');expect(screen.getByText('No items found with tag "family"')).toBeInTheDocument();
  fireEvent.click(screen.getByRole('button',{name:'Clear Filters'}));expect(titles()).toHaveLength(4);
 });
+
+it('retains selected tag identity while adopting current stored casing after edits',()=>{seed();render(<Harness/>);const filter=screen.getByLabelText('Filter by tag');fireEvent.change(filter,{target:{value:'family'}});act(()=>{Library.updateNotesAndTags('1','tv','',['Family']);Library.updateNotesAndTags('2','movie','',['FAMILY']);Library.updateNotesAndTags('4','tv','',['Family']);});expect(titles()).toEqual(['Delta','Beta','Alpha']);expect(filter).toHaveValue('Family');expect(within(filter).queryByRole('option',{name:'FAMILY',exact:true})).toBeNull();});

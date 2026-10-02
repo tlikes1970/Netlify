@@ -1,6 +1,24 @@
 export type Language = "en" | "es";
 
 export interface LanguageStrings {
+  notesAndTags: string;
+  notesLabel: string;
+  tagsLabel: string;
+  notesPlaceholder: string;
+  tagPlaceholder: string;
+  notesAdd: string;
+  notesCancel: string;
+  notesSave: string;
+  notesClose: string;
+  notesRemoveTag: string;
+  notesEmptyTags: string;
+  notesLimit: string;
+  tagLengthLimit: string;
+  tagCountLimit: string;
+  tagDuplicate: string;
+  tagBlank: string;
+  notesSaveFailed: string;
+
   notInterestedListTitle: string;
   notInterestedDescription: string;
   notInterestedEmpty: string;

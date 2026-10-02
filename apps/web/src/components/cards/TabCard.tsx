@@ -161,7 +161,7 @@ export default function TabCard({
             </button>
             {!isCondensed && (
               <button
-                onClick={() => actions?.onNotesEdit?.(item)}
+                onClick={actions?.onNotesEdit ? () => actions.onNotesEdit?.(item) : undefined}
                 className={buttonClass}
                 style={{
                   backgroundColor: "var(--btn)",
@@ -170,7 +170,7 @@ export default function TabCard({
                   border: "1px solid",
                 }}
               >
-                📝 Notes & Tags
+                📝 {translations.notesAndTags}
               </button>
             )}
             {/* Simple reminder for TV shows (Free feature) */}
@@ -243,7 +243,7 @@ export default function TabCard({
             </button>
             {!isCondensed && (
               <button
-                onClick={() => actions?.onNotesEdit?.(item)}
+                onClick={actions?.onNotesEdit ? () => actions.onNotesEdit?.(item) : undefined}
                 className={buttonClass}
                 style={{
                   backgroundColor: "var(--btn)",
@@ -252,7 +252,7 @@ export default function TabCard({
                   border: "1px solid",
                 }}
               >
-                📝 Notes & Tags
+                📝 {translations.notesAndTags}
               </button>
             )}
             {/* Simple reminder for TV shows (Free feature) */}
@@ -325,7 +325,7 @@ export default function TabCard({
             </button>
             {!isCondensed && (
               <button
-                onClick={() => actions?.onNotesEdit?.(item)}
+                onClick={actions?.onNotesEdit ? () => actions.onNotesEdit?.(item) : undefined}
                 className={buttonClass}
                 style={{
                   backgroundColor: "var(--btn)",
@@ -334,7 +334,7 @@ export default function TabCard({
                   border: "1px solid",
                 }}
               >
-                📝 Notes & Tags
+                📝 {translations.notesAndTags}
               </button>
             )}
             {/* Simple reminder for TV shows (Free feature) */}
@@ -742,18 +742,26 @@ export default function TabCard({
           <div className="flex gap-1">
             {item.userNotes && item.userNotes.trim() && (
               <span
-                className="text-xs cursor-pointer hover:scale-110 transition-transform"
+                  role={actions?.onNotesEdit ? "button" : undefined}
+                  tabIndex={actions?.onNotesEdit ? 0 : undefined}
+                  aria-label={actions?.onNotesEdit ? translations.notesAndTags : undefined}
+                  onKeyDown={event => { if (actions?.onNotesEdit && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); actions.onNotesEdit(item); } }}
+                  className={actions?.onNotesEdit ? "cursor-pointer inline-flex items-center justify-center" : "inline-flex items-center"}
                 title={`Notes: ${item.userNotes.substring(0, 100)}${item.userNotes.length > 100 ? "..." : ""}`}
-                onClick={() => actions?.onNotesEdit?.(item)}
+                onClick={actions?.onNotesEdit ? () => actions.onNotesEdit?.(item) : undefined}
               >
                 📝
               </span>
             )}
             {item.tags && item.tags.length > 0 && (
               <span
-                className="text-xs cursor-pointer hover:scale-110 transition-transform"
+                  role={actions?.onNotesEdit ? "button" : undefined}
+                  tabIndex={actions?.onNotesEdit ? 0 : undefined}
+                  aria-label={actions?.onNotesEdit ? translations.notesAndTags : undefined}
+                  onKeyDown={event => { if (actions?.onNotesEdit && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); actions.onNotesEdit(item); } }}
+                  className={actions?.onNotesEdit ? "cursor-pointer inline-flex items-center justify-center" : "inline-flex items-center"}
                 title={`Tags: ${item.tags.join(", ")}`}
-                onClick={() => actions?.onNotesEdit?.(item)}
+                onClick={actions?.onNotesEdit ? () => actions.onNotesEdit?.(item) : undefined}
               >
                 🏷️
               </span>

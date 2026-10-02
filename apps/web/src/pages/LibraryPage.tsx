@@ -70,7 +70,7 @@ export default function LibraryPage({
 
       {segment === 'mylists' ? (
         <div data-page="lists" data-list="mylists" className="px-1 md:px-0">
-          <MyListsPage onBack={onBackFromCustomLists || (() => onSegmentChange("watching"))} />
+          <MyListsPage onNotesEdit={onNotesEdit} onBack={onBackFromCustomLists || (() => onSegmentChange("watching"))} />
         </div>
       ) : (
         <PullToRefreshWrapper onRefresh={onRefresh}>

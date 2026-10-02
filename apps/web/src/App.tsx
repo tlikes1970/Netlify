@@ -908,9 +908,7 @@ export default function App() {
 
   const handleSaveNotesAndTags = (item: any, notes: string, tags: string[]) => {
     // Update the item in the library with new notes and tags
-    Library.updateNotesAndTags(item.id, item.mediaType, notes, tags);
-    setShowNotesModal(false);
-    setNotesModalItem(null);
+    return Library.updateNotesAndTags(item.id, item.mediaType, notes, tags);
   };
 
   // Render debug auth page if on /debug/auth route
@@ -1153,6 +1151,7 @@ export default function App() {
             }
           >
             <SettingsPage
+              onNotesEdit={handleNotesEdit} notesEditorOpen={showNotesModal}
               initialSection={settingsDesktopInitialSection}
               onClose={() => {
                 setShowSettings(false);
@@ -1163,7 +1162,7 @@ export default function App() {
         )}
 
         {/* Settings Sheet (Mobile) */}
-        <SettingsSheet />
+        <SettingsSheet onNotesEdit={handleNotesEdit} notesEditorOpen={showNotesModal} />
 
         {/* Notes and Tags Modal */}
         {showNotesModal && notesModalItem && (

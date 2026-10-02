@@ -94,6 +94,7 @@ export default function CardV2({
   disableOverflow = false,
   currentListContext: propCurrentListContext,
 }: CardV2Props) {
+  const translations = useTranslations();
   const { title, year, voteAverage } = item;
   const displayPosterUrl = resolvePosterUrl(item.posterUrl);
   const rating =
@@ -193,20 +194,28 @@ export default function CardV2({
             <div className="flex gap-0.5 flex-shrink-0">
               {item.userNotes && item.userNotes.trim() && (
                 <span
-                  className="cursor-pointer hover:scale-110 transition-transform"
+                  role={actions?.onNotesEdit ? "button" : undefined}
+                  tabIndex={actions?.onNotesEdit ? 0 : undefined}
+                  aria-label={actions?.onNotesEdit ? translations.notesAndTags : undefined}
+                  onKeyDown={event => { if (actions?.onNotesEdit && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); actions.onNotesEdit(item); } }}
+                  className={actions?.onNotesEdit ? "cursor-pointer inline-flex items-center justify-center" : "inline-flex items-center"}
                   style={{ fontSize: "var(--font-sm, 10px)" }}
                   title={`Notes: ${item.userNotes.substring(0, 50)}${item.userNotes.length > 50 ? "..." : ""}`}
-                  onClick={() => actions?.onNotesEdit?.(item)}
+                  onClick={actions?.onNotesEdit ? () => actions.onNotesEdit?.(item) : undefined}
                 >
                   📝
                 </span>
               )}
               {item.tags && item.tags.length > 0 && (
                 <span
-                  className="cursor-pointer hover:scale-110 transition-transform"
+                  role={actions?.onNotesEdit ? "button" : undefined}
+                  tabIndex={actions?.onNotesEdit ? 0 : undefined}
+                  aria-label={actions?.onNotesEdit ? translations.notesAndTags : undefined}
+                  onKeyDown={event => { if (actions?.onNotesEdit && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); actions.onNotesEdit(item); } }}
+                  className={actions?.onNotesEdit ? "cursor-pointer inline-flex items-center justify-center" : "inline-flex items-center"}
                   style={{ fontSize: "var(--font-sm, 10px)" }}
                   title={`Tags: ${item.tags.join(", ")}`}
-                  onClick={() => actions?.onNotesEdit?.(item)}
+                  onClick={actions?.onNotesEdit ? () => actions.onNotesEdit?.(item) : undefined}
                 >
                   🏷️
                 </span>

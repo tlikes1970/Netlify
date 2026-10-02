@@ -2,12 +2,18 @@
  * Library tag index
  * Purpose: Provides fast tag-based search across user's library items
  * Data Source: Library state from storage.ts
- * Update Path: Call rebuildIndex() when library changes
+ * Update Path: Library notifications invalidate the index; searches rebuild lazily.
  * Dependencies: Uses Library from storage.ts
  */
 
 import { Library } from './storage';
+import { customListManager } from './customLists';
 import type { MediaItem } from '../components/cards/card.types';
+
+function compatibleItems() {
+  return Library.getAll().filter(item => ['watching', 'wishlist', 'watched', 'not'].includes(item.list) ||
+    (item.list.startsWith('custom:') && !!customListManager.getListById(item.list.slice(7))));
+}
 
 type MediaKey = string; // format: "mediaType:id"
 
@@ -18,28 +24,22 @@ interface TagIndex {
 
 class LibraryTagIndex {
   private index: TagIndex = { byTag: new Map(), byItem: new Map() };
-  private lastRebuild: number = 0;
-  private readonly REBUILD_INTERVAL = 5000; // rebuild at most once per 5 seconds
+  private dirty = true;
+
+  constructor() { Library.subscribe(() => { this.dirty = true; }); }
 
   /**
    * Rebuild the index from current library state
    */
   rebuildIndex(): void {
-    const now = Date.now();
-    if (now - this.lastRebuild < this.REBUILD_INTERVAL) {
-      return;
-    }
-    this.lastRebuild = now;
+    if (!this.dirty) return;
+    this.dirty = false;
 
     this.index.byTag.clear();
     this.index.byItem.clear();
 
     // Get all library items across all lists
-    const lists: Array<'watching' | 'wishlist' | 'watched' | 'not'> = ['watching', 'wishlist', 'watched', 'not'];
-    
-    for (const list of lists) {
-      const items = Library.getByList(list);
-      for (const item of items) {
+    for (const item of compatibleItems()) {
         const key = `${item.mediaType}:${item.id}`;
         const tags = item.tags || [];
         
@@ -54,7 +54,6 @@ class LibraryTagIndex {
         
         // Index item -> tags for reverse lookup
         this.index.byItem.set(key, new Set(tags.map(this.normalizeTag)));
-      }
     }
   }
 
@@ -98,6 +97,7 @@ class LibraryTagIndex {
    * Check if an item has a specific tag
    */
   hasTag(item: MediaItem, tag: string): boolean {
+    this.rebuildIndex();
     const key = `${item.mediaType}:${item.id}`;
     const tags = this.index.byItem.get(key);
     if (!tags) return false;
@@ -121,14 +121,8 @@ export function searchTagsLocal(query: string): MediaItem[] {
   const keys = libraryTagIndex.searchTags(query);
   
   // Get all items from library
-  const allItems: MediaItem[] = [];
-  const lists: Array<'watching' | 'wishlist' | 'watched' | 'not'> = ['watching', 'wishlist', 'watched', 'not'];
-  
-  for (const list of lists) {
-    const items = Library.getByList(list);
-    allItems.push(...items);
-  }
-  
+  const allItems = compatibleItems();
+
   // Filter to matching keys
   const keySet = new Set(keys);
   return allItems.filter(item => {
@@ -136,43 +130,3 @@ export function searchTagsLocal(query: string): MediaItem[] {
     return keySet.has(key);
   });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -14,7 +14,7 @@ describe('Library predicates and sorting',()=>{
  it.each([[['Netflix'],['1','3']],[['netflix'],['1','3']],[['Netflix','ABC'],['1','3','4']],[['Missing'],[]]])('Network matching %j',(names,expected)=>expect(view('all',names)).toEqual(expected));
  it('ANDs Movie and Network and excludes missing network data',()=>expect(view('movie',['Netflix'])).toEqual([]));
  it.each([['all',[],'family',['1','2']],['tv',[],'family',['1']],['all',['Netflix'],'family',['1']],['tv',['Netflix'],'drama',['3']]])('combines type/network/tag %s %j %s',(type,names,tag,expected)=>expect(view(type,names,tag)).toEqual(expected));
- it('tag selection is case sensitive',()=>expect(view('all',[],'Family')).toEqual([]));
+ it('tag selection is case insensitive',()=>expect(view('all',[],'Family')).toEqual(['1','2']));
  it('tag sort respects filters and puts untagged last',()=>expect(view('tv',['Netflix','ABC'],null,true)).toEqual(['3','1','4']));
  it.each([['date-newest',['5','4','3','2','1']],['date-oldest',['1','2','3','4','5']],['alphabetical-az',['1','2','3','4','5']],['alphabetical-za',['5','4','3','2','1']],['streaming-service',['4','3','1','2','5']],['custom',['3','1','2','4','5']]])('sort %s',(sort,expected)=>expect(view('all',[],null,false,sort as SortMode,['3:tv','1:tv'])).toEqual(expected));
  it.each(['date-newest','date-oldest','alphabetical-az','alphabetical-za','streaming-service'] as SortMode[])('ties use string ID for %s',sort=>{
@@ -52,3 +52,5 @@ describe('ordering and compatibility',()=>{
  it('restores casing differences and deduplicates selected networks',()=>expect(validateFilters({type:'tv',providers:['NETFLIX','netflix']},['Netflix'])).toEqual({type:'tv',providers:['Netflix']}));
  it('retains selections while metadata has not loaded',()=>expect(validateFilters({type:'tv',providers:['Netflix']},[]).providers).toEqual(['Netflix']));
 });
+
+it('selected tag identity is case-insensitive while Type and Network remain AND predicates',()=>{const items=[{id:'case',mediaType:'tv' as const,title:'Title',list:'watching' as const,addedAt:1,tags:['Family'],networks:['Netflix']}];expect(processLibraryItems(items,{type:'tv',providers:['Netflix']},'FAMILY',false,'date-newest')).toHaveLength(1);expect(processLibraryItems(items,{type:'movie',providers:['Netflix']},'family',false,'date-newest')).toHaveLength(0);expect(processLibraryItems(items,{type:'tv',providers:['Other']},'family',false,'date-newest')).toHaveLength(0);});

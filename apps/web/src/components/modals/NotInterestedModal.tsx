@@ -8,22 +8,22 @@ import { useFocusTrap } from '@/lib/a11y/useFocusTrap';
 import { useAndroidBackDismiss } from '@/hooks/useAndroidBackDismiss';
 import ModalPortal from '../ModalPortal';
 
-interface NotInterestedModalProps { isOpen: boolean; onClose: () => void }
+interface NotInterestedModalProps { isOpen: boolean; onClose: () => void; onNotesEdit?: (item: LibraryEntry) => void; notesEditorOpen?: boolean }
 
-export default function NotInterestedModal({ isOpen, onClose }: NotInterestedModalProps) {
+export default function NotInterestedModal({ isOpen, onClose, onNotesEdit, notesEditorOpen = false }: NotInterestedModalProps) {
   const items = useLibrary('not', { includeItemUpdates: true });
   const t = useTranslations();
   const [pending, setPending] = useState<{ key: string; phase: 'confirming' | 'removing' } | null>(null);
   const [error, setError] = useState('');
   const [panel, setPanel] = useState<HTMLDivElement | null>(null);
   const close = useCallback(() => { if (!pending) onClose(); }, [pending, onClose]);
-  useFocusTrap(panel, isOpen && !pending);
-  useAndroidBackDismiss(isOpen && pending?.phase !== 'confirming', close);
+  useFocusTrap(panel, isOpen && !pending && !notesEditorOpen);
+  useAndroidBackDismiss(isOpen && !notesEditorOpen && pending?.phase !== 'confirming', close);
   useEffect(() => {
-    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape' && !pending) close(); };
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape' && !pending && !notesEditorOpen) close(); };
     if (isOpen) window.addEventListener('keydown', escape);
     return () => window.removeEventListener('keydown', escape);
-  }, [isOpen, pending, close]);
+  }, [isOpen, pending, close, notesEditorOpen]);
   useEffect(() => { if (isOpen) setError(''); }, [isOpen]);
   const restore = (item: LibraryEntry, target: PrimaryStatus) => {
     setError('');
@@ -67,6 +67,7 @@ export default function NotInterestedModal({ isOpen, onClose }: NotInterestedMod
               ['watching', t.currentlyWatchingAction], ['wishlist', t.wantToWatchAction], ['watched', t.watchedAction],
             ] as const).map(([target, label]) => <button key={target} className={button} disabled={!!pending} onClick={() => restore(item, target)}>{label}</button>)}</div>
             <button className={`${button} mt-3`} disabled={!!pending} onClick={() => void remove(item)} style={{ color: 'var(--error, #ef4444)' }}>{t.removeFromLibrary}</button>
+            {onNotesEdit && <button className={`${button} mt-3 ml-2`} disabled={!!pending} onClick={() => onNotesEdit(item)}>{t.notesAndTags}</button>}
             {active && <p role="status" className="text-sm mt-2">{active === 'confirming' ? t.confirmingRemoval : t.removingFromLibrary}</p>}
           </div>
         </article>;

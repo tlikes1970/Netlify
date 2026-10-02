@@ -421,3 +421,5 @@ it('retains compatible custom order and network selections through backup valida
   expect(JSON.parse(writes.get('flk.tab.watching.filter.providers')!)).toEqual(['NETFLIX']);
   expect(writes.get('flk.tab.watching.sort')).toBe('custom');
 });
+
+it('empty and oversized existing Notes/Tags retain supported backup representation',()=>{const data=fixture();data.library[0].userNotes='';data.library[0].tags=[];expect(parseBackup(JSON.stringify(data)).library[0]).toMatchObject({userNotes:'',tags:[]});data.library[0].userNotes='x'.repeat(6000);data.library[0].tags=['Family','family','x'.repeat(60),...Array.from({length:26},(_,i)=>`tag${i}`)];expect(parseBackup(JSON.stringify(data)).library[0]).toMatchObject({userNotes:data.library[0].userNotes,tags:data.library[0].tags});});

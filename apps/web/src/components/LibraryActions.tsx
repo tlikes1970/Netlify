@@ -288,7 +288,7 @@ export default function LibraryActions({
               border: "1px solid",
             }}
           >
-            📝 Notes & Tags
+            📝 {translations.notesAndTags}
           </button>
         )}
         
@@ -380,7 +380,7 @@ export default function LibraryActions({
             border: "1px solid",
           }}
         >
-          📝 Notes & Tags
+          📝 {translations.notesAndTags}
         </button>
         
         {/* Remind Me (TV shows only) */}
@@ -483,7 +483,7 @@ export default function LibraryActions({
             border: "1px solid",
           }}
         >
-          📝 Notes & Tags
+          📝 {translations.notesAndTags}
         </button>
       )}
       

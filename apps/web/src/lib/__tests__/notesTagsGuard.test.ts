@@ -1,0 +1,12 @@
+import { beforeEach, expect, it, vi } from 'vitest';
+const access=vi.hoisted(()=>({readOnly:false,uid:null as string|null}));
+vi.mock('../entitlements',()=>({getEntitlementsSync:()=>({isReadOnlyMode:access.readOnly})}));
+vi.mock('../auth',()=>({authManager:{getCurrentUser:()=>access.uid?{uid:access.uid}:null}}));
+vi.mock('../customLists',()=>({customListManager:{updateItemCount:vi.fn()}}));
+import { Library } from '../storage';
+import { beginRestore } from '../restoreBarrier';
+const item={id:'17',mediaType:'tv' as const,title:'Guarded title',userNotes:'Old',tags:['Family']};
+beforeEach(()=>{access.readOnly=false;access.uid=null;localStorage.clear();window.dispatchEvent(new Event('library:cleared'));Library.upsert(item,'watching');});
+it('expired-trial guard blocks metadata and opens existing access UI',()=>{access.readOnly=true;const event=vi.fn();window.addEventListener('settings:open-page',event);expect(Library.updateNotesAndTags('17','tv','New',[])).toBe(false);expect(Library.getEntry('17','tv')).toMatchObject(item);expect(event).toHaveBeenCalledOnce();window.removeEventListener('settings:open-page',event);});
+it.each([null,'owner'])('normal guard allows %s mutation',uid=>{access.uid=uid;expect(Library.updateNotesAndTags('17','tv','New',[])).toBe(true);expect(Library.getEntry('17','tv')).toMatchObject({userNotes:'New',tags:[]});});
+it('restore guard protects both live and persisted metadata',async()=>{const end=await beginRestore();try {expect(Library.updateNotesAndTags('17','tv','New',[])).toBe(false);expect(Library.getEntry('17','tv')).toMatchObject(item);}finally{end();}});

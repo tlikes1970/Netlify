@@ -169,6 +169,12 @@ export default function SearchResults({
     };
   }, [currentPage, totalPages, isLoading]);
 
+  useEffect(() => {
+    if (!query.startsWith("tag:")) return;
+    const unsubscribe = Library.subscribe(() => { setItems(searchTagsLocal(query.substring(4))); });
+    return () => { unsubscribe(); };
+  }, [query]);
+
   async function fetchPage(nextPage: number, replace = false) {
     if (isLoading) return;
     abortRef.current?.abort();

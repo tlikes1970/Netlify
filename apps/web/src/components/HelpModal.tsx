@@ -359,8 +359,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
                   ) to search your own lists.
                 </li>
                 <li>
-                  Discovery shows only refresh when your tastes change—rate or
-                  tag more items to improve accuracy.
+                  Tags help organize your titles and filter or search your Library.
                 </li>
               </ul>
             </div>

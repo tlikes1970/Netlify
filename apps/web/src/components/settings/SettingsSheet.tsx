@@ -94,7 +94,7 @@ if (typeof window !== 'undefined') {
   };
 }
 
-export default function SettingsSheet() {
+export default function SettingsSheet({ onNotesEdit, notesEditorOpen = false }: { onNotesEdit?: (item: import("../cards/card.types").MediaItem) => void; notesEditorOpen?: boolean } = {}) {
   console.log('🔧 SettingsSheet component rendering - component function called');
   const [open, setOpen] = useState<boolean>(() => {
     if (typeof document === 'undefined') {
@@ -166,7 +166,7 @@ export default function SettingsSheet() {
     showSharingModal,
   ]);
 
-  useAndroidBackDismiss(open, dismissForAndroidBack);
+  useAndroidBackDismiss(open && !notesEditorOpen, dismissForAndroidBack);
 
   // Prevent background scroll with layout stabilization
   useEffect(() => {
@@ -201,10 +201,10 @@ export default function SettingsSheet() {
   }, [open]);
 
   // Focus trap
-  useFocusTrap(dialogRef.current, !!open, '[role="tab"][aria-selected="true"]');
+  useFocusTrap(dialogRef.current, !!open && !notesEditorOpen, '[role="tab"][aria-selected="true"]');
 
   // Hide rest of app from screen readers
-  useInertOutside(dialogRef.current, !!open);
+  useInertOutside(dialogRef.current, !!open && !notesEditorOpen);
 
   // iOS soft keyboard: keep inputs visible
   useEffect(() => {
@@ -473,6 +473,7 @@ export default function SettingsSheet() {
 
       {/* Modals */}
       <NotInterestedModal
+        onNotesEdit={onNotesEdit} notesEditorOpen={notesEditorOpen}
         isOpen={showNotInterestedModal}
         onClose={() => setShowNotInterestedModal(false)}
       />

@@ -95,14 +95,21 @@ export default function ListPage({
 
   // Get all unique tags from items
   const allTags = useMemo(() => {
-    const tagSet = new Set<string>();
+    const tagSet = new Map<string, string>();
     items.forEach((item) => {
       if (item.tags) {
-        item.tags.forEach((tag) => tagSet.add(tag));
+        item.tags.forEach((tag) => { const key = tag.trim().toLowerCase(); if (!tagSet.has(key)) tagSet.set(key, tag); });
       }
     });
-    return Array.from(tagSet).sort();
+    return Array.from(tagSet.values()).sort();
   }, [items]);
+
+  // Keep the selected identity, using the current stored display casing when available.
+  useEffect(() => {
+    if (!selectedTag) return;
+    const canonical = allTags.find(tag => tag.trim().toLowerCase() === selectedTag.trim().toLowerCase());
+    if (canonical && canonical !== selectedTag) setSelectedTag(canonical);
+  }, [allTags, selectedTag]);
 
   // Get all unique providers from items
   const availableProviders = useMemo(() => {

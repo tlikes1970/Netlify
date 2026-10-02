@@ -29,7 +29,7 @@ export function processLibraryItems(items: LibraryEntry[], filters: ListFiltersS
   let result=items.filter(item =>
     (filters.type==='all' || item.mediaType===filters.type) &&
     (!filters.providers.length || filters.providers.some(name => item.networks?.some(network => typeof network==='string' && network.toLowerCase()===name.toLowerCase()))) &&
-    (!tag || item.tags?.includes(tag))
+    (!tag || item.tags?.some(value => value.trim().toLowerCase() === tag.trim().toLowerCase()))
   );
   if (tagSort) return [...result].sort((a,b) => {
     const at=a.tags?.[0], bt=b.tags?.[0];

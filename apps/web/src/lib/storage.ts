@@ -492,6 +492,7 @@ export const Library = {
     notes: string,
     tags: string[]
   ) {
+    if (!guardMutation()) return false;
     const key = k(id, mediaType);
     if (state[key]) {
       state[key] = {
@@ -513,7 +514,9 @@ export const Library = {
           })
         );
       }
+      return true;
     }
+    return false;
   },
 
   getByList(list: ListName): LibraryEntry[] {

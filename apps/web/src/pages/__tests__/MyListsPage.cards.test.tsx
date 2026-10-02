@@ -10,7 +10,7 @@ vi.mock('@/lib/customLists', async () => {
   return {useCustomLists: () => ({customLists: lists,maxLists:3}), customListManager: {getListById: (id: string) => lists.find(l => l.id === id), setSelectedList: vi.fn(), updateItemCount: mocks.count}};
 });
 vi.mock('@/lib/settings', () => ({useSettings: () => ({layout:{episodeTracking:false}, personality:'Zen'}), getPersonalityText: () => 'Nothing here yet', DEFAULT_PERSONALITY:'Zen'}));
-vi.mock('@/lib/language', () => ({useTranslations: () => ({wantToWatchAction:'Want to Watch',currentlyWatchingAction:'Watching',watchedAction:'Watched',notInterestedAction:'Not Interested'})}));
+vi.mock('@/lib/language', () => ({useTranslations: () => ({wantToWatchAction:'Want to Watch',currentlyWatchingAction:'Watching',notesAndTags:'Notes & Tags',watchedAction:'Watched',notInterestedAction:'Not Interested'})}));
 vi.mock('@/hooks/useDeviceDetection', () => ({useIsDesktop: () => ({isDesktop:false,ready:true})}));
 vi.mock('@/hooks/useEntitlements', () => ({useEntitlements: () => ({hasFullAccess:true,isReadOnlyMode:false})}));
 vi.mock('@/components/Toast', () => ({useToast: () => ({addToast:mocks.toast})}));
@@ -115,4 +115,12 @@ describe('mobile Custom List cards', async () => {
     expect(screen.getByText('Nothing here yet')).toBeInTheDocument();
     expect(screen.queryByRole('article')).toBeNull();
   });
+});
+
+it('custom-list Notes & Tags opens canonical editor and preserves status and memberships',async()=>{
+ Library.upsert({...item,userNotes:'Old',tags:['Family']},'watching');Library.addToCustomList(item,'a');Library.addToCustomList(item,'b');
+ const edit=vi.fn(entry=>Library.updateNotesAndTags(entry.id,entry.mediaType,'New',['Comedy']));
+ render(<MyListsPage onNotesEdit={edit}/>);await openMenu();
+ fireEvent.click(screen.getByRole('menuitem',{name:'Notes & Tags'}));
+ expect(edit).toHaveBeenCalled();expect(Library.getEntry(item.id,item.mediaType)).toMatchObject({userNotes:'New',tags:['Comedy'],list:'watching',customListIds:['a','b']});
 });

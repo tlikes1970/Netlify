@@ -1,3 +1,4 @@
+import { useTranslations } from "../../lib/language";
 import { Library } from "../../lib/storage";
 import ListSelectorModal from "../../components/ListSelectorModal";
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo, useContext } from "react";
@@ -38,6 +39,7 @@ export function CompactOverflowMenu({
   secondaryWatching = false,
   customListContext = false,
 }: CompactOverflowMenuProps) {
+  const translations = useTranslations();
   const [showLists, setShowLists] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const reportOverflowOpen = useContext(SwipeOverflowContext);
@@ -55,7 +57,7 @@ export function CompactOverflowMenu({
   // Build real menu actions from provided handlers (before positioning hooks)
   const menuActions = useMemo(
     () => (actions ? buildMenuActions(item, context, actions) : []),
-    [actions, item, context, settings, hasFullAccess, addToast, hideStatusActions, customListContext, secondaryWatching]
+    [translations.notesAndTags, actions, item, context, settings, hasFullAccess, addToast, hideStatusActions, customListContext, secondaryWatching]
   );
 
   const updateMenuPosition = useCallback(() => {
@@ -288,7 +290,7 @@ export function CompactOverflowMenu({
         if (handlers.onNotesEdit)
           menuItems.push({
             id: "notes",
-            label: "Notes & Tags",
+            label: translations.notesAndTags,
             onClick: handlers.onNotesEdit,
           });
         // Simple Reminder for TV shows
@@ -355,7 +357,7 @@ export function CompactOverflowMenu({
         if (handlers.onNotesEdit)
           menuItems.push({
             id: "notes",
-            label: "Notes & Tags",
+            label: translations.notesAndTags,
             onClick: handlers.onNotesEdit,
           });
         // Simple Reminder for TV shows
@@ -422,7 +424,7 @@ export function CompactOverflowMenu({
         if (handlers.onNotesEdit)
           menuItems.push({
             id: "notes",
-            label: "Notes & Tags",
+            label: translations.notesAndTags,
             onClick: handlers.onNotesEdit,
           });
         // Simple Reminder for TV shows
@@ -491,7 +493,7 @@ export function CompactOverflowMenu({
         if (handlers.onNotesEdit)
           menuItems.push({
             id: "notes",
-            label: "Notes & Tags",
+            label: translations.notesAndTags,
             onClick: handlers.onNotesEdit,
           });
         // Episodes for TV shows

@@ -15,13 +15,15 @@ const setDoc = trackedWrite(firestoreWrite);
 export class FirebaseSyncManager {
   private static instance: FirebaseSyncManager;
   private isInitialized = false;
-  private syncInProgress = false;
+  private queuedUid: string | null = null;
+  private activeSync: Promise<boolean> | null = null;
   private pendingWrite: Promise<void> | null = null;
 
   async prepareRestore(): Promise<void> {
     if (this.syncTimeout) clearTimeout(this.syncTimeout);
     this.syncTimeout = null;
-    await this.pendingWrite;
+    this.queuedUid = null;
+    await this.activeSync;
   }
   private syncTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -175,13 +177,26 @@ export class FirebaseSyncManager {
    * Save data to Firebase with size limits
    */
   async saveToFirebase(uid: string): Promise<boolean> {
-    if (this.syncInProgress) {
-      console.log('🔄 Sync already in progress, skipping');
-      return false;
-    }
+    if (isRestoring()) return false;
+    this.queuedUid = uid;
+    if (this.activeSync) return this.activeSync;
+    this.activeSync = this.drainWrites();
+    try { return await this.activeSync; }
+    finally { this.activeSync = null; }
+  }
 
+  private async drainWrites(): Promise<boolean> {
+    let success = true;
+    while (this.queuedUid && !isRestoring()) {
+      const uid = this.queuedUid;
+      this.queuedUid = null;
+      success = await this.writeSnapshot(uid) && success;
+    }
+    return success;
+  }
+
+  private async writeSnapshot(uid: string): Promise<boolean> {
     try {
-      this.syncInProgress = true;
       console.log('💾 Starting Firebase sync for user:', uid);
 
       const watchlists = this.createLeanWatchlists();
@@ -216,7 +231,6 @@ export class FirebaseSyncManager {
       console.error('❌ Firebase sync failed:', error);
       return false;
     } finally {
-      this.syncInProgress = false;
       this.pendingWrite = null;
     }
   }
@@ -338,7 +352,7 @@ export class FirebaseSyncManager {
               posterUrl: cloudItem.poster_path,
               voteAverage: cloudItem.vote_average,
               userRating: cloudItem.user_rating ?? undefined,
-              userNotes: cloudItem.user_notes || undefined,
+              userNotes: Object.prototype.hasOwnProperty.call(cloudItem, 'user_notes') ? (cloudItem.user_notes ?? '') : undefined,
               tags: cloudItem.user_tags || undefined,
               synopsis: cloudItem.synopsis || '',
               list: list,
@@ -366,10 +380,8 @@ export class FirebaseSyncManager {
                 userRating: cloudItem.user_rating !== null && cloudItem.user_rating !== undefined 
                   ? cloudItem.user_rating 
                   : cleanedData[existingKey].userRating,
-                userNotes: cloudItem.user_notes || cleanedData[existingKey].userNotes,
-                tags: cloudItem.user_tags && cloudItem.user_tags.length > 0 
-                  ? cloudItem.user_tags 
-                  : cleanedData[existingKey].tags,
+                userNotes: Object.prototype.hasOwnProperty.call(cloudItem, 'user_notes') ? (cloudItem.user_notes ?? '') : cleanedData[existingKey].userNotes,
+                tags: Object.prototype.hasOwnProperty.call(cloudItem, 'user_tags') ? (cloudItem.user_tags ?? []) : cleanedData[existingKey].tags,
                 // Update list if it changed
                 list: list,
               };
@@ -395,7 +407,7 @@ export class FirebaseSyncManager {
               posterUrl: cloudItem.poster_path,
               voteAverage: cloudItem.vote_average,
               userRating: cloudItem.user_rating ?? undefined,
-              userNotes: cloudItem.user_notes || undefined,
+              userNotes: Object.prototype.hasOwnProperty.call(cloudItem, 'user_notes') ? (cloudItem.user_notes ?? '') : undefined,
               tags: cloudItem.user_tags || undefined,
               synopsis: cloudItem.synopsis || '',
               showStatus: cloudItem.show_status,
@@ -428,10 +440,8 @@ export class FirebaseSyncManager {
                 userRating: cloudItem.user_rating !== null && cloudItem.user_rating !== undefined 
                   ? cloudItem.user_rating 
                   : cleanedData[existingKey].userRating,
-                userNotes: cloudItem.user_notes || cleanedData[existingKey].userNotes,
-                tags: cloudItem.user_tags && cloudItem.user_tags.length > 0 
-                  ? cloudItem.user_tags 
-                  : cleanedData[existingKey].tags,
+                userNotes: Object.prototype.hasOwnProperty.call(cloudItem, 'user_notes') ? (cloudItem.user_notes ?? '') : cleanedData[existingKey].userNotes,
+                tags: Object.prototype.hasOwnProperty.call(cloudItem, 'user_tags') ? (cloudItem.user_tags ?? []) : cleanedData[existingKey].tags,
                 // Update list if it changed
                 list: list,
               };
@@ -460,7 +470,7 @@ export class FirebaseSyncManager {
                 posterUrl: cloudItem.poster_path,
                 voteAverage: cloudItem.vote_average,
                 userRating: cloudItem.user_rating ?? undefined,
-                userNotes: cloudItem.user_notes || undefined,
+                userNotes: Object.prototype.hasOwnProperty.call(cloudItem, 'user_notes') ? (cloudItem.user_notes ?? '') : undefined,
                 tags: cloudItem.user_tags || undefined,
                 synopsis: cloudItem.synopsis || '',
                 showStatus: cloudItem.show_status,
@@ -493,10 +503,8 @@ export class FirebaseSyncManager {
                   userRating: cloudItem.user_rating !== null && cloudItem.user_rating !== undefined 
                     ? cloudItem.user_rating 
                     : cleanedData[existingKey].userRating,
-                  userNotes: cloudItem.user_notes || cleanedData[existingKey].userNotes,
-                  tags: cloudItem.user_tags && cloudItem.user_tags.length > 0 
-                    ? cloudItem.user_tags 
-                    : cleanedData[existingKey].tags,
+                  userNotes: Object.prototype.hasOwnProperty.call(cloudItem, 'user_notes') ? (cloudItem.user_notes ?? '') : cleanedData[existingKey].userNotes,
+                  tags: Object.prototype.hasOwnProperty.call(cloudItem, 'user_tags') ? (cloudItem.user_tags ?? []) : cleanedData[existingKey].tags,
                   customListIds: Array.from(new Set([
                     ...(cleanedData[existingKey].customListIds || []),
                     customListId,
@@ -556,6 +564,8 @@ export class FirebaseSyncManager {
       return;
     }
 
+    if (this.activeSync) { this.queuedUid = uid; return; }
+
     // Debounce sync calls
     if (this.syncTimeout) {
       console.log('⏳ Sync already queued, clearing previous timeout');
@@ -563,6 +573,7 @@ export class FirebaseSyncManager {
     }
 
     this.syncTimeout = setTimeout(async () => {
+      this.syncTimeout = null;
       console.log('🚀 Executing Firebase sync...');
       await this.saveToFirebase(uid);
     }, 1000); // 1 second debounce

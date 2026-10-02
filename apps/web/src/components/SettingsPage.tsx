@@ -30,8 +30,11 @@ const NotificationCenter = lazy(() =>
 export default function SettingsPage({
   onClose,
   initialSection = "account",
+  onNotesEdit, notesEditorOpen = false,
 }: {
   onClose: () => void;
+  onNotesEdit?: (item: MediaItem) => void;
+  notesEditorOpen?: boolean;
   /** First section shown when the modal mounts (e.g. `pro` from upgrade CTAs). */
   initialSection?: SettingsSectionId;
 }) {
@@ -71,7 +74,7 @@ export default function SettingsPage({
     showSharingModal,
   ]);
 
-  useAndroidBackDismiss(!showNotInterestedModal, dismissForAndroidBack);
+  useAndroidBackDismiss(!showNotInterestedModal && !notesEditorOpen, dismissForAndroidBack);
   
   // Map old tab navigation events to new sections
   useEffect(() => {
@@ -516,6 +519,7 @@ export default function SettingsPage({
 
       {/* Not Interested Modal */}
       <NotInterestedModal
+        onNotesEdit={onNotesEdit} notesEditorOpen={notesEditorOpen}
         isOpen={showNotInterestedModal}
         onClose={() => setShowNotInterestedModal(false)}
       />

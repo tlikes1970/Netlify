@@ -25,6 +25,7 @@ vi.mock("@/lib/storage", () => ({
 }));
 vi.mock("@/lib/language", () => ({
   useTranslations: () => ({
+    notesAndTags: "Notes & Tags",
     wantToWatchAction: "Want to Watch",
     currentlyWatchingAction: "Watching",
     watchedAction: "Watched",

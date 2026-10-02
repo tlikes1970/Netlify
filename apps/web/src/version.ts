@@ -401,4 +401,5 @@
 // - All state changes now only trigger when values actually change
 // 2.0.21 — coordinated Start Over, identity/access preservation and custom-list deletion.
 // 2.0.22 — Not Interested recovery, reminder cancellation and accessible management.
-export const APP_VERSION = "2.0.22";
+// 2.0.23 — Notes & Tags editing, guarded mutations and reliable Library synchronization.
+export const APP_VERSION = "2.0.23";

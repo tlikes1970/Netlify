@@ -1,6 +1,9 @@
 import { act, cleanup, fireEvent, render, screen, within, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import NotInterestedModal from '../modals/NotInterestedModal';
+import NotesAndTagsModal from '../modals/NotesAndTagsModal';
+import { useState } from 'react';
+import type { LibraryEntry } from '../../lib/storage';
 import { Library, flushPendingSaves } from '../../lib/storage';
 import { languageManager } from '../../lib/language';
 const m=vi.hoisted(()=>({ confirm:vi.fn(), canWrite:true, close:vi.fn() }));
@@ -19,3 +22,10 @@ it('confirmed asynchronous deletion stays Removing until completed and only remo
 it('removal failure clears pending state and reports an error without success',async()=>{m.confirm.mockResolvedValue(true);vi.spyOn(Library,'remove').mockImplementation(()=>{throw Error('storage failure')});open();fireEvent.click(within(screen.getByTestId('not-interested-movie:8')).getByRole('button',{name:'Remove from Library',exact:true}));expect(await screen.findByRole('alert')).toHaveTextContent('could not be completed');expect(screen.queryByRole('status')).toBeNull();expect(Library.getByList('not')).toHaveLength(2);});
 it('read-only restrictions apply to restore and removal',async()=>{open();m.canWrite=false;const row=within(screen.getByTestId('not-interested-movie:8'));fireEvent.click(row.getByRole('button',{name:'Watching',exact:true}));fireEvent.click(row.getByRole('button',{name:'Remove from Library',exact:true}));await waitFor(()=>expect(screen.queryByRole('status')).toBeNull());expect(m.confirm).not.toHaveBeenCalled();expect(Library.getByList('not')).toHaveLength(2);});
 it('translated dialog supports Close, Escape and dialog associations',async()=>{languageManager.setLanguage('es');open();await waitFor(()=>expect(screen.getByRole('dialog')).toHaveAccessibleName('Lista de No Me Interesa (2)'));expect(screen.getByRole('dialog')).toHaveAttribute('aria-describedby','not-interested-description');expect(screen.getAllByRole('button',{name:'Eliminar de la biblioteca',exact:true})).toHaveLength(2);fireEvent.keyDown(window,{key:'Escape'});expect(m.close).toHaveBeenCalledOnce();fireEvent.click(screen.getByRole('button',{name:'Cerrar lista de No Me Interesa'}));expect(m.close).toHaveBeenCalledTimes(2);});
+
+it('Notes & Tags delegates canonical editing without restoring title or changing reminders',async()=>{const reminder='{"8":{"enabled":false}}';localStorage.setItem('flicklet.series-reminders.v1',reminder);const edit=vi.fn(item=>Library.updateNotesAndTags(item.id,item.mediaType,'New',['Family']));render(<NotInterestedModal isOpen onClose={m.close} onNotesEdit={edit}/>);fireEvent.click(await within(screen.getByTestId('not-interested-tv:8')).findByRole('button',{name:'Notes & Tags'}));expect(Library.getEntry('8','tv')).toMatchObject({list:'not',userNotes:'New',tags:['Family'],customListIds:['a','b']});expect(localStorage.getItem('flicklet.series-reminders.v1')).toBe(reminder);expect(localStorage.getItem('episode-progress-8')).not.toBeNull();});
+
+it('nested editor consumes Android Back without dismissing Not Interested management',async()=>{
+ function Nested(){const [item,setItem]=useState<LibraryEntry|null>(null);return <><NotInterestedModal isOpen onClose={m.close} onNotesEdit={setItem} notesEditorOpen={!!item}/>{item&&<NotesAndTagsModal item={item} isOpen onClose={()=>setItem(null)} onSave={()=>true}/>}</>}
+ render(<Nested/>);fireEvent.click(await within(screen.getByTestId('not-interested-tv:8')).findByRole('button',{name:'Notes & Tags'}));expect(screen.getAllByRole('dialog')).toHaveLength(2);act(()=>{window.dispatchEvent(new Event('flicklet:android-back',{cancelable:true}));});expect(screen.getAllByRole('dialog')).toHaveLength(1);expect(m.close).not.toHaveBeenCalled();
+});

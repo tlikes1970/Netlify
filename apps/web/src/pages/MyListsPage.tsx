@@ -9,7 +9,7 @@ import { shareListWithFallback } from '../lib/shareLinks';
 import { getToastCallback } from '../state/actions';
 import { setPrimaryStatus, setNotInterested } from '../lib/statusTransitions';
 
-export default function MyListsPage({onBack}: {onBack?: () => void} = {}) {
+export default function MyListsPage({onBack, onNotesEdit}: {onBack?: () => void; onNotesEdit?: (item: import("../components/cards/card.types").MediaItem) => void} = {}) {
   const userLists = useCustomLists();
   const [selectedListId, setSelectedListId] = useState<string>(() => customListManager.getSelectedList?.()?.id || '');
   const translations = useTranslations();
@@ -159,6 +159,7 @@ export default function MyListsPage({onBack}: {onBack?: () => void} = {}) {
 
   // Action handlers for cards
   const actions = {
+    onNotesEdit,
     onWatching: (item: any) => setPrimaryStatus(item, "watching", { feedback: true }),
     onRatingChange: (item: any, rating: number) => Library.updateRating(item.id, item.mediaType, rating),
     onWant: (item: any) => {
