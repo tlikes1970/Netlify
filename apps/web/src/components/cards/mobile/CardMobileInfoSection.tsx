@@ -48,17 +48,19 @@ export function CardMobileInfoSection({
           actions={actions}
           customListContext={customListContext}
         />
-        <span className="meta">{metaLine}</span>
-        {chips}
+        <div className="card-mobile-metadata">
+          <span className="meta">{metaLine}</span>
+          {chips}
+          {item.networks && item.networks.length > 0 && (
+            <ProviderBadges
+              providers={item.networks}
+              maxVisible={2}
+              mediaType={providerMediaType}
+            />
+          )}
+        </div>
         {item.mediaType === 'tv' && settings.layout.episodeTracking && (
           <EpisodeProgressDisplay showId={Number(item.id)} compact />
-        )}
-        {item.networks && item.networks.length > 0 && (
-          <ProviderBadges
-            providers={item.networks}
-            maxVisible={2}
-            mediaType={providerMediaType}
-          />
         )}
       </header>
 

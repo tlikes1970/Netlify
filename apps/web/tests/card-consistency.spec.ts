@@ -106,6 +106,14 @@ for (const width of [320,360,390,768,1023,1024,1280]) {
    const library=page.getByTestId('library'); const custom=page.getByTestId('custom');
    await expect(library.locator(width<1024?'.card-mobile':'.tab-card')).toHaveCount(1);
    await expect(library.locator(width<1024?'.tab-card':'.card-mobile')).toHaveCount(0);
+   if (width < 1024) {
+    const metadata = library.locator('.card-mobile-metadata');
+    await expect(metadata.getByText('2025 • TV Show', {exact:true})).toBeVisible();
+    await expect(metadata.getByText('RETURNING', {exact:true})).toBeVisible();
+    await expect(metadata.getByText('On Network', {exact:true})).toBeVisible();
+    expect(await metadata.locator('.provider-badges-container').evaluate(el => getComputedStyle(el).marginTop)).toBe('0px');
+    expect(await metadata.locator('.card-mobile-chips').evaluate(el => getComputedStyle(el).marginTop)).toBe('0px');
+   }
    await expect(custom.locator(width<1024?'.card-mobile':'.tab-card')).toHaveCount(2);
    for (const surface of width<1024?[library,custom]:[]) {
     for(const poster of await surface.locator('.poster-image').all()) {const b=await poster.boundingBox();expect(b!.width).toBe(112);expect(b!.height).toBe(168);}

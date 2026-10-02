@@ -472,3 +472,23 @@
 .compact-user-rating > span { font-size: 11px; }
 
 .card-mobile .poster-col, .card-mobile .poster-image { width: 112px; height: 168px; }
+
+/* All saved-title tabs use the same compact metadata band. TV details wrap
+   within this band instead of adding separately spaced header sections. */
+.card-mobile-metadata {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+  min-width: 0;
+}
+.card-mobile .card-mobile-metadata .meta { margin: 0; }
+.card-mobile .card-mobile-metadata .card-mobile-chips { margin: 0; }
+.card-mobile .card-mobile-metadata .provider-badges-container {
+  margin: 0;
+  min-width: 0;
+}
+.card-mobile .card-mobile-metadata .provider-badge {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
