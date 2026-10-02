@@ -1,3 +1,4 @@
+import { setNotInterested } from "../lib/statusTransitions";
 import { useMemo, useState, useEffect } from "react";
 import { useSmartDiscovery } from "@/hooks/useSmartDiscovery";
 import { useAuth } from "@/hooks/useAuth";
@@ -178,10 +179,10 @@ export default function DiscoveryPage() {
         console.warn("⚠️ onWatched: missing id or mediaType", item);
       }
     },
-    onNotInterested: (item: MediaItem) => {
+    onNotInterested: async (item: MediaItem) => {
       if (item.id && item.mediaType) {
         const existing = Library.getEntry(item.id, item.mediaType);
-        Library.upsert(
+        await setNotInterested(
           {
             id: item.id,
             mediaType: item.mediaType,
@@ -194,7 +195,6 @@ export default function DiscoveryPage() {
             synopsis: item.synopsis,
             userRating: existing?.userRating || item.userRating,
           },
-          "not",
         );
         setLibraryVersion((prev) => prev + 1);
       }

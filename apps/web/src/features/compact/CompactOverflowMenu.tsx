@@ -1,3 +1,4 @@
+import { Library } from "../../lib/storage";
 import ListSelectorModal from "../../components/ListSelectorModal";
 import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo, useContext } from "react";
 import { ActionItem, ActionContext } from "./actionsMap";
@@ -544,7 +545,7 @@ export function CompactOverflowMenu({
     }
     menuItems.push({ id: "custom-lists", label: customListContext ? "Add to Lists" : "Custom Lists", onClick: () => setShowLists(true) });
     if (customListContext && handlers.onWatched) menuItems.push({id:"watched",label:"Watched",onClick:handlers.onWatched});
-    return menuItems.filter(action => !hideStatusActions || !["want", "watching", "watched"].includes(action.id) || (customListContext && action.id === "watched") || (secondaryWatching && action.id === "watching"));
+    return menuItems.filter(action => !(customListContext && action.id === "not-interested" && Library.getCurrentList(_item.id, isTVShow ? "tv" : "movie") === "not")).filter(action => !hideStatusActions || !["want", "watching", "watched"].includes(action.id) || (customListContext && action.id === "watched") || (secondaryWatching && action.id === "watching"));
   }
 
   return (

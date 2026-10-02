@@ -52,3 +52,18 @@ export function removeMediaItemWithConfirmation(item: {
   }
   removeShowWithConfirmation(item.id, item.mediaType);
 }
+
+/** Awaitable removal for management UIs; confirmation and mutation are separate phases. */
+export async function removeShowWithResult(
+  id: string | number,
+  mediaType: MediaType,
+  options: { title: string; body: string; confirmLabel: string; cancelLabel: string },
+  onRemoving: () => void,
+): Promise<'removed' | 'cancelled' | 'blocked'> {
+  if (!guardMutation()) return 'blocked';
+  if (!await confirmAction({ ...options, destructive: true })) return 'cancelled';
+  if (!guardMutation()) return 'blocked';
+  onRemoving();
+  await Library.remove(id, mediaType);
+  return 'removed';
+}

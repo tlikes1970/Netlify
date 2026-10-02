@@ -1,3 +1,4 @@
+import { setNotInterested } from "../lib/statusTransitions";
 import { on } from '../lib/events';
 import { Library } from '../lib/storage';
 import type { MediaType } from '../components/cards/card.types';
@@ -94,7 +95,7 @@ export function mountActionBridge() {
     const mediaData = title ? { title } : await fetchMediaDataFromTMDB(String(id), mediaType as MediaType);
     
     // Mark as not interested
-    Library.upsert({ 
+    const saved = await setNotInterested({
       id, 
       mediaType: mediaType as MediaType, 
       title: mediaData.title,
@@ -102,7 +103,8 @@ export function mountActionBridge() {
       synopsis: mediaData.synopsis,
       showStatus: mediaData.showStatus as 'Ended' | 'Returning Series' | 'In Production' | 'Canceled' | 'Planned' | undefined,
       lastAirDate: mediaData.lastAirDate
-    }, 'not');
+    });
+    if (!saved) return;
     
     // Show personality-based feedback
     const settings = settingsManager.getSettings();

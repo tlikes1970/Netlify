@@ -1,6 +1,21 @@
 export type Language = "en" | "es";
 
 export interface LanguageStrings {
+  notInterestedListTitle: string;
+  notInterestedDescription: string;
+  notInterestedEmpty: string;
+  restoreToStatus: string;
+  removeFromLibrary: string;
+  confirmingRemoval: string;
+  removingFromLibrary: string;
+  notInterestedFailed: string;
+  notInterestedActionFailed: string;
+  notInterestedClose: string;
+  notInterestedDone: string;
+  notInterestedRemoveTitle: string;
+  notInterestedRemoveBody: string;
+  notInterestedCancel: string;
+
   // Navigation
   home: string;
   currentlyWatching: string;

@@ -1,3 +1,6 @@
+import { authManager } from "./auth";
+import { guardMutation } from "./readOnlyGuard";
+import { languageManager } from "./language";
 import { isRestoring } from "./restoreBarrier";
 import { WATCH_STATUS_LABELS } from './watchStatus';
 import type { MediaItem } from '@/components/cards/card.types';
@@ -91,5 +94,25 @@ export function setPrimaryStatus(
         },
       },
     );
+  }
+}
+
+/** User mutation only: native cancellation must succeed before changing TV status. */
+export async function setNotInterested(item: MediaItem): Promise<boolean> {
+  if (!guardMutation()) return false;
+  const uid = authManager.getCurrentUser()?.uid;
+  const initialStatus = Library.getCurrentList(item.id, item.mediaType);
+  try {
+    if (item.mediaType === 'tv') {
+      const { disableSeriesReminder } = await import('./seriesReminders');
+      await disableSeriesReminder(Number(item.id));
+      if (!guardMutation() || authManager.getCurrentUser()?.uid !== uid || Library.getCurrentList(item.id, item.mediaType) !== initialStatus) return false;
+    }
+    if (Library.has(item.id, item.mediaType)) Library.move(item.id, item.mediaType, 'not');
+    else Library.upsert(item, 'not');
+    return Library.getCurrentList(item.id, item.mediaType) === 'not';
+  } catch (error) {
+    getGlobalToastCallback()?.(`${languageManager.getTranslations().notInterestedFailed} ${error instanceof Error ? error.message : ''}`, 'error');
+    return false;
   }
 }

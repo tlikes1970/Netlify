@@ -1,4 +1,6 @@
-import { useEffect, useId, useRef } from 'react';
+import { useFocusTrap } from "../lib/a11y/useFocusTrap";
+import { useAndroidBackDismiss } from "../hooks/useAndroidBackDismiss";
+import { useEffect, useId, useState } from 'react';
 import ModalPortal from './ModalPortal';
 import type { ConfirmDialogOptions } from '@/state/confirm';
 
@@ -23,7 +25,10 @@ export default function ConfirmModal({
 }: ConfirmModalProps) {
   const titleId = useId();
   const bodyId = useId();
-  const panelRef = useRef<HTMLDivElement>(null);
+  const [panel, setPanel] = useState<HTMLDivElement | null>(null);
+
+  useFocusTrap(panel, isOpen);
+  useAndroidBackDismiss(isOpen, onCancel);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -37,7 +42,7 @@ export default function ConfirmModal({
 
     window.addEventListener('keydown', onKeyDown);
     const focusTimer = window.setTimeout(() => {
-      const cancelBtn = panelRef.current?.querySelector<HTMLButtonElement>(
+      const cancelBtn = panel?.querySelector<HTMLButtonElement>(
         '[data-confirm-cancel]'
       );
       cancelBtn?.focus();
@@ -47,7 +52,7 @@ export default function ConfirmModal({
       window.removeEventListener('keydown', onKeyDown);
       window.clearTimeout(focusTimer);
     };
-  }, [isOpen, onCancel]);
+  }, [isOpen, onCancel, panel]);
 
   if (!isOpen) return null;
 
@@ -60,7 +65,7 @@ export default function ConfirmModal({
         role="presentation"
       >
         <div
-          ref={panelRef}
+          ref={setPanel}
           role="alertdialog"
           aria-modal="true"
           aria-labelledby={titleId}

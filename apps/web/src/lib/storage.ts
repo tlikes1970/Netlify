@@ -230,7 +230,7 @@ export function addToListWithConfirmation(
   item: MediaItem,
   targetList: ListName,
   onConfirm?: () => void
-): boolean {
+): boolean | Promise<boolean> {
   const currentList = Library.getCurrentList(item.id, item.mediaType);
 
   // Check if this is the first show being added (for onboarding completion)
@@ -245,8 +245,9 @@ export function addToListWithConfirmation(
     );
 
     if (confirmed) {
-      Library.upsert(item, targetList);
-      onConfirm?.();
+      if (targetList === "not") {
+        return import("./statusTransitions").then(({ setNotInterested }) => setNotInterested(item)).then(saved => { if (saved) onConfirm?.(); return saved; });
+      } else { Library.upsert(item, targetList); onConfirm?.(); }
 
       // Check if this was the first show added
       if (wasEmpty && targetList === "watching") {
@@ -258,8 +259,9 @@ export function addToListWithConfirmation(
     return false;
   } else {
     // No existing item or same list, proceed normally
-    Library.upsert(item, targetList);
-    onConfirm?.();
+    if (targetList === "not") {
+      return import("./statusTransitions").then(({ setNotInterested }) => setNotInterested(item)).then(saved => { if (saved) onConfirm?.(); return saved; });
+    } else { Library.upsert(item, targetList); onConfirm?.(); }
 
     // Check if this was the first show added (for onboarding) - only for "watching" list
     if (wasEmpty && targetList === "watching") {

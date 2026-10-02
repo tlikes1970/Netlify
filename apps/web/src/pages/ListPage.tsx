@@ -5,7 +5,7 @@ import { getItemSynopsis } from "@/lib/itemSynopsis";
 import { backfillSynopsisForItems } from "@/utils/backfillSynopsis";
 import { removeMediaItemWithConfirmation } from "@/lib/confirmRemoveShow";
 import { Library, LibraryEntry } from "@/lib/storage";
-import { setPrimaryStatus } from "@/lib/statusTransitions";
+import { setPrimaryStatus, setNotInterested } from "@/lib/statusTransitions";
 import { useSettings, resolveFlickletLine } from "@/lib/settings";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { EpisodeTrackingModal } from "@/components/modals/EpisodeTrackingModal";
@@ -590,7 +590,7 @@ export default function ListPage({
     },
     onNotInterested: (item: MediaItem) => {
       if (item.id && item.mediaType) {
-        Library.move(item.id, item.mediaType, "not");
+        void setNotInterested(item);
       }
     },
     onDelete: (item: MediaItem) => {

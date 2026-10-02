@@ -91,6 +91,8 @@ async function reconcileOne(reminder: SeriesReminder): Promise<void> {
     showId: reminder.showId,
     title: reminder.title,
   });
+  const { Library } = await import("./storage");
+  if (Library.getCurrentList(reminder.showId, "tv") === "not" || !isSeriesReminderEnabled(reminder.showId)) return;
   const episodes = await fetchRelevantSeasonEpisodes(reminder.showId);
   const desired = selectDesiredEpisodeReminders(reminder.showId, episodes);
   console.info("[SeriesReminder] Desired notifications", {
@@ -173,6 +175,8 @@ async function enableSeriesReminderInternal(
   showId: number,
   title: string,
 ): Promise<{ enabled: boolean; reason?: "unsupported" | "denied" }> {
+  const { Library } = await import("./storage");
+  if (Library.getCurrentList(showId, "tv") === "not") return { enabled: false, reason: "unsupported" };
   if (!nativeAndroid()) return { enabled: false, reason: "unsupported" };
   if (!(await ensurePermission())) return { enabled: false, reason: "denied" };
   await ensureChannel();
@@ -186,18 +190,15 @@ async function enableSeriesReminderInternal(
 }
 
 async function disableSeriesReminderInternal(showId: number): Promise<void> {
+  if (reconcilePromise) await reconcilePromise;
+  const recover = await cancelSeriesReminderSchedules([showId]);
   const existing = readState()[String(showId)];
-  if (existing) setSeriesReminderState(showId, existing.title, false);
-  if (!nativeAndroid()) return;
-  const pending = await LocalNotifications.getPending();
-  const ids = pending.notifications
-    .filter(
-      (notification) =>
-        notification.extra?.flickletSeriesReminder === true &&
-        Number(notification.extra?.showId) === showId,
-    )
-    .map(({ id }) => ({ id }));
-  if (ids.length > 0) await LocalNotifications.cancel({ notifications: ids });
+  try {
+    if (existing) setSeriesReminderState(showId, existing.title, false);
+  } catch (error) {
+    await recover();
+    throw error;
+  }
 }
 
 async function reconcileSeriesRemindersInternal(options?: {
@@ -271,9 +272,17 @@ if (typeof window !== "undefined" && nativeAndroid()) {
   (window as any).flickletTestEpisodeReminder = scheduleDevelopmentReminderTest;
 }
 
-export const enableSeriesReminder = trackedWrite(enableSeriesReminderInternal);
-export const disableSeriesReminder = trackedWrite(disableSeriesReminderInternal);
-export const reconcileSeriesReminders = trackedWrite(reconcileSeriesRemindersInternal);
+let reminderOperation: Promise<unknown> = Promise.resolve();
+function serializeReminder<T extends (...args: never[]) => Promise<unknown>>(operation: T): T {
+  return trackedWrite(((...args: Parameters<T>) => {
+    const run = reminderOperation.then(() => operation(...args));
+    reminderOperation = run.catch(() => undefined);
+    return run;
+  }) as T);
+}
+export const enableSeriesReminder = serializeReminder(enableSeriesReminderInternal);
+export const disableSeriesReminder = serializeReminder(disableSeriesReminderInternal);
+export const reconcileSeriesReminders = serializeReminder(reconcileSeriesRemindersInternal);
 
 /** Replacement-only native cleanup; does not remove preferences or OS permission. */
 export async function cancelSeriesReminderSchedules(showIds?: readonly number[]): Promise<() => Promise<void>> {

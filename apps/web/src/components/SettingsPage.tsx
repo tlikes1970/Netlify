@@ -71,7 +71,7 @@ export default function SettingsPage({
     showSharingModal,
   ]);
 
-  useAndroidBackDismiss(true, dismissForAndroidBack);
+  useAndroidBackDismiss(!showNotInterestedModal, dismissForAndroidBack);
   
   // Map old tab navigation events to new sections
   useEffect(() => {

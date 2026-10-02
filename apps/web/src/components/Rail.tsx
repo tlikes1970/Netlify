@@ -1,8 +1,8 @@
 import CardV2 from './cards/CardV2';
 import type { MediaItem } from './cards/card.types';
 import { removeMediaItemWithConfirmation } from '@/lib/confirmRemoveShow';
-import { Library } from '@/lib/storage';
-import { setPrimaryStatus } from '@/lib/statusTransitions';
+
+import { setPrimaryStatus, setNotInterested } from '@/lib/statusTransitions';
 import { useRailImagePreload } from '../hooks/useImagePreload';
 import { ForYouErrorFallback } from './home/ForYouErrorFallback';
 import type { ForYouRowLoadState } from './home/forYouRowStatus';
@@ -87,18 +87,18 @@ export default function Rail({
         console.log('✅ Item added to watched:', item.title);
       }
     },
-    onNotInterested: (item: MediaItem) => {
+    onNotInterested: async (item: MediaItem) => {
       console.log('🎬 For You Not Interested button clicked:', item);
       if (item.id && item.mediaType) {
-        Library.upsert({ 
+        const saved = await setNotInterested({
           id: item.id, 
           mediaType: item.mediaType, 
           title: item.title,
           posterUrl: item.posterUrl,
           year: item.year,
           voteAverage: item.voteAverage
-        }, 'not');
-        console.log('✅ Item added to not interested:', item.title);
+        });
+        if (saved) console.log('✅ Item added to not interested:', item.title);
       }
     },
     onDelete: (item: MediaItem) => {

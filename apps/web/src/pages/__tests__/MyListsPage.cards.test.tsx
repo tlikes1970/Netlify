@@ -40,6 +40,7 @@ function setup(status: 'watching' | 'wishlist' | 'watched' | 'not' = 'watched') 
 }
 async function openMenu() { fireEvent.click(screen.getByRole('button',{name:'More options'})); await screen.findByRole('menu'); }
 describe('mobile Custom List cards', async () => {
+  it('omits redundant Not Interested while retaining legitimate restore destinations', async () => { setup('not'); await openMenu(); expect(screen.queryByRole('menuitem',{name:'Not Interested',exact:true})).toBeNull(); expect(screen.getByRole('menuitem',{name:'Watched',exact:true})).toBeInTheDocument(); expect(screen.getByRole('button',{name:'Watching',exact:true})).toBeInTheDocument(); expect(screen.getByRole('button',{name:'Want to Watch',exact:true})).toBeInTheDocument(); });
   it.each(['watching','wishlist','watched','not'] as const)('shows contextual destinations for %s without permanent legacy controls', status => {
     setup(status);
     expect(screen.queryByRole('combobox')).toBeNull();

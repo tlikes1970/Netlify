@@ -1,0 +1,12 @@
+import { act, cleanup, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { useForYouContent } from '../useGenreContent';
+import { Library, flushPendingSaves } from '../../lib/storage';
+import { setPrimaryStatus } from '../../lib/statusTransitions';
+vi.mock('../../lib/auth',()=>({authManager:{getCurrentUser:()=>null}}));
+vi.mock('../../lib/customLists',()=>({customListManager:{updateItemCount:vi.fn()}}));
+vi.mock('../../lib/readOnlyGuard',()=>({guardMutation:()=>true}));
+vi.mock('../../lib/tmdb',()=>({fetchGenreContent:vi.fn(),getTVShowDetails:vi.fn()}));
+vi.mock('@tanstack/react-query',()=>({useQuery:()=>({data:[{id:'8',kind:'movie',title:'Tracked'},{id:'9',kind:'movie',title:'New'}],isSuccess:true})}));
+beforeEach(()=>{localStorage.clear();window.dispatchEvent(new Event('library:cleared'));});afterEach(()=>{cleanup();flushPendingSaves();});
+it.each(['watching','wishlist','watched'] as const)('Not Interested and restored %s stay excluded from For You',target=>{const item={id:'8',mediaType:'movie' as const,title:'Tracked',userRating:4};Library.upsert(item,'not');const {result}=renderHook(()=>useForYouContent([{id:'r',mainGenre:'drama',subGenre:'all',title:'Row'}]));expect(result.current[0].data.map(i=>i.id)).toEqual(['9']);act(()=>setPrimaryStatus(item,target));expect(result.current[0].data.map(i=>i.id)).toEqual(['9']);expect(Library.getEntry('8','movie')!.userRating).toBe(4);});

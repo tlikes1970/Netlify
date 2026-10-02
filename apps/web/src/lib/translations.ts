@@ -2,6 +2,21 @@ import type { Language, LanguageStrings } from "./language.types";
 
 const TRANSLATIONS: Record<Language, LanguageStrings> = {
   en: {
+    notInterestedListTitle: "Not Interested List",
+    notInterestedDescription: "Restore a title to a Library status to keep its ratings, notes and lists. Removing it from Library deletes that entry and its saved metadata.",
+    notInterestedEmpty: "No titles marked Not Interested.",
+    restoreToStatus: "Restore to",
+    removeFromLibrary: "Remove from Library",
+    confirmingRemoval: "Waiting for confirmation…",
+    removingFromLibrary: "Removing…",
+    notInterestedFailed: "Could not mark Not Interested. Please try again.",
+    notInterestedActionFailed: "The action could not be completed. Please try again.",
+    notInterestedClose: "Close Not Interested list",
+    notInterestedDone: "Done",
+    notInterestedRemoveTitle: "Remove this title from Library?",
+    notInterestedRemoveBody: "Its rating, notes, tags, favorite and list memberships will be removed. Adding it again does not restore those saved details.",
+    notInterestedCancel: "Cancel",
+
     // Navigation
     home: "Home",
     currentlyWatching: "Currently Watching",
@@ -358,6 +373,21 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
   },
 
   es: {
+    notInterestedListTitle: "Lista de No Me Interesa",
+    notInterestedDescription: "Restaura un título a un estado de tu biblioteca para conservar sus valoraciones, notas y listas. Eliminarlo de la biblioteca borra esa entrada y sus datos guardados.",
+    notInterestedEmpty: "No hay títulos marcados como No Me Interesa.",
+    restoreToStatus: "Restaurar en",
+    removeFromLibrary: "Eliminar de la biblioteca",
+    confirmingRemoval: "Esperando confirmación…",
+    removingFromLibrary: "Eliminando…",
+    notInterestedFailed: "No se pudo marcar como No Me Interesa. Inténtalo de nuevo.",
+    notInterestedActionFailed: "No se pudo completar la acción. Inténtalo de nuevo.",
+    notInterestedClose: "Cerrar lista de No Me Interesa",
+    notInterestedDone: "Listo",
+    notInterestedRemoveTitle: "¿Eliminar este título de la biblioteca?",
+    notInterestedRemoveBody: "Se eliminarán su valoración, notas, etiquetas, favorito y pertenencia a listas. Añadirlo de nuevo no recupera esos datos.",
+    notInterestedCancel: "Cancelar",
+
     // Navigation
     home: "Inicio",
     currentlyWatching: "Viendo Ahora",

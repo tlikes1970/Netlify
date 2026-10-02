@@ -400,4 +400,5 @@
 // - All hooks now use refs to track previous values for accurate logging
 // - All state changes now only trigger when values actually change
 // 2.0.21 — coordinated Start Over, identity/access preservation and custom-list deletion.
-export const APP_VERSION = "2.0.21";
+// 2.0.22 — Not Interested recovery, reminder cancellation and accessible management.
+export const APP_VERSION = "2.0.22";

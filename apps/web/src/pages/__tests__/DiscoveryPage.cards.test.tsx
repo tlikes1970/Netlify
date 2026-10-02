@@ -38,6 +38,7 @@ async function menu() {
   await screen.findByRole('menu');
 }
 describe('Discovery real card behavior', () => {
+  it.each(['watching','wishlist','watched'] as const)('restoring Not Interested to %s keeps title excluded', target => { const item={id:'10',mediaType:'movie' as const,title:'Discovery Movie'}; Library.upsert(item,'not'); render(<DiscoveryPage/>); expect(screen.queryByText('Discovery Movie')).toBeNull(); act(()=>Library.move('10','movie',target)); expect(screen.queryByText('Discovery Movie')).toBeNull(); });
   it('has only Want to Watch and Watched primary controls, compact overflow and poster fallback', () => {
     render(<DiscoveryPage/>);
     expect(screen.getByRole('button',{name:'Want to Watch',exact:true})).toBeInTheDocument();

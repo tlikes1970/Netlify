@@ -8,7 +8,7 @@ import { discoverByGenre } from "./api";
 import { emit } from "../lib/events";
 import { removeMediaItemWithConfirmation } from "../lib/confirmRemoveShow";
 import { addToListWithConfirmation, Library } from "../lib/storage";
-import { setPrimaryStatus } from "../lib/statusTransitions";
+import { setPrimaryStatus, setNotInterested } from "../lib/statusTransitions";
 import { fetchFullMediaMetadata, fetchNetworkInfo } from "./api";
 import { fetchNextAirDate, fetchShowStatus } from "../tmdb/tv";
 import { useTranslations } from "../lib/language";
@@ -72,7 +72,7 @@ export default function SearchResults({
     },
     onNotInterested: (item: MediaItem) => {
       if (item.id && item.mediaType) {
-        Library.move(item.id, item.mediaType, "not");
+        void setNotInterested(item);
       }
     },
     onDelete: (item: MediaItem) => {
@@ -634,11 +634,7 @@ export function SearchResultCard({
           break;
         }
         case "not-interested":
-          addToListWithConfirmation(enrichedItem, "not", () => {
-            emit("card:notInterested", {
-              id: enrichedItem.id,
-              mediaType: enrichedItem.mediaType as any,
-            });
+          await addToListWithConfirmation(enrichedItem, "not", () => {
             onRemove(); // Remove from search results
           });
           break;

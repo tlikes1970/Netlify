@@ -11,7 +11,7 @@ test.beforeAll(async()=>{
   'lib/tabStateSync':`export async function syncTabStateToFirebase(){}`,
   'lib/analytics':`export function trackSortChange(){} export function trackFilterChange(){} export function trackReorderCompleted(){}`,
   'lib/tmdb':`export async function getTVShowDetails(){}`,
-  'lib/statusTransitions':`export function setPrimaryStatus(){}`,
+  'lib/statusTransitions':`export function setPrimaryStatus(){} export async function setNotInterested(){return true}`,
   'lib/confirmRemoveShow':`export function removeMediaItemWithConfirmation(){}`,
   'utils/backfillSynopsis':`export async function backfillSynopsisForItems(){}`,
   'components/cards/TabCard':`import React from 'react';export default function Card({item}){return <div data-testid="result">{item.title}</div>}`,

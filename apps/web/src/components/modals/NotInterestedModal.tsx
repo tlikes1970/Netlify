@@ -1,146 +1,77 @@
-import { useState } from 'react';
-import { useLibrary } from '@/lib/storage';
-import { removeMediaItemWithConfirmation } from '@/lib/confirmRemoveShow';
-import ErrorBoundary from '../ErrorBoundary';
+import { useCallback, useEffect, useState } from 'react';
+import { useLibrary, type LibraryEntry } from '@/lib/storage';
+import { removeShowWithResult } from '@/lib/confirmRemoveShow';
+import { setPrimaryStatus, type PrimaryStatus } from '@/lib/statusTransitions';
+import { useTranslations } from '@/lib/language';
+import { guardMutation } from '@/lib/readOnlyGuard';
+import { useFocusTrap } from '@/lib/a11y/useFocusTrap';
+import { useAndroidBackDismiss } from '@/hooks/useAndroidBackDismiss';
+import ModalPortal from '../ModalPortal';
 
-interface NotInterestedModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+interface NotInterestedModalProps { isOpen: boolean; onClose: () => void }
 
 export default function NotInterestedModal({ isOpen, onClose }: NotInterestedModalProps) {
-  const notInterestedItems = useLibrary('not');
-  const [isRemoving, setIsRemoving] = useState<string | null>(null);
-
-  if (!isOpen) return null;
-
-  const handleRemoveItem = async (item: any) => {
-    if (!item.id || !item.mediaType) return;
-    
-    setIsRemoving(item.id);
-    try {
-      removeMediaItemWithConfirmation(item);
-    } catch (error) {
-      console.error('Error removing item:', error);
-    } finally {
-      setIsRemoving(null);
-    }
+  const items = useLibrary('not', { includeItemUpdates: true });
+  const t = useTranslations();
+  const [pending, setPending] = useState<{ key: string; phase: 'confirming' | 'removing' } | null>(null);
+  const [error, setError] = useState('');
+  const [panel, setPanel] = useState<HTMLDivElement | null>(null);
+  const close = useCallback(() => { if (!pending) onClose(); }, [pending, onClose]);
+  useFocusTrap(panel, isOpen && !pending);
+  useAndroidBackDismiss(isOpen && pending?.phase !== 'confirming', close);
+  useEffect(() => {
+    const escape = (event: KeyboardEvent) => { if (event.key === 'Escape' && !pending) close(); };
+    if (isOpen) window.addEventListener('keydown', escape);
+    return () => window.removeEventListener('keydown', escape);
+  }, [isOpen, pending, close]);
+  useEffect(() => { if (isOpen) setError(''); }, [isOpen]);
+  const restore = (item: LibraryEntry, target: PrimaryStatus) => {
+    setError('');
+    if (!guardMutation()) return;
+    try { setPrimaryStatus(item, target, { feedback: true }); }
+    catch { setError(t.notInterestedActionFailed); }
   };
-
-  return (
-    <div className="fixed inset-0 z-modal backdrop-blur-sm flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}>
-      <div className="rounded-xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden" style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', border: '1px solid' }}>
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: 'var(--line)' }}>
-          <h2 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>
-            Not Interested List ({notInterestedItems.length})
-          </h2>
-          <button
-            onClick={onClose}
-            className="transition-colors"
-            style={{ color: 'var(--muted)' }}
-            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
-            aria-label="Close"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {notInterestedItems.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">😴</div>
-              <h3 className="text-lg font-medium mb-2" style={{ color: 'var(--text)' }}>
-                No items marked as not interested
-              </h3>
-              <p className="text-sm" style={{ color: 'var(--muted)' }}>
-                Items you mark as "not interested" will appear here for review.
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="mb-4 p-3 rounded-lg" style={{ backgroundColor: 'var(--btn)' }}>
-                <p className="text-sm" style={{ color: 'var(--text)' }}>
-                  💡 <strong>Tip:</strong> Items removed from this list will be deleted from your account permanently.
-                </p>
-              </div>
-              
-              <ErrorBoundary name="NotInterestedList" onReset={() => {/* Optional: could refetch data */}}>
-                {notInterestedItems.map((item) => (
-                  <div key={item.id} className="relative">
-                    <div className="flex items-start gap-4 p-4 rounded-lg border" style={{ backgroundColor: 'var(--bg)', borderColor: 'var(--line)' }}>
-                      {/* Poster */}
-                      <div className="w-20 aspect-[2/3] rounded-lg overflow-hidden flex-shrink-0">
-                        {item.posterUrl ? (
-                          <img 
-                            src={item.posterUrl} 
-                            alt={item.title}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: 'var(--btn)' }}>
-                            <span className="text-2xl">🎬</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-lg font-medium mb-1" style={{ color: 'var(--text)' }}>
-                          {item.title}
-                        </h3>
-                        {item.year && (
-                          <p className="text-sm mb-3" style={{ color: 'var(--muted)' }}>
-                            {item.year}
-                          </p>
-                        )}
-
-                        {/* Actions */}
-                        <div className="flex gap-2 flex-wrap">
-                          <button
-                            onClick={() => handleRemoveItem(item)}
-                            className="px-3 py-1.5 text-sm rounded-lg transition-colors"
-                            style={{ backgroundColor: '#ef4444', color: 'white' }}
-                          >
-                            🗑️ Remove from Library
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {isRemoving === item.id && (
-                      <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
-                        <div className="text-white text-sm">Removing...</div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </ErrorBoundary>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-6 border-t" style={{ borderColor: 'var(--line)' }}>
-          <div className="flex justify-between items-center">
-            <p className="text-sm" style={{ color: 'var(--muted)' }}>
-              {notInterestedItems.length} item{notInterestedItems.length !== 1 ? 's' : ''} in your not interested list
-            </p>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-lg font-medium transition-colors"
-              style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-            >
-              Done
-            </button>
-          </div>
-        </div>
+  const remove = async (item: LibraryEntry) => {
+    if (pending) return;
+    const key = `${item.mediaType}:${item.id}`;
+    setError(''); setPending({ key, phase: 'confirming' });
+    try {
+      await removeShowWithResult(item.id, item.mediaType, {
+        title: t.notInterestedRemoveTitle, body: t.notInterestedRemoveBody,
+        confirmLabel: t.removeFromLibrary, cancelLabel: t.notInterestedCancel,
+      }, () => setPending({ key, phase: 'removing' }));
+    } catch { setError(t.notInterestedActionFailed); }
+    finally { setPending(null); }
+  };
+  if (!isOpen) return null;
+  const button = 'min-h-[44px] px-3 py-2 rounded-lg border text-sm whitespace-normal';
+  return <ModalPortal><div className="fixed inset-0 z-modal flex items-center justify-center p-3" style={{ background: 'rgba(0,0,0,.8)', paddingTop: 'calc(12px + var(--safe-top, env(safe-area-inset-top, 0px)))', paddingBottom: 'calc(12px + var(--safe-bottom, env(safe-area-inset-bottom, 0px)))' }}>
+    <div ref={setPanel} role="dialog" aria-modal="true" aria-labelledby="not-interested-title" aria-describedby="not-interested-description" tabIndex={-1} className="rounded-xl w-full max-w-4xl max-h-full overflow-y-auto p-4 sm:p-6" style={{ background: 'var(--card)', color: 'var(--text)' }}>
+      <div className="flex items-start justify-between gap-2">
+        <h2 id="not-interested-title" className="text-xl font-semibold break-words">{t.notInterestedListTitle} ({items.length})</h2>
+        <button className={`${button} min-w-[44px] shrink-0`} aria-label={t.notInterestedClose} onClick={close} disabled={!!pending}>×</button>
       </div>
+      <p id="not-interested-description" className="text-sm my-4">{t.notInterestedDescription}</p>
+      {error && <p role="alert" className="my-3">{error}</p>}
+      {!items.length && <p className="py-8">{t.notInterestedEmpty}</p>}
+      <div className="space-y-4">{items.map(item => {
+        const key = `${item.mediaType}:${item.id}`;
+        const active = pending?.key === key ? pending.phase : null;
+        return <article key={key} data-testid={`not-interested-${key}`} className="flex gap-3 p-3 rounded-lg border" aria-busy={active === 'removing'}>
+          <div className="w-16 shrink-0">{item.posterUrl ? <img src={item.posterUrl} alt="" className="w-full rounded-lg" /> : <span aria-hidden="true">🎬</span>}</div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium break-words">{item.title}</h3>
+            {item.year && <p className="text-sm">{item.year}</p>}
+            <p className="text-sm mt-2 mb-1">{t.restoreToStatus}</p>
+            <div className="flex flex-wrap gap-2">{([
+              ['watching', t.currentlyWatchingAction], ['wishlist', t.wantToWatchAction], ['watched', t.watchedAction],
+            ] as const).map(([target, label]) => <button key={target} className={button} disabled={!!pending} onClick={() => restore(item, target)}>{label}</button>)}</div>
+            <button className={`${button} mt-3`} disabled={!!pending} onClick={() => void remove(item)} style={{ color: 'var(--error, #ef4444)' }}>{t.removeFromLibrary}</button>
+            {active && <p role="status" className="text-sm mt-2">{active === 'confirming' ? t.confirmingRemoval : t.removingFromLibrary}</p>}
+          </div>
+        </article>;
+      })}</div>
+      <div className="flex justify-end mt-4"><button className={button} onClick={close} disabled={!!pending}>{t.notInterestedDone}</button></div>
     </div>
-  );
+  </div></ModalPortal>;
 }

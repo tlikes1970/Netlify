@@ -7,7 +7,7 @@ import { useSettings, getPersonalityText, DEFAULT_PERSONALITY } from '../lib/set
 import type { ListName } from '../state/library.types';
 import { shareListWithFallback } from '../lib/shareLinks';
 import { getToastCallback } from '../state/actions';
-import { setPrimaryStatus } from '../lib/statusTransitions';
+import { setPrimaryStatus, setNotInterested } from '../lib/statusTransitions';
 
 export default function MyListsPage({onBack}: {onBack?: () => void} = {}) {
   const userLists = useCustomLists();
@@ -173,7 +173,7 @@ export default function MyListsPage({onBack}: {onBack?: () => void} = {}) {
     },
     onNotInterested: (item: any) => {
       if (item.id && item.mediaType) {
-        Library.move(item.id, item.mediaType, 'not');
+        void setNotInterested(item);
       }
     },
     onDelete: (item: any) => {
