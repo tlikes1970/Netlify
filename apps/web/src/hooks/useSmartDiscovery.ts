@@ -1,3 +1,4 @@
+import { useLanguage, getMetadataLanguage } from '@/lib/language';
 import { useState, useEffect, useMemo, useRef } from "react";
 import { authManager } from "@/lib/auth";
 import { Library } from "@/lib/storage";
@@ -37,8 +38,8 @@ export function useSmartDiscovery() {
     rating: number;
     timestamp: number;
   } | null>(null);
-  const isFetchingRef = useRef(false);
-  const lastLibraryHashRef = useRef<string>("");
+  useLanguage();
+  const language = getMetadataLanguage();
   const settings = useSettings();
 
   // Get user's library data - include ratings in the data
@@ -175,30 +176,13 @@ export function useSmartDiscovery() {
     fetchGenrePreferences();
   }, [libraryHash, watching, wishlist, watched]);
 
-  // Fetch smart recommendations (with guards to prevent infinite loops)
-  // Track if we've fetched for this library state
-  const hasFetchedRef = useRef(false);
-
+  // Fetch for the current stable library/preferences and metadata locale.
   useEffect(() => {
-    // Guard: prevent concurrent fetches
-    if (isFetchingRef.current) {
-      return; // Already fetching, skip
-    }
-
-    // Guard: only fetch if library actually changed OR we haven't fetched yet
-    const libraryChanged = libraryHash !== lastLibraryHashRef.current;
-    if (!libraryChanged && hasFetchedRef.current) {
-      return; // No change and we've already fetched, skip
-    }
-
-    // Reset fetch flag when library changes so we re-fetch with new preferences
-    if (libraryChanged) {
-      hasFetchedRef.current = false;
-    }
-    lastLibraryHashRef.current = libraryHash;
-
+    // A locale/library change can start a new request immediately. Superseded
+    // requests may fill their own cache, but must never replace current UI state.
+    let current = true;
     const fetchRecommendations = async () => {
-      isFetchingRef.current = true;
+      setRecommendations([]);
       setIsLoading(true);
       setError(null);
 
@@ -215,30 +199,31 @@ export function useSmartDiscovery() {
           enhancedPreferences,
           discoveryLimit,
           get,
-          userId
+          userId,
+          language
         );
 
-        setRecommendations(recs);
-        hasFetchedRef.current = true; // Mark that we've successfully fetched
+        if (current && language === getMetadataLanguage()) setRecommendations(recs);
       } catch (err) {
         // Only log errors, not every fetch
         if (err instanceof Error && !err.message.includes("aborted")) {
           console.error("Failed to fetch smart recommendations:", err);
         }
-        setError("Failed to load recommendations. Please try again.");
+        if (current && language === getMetadataLanguage()) setError("Failed to load recommendations. Please try again.");
       } finally {
-        setIsLoading(false);
-        isFetchingRef.current = false;
+        if (current && language === getMetadataLanguage()) setIsLoading(false);
       }
     };
 
-    fetchRecommendations();
+    void fetchRecommendations();
+    return () => { current = false; };
   }, [
     libraryHash,
     userPreferences,
     genrePreferences,
     userId,
     settings.layout.discoveryLimit,
+    language,
   ]);
 
   return {

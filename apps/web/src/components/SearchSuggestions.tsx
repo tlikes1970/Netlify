@@ -1,4 +1,4 @@
-import { t as coreText, useLanguage } from "@/lib/language";
+import { t as coreText, useLanguage, getMetadataLanguage } from "@/lib/language";
 import { persistLocalContent } from "../lib/restoreBarrier";
 import { useState, useEffect, useRef } from 'react';
 import { fetchEnhancedAutocomplete } from '../search/enhancedAutocomplete';
@@ -151,16 +151,16 @@ export default function SearchSuggestions({
   
   // Fetch TMDB autocomplete suggestions with enhanced relevance scoring
   useEffect(() => {
+    abortControllerRef.current?.abort();
+    setTmdbSuggestions([]);
     if (!query.trim() || query.length < 2) {
       setTmdbSuggestions([]);
       return;
     }
 
-    // Cancel previous request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    abortControllerRef.current = new AbortController();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    const metadataLanguage = getMetadataLanguage();
 
     const fetchSuggestions = async () => {
       try {
@@ -168,8 +168,9 @@ export default function SearchSuggestions({
         // Fetches 100 candidates, ranks them, returns top 10
         const mediaItems = await fetchEnhancedAutocomplete(
           query, 
-          abortControllerRef.current?.signal,
-          [] // enabledProviders - empty for now, can be enhanced later
+          controller.signal,
+          [], // enabledProviders - empty for now, can be enhanced later
+          metadataLanguage
         );
         
         // Convert MediaItem[] to AutocompleteSuggestion[] format
@@ -187,12 +188,12 @@ export default function SearchSuggestions({
           };
         });
         
-        setTmdbSuggestions(suggestions);
+        if (!controller.signal.aborted && metadataLanguage === getMetadataLanguage()) setTmdbSuggestions(suggestions);
       } catch (error) {
         if (error instanceof Error && error.name !== 'AbortError') {
           console.warn('Failed to fetch enhanced autocomplete:', error);
         }
-        setTmdbSuggestions([]);
+        if (!controller.signal.aborted && metadataLanguage === getMetadataLanguage()) setTmdbSuggestions([]);
       }
     };
 
@@ -200,11 +201,9 @@ export default function SearchSuggestions({
     const timer = setTimeout(fetchSuggestions, 300);
     return () => {
       clearTimeout(timer);
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
+      controller.abort();
     };
-  }, [query]);
+  }, [query, language]);
 
   // Filter suggestions based on query
   useEffect(() => {

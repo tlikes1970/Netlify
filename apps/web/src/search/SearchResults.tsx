@@ -1,6 +1,6 @@
 import { genreDisplayName } from "../lib/genreLabels";
 import { formatRating } from "../lib/localeFormatters";
-import { t as coreText, useLanguage } from "@/lib/language";
+import { t as coreText, useLanguage, getMetadataLanguage } from "@/lib/language";
 import { getListDisplayName } from "../lib/storage";
 import React, { useEffect, useState, useRef } from "react";
 // import CardV2 from '../components/cards/CardV2'; // Unused
@@ -67,7 +67,7 @@ export default function SearchResults({
   onExtrasOpen?: (item: MediaItem) => void;
   onEpisodeTracking?: (item: MediaItem) => void;
 }) {
-  useLanguage();
+  const language = useLanguage();
   const translations = useTranslations();
   // Create actions object using Library methods and passed handlers
   const actions: CardActionHandlers = {
@@ -157,7 +157,7 @@ export default function SearchResults({
     else setIsLoading(false);
     return () => abortRef.current?.abort();
     // eslint-disable-next-line
-  }, [query, genre, searchType, mediaTypeFilter, resolvedItems]);
+  }, [query, genre, searchType, mediaTypeFilter, resolvedItems, language]);
 
   // Setup intersection observer for infinite scroll
   useEffect(() => {
@@ -199,6 +199,7 @@ export default function SearchResults({
     const ac = new AbortController();
     abortRef.current = ac;
     setIsLoading(true);
+    const metadataLanguage = getMetadataLanguage();
     try {
       let result: SearchResultWithPagination;
 
@@ -214,14 +215,14 @@ export default function SearchResults({
       } else if (!query.trim() && genre != null && searchType === "movies-tv") {
         // Genre-only search: no text query, genre selected
         const searchResult = await discoverByGenre(genre, nextPage, {
-          signal: ac.signal,
+          signal: ac.signal, language: metadataLanguage,
         });
         result = searchResult;
       } else {
         const run = async (term: string, page: number) => {
           const response = searchType !== "people"
-            ? await smartSearch(term, page, searchType, { signal: ac.signal })
-            : await cachedSearchMulti(term, page, genre ?? null, searchType, { signal: ac.signal });
+            ? await smartSearch(term, page, searchType, { signal: ac.signal, language: metadataLanguage })
+            : await cachedSearchMulti(term, page, genre ?? null, searchType, { signal: ac.signal, language: metadataLanguage });
           return { ...response, items: mediaTypeFilter && searchType === "movies-tv"
             ? response.items.filter(item => item.mediaType === mediaTypeFilter) : response.items };
         };
@@ -229,7 +230,7 @@ export default function SearchResults({
         result = searchResult;
       }
 
-      if (ac.signal.aborted || abortRef.current !== ac) return;
+      if (ac.signal.aborted || abortRef.current !== ac || metadataLanguage !== getMetadataLanguage()) return;
       if (replace) {
         setCorrection(result.correctedQuery ?? null);
         effectiveQuery.current = result.correctedQuery ?? query;

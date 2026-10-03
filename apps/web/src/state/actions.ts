@@ -4,7 +4,7 @@ import { Library } from '../lib/storage';
 import type { MediaType } from '../components/cards/card.types';
 import { fetchNextAirDate } from '../tmdb/tv';
 import { settingsManager, getPersonalityText, DEFAULT_PERSONALITY } from '../lib/settings';
-import { get } from '../lib/tmdb';
+import { getCoreTitleDetails } from '../lib/tmdb';
 import { getGlobalToastCallback, setGlobalToastCallback, type ToastCallback } from '../lib/toastBridge';
 import { setPrimaryStatus } from '../lib/statusTransitions';
 
@@ -20,8 +20,8 @@ export function getToastCallback(): ToastCallback | null {
 // Helper function to fetch title and year from TMDB API
 async function fetchMediaDataFromTMDB(id: string, mediaType: MediaType): Promise<{ title: string; year?: string; showStatus?: string; lastAirDate?: string; synopsis?: string }> {
   try {
-    const endpoint = mediaType === 'movie' ? `/movie/${id}` : `/tv/${id}`;
-    const data = await get(endpoint);
+    if (mediaType !== 'movie' && mediaType !== 'tv') return { title: 'Untitled' };
+    const data = await getCoreTitleDetails(id, mediaType, Library.getEntry(id, mediaType) ?? undefined);
     
     const title = data.title || data.name || 'Untitled';
     

@@ -1,5 +1,5 @@
 import type { MediaItem } from '../components/cards/card.types';
-import { get } from './tmdb';
+import { getCoreTitleDetails } from './tmdb';
 import { mapTMDBToMediaItem } from '../search/api';
 export type SharedTitleRequest = { id: number; mediaType: 'movie' | 'tv' } | { error: 'invalid' | 'legacy' };
 export function parseSharedTitle(query: string): SharedTitleRequest {
@@ -11,7 +11,7 @@ export function parseSharedTitle(query: string): SharedTitleRequest {
 }
 export async function resolveSharedTitle(request: SharedTitleRequest): Promise<MediaItem> {
   if ('error' in request) throw new Error(request.error);
-  const data = await get(`/${request.mediaType}/${request.id}`);
-  if (data.id !== request.id || !(data.title || data.name)) throw new Error('unavailable');
+  const data = await getCoreTitleDetails(request.id, request.mediaType);
+  if (data.id !== request.id || !(data.title || data.name || data.original_title || data.original_name)) throw new Error('unavailable');
   return mapTMDBToMediaItem({ ...data, media_type: request.mediaType });
 }

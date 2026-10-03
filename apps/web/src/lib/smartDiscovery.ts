@@ -1,3 +1,5 @@
+import { getMetadataLanguage } from './language';
+import { metadataTitle } from './metadataText';
 import { Library, LibraryEntry } from "./storage";
 import { CardData } from "./tmdb";
 
@@ -248,7 +250,8 @@ export async function getSmartRecommendations(
   limit: number = 20,
   tmdbApi: (path: string, params?: any) => Promise<any> = () =>
     Promise.resolve({}),
-  userId: string = "anonymous"
+  userId: string = "anonymous",
+  language = getMetadataLanguage()
 ): Promise<RecommendationScore[]> {
   // Check cache (user-specific) - but include library state in cache key for backfill
   const prefsHash = hashPreferences(preferences);
@@ -256,7 +259,7 @@ export async function getSmartRecommendations(
     .map((e) => `${e.mediaType}:${e.id}`)
     .sort()
     .join(",");
-  const cacheKey = `${userId}:${prefsHash}:${libraryIds}`;
+  const cacheKey = `${userId}:${language}:${prefsHash}:${libraryIds}`;
   const cached = recommendationCache.get(cacheKey);
   const now = Date.now();
 
@@ -289,12 +292,12 @@ export async function getSmartRecommendations(
       popularTvData,
       popularTvPage2,
     ] = await Promise.all([
-      tmdbApi("/trending/all/week", { page: 1 }),
-      tmdbApi("/trending/all/week", { page: 2 }),
-      tmdbApi("/movie/popular", { page: 1 }),
-      tmdbApi("/movie/popular", { page: 2 }),
-      tmdbApi("/tv/popular", { page: 1 }),
-      tmdbApi("/tv/popular", { page: 2 }),
+      tmdbApi("/trending/all/week", { page: 1, language }),
+      tmdbApi("/trending/all/week", { page: 2, language }),
+      tmdbApi("/movie/popular", { page: 1, language }),
+      tmdbApi("/movie/popular", { page: 2, language }),
+      tmdbApi("/tv/popular", { page: 1, language }),
+      tmdbApi("/tv/popular", { page: 2, language }),
     ]);
 
     // Combine all candidate items and deduplicate
@@ -329,7 +332,7 @@ export async function getSmartRecommendations(
       if (!candidate.poster_path) continue; // Skip items without posters
 
       // Ensure title is properly extracted and validated
-      const rawTitle = candidate.title || candidate.name;
+      const rawTitle = metadataTitle(candidate);
       const safeTitle = (() => {
         if (
           typeof rawTitle === "string" &&

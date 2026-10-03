@@ -1,5 +1,7 @@
+import { metadataTitle, metadataText } from '../lib/metadataText';
+import { getMetadataLanguage } from '../lib/language';
 import type { MediaItem } from '../components/cards/card.types';
-import { get } from '../lib/tmdb';
+import { get, getCoreTitleDetails } from '../lib/tmdb';
 import { normalizeQuery } from '../lib/string';
 import { computeSearchScore } from './rank';
 import { Library } from '../lib/storage';
@@ -16,13 +18,14 @@ export type SearchResultWithPagination = {
 
 // Function to fetch network/production company information from TMDB detailed endpoints
 export async function fetchNetworkInfo(id: number, mediaType: 'movie' | 'tv'): Promise<{ networks?: string[]; productionCompanies?: string[] }> {
+  const language = getMetadataLanguage();
   const maxRetries = 2;
   let lastError: Error | null = null;
   
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const endpoint = mediaType === 'movie' ? `/movie/${id}` : `/tv/${id}`;
-      const data = await get(endpoint);
+      const data = await get(endpoint, { language });
       
       if (mediaType === 'tv') {
         // For TV shows, get networks
@@ -68,8 +71,7 @@ export async function fetchFullMediaMetadata(item: MediaItem): Promise<Partial<M
       return {};
     }
 
-    const endpoint = item.mediaType === 'movie' ? `/movie/${id}` : `/tv/${id}`;
-    const data = await get(endpoint);
+    const data = await getCoreTitleDetails(id, item.mediaType, item);
 
     // Extract common fields
     const title = item.mediaType === 'movie' ? data.title : data.name;
@@ -128,7 +130,7 @@ export async function searchMulti(
   searchType: 'all' | 'movies-tv' | 'people' = 'all',
   opts?: { signal?: AbortSignal; language?: string; region?: string }
 ): Promise<SearchResultWithPagination> {
-  const language = opts?.language ?? 'en-US';
+  const language = opts?.language ?? getMetadataLanguage();
   const region   = opts?.region ?? 'US';
   const q = normalizeQuery(query);
 
@@ -187,6 +189,7 @@ function enrichWithLibraryData(item: MediaItem): MediaItem {
   if (libraryEntry) {
     return {
       ...item,
+      synopsis: metadataText(item.synopsis, libraryEntry.synopsis) || '',
       userRating: libraryEntry.userRating,
       userNotes: libraryEntry.userNotes,
       tags: libraryEntry.tags,
@@ -212,7 +215,7 @@ export function mapTMDBToMediaItem(r: any): MediaItem {
     } as MediaItem;
   }
 
-  const rawTitle = mediaType === 'movie' ? r.title : r.name;
+  const rawTitle = metadataTitle(r);
   const safeTitle = (() => {
     if (typeof rawTitle === 'string' && rawTitle.trim() && rawTitle !== String(r.id)) {
       return rawTitle.trim();
@@ -250,7 +253,7 @@ export async function discoverByGenre(
   page = 1,
   opts?: { signal?: AbortSignal; language?: string; region?: string }
 ): Promise<SearchResultWithPagination> {
-  const language = opts?.language ?? 'en-US';
+  const language = opts?.language ?? getMetadataLanguage();
   const region = opts?.region ?? 'US';
 
   const qsBase = (params: Record<string, any>) => {

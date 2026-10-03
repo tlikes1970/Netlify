@@ -1,0 +1,35 @@
+import React from 'react';
+import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
+import { beforeEach, afterEach, expect, it, vi } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useSmartDiscovery } from '../useSmartDiscovery';
+import { useGenreContent } from '../useGenreContent';
+import { getSmartRecommendations } from '../../lib/smartDiscovery';
+import { fetchGenreContent } from '../../lib/tmdb';
+import { changeLanguage } from '../../lib/language';
+vi.mock('../../lib/auth',()=>({authManager:{getCurrentUser:()=>null}}));
+vi.mock('../../lib/settings',()=>({useSettings:()=>({layout:{discoveryLimit:25}})}));
+vi.mock('../../lib/storage',()=>({Library:{getAll:()=>[],getByList:()=>[]}}));
+vi.mock('../../lib/tmdb',()=>({get:vi.fn(),fetchGenreContent:vi.fn()}));
+vi.mock('../../lib/smartDiscovery',async()=>({...await vi.importActual<typeof import('../../lib/smartDiscovery')>('../../lib/smartDiscovery'),getSmartRecommendations:vi.fn()}));
+const recommendations=vi.mocked(getSmartRecommendations),genre=vi.mocked(fetchGenreContent);
+const card=(title:string)=>({id:'7',kind:'movie' as const,title,poster:'',overview:title});
+const recs=(title:string)=>[{item:card(title),score:1,reasons:[]}];
+beforeEach(()=>{changeLanguage('en');recommendations.mockReset();genre.mockReset();});
+afterEach(()=>{cleanup();changeLanguage('en');});
+it.each([['en','es'],['es','en']] as const)('Discovery %s→%s refetches and ignores late old response',async(from,to)=>{
+ changeLanguage(from);let finish!:(v:ReturnType<typeof recs>)=>void;
+ recommendations.mockImplementation((_prefs,_limit,_api,_uid,language)=>language===(from==='en'?'en-US':'es')?new Promise(resolve=>{finish=resolve}):Promise.resolve(recs(to)));
+ const {result}=renderHook(()=>useSmartDiscovery());await waitFor(()=>expect(finish).toBeTypeOf('function'));
+ act(()=>changeLanguage(to));await waitFor(()=>expect(result.current.recommendations[0]?.item.title).toBe(to));await act(async()=>finish(recs(from)));
+ expect(result.current.recommendations[0].item.title).toBe(to);expect(result.current.isLoading).toBe(false);
+});
+it.each([['en','es'],['es','en']] as const)('For You %s→%s uses distinct query identity and ignores old response',async(from,to)=>{
+ changeLanguage(from);let finish!:(v:ReturnType<typeof card>[])=>void;
+ genre.mockImplementation((_main,_sub,language)=>language===(from==='en'?'en-US':'es')?new Promise(resolve=>{finish=resolve}):Promise.resolve([card(to)]));
+ const client=new QueryClient({defaultOptions:{queries:{retry:false}}});
+ const wrapper=({children}:{children:React.ReactNode})=><QueryClientProvider client={client}>{children}</QueryClientProvider>;
+ const {result}=renderHook(()=>useGenreContent('drama','popular'),{wrapper});await waitFor(()=>expect(finish).toBeTypeOf('function'));
+ act(()=>changeLanguage(to));await waitFor(()=>expect(result.current.data?.[0].title).toBe(to));await act(async()=>finish([card(from)]));
+ expect(result.current.data?.[0].title).toBe(to);expect(client.getQueryData(['tmdb','genre','drama','popular',from==='en'?'en-US':'es'])).toEqual([card(from)]);client.clear();
+});

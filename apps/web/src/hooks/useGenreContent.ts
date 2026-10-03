@@ -1,3 +1,4 @@
+import { useLanguage, getMetadataLanguage } from '@/lib/language';
 import { useQuery } from '@tanstack/react-query';
 import { fetchGenreContent, CardData } from '@/lib/tmdb';
 // import { useSettings, getPersonalityText } from '@/lib/settings'; // Unused
@@ -27,11 +28,13 @@ export function useGenreContent(
   subGenre: string,
   options?: { fetchEnabled?: boolean }
 ) {
+  useLanguage();
+  const language = getMetadataLanguage();
   const fetchEnabled = options?.fetchEnabled !== false;
 
   return useQuery<CardData[]>({
-    queryKey: ['tmdb', 'genre', mainGenre, subGenre],
-    queryFn: async () => fetchGenreContent(mainGenre, subGenre),
+    queryKey: ['tmdb', 'genre', mainGenre, subGenre, language],
+    queryFn: async () => fetchGenreContent(mainGenre, subGenre, language),
     staleTime: 300_000, // 5 minutes
     enabled: fetchEnabled && !!(mainGenre && subGenre),
     retry: (failureCount) => failureCount < 2,

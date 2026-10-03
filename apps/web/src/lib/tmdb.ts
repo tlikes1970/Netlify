@@ -1,3 +1,5 @@
+import { getMetadataLanguage } from './language';
+import { metadataTitle, metadataText } from './metadataText';
 // TMDB calls use TMDB_PROXY_BASE from apiConfig (relative on web; absolute on Capacitor).
 
 import { getOptimalImageSize } from "../hooks/useImageOptimization";
@@ -17,6 +19,9 @@ type Raw = {
   id: number;
   title?: string;
   name?: string;
+  original_title?: string;
+  original_name?: string;
+  overview?: string;
   poster_path?: string | null;
   media_type?: "movie" | "tv" | string;
   release_date?: string;
@@ -51,7 +56,7 @@ export type Showtime = {
 
 const map = (r: Raw): CardData => {
   // Ensure title is properly extracted and validated
-  const rawTitle = r.title || r.name;
+  const rawTitle = metadataTitle(r);
   const safeTitle = (() => {
     if (
       typeof rawTitle === "string" &&
@@ -81,6 +86,7 @@ const map = (r: Raw): CardData => {
     kind: (r.media_type as "movie" | "tv") || (r.title ? "movie" : "tv"),
     title: safeTitle,
     poster: img(r.poster_path),
+    overview: metadataText(r.overview),
     year,
   };
 };
@@ -145,6 +151,31 @@ export async function get(
   
   lastSource = "proxy";
   return pr.json();
+}
+
+/** Core title text only. Episode/season/reminder callers continue using get directly. */
+export async function getCoreTitleDetails(
+  id: string | number,
+  kind: 'movie' | 'tv',
+  existing?: { title?: string; synopsis?: string },
+  language = getMetadataLanguage()
+) {
+  const endpoint = `/${kind}/${id}`;
+  const data = await get(endpoint, { language });
+  const titleField = kind === 'movie' ? 'title' : 'name';
+  const originalField = kind === 'movie' ? 'original_title' : 'original_name';
+  const title = metadataText(data[titleField], data[originalField], existing?.title);
+  const overview = metadataText(data.overview, existing?.synopsis);
+  let fallback: Record<string, unknown> = {};
+  if (language !== 'en-US' && (!title || !overview)) {
+    try { fallback = await get(endpoint, { language: 'en-US' }); }
+    catch { /* Retain the successful localized/source response on fallback failure. */ }
+  }
+  return {
+    ...data,
+    [titleField]: title || metadataText(fallback[titleField], fallback[originalField]),
+    overview: overview || metadataText(fallback.overview),
+  };
 }
 
 export async function trendingForYou() {
@@ -323,8 +354,9 @@ const KEYWORD_SUBGENRES: Record<string, string> = {
   sports: "6075", // TMDB keyword ID for "sport"
 };
 
-export async function fetchGenreContent(mainGenre: string, subGenre: string) {
+export async function fetchGenreContent(mainGenre: string, subGenre: string, language = getMetadataLanguage()) {
   if (!mainGenre || !subGenre) return [];
+  const localizedGet = (path: string, params: Record<string, string | number>) => get(path, { ...params, language });
 
   console.log(`🎬 Fetching content for ${mainGenre}/${subGenre}`);
 
@@ -364,7 +396,7 @@ export async function fetchGenreContent(mainGenre: string, subGenre: string) {
         animeParams.with_genres = ["16", ...subGenreIds].join(",");
       }
 
-      const animeTvData = await get("/discover/tv", animeParams);
+      const animeTvData = await localizedGet("/discover/tv", animeParams);
 
       const animeShows = (animeTvData.results ?? [])
         .filter((r: Raw) => r.poster_path)
@@ -389,7 +421,7 @@ export async function fetchGenreContent(mainGenre: string, subGenre: string) {
           animeMovieParams.with_genres = ["16", ...subGenreIds].join(",");
         }
 
-        const animeMovies = await get("/discover/movie", animeMovieParams);
+        const animeMovies = await localizedGet("/discover/movie", animeMovieParams);
 
         const movies = (animeMovies.results ?? [])
           .filter((r: Raw) => r.poster_path)
@@ -400,7 +432,7 @@ export async function fetchGenreContent(mainGenre: string, subGenre: string) {
     } 
     // For Western animation (not anime), exclude Japan
     else if (mainGenre === "animation") {
-      const animationTvData = await get("/discover/tv", {
+      const animationTvData = await localizedGet("/discover/tv", {
         with_genres: "16", // Animation
         without_origin_country: "JP", // Exclude Japan = Western animation only
         sort_by: "popularity.desc",
@@ -416,7 +448,7 @@ export async function fetchGenreContent(mainGenre: string, subGenre: string) {
 
       // If we don't have enough, try animation movies too
       if (combined.length < 12) {
-        const animationMovies = await get("/discover/movie", {
+        const animationMovies = await localizedGet("/discover/movie", {
           with_genres: "16", // Animation
           without_origin_country: "JP", // Exclude Japan
           sort_by: "popularity.desc",
@@ -432,12 +464,12 @@ export async function fetchGenreContent(mainGenre: string, subGenre: string) {
     } else {
       // For other genres, fetch movies and TV in parallel
       const [movieData, tvData] = await Promise.all([
-        get("/discover/movie", {
+        localizedGet("/discover/movie", {
           with_genres: [...mainGenreIds.movie, ...subGenreIds].join(","),
           sort_by: "popularity.desc",
           page: 1,
         }),
-        get("/discover/tv", {
+        localizedGet("/discover/tv", {
           with_genres: [...mainGenreIds.tv, ...subGenreIds].join(","),
           sort_by: "popularity.desc",
           page: 1,
@@ -462,12 +494,12 @@ export async function fetchGenreContent(mainGenre: string, subGenre: string) {
       );
 
       const [fallbackMovies, fallbackTv] = await Promise.all([
-        get("/discover/movie", {
+        localizedGet("/discover/movie", {
           with_genres: mainGenreIds.movie.join(","),
           sort_by: "popularity.desc",
           page: 1,
         }),
-        get("/discover/tv", {
+        localizedGet("/discover/tv", {
           with_genres: mainGenreIds.tv.join(","),
           sort_by: "popularity.desc",
           page: 1,

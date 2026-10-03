@@ -1,3 +1,4 @@
+import { getMetadataLanguage } from '../lib/language';
 /**
  * Smart search orchestrator
  * Purpose: Searches TMDB and ranks results using BM25-like scoring
@@ -202,7 +203,7 @@ export async function smartSearch(
   searchType: SearchType = 'all',
   opts?: { signal?: AbortSignal; language?: string; region?: string; debugSearch?: boolean }
 ): Promise<SearchResultWithPagination> {
-  const language = opts?.language ?? 'en-US';
+  const language = opts?.language ?? getMetadataLanguage();
   const region   = opts?.region ?? 'US';
   const query    = normalizeQuery(queryRaw);
   

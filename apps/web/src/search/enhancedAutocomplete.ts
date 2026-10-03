@@ -1,3 +1,5 @@
+import { getMetadataLanguage } from '../lib/language';
+import { metadataTitle } from '../lib/metadataText';
 /**
  * Process: Enhanced Autocomplete with Relevance Scoring
  * Purpose: Fetch and rank autocomplete suggestions using predictive relevance scoring
@@ -26,7 +28,8 @@ async function fetchTMDB(path: string, params: Record<string, any>, signal?: Abo
 export async function fetchEnhancedAutocomplete(
   query: string,
   signal?: AbortSignal,
-  enabledProviders: string[] = []
+  enabledProviders: string[] = [],
+  language = getMetadataLanguage()
 ): Promise<MediaItem[]> {
   if (!query.trim() || query.length < 2) {
     return [];
@@ -40,21 +43,21 @@ export async function fetchEnhancedAutocomplete(
         query: query.trim(),
         page: 1,
         include_adult: false,
-        language: 'en-US',
+        language,
         region: 'US',
       }, signal).catch(() => ({ results: [] })),
       fetchTMDB('search/movie', {
         query: query.trim(),
         page: 1,
         include_adult: false,
-        language: 'en-US',
+        language,
         region: 'US',
       }, signal).catch(() => ({ results: [] })),
       fetchTMDB('search/tv', {
         query: query.trim(),
         page: 1,
         include_adult: false,
-        language: 'en-US',
+        language,
         region: 'US',
       }, signal).catch(() => ({ results: [] }))
     ]);
@@ -109,7 +112,7 @@ export async function fetchEnhancedAutocomplete(
           return null;
         }
         
-        const title = mediaType === 'movie' ? r.title : r.name;
+        const title = metadataTitle(r);
         const date = mediaType === 'movie' ? r.release_date : r.first_air_date;
         const year = date ? String(date).slice(0, 4) : undefined;
         
