@@ -145,7 +145,7 @@ export default function TabCard({
                 border: "1px solid",
               }}
             >
-              {isCondensed ? "Watched" : translations.watchedAction}
+              {translations.watchedAction}
             </button>
             <button
               onClick={() => actions?.onNotInterested?.(item)}
@@ -159,7 +159,7 @@ export default function TabCard({
             >
               {translations.notInterestedAction}
             </button>
-            {!customListContext && !isCondensed && (
+            {!customListContext && (
               <button
                 onClick={actions?.onNotesEdit ? () => actions.onNotesEdit?.(item) : undefined}
                 className={buttonClass}
@@ -227,7 +227,7 @@ export default function TabCard({
                 border: "1px solid",
               }}
             >
-              {isCondensed ? "Watched" : translations.watchedAction}
+              {translations.watchedAction}
             </button>
             <button
               onClick={() => actions?.onNotInterested?.(item)}
@@ -241,7 +241,7 @@ export default function TabCard({
             >
               {translations.notInterestedAction}
             </button>
-            {!customListContext && !isCondensed && (
+            {!customListContext && (
               <button
                 onClick={actions?.onNotesEdit ? () => actions.onNotesEdit?.(item) : undefined}
                 className={buttonClass}
@@ -323,7 +323,7 @@ export default function TabCard({
             >
               {translations.notInterestedAction}
             </button>
-            {!customListContext && !isCondensed && (
+            {!customListContext && (
               <button
                 onClick={actions?.onNotesEdit ? () => actions.onNotesEdit?.(item) : undefined}
                 className={buttonClass}
@@ -400,7 +400,7 @@ export default function TabCard({
                 border: "1px solid",
               }}
             >
-              {isCondensed ? "Watched" : translations.watchedAction}
+              {translations.watchedAction}
             </button>
             <button
               onClick={() => actions?.onNotInterested?.(item)}
@@ -449,12 +449,9 @@ export default function TabCard({
     }
   };
 
-  const isCondensed = settings.layout.condensedView;
 
   // Define buttonClass at component level so it can be used throughout
-  const buttonClass = isCondensed
-    ? "px-3 py-2 rounded-lg text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
-    : "px-4 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md";
+  const buttonClass = "px-4 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md";
 
   // Convert tabType to tabKey for mobile components
   const getTabKey = (tabType: string): "watching" | "watched" | "want" => {
@@ -734,7 +731,7 @@ export default function TabCard({
           </div>
 
           {/* Pro Strip - with dotted yellow border */}
-          {!customListContext && !isCondensed && (
+          {!customListContext && (
             <div className="pro-buttons-row">
               <button
                 onClick={() => {
@@ -882,7 +879,7 @@ export default function TabCard({
       item={item}
       actions={actions}
       context={getSwipeContext()}
-      className={isCondensed ? "mb-3" : "mb-5"}
+      className="mb-5"
     >
       {cardContent}
     </SwipeableCard>

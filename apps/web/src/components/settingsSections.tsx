@@ -375,7 +375,7 @@ function NotificationsSection({
 function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
   const settings = useSettings();
   const translations = useTranslations();
-  const { hasFullAccess: isPro } = useEntitlements();
+  useEntitlements(); // Preserve access-state recovery for the neighboring My Lists controls.
   const userLists = useCustomLists();
   const [editingListId, setEditingListId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -749,30 +749,6 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
         </h4>
         <div className="space-y-3">
           <div className="space-y-1">
-            <label className="flex items-center space-x-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={settings.layout.condensedView}
-                onChange={(e) =>
-                  settingsManager.updateSettings({
-                    layout: {
-                      ...settings.layout,
-                      condensedView: e.target.checked,
-                    },
-                  })
-                }
-                className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 rounded focus:ring-blue-500"
-              />
-              <span style={{ color: "var(--text)" }}>
-                {translations.condensedView}
-              </span>
-            </label>
-            <p className="text-xs ml-7" style={{ color: "var(--muted)" }}>
-              {translations.condensedViewDescription}
-            </p>
-          </div>
-
-          <div className="space-y-1">
             <label
               className="flex items-center space-x-3 cursor-pointer"
             >
@@ -786,11 +762,6 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
                 {translations.enableEpisodeTracking}
               </span>
             </label>
-            {settings.layout.condensedView && isPro && (
-              <p className="text-xs ml-7" style={{ color: "var(--muted)" }}>
-                {translations.episodeTrackingCondensedProAllowed}
-              </p>
-            )}
           </div>
         </div>
       </div>

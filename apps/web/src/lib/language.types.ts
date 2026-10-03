@@ -140,14 +140,10 @@ export interface LanguageStrings {
   light: string;
   darkBackgroundWithLightText: string;
   lightBackgroundWithDarkText: string;
-  condensedView: string;
   enableEpisodeTracking: string;
   discoveryRecommendations: string;
   discoveryRecommendationsDescription: string;
   otherLayoutSettings: string;
-  condensedViewDescription: string;
-  episodeTrackingCondensedProRequired: string;
-  episodeTrackingCondensedProAllowed: string;
   proFeatures: string;
   themePacksComingSoon: string;
 

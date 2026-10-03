@@ -451,9 +451,6 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             <div>
               <h4 className="font-semibold mb-2">Layout Options</h4>
               <ul className="list-disc list-inside space-y-2 ml-4">
-                <li>
-                  Toggle <strong>Condensed View</strong> for tighter spacing.
-                </li>
                 <li>Choose which sections appear on your Home screen.</li>
                 <li>
                   Enable or disable <strong>Episode Tracking</strong> here too.

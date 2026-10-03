@@ -402,4 +402,4 @@
 // 2.0.21 — coordinated Start Over, identity/access preservation and custom-list deletion.
 // 2.0.22 — Not Interested recovery, reminder cancellation and accessible management.
 // 2.0.23 — Notes & Tags editing, guarded mutations and reliable Library synchronization.
-export const APP_VERSION = "2.0.33";
+export const APP_VERSION = "2.0.34";

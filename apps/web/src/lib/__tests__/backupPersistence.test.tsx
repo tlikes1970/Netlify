@@ -130,7 +130,6 @@ const defaults = {
   },
   layout: {
     theme: "dark",
-    condensedView: false,
     homePageLists: ["up-next"],
     forYouGenres: ["horror"],
     episodeTracking: true,

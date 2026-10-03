@@ -114,7 +114,7 @@ export function portableSettings(value: unknown): ObjectValue {
   if ("layout" in source) {
     const n = object(source.layout, "layout");
     const clean: ObjectValue = {};
-    for (const key of ["condensedView", "episodeTracking"])
+    for (const key of ["episodeTracking"])
       if (key in n) clean[key] = boolean(n[key], key);
     for (const key of ["homePageLists", "forYouGenres"])
       if (key in n) clean[key] = strings(n[key], key);
@@ -625,7 +625,6 @@ export function validateBackup(value: unknown): Backup {
       if (!(k in n)) fail(`missing notification preference ${k}.`);
     const l = object(object(s.settings, "settings").layout, "layout");
     for (const k of [
-      "condensedView",
       "theme",
       "homePageLists",
       "forYouGenres",
@@ -712,7 +711,6 @@ export function restoreWrites(
       [
         "layout",
         [
-          "condensedView",
           "theme",
           "homePageLists",
           "forYouGenres",

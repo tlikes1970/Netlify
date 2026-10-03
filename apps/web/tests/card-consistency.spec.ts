@@ -20,7 +20,7 @@ test.beforeAll(async () => {
     "lib/readOnlyGuard": `export function notifyReadOnlyBlocked(){} export function guardMutation(){return true}`,
     "lib/customLists": `export function useCustomLists(){return {customLists:[{id:"family",name:"Family",itemCount:2}],selectedListId:"family",maxLists:3}} export const customListManager={getSelectedList:()=>({id:"family"}),getListById:id=>id==="family"?{id,name:"Family"}:null,setSelectedList:()=>{}}`,
     "lib/proUpgrade": `export function startProUpgrade(){}`,
-    "lib/settings": `export function useSettings(){return {layout:{episodeTracking:false,condensedView:false}}} export function getPersonalityText(){return ""} export const DEFAULT_PERSONALITY="Zen"`,
+    "lib/settings": `export function useSettings(){return {layout:{episodeTracking:false,condensedView:true}}} export function getPersonalityText(){return ""} export const DEFAULT_PERSONALITY="Zen"`,
     "lib/language": `export function useTranslations(){return {searchCorrection:"Showing results for “{query}”",notesAndTags:"Notes & Tags",currentlyWatchingAction:"Watching",notInterestedAction:"Not Interested",wantToWatchAction:"Want to Watch",watchedAction:"Watched",manageCurrentlyWatchingAction:"Manage Currently Watching"}}`,
     "hooks/useAuth": `export function useAuth(){return {isAuthenticated:true,user:{uid:"browser-test"}}}`,
     "hooks/useSmartDiscovery": `export function useSmartDiscovery(){return {recommendations:[{item:{id:"d1",kind:"movie",title:"Short",poster:"",year:2025,overview:"An existing overview with enough words to wrap into multiple lines. ".repeat(5)}},{item:{id:"d2",kind:"tv",title:"A very long Discovery title that needs more than two lines to display",poster:""}},{item:{id:"d3",kind:"movie",title:"Want title",poster:"",year:2024}}],isLoading:false,error:null}}`,
@@ -107,6 +107,11 @@ for (const width of [320,360,390,768,1023,1024,1280]) {
    await expect(correction).toHaveText("Showing results for “Breaking Bad”");
    expect(await correction.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);
    const library=page.getByTestId('library'); const custom=page.getByTestId('custom');
+   if(width>=1024) {
+    await expect(library.getByRole('button',{name:'📝 Notes & Tags',exact:true})).toBeVisible();
+    await expect(library.getByRole('button',{name:'Shows Like This',exact:true})).toBeVisible();
+    await expect(library.getByRole('button',{name:'Extras',exact:true})).toBeVisible();
+   }
    await expect(library.locator(width<1024?'.card-mobile':'.tab-card')).toHaveCount(1);
    await expect(library.locator(width<1024?'.tab-card':'.card-mobile')).toHaveCount(0);
    if (width < 1024) {

@@ -123,16 +123,8 @@ html[data-compact-mobile-v1="true"] .space-y-3 {
   margin-bottom: 1.25rem; /* 20px, reduced from mb-8 (32px) */
 }
 
-.tab-card.mb-3 {
-  margin-bottom: 0.75rem; /* 12px, reduced from mb-4 (16px) */
-}
-
 html[data-compact-mobile-v1="true"] .tab-card.mb-5 {
   margin-bottom: 1rem; /* 16px */
-}
-
-html[data-compact-mobile-v1="true"] .tab-card.mb-3 {
-  margin-bottom: 0.5rem; /* 8px */
 }
 
 /* Desktop List Content Column - Centered layout for watching/want/watched tabs */

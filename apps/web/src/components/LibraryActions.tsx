@@ -20,7 +20,6 @@ export interface LibraryActionsProps {
   actions?: CardActionHandlers;
   mode?: LibraryActionsMode;
   currentList?: ListName | null;
-  isCondensed?: boolean;
 }
 
 /**
@@ -36,7 +35,6 @@ export default function LibraryActions({
   actions,
   mode = "list",
   currentList,
-  isCondensed = false,
 }: LibraryActionsProps) {
   const translations = useTranslations();
   const settings = useSettings();
@@ -50,10 +48,8 @@ export default function LibraryActions({
   // Get user rating from libraryEntry or item
   const userRating = libraryEntry?.userRating ?? item.userRating ?? 0;
 
-  // Button class based on condensed mode
-  const buttonClass = isCondensed
-    ? "px-3 py-2 rounded-lg text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md"
-    : "px-4 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md";
+  // Button class for the standard view
+  const buttonClass = "px-4 py-2.5 rounded-xl text-xs cursor-pointer transition-all duration-150 ease-out hover:scale-105 active:scale-95 active:shadow-inner hover:shadow-md";
 
   const handleRatingChange = (rating: number) => {
     if (actions?.onRatingChange) {
@@ -92,7 +88,7 @@ export default function LibraryActions({
               border: "1px solid",
             }}
           >
-            {isCondensed ? "Watched" : translations.watchedAction}
+            {translations.watchedAction}
           </button>,
           <button
             key="not"
@@ -139,7 +135,7 @@ export default function LibraryActions({
               border: "1px solid",
             }}
           >
-            {isCondensed ? "Watched" : translations.watchedAction}
+            {translations.watchedAction}
           </button>,
           <button
             key="not"
@@ -247,7 +243,7 @@ export default function LibraryActions({
               border: "1px solid",
             }}
           >
-            {isCondensed ? "Watched" : translations.watchedAction}
+            {translations.watchedAction}
           </button>
         );
     }
@@ -277,7 +273,7 @@ export default function LibraryActions({
         )}
         
         {/* Notes button */}
-        {!isCondensed && (
+        {(
           <button
             onClick={() => actions?.onNotesEdit?.(item)}
             className={buttonClass}
@@ -420,7 +416,7 @@ export default function LibraryActions({
         )}
         
         {/* Pro features */}
-        {!isCondensed && (
+        {(
           <div className="space-y-2 pt-2 border-t" style={{ borderColor: "var(--line)" }}>
 
             <button
@@ -471,8 +467,8 @@ export default function LibraryActions({
       {/* Status buttons */}
       {renderStatusButtons()}
       
-      {/* Notes button (if not condensed) */}
-      {!isCondensed && (
+      {/* Notes button */}
+      {(
         <button
           onClick={() => actions?.onNotesEdit?.(item)}
           className={buttonClass}

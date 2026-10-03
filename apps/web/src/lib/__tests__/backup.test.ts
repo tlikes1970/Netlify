@@ -17,7 +17,6 @@ const defaults = {
   },
   layout: {
     theme: "dark",
-    condensedView: false,
     homePageLists: ["up-next"],
     forYouGenres: ["horror"],
     episodeTracking: true,
@@ -423,3 +422,19 @@ it('retains compatible custom order and network selections through backup valida
 });
 
 it('empty and oversized existing Notes/Tags retain supported backup representation',()=>{const data=fixture();data.library[0].userNotes='';data.library[0].tags=[];expect(parseBackup(JSON.stringify(data)).library[0]).toMatchObject({userNotes:'',tags:[]});data.library[0].userNotes='x'.repeat(6000);data.library[0].tags=['Family','family','x'.repeat(60),...Array.from({length:26},(_,i)=>`tag${i}`)];expect(parseBackup(JSON.stringify(data)).library[0]).toMatchObject({userNotes:data.library[0].userNotes,tags:data.library[0].tags});});
+
+
+it("accepts old condensed backups and restores adjacent layout preferences", async () => {
+  const backup=fixture();
+  Object.assign(backup.settings.layout,{condensedView:true});
+  backup.settings.layout.theme="light";
+  const validated=validateBackup(parseBackup(JSON.stringify(backup)));
+  const writes=restoreWrites(validated,localStorage,null);
+  await applyRestore(writes,localStorage,async()=>{},()=>true);
+  const restored=JSON.parse(localStorage.getItem("flicklet.settings.v2")!);
+  expect(restored.layout.theme).toBe("light");
+  expect(restored.layout.episodeTracking).toBe(true);
+  expect(restored.layout.forYouGenres).toEqual(["horror"]);
+  expect(restored.layout).not.toHaveProperty("condensedView");
+  expect(JSON.parse(localStorage.getItem("flicklet.library.v2")!)["tv:10"].userNotes).toBe("Keep these notes");
+});

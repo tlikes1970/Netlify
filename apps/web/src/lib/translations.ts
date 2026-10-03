@@ -146,14 +146,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     discoveryRecommendationsDescription:
       "Number of recommendations to show in Discovery",
     otherLayoutSettings: "Other Layout Settings",
-    condensedView: "Condensed View",
-    condensedViewDescription:
-      "Show more items per screen with smaller cards and shorter button labels. Hides episode tracking and detailed features.",
     enableEpisodeTracking: "Enable Episode Tracking",
-    episodeTrackingCondensedProRequired:
-      "Episode tracking requires Full Access.",
-    episodeTrackingCondensedProAllowed:
-      "Full Access includes episode tracking",
     proFeatures: "Full Access features",
     themePacksComingSoon: "",
 
@@ -568,14 +561,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     discoveryRecommendationsDescription:
       "Número de recomendaciones que se muestran en Descubrir",
     otherLayoutSettings: "Otras opciones de diseño",
-    condensedView: "Vista condensada",
-    condensedViewDescription:
-      "Muestra más elementos por pantalla con tarjetas más pequeñas y etiquetas de botones más cortas. Oculta seguimiento de episodios y funciones detalladas.",
     enableEpisodeTracking: "Habilitar Seguimiento de Episodios",
-    episodeTrackingCondensedProRequired:
-      "El seguimiento de episodios requiere Acceso completo.",
-    episodeTrackingCondensedProAllowed:
-      "Acceso completo incluye seguimiento de episodios",
     proFeatures: "Funciones de Acceso completo",
     themePacksComingSoon: "",
 

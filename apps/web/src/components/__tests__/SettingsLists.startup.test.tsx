@@ -23,6 +23,8 @@ afterEach(()=>{cleanup();vi.restoreAllMocks();clearBillingCache()});
 it.each([false,true])('real billing/pro/entitlement hooks recover Settings after unresolved access (previously purchased=%s)',async previousPaid=>{
   if(previousPaid) setEntitlementsCache(resolveEntitlements({isAuthenticated:true,paidPro:true,proSource:'android',trialStartMs:null}));
   render(renderSettingsSection('display',{isMobile:true}));
+  expect(screen.queryByRole('checkbox',{name:'Condensed View'})).toBeNull();
+  expect(screen.getByRole('checkbox',{name:'Enable Episode Tracking'})).toBeVisible();
   expect(screen.queryByRole('button',{name:'Create New List'})).toBeNull();
   expect(customListManager.getUserLists().maxLists).toBe(3);
   await act(async()=>{resolveBilling({isPro:true,source:'android',purchaseType:'one_time',currentPeriodEnd:null});});

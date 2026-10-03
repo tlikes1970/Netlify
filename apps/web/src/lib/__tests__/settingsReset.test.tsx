@@ -253,7 +253,6 @@ describe("preference-only reset", () => {
       expect(result.notifications[name]).toBe(defaults.notifications[name]);
     for (const name of [
       "theme",
-      "condensedView",
       "homePageLists",
       "forYouGenres",
       "episodeTracking",
@@ -486,4 +485,21 @@ describe("preference-only reset", () => {
     expect(mocks.transaction).toHaveBeenCalledTimes(1);
     expect(manager.getSettings().layout.theme).toBe("dark");
   });
+});
+
+
+it("tolerates retired condensed values in local and cloud settings", async () => {
+  const old=fixture();
+  old.layout.condensedView=true;
+  old.layout.theme="light";
+  localStorage.setItem(key,JSON.stringify(old));
+  const local=new SettingsManager();
+  expect(local.getSettings().layout.theme).toBe("light");
+  expect(local.getSettings().preferredName).toBe(old.preferredName);
+  mocks.user={uid:"owner"} as AuthUser;
+  mocks.server={settings:{...old,fullSettings:old}};
+  const cloud=new SettingsManager();
+  await cloud.loadSettingsFromFirebase("owner");
+  expect(cloud.getSettings().layout.theme).toBe("light");
+  expect(cloud.getSettings().preferredName).toBe(old.preferredName);
 });

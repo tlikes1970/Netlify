@@ -62,7 +62,6 @@ export interface Settings {
   
   // Layout
   layout: {
-    condensedView: boolean;
     theme: Theme;
     homePageLists: string[];
     forYouGenres: string[];
@@ -97,7 +96,6 @@ export const DEFAULT_SETTINGS: Settings = {
   },
   
   layout: {
-    condensedView: false,
     theme: 'dark',
     homePageLists: ['currently-watching', 'up-next', 'for-you-drama', 'for-you-comedy', 'for-you-horror', 'feedback'],
     forYouGenres: ['drama', 'comedy', 'horror'],
@@ -120,7 +118,7 @@ export const DEFAULT_SETTINGS: Settings = {
 /** Legacy community settings may still exist in localStorage/Firestore until rewritten. */
 type SettingsPayload = Omit<Partial<Settings>, 'layout' | 'community'> & {
   community?: { followedTopics?: string[] };
-  layout?: Partial<Settings['layout']>;
+  layout?: Partial<Settings['layout']> & { condensedView?: boolean }; // Tolerated legacy preference; never rendered.
 };
 
 /** Remove retired community fields from stored or remote settings payloads. */
@@ -169,7 +167,6 @@ export function resetPreferences<T extends Settings>(current: T): T {
     },
     layout: {
       ...current.layout,
-      condensedView: defaults.layout.condensedView,
       theme: defaults.layout.theme,
       homePageLists: defaults.layout.homePageLists,
       forYouGenres: defaults.layout.forYouGenres,
@@ -186,7 +183,6 @@ function resetPreferenceFields(settings: Settings): Record<string, unknown> {
     'notifications.upcomingEpisodes': settings.notifications.upcomingEpisodes,
     'notifications.weeklyDiscover': settings.notifications.weeklyDiscover,
     'notifications.monthlyStats': settings.notifications.monthlyStats,
-    'layout.condensedView': settings.layout.condensedView,
     'layout.theme': settings.layout.theme,
     'layout.homePageLists': settings.layout.homePageLists,
     'layout.forYouGenres': settings.layout.forYouGenres,
