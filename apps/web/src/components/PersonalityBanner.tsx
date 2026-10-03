@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { usePreferredName } from "../hooks/usePreferredName";
 import { useSettings, resolveFlickletLine } from "../lib/settings";
+import HomeMarquee from "./HomeMarquee";
 import { Library } from "../lib/storage";
 
 /**
@@ -28,7 +29,7 @@ export function PersonalityBanner() {
 
   return (
     <div
-      className="w-full px-3 py-2 text-center text-sm leading-snug border-b"
+      className="personality-banner w-full px-3 py-2 text-center text-sm leading-snug border-b"
       style={{
         color: "var(--muted)",
         backgroundColor: "var(--bg)",
@@ -37,7 +38,7 @@ export function PersonalityBanner() {
       role="note"
       data-testid="personality-banner"
     >
-      {line}
+      <HomeMarquee messages={[line]} />
     </div>
   );
 }

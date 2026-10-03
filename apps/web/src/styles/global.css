@@ -1209,6 +1209,7 @@ input:focus-visible {
 }
 
 .flicklet-marquee-container {
+  text-align: left;
   position: relative;
   overflow: hidden;
   width: 100%;
@@ -1219,23 +1220,27 @@ input:focus-visible {
   display: inline-block;
   white-space: nowrap;
   will-change: transform;
-  /* NO animation keyframes here - JS drives transform via requestAnimationFrame */
-  /* No extra padding/background - text sits directly on page bg */
+  vertical-align: middle;
+  max-width: none;
 }
 
-/* Phone copy must be readable as a complete message rather than mid-ticker. */
-.flicklet-marquee-track--static {
-  display: block;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  text-align: center;
-  transform: none !important;
+@keyframes flicklet-ticker-pass {
+  from { transform: translateX(var(--ticker-start)); }
+  to { transform: translateX(var(--ticker-end)); }
 }
+.flicklet-marquee-track--moving {
+  animation: flicklet-ticker-pass var(--ticker-duration) linear both;
+}
+.personality-banner .flicklet-marquee-outer { margin: 0; padding: 0; }
 
-/* Reduced motion: no movement, just show text left-aligned */
 @media (prefers-reduced-motion: reduce) {
   .flicklet-marquee-track {
-    transform: translateX(0) !important;
+    animation: none;
+    transform: none;
+    display: block;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    will-change: auto;
   }
 }
 

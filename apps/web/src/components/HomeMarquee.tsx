@@ -1,132 +1,51 @@
-/**
- * Process: Home Marquee
- * Purpose: Display horizontal scrolling text ticker with rotating messages between tabs and "Your Shows" section on Home page
- * Data Source: HOME_MARQUEE_MESSAGES config file
- * Update Path: Edit apps/web/src/config/homeMarqueeMessages.ts to add/change messages
- * Dependencies: JS-driven animation using requestAnimationFrame (no CSS keyframes)
- */
-
-import { useState, useEffect, useRef } from 'react';
-import { useIsMobileScreen } from '../hooks/useDeviceDetection';
+import { useLayoutEffect, useState, useRef } from 'react';
 
 interface HomeMarqueeProps {
   messages: string[];
-  autoRotate?: boolean;      // default true
-  speedPxPerSecond?: number; // default ~70 px/s
+  autoRotate?: boolean;
+  speedPxPerSecond?: number;
 }
 
-export default function HomeMarquee({ 
-  messages, 
-  autoRotate = true, 
-  speedPxPerSecond = 70 
-}: HomeMarqueeProps) {
+/** One full right-to-left pass per message, preserving the historical 70px/s speed. */
+export default function HomeMarquee({ messages, autoRotate = true, speedPxPerSecond = 70 }: HomeMarqueeProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const trackRef = useRef<HTMLDivElement | null>(null);
-  const isMobile = useIsMobileScreen();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const index = currentIndex < messages.length ? currentIndex : 0;
+  const message = messages[index];
 
-  // Reset index when messages change
-  useEffect(() => {
-    if (currentIndex >= messages.length) {
-      setCurrentIndex(0);
-    }
-  }, [messages.length, currentIndex]);
-
-  // JS-driven ticker animation using requestAnimationFrame
-  // Measures actual pixel widths and animates deterministically
-  useEffect(() => {
-    if (isMobile || !autoRotate || messages.length === 0) return;
-
+  useLayoutEffect(() => {
     const container = containerRef.current;
     const track = trackRef.current;
     if (!container || !track) return;
-
-    let frameId: number | null = null;
-    let cancelled = false;
-
-    // Wait for next frame to ensure DOM has settled after key change
-    const startAnimation = () => {
-      // Measure actual widths
-      const containerWidth = container.getBoundingClientRect().width;
-      const trackWidth = track.getBoundingClientRect().width;
-
-      // Distance from just off-screen right to just off-screen left
-      const startX = containerWidth;
-      const endX = -trackWidth;
-      const distance = startX - endX; // positive value
-
-      // Calculate duration based on speed
-      const durationMs = (distance / speedPxPerSecond) * 1000;
-
-      let startTime: number | null = null;
-
-      const animate = (timestamp: number) => {
-        if (cancelled) return;
-        if (startTime === null) startTime = timestamp;
-
-        const elapsed = timestamp - startTime;
-        const progress = Math.min(elapsed / durationMs, 1);
-
-        // Linear interpolation from startX to endX
-        const x = startX + (endX - startX) * progress;
-        track.style.transform = `translateX(${x}px)`;
-
-        if (progress < 1) {
-          frameId = requestAnimationFrame(animate);
-        } else {
-          // One full pass completed; advance to next message
-          if (messages.length > 1) {
-            setCurrentIndex((prev) => (prev + 1) % messages.length);
-          } else {
-            // Single message: restart the animation
-            startTime = null;
-            track.style.transform = `translateX(${startX}px)`;
-            frameId = requestAnimationFrame(animate);
-          }
-        }
-      };
-
-      // Initialize position before starting
-      track.style.transform = `translateX(${startX}px)`;
-      frameId = requestAnimationFrame(animate);
+    const measure = () => {
+      const width = container.clientWidth;
+      const textWidth = track.scrollWidth;
+      track.style.setProperty('--ticker-start', `${width}px`);
+      track.style.setProperty('--ticker-end', `${-textWidth}px`);
+      track.style.setProperty('--ticker-duration', `${(width + textWidth) / Math.max(1, speedPxPerSecond)}s`);
     };
+    measure();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", measure);
+      return () => window.removeEventListener("resize", measure);
+    }
+    const observer = new ResizeObserver(measure);
+    observer.observe(container);
+    observer.observe(track);
+    return () => observer.disconnect();
+  }, [message, speedPxPerSecond]);
 
-    // Start animation on next frame to ensure layout is complete
-    const timeoutId = setTimeout(() => {
-      requestAnimationFrame(startAnimation);
-    }, 0);
-
-    return () => {
-      cancelled = true;
-      clearTimeout(timeoutId);
-      if (frameId !== null) cancelAnimationFrame(frameId);
-    };
-  }, [autoRotate, currentIndex, isMobile, messages.length, speedPxPerSecond]);
-
-  // Don't render if no messages
-  if (messages.length === 0) {
-    return null;
-  }
-
-  const currentMessage = messages[currentIndex];
-
+  if (!messages.length) return null;
   return (
     <div className="px-4 flicklet-marquee-outer">
       <div ref={containerRef} className="flicklet-marquee-container">
-        <div
-          ref={trackRef}
-          key={currentIndex}
-          className={`flicklet-marquee-track${isMobile ? ' flicklet-marquee-track--static' : ''}`}
-          style={{ 
-            color: "var(--text)", 
-            fontSize: "0.875rem"
-          }}
-        >
-          {currentMessage}
+        <div ref={trackRef} key={`${index}:${message}`} className={`flicklet-marquee-track${autoRotate ? ' flicklet-marquee-track--moving' : ''}`}
+          style={{ fontSize: '0.875rem', animationIterationCount: messages.length === 1 ? 'infinite' : 1 }}
+          onAnimationEnd={() => { if (autoRotate) setCurrentIndex((index + 1) % messages.length); }}>
+          {message}
         </div>
       </div>
     </div>
   );
 }
-
-
