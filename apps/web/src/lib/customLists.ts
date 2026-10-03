@@ -6,6 +6,7 @@ import * as React from "react";
 import type { CustomList, UserLists, ListName } from "../state/library.types";
 import { getMaxCustomLists } from "./proConfig";
 import { guardMutation } from "./readOnlyGuard";
+import { subscribeEntitlements } from "./entitlements";
 
 const CUSTOM_LISTS_KEY = "flicklet.customLists.v2";
 
@@ -26,6 +27,11 @@ class CustomListManager {
     this.userLists = this.loadUserLists();
     // Update maxLists based on current Pro status
     this.updateMaxLists();
+    subscribeEntitlements(() => {
+      const previousLimit = this.userLists.maxLists;
+      this.updateMaxLists();
+      if (previousLimit !== this.userLists.maxLists) this.emitChange();
+    });
     // Initialize last synced counts
     this.userLists.customLists.forEach((list) => {
       this.lastSyncedCounts.set(list.id, list.itemCount);

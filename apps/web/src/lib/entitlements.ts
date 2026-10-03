@@ -228,8 +228,18 @@ let cachedEntitlements: EntitlementState = resolveEntitlements({
   trialStartMs: null,
 });
 
+const entitlementSubscribers = new Set<() => void>();
+
+export function subscribeEntitlements(callback: () => void): () => void {
+  entitlementSubscribers.add(callback);
+  return () => { entitlementSubscribers.delete(callback); };
+}
+
 export function setEntitlementsCache(state: EntitlementState): void {
+  const accessChanged = cachedEntitlements.hasFullAccess !== state.hasFullAccess
+    || cachedEntitlements.isReadOnlyMode !== state.isReadOnlyMode;
   cachedEntitlements = state;
+  if (accessChanged) entitlementSubscribers.forEach(callback => callback());
 }
 
 export function getEntitlementsSync(): EntitlementState {
