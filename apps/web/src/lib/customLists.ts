@@ -2,7 +2,6 @@ import { Library } from "./storage";
 import { recoverLocalRestore } from './restoreRecovery';
 import { isRestoring } from './restoreBarrier';
 import { useEffect, useState } from "react";
-import * as React from "react";
 import type { CustomList, UserLists, ListName } from "../state/library.types";
 import { getMaxCustomLists } from "./proConfig";
 import { guardMutation } from "./readOnlyGuard";
@@ -151,6 +150,7 @@ class CustomListManager {
 
     this.userLists.customLists.push(newList);
     this.saveUserLists();
+    Library.syncCustomListDefinitions("customListCreate");
     return newList;
   }
 
@@ -173,6 +173,7 @@ class CustomListManager {
 
     this.userLists.customLists[listIndex] = updatedList;
     this.saveUserLists();
+    Library.syncCustomListDefinitions("customListUpdate");
     return updatedList;
   }
 
@@ -334,42 +335,26 @@ export const customListManager = new CustomListManager();
 
 // React hook for using custom lists
 export function useCustomLists(): UserLists {
-  const [userLists, setUserLists] = useState(customListManager.getUserLists());
-  // Use ref to track previous value for accurate logging
-  const prevListsRef = React.useRef(userLists);
+  const [userLists, setUserLists] = useState(() => customListManager.getUserLists());
 
   useEffect(() => {
-    // ⚠️ REMOVED: flickerDiagnostics logging disabled
-    setUserLists(customListManager.getUserLists());
-    const unsubscribe = customListManager.subscribe(() => {
-      const newLists = customListManager.getUserLists();
-
-      // Only log and update if value actually changed
-      const prevLength = prevListsRef.current.customLists.length;
-      const newLength = newLists.customLists.length;
-      const hasChanged =
-        prevListsRef.current.selectedListId !== newLists.selectedListId ||
-        prevListsRef.current.maxLists !== newLists.maxLists ||
-        prevLength !== newLength ||
-        newLists.customLists.some((list, idx) => {
-          const prevList = prevListsRef.current.customLists[idx];
-          if (!prevList) return true;
-          return (
-            list.id !== prevList.id ||
-            list.name !== prevList.name ||
-            list.description !== prevList.description ||
-            list.color !== prevList.color ||
-            list.itemCount !== prevList.itemCount ||
-            list.isDefault !== prevList.isDefault
-          );
-        });
-
-      if (hasChanged) {
-        // ⚠️ REMOVED: flickerDiagnostics logging disabled
-        prevListsRef.current = newLists;
-        setUserLists(newLists);
-      }
-    });
+    const publish = () => {
+      const next = customListManager.getUserLists();
+      setUserLists(previous => {
+        const changed = previous.selectedListId !== next.selectedListId
+          || previous.maxLists !== next.maxLists
+          || previous.customLists.length !== next.customLists.length
+          || next.customLists.some((list, index) => {
+            const old = previous.customLists[index];
+            return !old || list.id !== old.id || list.name !== old.name
+              || list.description !== old.description || list.color !== old.color
+              || list.itemCount !== old.itemCount || list.isDefault !== old.isDefault;
+          });
+        return changed ? next : previous;
+      });
+    };
+    const unsubscribe = customListManager.subscribe(publish);
+    publish();
     return unsubscribe;
   }, []);
 

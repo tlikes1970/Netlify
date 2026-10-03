@@ -460,6 +460,15 @@ export const Library = {
     if (currentUser) window.dispatchEvent(new CustomEvent("library:changed", { detail: { uid: currentUser.uid, operation: "customListDelete" } }));
   },
 
+  /** Definitions share the normal queued watchlists write, without changing titles. */
+  syncCustomListDefinitions(operation: "customListCreate" | "customListUpdate") {
+    if (isRestoring()) return;
+    const currentUser = getCurrentFirebaseUser();
+    if (currentUser) window.dispatchEvent(new CustomEvent("library:changed", {
+      detail: { uid: currentUser.uid, operation },
+    }));
+  },
+
   remove(id: string | number, mediaType: MediaType) {
     if (!guardMutation()) return;
     const key = k(id, mediaType);
