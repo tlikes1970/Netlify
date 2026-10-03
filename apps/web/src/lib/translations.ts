@@ -200,7 +200,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
       'Choose up to three genre rows for your home page. Each row pairs a main genre with a subgenre. Titles already on your lists are hidden automatically.',
     forYouAddAnotherRow: "+ Add Another Row",
     forYouTipText:
-      "💡 Tip: For You updates as your lists change. Pick genres you enjoy — we personalize what shows up using your tastes and tracking activity.",
+      "💡 Tip: Choose genres for your For You rows. Titles already in your Library are hidden.",
 
     // Notifications
     notificationTypes: "Notification Types",
@@ -237,7 +237,6 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     themePacks: "",
     holidayAndMovieThemes: "",
     socialFeatures: "Community features and shared watchlists among friends",
-    flickwordTriviaSharedWatchlists: "Shared watchlists among friends",
     bloopersBehindTheScenes:
       "Shows Like This and Extras (activates buttons on show cards)",
     activatesButtonOnShowCards: "Activates button on show cards",
@@ -349,10 +348,6 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     feedback: "Feedback",
 
     // Games
-    flickword: "FlickWord",
-    flickword_tagline: "Wordle-style daily word play",
-    daily_trivia: "Daily Trivia",
-    daily_trivia_tagline: "Fresh question, new bragging rights",
     play_now: "Play Now",
     close_game: "Close Game",
     games: "Games",
@@ -617,7 +612,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
       'Elige hasta tres filas de género para tu página principal. Cada fila combina un género principal con un subgénero. Los títulos que ya están en tus listas no se muestran.',
     forYouAddAnotherRow: "+ Agregar otra fila",
     forYouTipText:
-      "💡 Consejo: Para ti se actualiza cuando cambian tus listas. Elige géneros que te gusten; personalizamos lo que ves según tus gustos y tu actividad.",
+      "💡 Consejo: Elige géneros para tus filas de Para ti. Los títulos que ya están en tu Biblioteca no se muestran.",
 
     // Notifications
     notificationTypes: "Tipos de Notificación",
@@ -656,7 +651,6 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     holidayAndMovieThemes: "",
     socialFeatures:
       "Funciones de comunidad y listas compartidas entre amigos",
-    flickwordTriviaSharedWatchlists: "Listas compartidas entre amigos",
     bloopersBehindTheScenes:
       "Shows Like This y Extras (activa botones en tarjetas)",
     activatesButtonOnShowCards: "Activa botón en tarjetas de programas",
@@ -771,10 +765,6 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     feedback: "Comentarios",
 
     // Games
-    flickword: "FlickWord",
-    flickword_tagline: "Juego de palabras diario estilo Wordle",
-    daily_trivia: "Trivia Diaria",
-    daily_trivia_tagline: "Pregunta fresca, nuevos derechos de presumir",
     play_now: "Jugar Ahora",
     close_game: "Cerrar Juego",
     games: "Juegos",

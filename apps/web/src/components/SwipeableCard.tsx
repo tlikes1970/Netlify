@@ -1,5 +1,4 @@
 import React from 'react';
-import { SwipeOverflowContext } from './SwipeOverflowContext';
 import type { MediaItem, CardActionHandlers, CardContext } from '../components/cards/card.types';
 import { useSwipe } from '../lib/useSwipe';
 import { useIsDesktop } from '../hooks/useDeviceDetection';
@@ -28,7 +27,6 @@ export default function SwipeableCard({
   // Auto-disable swipe on desktop
   const { isDesktop: isDesktopDevice } = useIsDesktop();
   const swipeDisabled = disableSwipe || isDesktopDevice;
-  const [overflowOpen, setOverflowOpen] = React.useState(false);
 
   // Define swipe actions based on context
   const getSwipeActions = () => {
@@ -94,6 +92,11 @@ export default function SwipeableCard({
         ];
 
       case 'tab-foryou':
+        return [{
+          id: 'want', label: 'Want to Watch', icon: '', color: '#ffffff',
+          backgroundColor: '#ef4444', action: () => actions?.onWant?.(item)
+        }];
+
       case 'search':
       case 'home':
         return [
@@ -208,8 +211,7 @@ export default function SwipeableCard({
   };
 
   return (
-    <SwipeOverflowContext.Provider value={setOverflowOpen}>
-    <div className="group/swipe-card relative overflow-hidden">
+    <div className="relative overflow-hidden">
       {/* Swipe Action Overlays */}
       {previewAction && (
         <>
@@ -292,18 +294,6 @@ export default function SwipeableCard({
         </div>
       </div>
       
-      {/* Swipe Instructions (only show on mobile) */}
-      {!swipeState.isSwipeActive && !isDesktopDevice && !overflowOpen && (
-        <div className="pointer-events-none absolute top-2 right-2 z-20 opacity-0 group-hover/swipe-card:opacity-100 transition-opacity duration-200">
-          <div className="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
-            <div className="flex items-center gap-1">
-              <span>👆</span>
-              <span>Swipe for actions</span>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
-    </SwipeOverflowContext.Provider>
   );
 }

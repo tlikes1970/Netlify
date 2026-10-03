@@ -224,14 +224,14 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </button>
           </div>
 
-          {error === 'blocked' ? (
+          {isBlocked || error === 'blocked' ? (
             <div className="mb-4 p-4 rounded-lg" 
                  style={{ backgroundColor: '#fff3cd', borderColor: '#ffc107', border: '2px solid' }}>
               <p className="mb-2 font-semibold" style={{ color: '#856404' }}>
                 Sign-in needs your device's browser
               </p>
               <p className="mb-3 text-sm" style={{ color: '#856404' }}>
-                This screen is an embedded browser, which Google doesn't allow for security reasons. 
+                Sign-in may not work in this browser or installed web app.
                 Tap 'Open in browser' to continue securely.
               </p>
               <a

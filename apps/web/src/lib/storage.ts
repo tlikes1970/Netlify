@@ -233,8 +233,6 @@ export function addToListWithConfirmation(
 ): boolean | Promise<boolean> {
   const currentList = Library.getCurrentList(item.id, item.mediaType);
 
-  // Check if this is the first show being added (for onboarding completion)
-  const wasEmpty = Library.getAll().length === 0;
 
   if (currentList && currentList !== targetList) {
     const currentListName = getListDisplayName(currentList);
@@ -249,11 +247,6 @@ export function addToListWithConfirmation(
         return import("./statusTransitions").then(({ setNotInterested }) => setNotInterested(item)).then(saved => { if (saved) onConfirm?.(); return saved; });
       } else { Library.upsert(item, targetList); onConfirm?.(); }
 
-      // Check if this was the first show added
-      if (wasEmpty && targetList === "watching") {
-        window.dispatchEvent(new CustomEvent("onboarding:firstShowAdded"));
-      }
-
       return true;
     }
     return false;
@@ -262,11 +255,6 @@ export function addToListWithConfirmation(
     if (targetList === "not") {
       return import("./statusTransitions").then(({ setNotInterested }) => setNotInterested(item)).then(saved => { if (saved) onConfirm?.(); return saved; });
     } else { Library.upsert(item, targetList); onConfirm?.(); }
-
-    // Check if this was the first show added (for onboarding) - only for "watching" list
-    if (wasEmpty && targetList === "watching") {
-      window.dispatchEvent(new CustomEvent("onboarding:firstShowAdded"));
-    }
 
     return true;
   }

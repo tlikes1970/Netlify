@@ -6,7 +6,6 @@ import {
   Theater,
 } from "@/lib/tmdb";
 import { makeGeoResolver } from "@/utils/geoClient";
-import { getOnboardingCompleted } from "@/lib/onboarding";
 
 export interface LocationData {
   latitude: number;
@@ -44,8 +43,6 @@ export function useLocation() {
     }
     
     // No saved location, proceed with auto-detection
-    let eventHandler: (() => void) | null = null;
-    let fallbackTimeoutId: ReturnType<typeof setTimeout> | null = null;
     let detectionTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
     const requestLocation = () => {
@@ -139,42 +136,10 @@ export function useLocation() {
       }
     };
 
-    // Wait for onboarding to complete before requesting location permission
-    // If onboarding is already completed, proceed immediately
-    if (getOnboardingCompleted()) {
-      requestLocation();
-    } else {
-      // Otherwise, wait for onboarding completion event
-      eventHandler = () => {
-        requestLocation();
-        if (eventHandler) {
-          window.removeEventListener("onboarding:completed", eventHandler);
-        }
-        if (fallbackTimeoutId) {
-          clearTimeout(fallbackTimeoutId);
-        }
-      };
-
-      window.addEventListener("onboarding:completed", eventHandler);
-
-      // Fallback: if onboarding doesn't complete within 3 minutes, proceed anyway
-      // This gives users plenty of time to complete the onboarding flow
-      fallbackTimeoutId = setTimeout(() => {
-        if (eventHandler) {
-          window.removeEventListener("onboarding:completed", eventHandler);
-        }
-        requestLocation();
-      }, 180000); // 3 minutes
-    }
+    requestLocation();
 
     // Cleanup
     return () => {
-      if (eventHandler) {
-        window.removeEventListener("onboarding:completed", eventHandler);
-      }
-      if (fallbackTimeoutId) {
-        clearTimeout(fallbackTimeoutId);
-      }
       if (detectionTimeoutId) {
         clearTimeout(detectionTimeoutId);
       }

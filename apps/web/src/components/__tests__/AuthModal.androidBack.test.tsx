@@ -1,5 +1,5 @@
-import { act, render } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { act, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import AuthModal from "@/components/AuthModal";
 
@@ -26,4 +26,14 @@ describe("AuthModal Android Back", () => {
     expect(handled).toBe(true);
     expect(onClose).toHaveBeenCalledOnce();
   });
+});
+
+afterEach(()=>vi.restoreAllMocks());
+it('offers browser recovery in standalone web-app context without claiming an embedded browser',()=>{
+ vi.spyOn(window,'matchMedia').mockReturnValue({matches:true,addListener:vi.fn(),removeListener:vi.fn()} as unknown as MediaQueryList);
+ render(<AuthModal isOpen onClose={()=>{}}/>);
+ expect(screen.getByRole('button',{name:/Google/})).toBeDisabled();
+ expect(screen.getByText(/Sign-in may not work in this browser or installed web app/)).toBeInTheDocument();
+ const link=screen.getByRole('link',{name:'Open in Browser'});
+ expect(link).toHaveAttribute('target','_blank');expect(link.getAttribute('href')).toContain('redirect_bounce=1');
 });

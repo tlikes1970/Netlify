@@ -619,8 +619,8 @@ export function DragHandle({
           onKeyboardReorder?.(e.key === "ArrowUp" ? "up" : "down");
         }
       }}
-      title="Drag to reorder (Arrow Up/Down to move with keyboard)"
-      aria-label={`Drag to reorder${itemTitle ? ` ${itemTitle}` : ""}. Press Arrow Up or Down to move with keyboard.`}
+      title="Drag to reorder; on touch, hold then drag. Use Arrow Up/Down with a keyboard."
+      aria-label={`Drag to reorder${itemTitle ? ` ${itemTitle}` : ""}. On touch, hold then drag. Press Arrow Up or Down to move with keyboard.`}
       role="button"
       tabIndex={0}
       aria-grabbed={isDraggingState}

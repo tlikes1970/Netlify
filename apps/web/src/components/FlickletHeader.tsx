@@ -169,7 +169,7 @@ function AppTitle({ text, onClick }: { text: string; onClick?: () => void }) {
   };
 
   return (
-    <div data-onboarding-id="home-header">
+    <div>
       <h1
         className={`max-w-full select-none text-balance font-extrabold tracking-tight text-2xl leading-tight sm:text-3xl md:text-5xl lg:text-6xl bg-gradient-to-r from-fuchsia-500 via-pink-500 to-amber-400 bg-clip-text text-transparent drop-shadow-[0_1px_0_rgba(255,255,255,0.35)] ${onClick ? "cursor-pointer" : ""}`}
         title={onClick ? `Go to ${text} home` : text}
@@ -1769,7 +1769,6 @@ function SearchRow({
               autoCorrect="off"
               autoCapitalize="off"
               aria-label="Search movies, shows, people"
-              data-onboarding-id="search-input"
               data-testid="search-input"
               placeholder={
                 searchMode === "tag"

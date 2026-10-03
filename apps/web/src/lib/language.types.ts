@@ -228,7 +228,6 @@ export interface LanguageStrings {
   themePacks: string;
   holidayAndMovieThemes: string;
   socialFeatures: string;
-  flickwordTriviaSharedWatchlists: string;
   bloopersBehindTheScenes: string;
   activatesButtonOnShowCards: string;
   additionalFeaturesTBD: string;
@@ -332,10 +331,6 @@ export interface LanguageStrings {
   feedback: string;
 
   // Games
-  flickword: string;
-  flickword_tagline: string;
-  daily_trivia: string;
-  daily_trivia_tagline: string;
   play_now: string;
   close_game: string;
   games: string;

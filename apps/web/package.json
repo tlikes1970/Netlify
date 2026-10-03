@@ -1,14 +1,13 @@
 {
   "name": "flicklet-web",
   "private": true,
-  "version": "2.0.34",
+  "version": "2.0.35",
   "type": "module",
   "engines": {
     "node": ">=18 <21"
   },
   "scripts": {
     "dev": "vite",
-    "prebuild": "npm run lexicon:build",
     "build": "tsc && vite build",
     "// NOTE: mobile builds use --mode mobile so API_BASE points at production backend.": "",
     "preview": "vite preview",
@@ -21,8 +20,7 @@
     "test:ui": "vitest --ui",
     "test:e2e": "cross-env VITEST=false playwright test",
     "test:e2e:ui": "cross-env VITEST=false playwright test --ui",
-    "analyze:bundle": "npm run build && node scripts/bundle-budget-check.js",
-    "lexicon:build": "node scripts/build-lexicon.mjs"
+    "analyze:bundle": "npm run build && node scripts/bundle-budget-check.js"
   },
   "dependencies": {
     "@capacitor/core": "^7.4.4",

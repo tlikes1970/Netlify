@@ -88,7 +88,7 @@ export function getErrorMessage(
  * Log error details to console in development mode only
  * Never exposes technical details to users
  * 
- * @param context - Where the error occurred (e.g., 'FlickWordGame', 'FeedbackPanel')
+ * @param context - Where the error occurred (e.g., 'FeedbackPanel')
  * @param error - The original error object
  * @param additionalInfo - Optional additional context
  */

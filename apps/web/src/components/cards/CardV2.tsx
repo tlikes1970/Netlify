@@ -310,7 +310,7 @@ export default function CardV2({
 
   // Mobile: wrap with SwipeableCard (swipe functionality + More menu)
   // Desktop: no wrapper at all (just the card + More menu)
-  if (isDesktop || disableSwipe) {
+  if (isDesktop.isDesktop || disableSwipe) {
     return cardContent;
   }
 

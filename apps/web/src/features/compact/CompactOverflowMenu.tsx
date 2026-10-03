@@ -1,7 +1,7 @@
 import { useTranslations } from "../../lib/language";
 import { Library } from "../../lib/storage";
 import ListSelectorModal from "../../components/ListSelectorModal";
-import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo, useContext } from "react";
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from "react";
 import { ActionItem, ActionContext } from "./actionsMap";
 import type {
   CardActionHandlers,
@@ -19,7 +19,6 @@ import {
   type MenuPlacement,
   getMenuViewportBounds,
 } from "./overflowMenuPlacement";
-import { SwipeOverflowContext } from '../../components/SwipeOverflowContext';
 interface CompactOverflowMenuProps {
   item: ActionItem;
   context: ActionContext;
@@ -42,11 +41,6 @@ export function CompactOverflowMenu({
   const translations = useTranslations();
   const [showLists, setShowLists] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const reportOverflowOpen = useContext(SwipeOverflowContext);
-  useLayoutEffect(() => {
-    reportOverflowOpen?.(isOpen);
-    return () => reportOverflowOpen?.(false);
-  }, [isOpen, reportOverflowOpen]);
   const [menuPosition, setMenuPosition] = useState<MenuPlacement | null>(null);
   const [positionReady, setPositionReady] = useState(false);
   const menuPanelRef = useRef<HTMLDivElement>(null);

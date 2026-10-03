@@ -13,7 +13,6 @@ vi.mock('@/lib/statusTransitions', () => ({setPrimaryStatus:vi.fn()}));
 let frame: FrameRequestCallback;
 let pointerDescriptor: PropertyDescriptor | undefined;
 const item={id:1,title:'Example',mediaType:'tv'} as MediaItem;
-function hint() { return screen.getByText('Swipe for actions').parentElement!.parentElement!.parentElement!; }
 function fixture() {
   const overflow=vi.fn();
   const navigate=vi.fn();
@@ -44,24 +43,18 @@ afterEach(() => {
   if(pointerDescriptor) Object.defineProperty(window,'PointerEvent',pointerDescriptor);
 });
 
-describe('non-blocking swipe instruction', () => {
-  it('renders one mobile hint with pointer events disabled and parent-controlled visibility', () => {
+describe('swipe without recurring advertisement', () => {
+  it('renders no recurring mobile advertisement', () => {
     fixture();
-    expect(screen.getAllByText('Swipe for actions')).toHaveLength(1);
-    expect(hint()).toHaveClass('pointer-events-none','opacity-0','group-hover/swipe-card:opacity-100');
-    expect(hint()).not.toHaveClass('hover:opacity-100');
-    expect(hint().parentElement).toHaveClass('group/swipe-card');
+    expect(screen.queryByText('Swipe for actions')).toBeNull();
   });
   it('retains absolute placement and the existing card structure without adding layout space', () => {
     const {surface}=fixture();
-    expect(hint()).toHaveClass('absolute','top-2','right-2','z-20');
-    expect(surface.parentElement).toBe(hint().parentElement);
     expect(surface.parentElement).toHaveClass('relative','overflow-hidden');
-    expect(surface.parentElement?.children).toHaveLength(2);
+    expect(surface.parentElement?.children).toHaveLength(1);
   });
   it('preserves overflow and card navigation callbacks while the hint exists', () => {
     const {overflow,navigate}=fixture();
-    expect(hint()).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button',{name:'More options'}));
     fireEvent.click(screen.getByRole('button',{name:'Open card'}));
     expect(overflow).toHaveBeenCalledOnce();
@@ -77,7 +70,7 @@ describe('non-blocking swipe instruction', () => {
     fireEvent.touchStart(surface,{touches:[{clientX:150,clientY:150}]});
     expect(screen.queryByText('Swipe for actions')).toBeNull();
     fireEvent.touchEnd(surface);
-    expect(screen.getByText('Swipe for actions')).toBeInTheDocument();
+    expect(screen.queryByText('Swipe for actions')).toBeNull();
     expect(setPrimaryStatus).not.toHaveBeenCalled();
   });
   it('retains the early preview without triggering a below-threshold action', () => {
@@ -87,7 +80,7 @@ describe('non-blocking swipe instruction', () => {
     expect(screen.queryByText('Swipe for actions')).toBeNull();
     fireEvent.touchEnd(surface);
     expect(setPrimaryStatus).not.toHaveBeenCalled();
-    expect(screen.getByText('Swipe for actions')).toBeInTheDocument();
+    expect(screen.queryByText('Swipe for actions')).toBeNull();
   });
   it.each([
     [100,'watched'],
@@ -97,7 +90,16 @@ describe('non-blocking swipe instruction', () => {
     touch(surface,distance);
     fireEvent.touchEnd(surface);
     expect(setPrimaryStatus).toHaveBeenCalledWith(item,status,{feedback:true});
-    expect(screen.getByText('Swipe for actions')).toBeInTheDocument();
+    expect(screen.queryByText('Swipe for actions')).toBeNull();
+  });
+  it('delegates Discovery swipe to the visible action callback exactly once', () => {
+    const onWant=vi.fn();
+    render(<SwipeableCard item={item} context="tab-foryou" actions={{onWant}}><article data-testid="discovery"/></SwipeableCard>);
+    const surface=screen.getByTestId('discovery').parentElement!.parentElement!;
+    touch(surface,100); fireEvent.touchEnd(surface);
+    expect(onWant).toHaveBeenCalledTimes(1);
+    expect(onWant).toHaveBeenCalledWith(item);
+    expect(setPrimaryStatus).not.toHaveBeenCalled();
   });
   it('retains the 200px displacement limit and resets the transform on release', () => {
     const {surface}=fixture();
@@ -112,7 +114,7 @@ describe('non-blocking swipe instruction', () => {
     const {surface}=fixture();
     fireEvent.touchStart(surface,{touches:[{clientX:150,clientY:150}]});
     fireEvent.touchEnd(surface);
-    expect(screen.getByText('Swipe for actions')).toBeInTheDocument();
+    expect(screen.queryByText('Swipe for actions')).toBeNull();
     expect(storage).not.toHaveBeenCalled();
     expect(vi.getTimerCount()).toBe(0);
     vi.useRealTimers();
@@ -138,10 +140,9 @@ function menuFixture() {
   return {...render(card(true)),onOpen,card};
 }
 
-describe('swipe hint with real overflow menu', () => {
+describe('swipe card with real overflow menu', () => {
   it('hides throughout an open menu and restores normal eligibility on close/reopen', () => {
     menuFixture();
-    expect(hint()).toHaveClass('pointer-events-none');
     fireEvent.click(screen.getByRole('button',{name:'More'}));
     expect(screen.getByRole('menu')).toBeInTheDocument();
     expect(screen.queryByText('Swipe for actions')).toBeNull();
@@ -151,11 +152,9 @@ describe('swipe hint with real overflow menu', () => {
     expect(screen.queryByText('Swipe for actions')).toBeNull();
     fireEvent.keyDown(document,{key:'Escape'});
     expect(screen.queryByRole('menu')).toBeNull();
-    expect(hint()).toHaveClass('pointer-events-none','group-hover/swipe-card:opacity-100');
     fireEvent.click(screen.getByRole('button',{name:'More'}));
     expect(screen.queryByText('Swipe for actions')).toBeNull();
     fireEvent.click(screen.getByRole('button',{name:'More'}));
-    expect(hint()).toBeInTheDocument();
   });
   it('preserves menu action and restores the hint when the action closes the menu', () => {
     const {onOpen}=menuFixture();
@@ -164,13 +163,11 @@ describe('swipe hint with real overflow menu', () => {
     fireEvent.click(screen.getByRole('menuitem',{name:'Open Details'}));
     expect(onOpen).toHaveBeenCalledWith(item);
     expect(screen.queryByRole('menu')).toBeNull();
-    expect(hint()).toBeInTheDocument();
   });
   it('clears local open state when the overflow child unmounts', () => {
     const {rerender,card}=menuFixture();
     fireEvent.click(screen.getByRole('button',{name:'More'}));
     expect(screen.queryByText('Swipe for actions')).toBeNull();
     rerender(card(false));
-    expect(hint()).toBeInTheDocument();
   });
 });

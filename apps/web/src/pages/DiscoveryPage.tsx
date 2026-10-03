@@ -94,6 +94,7 @@ export default function DiscoveryPage() {
 
   const actions = {
     onWant: (item: MediaItem) => {
+      if (!isAuthenticated) { handleSignIn(); return; }
       console.log("🎬 Discovery onWant called:", item);
       if (item.id && item.mediaType) {
         const existing = Library.getEntry(item.id, item.mediaType);

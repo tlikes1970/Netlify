@@ -53,13 +53,6 @@ export default defineConfig(({ mode }) => {
             'firebase-firestore': ['firebase/firestore'],
             'firebase-app': ['firebase/app'],
             'react-vendor': ['react', 'react-dom'],
-            games: [
-              './src/components/games/TriviaGame.tsx',
-              './src/components/games/FlickWordModal.tsx',
-              './src/components/games/TriviaModal.tsx',
-              './src/components/games/FlickWordStats.tsx',
-              './src/components/games/TriviaStats.tsx',
-            ],
             modals: [
               './src/components/modals/NotificationSettings.tsx',
               './src/components/modals/NotificationCenter.tsx',

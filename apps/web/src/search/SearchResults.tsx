@@ -369,7 +369,6 @@ export default function SearchResults({
  */
 export function SearchResultCard({
   item,
-  index,
   onRemove,
   actions,
 }: {
@@ -689,11 +688,6 @@ export function SearchResultCard({
     return (
       <button
         onClick={() => handleAction(action)}
-        data-onboarding-id={
-          action === "currently-watching" && index === 0
-            ? "search-add-button"
-            : undefined
-        }
         className={`px-2.5 py-1.5 rounded-lg text-xs transition-all duration-150 ease-out ${
           isPressed
             ? "scale-95 active:shadow-inner"

@@ -11,7 +11,6 @@ import HomeUpNextRail from "@/components/rails/HomeUpNextRail";
 import HomeMarquee from "@/components/HomeMarquee";
 import HomeForYouSection from "@/components/home/HomeForYouSection";
 import { ThemeToggleFAB } from "@/components/FABs";
-import OnboardingCoachmarks from "@/components/onboarding/OnboardingCoachmarks";
 import ScrollToTopArrow from "@/components/ScrollToTopArrow";
 import { lazy, Suspense } from "react";
 import { openSettingsSheet, closeSettingsSheet } from "@/components/settings/SettingsSheet";
@@ -58,7 +57,6 @@ import {
 import AuthModal from "@/components/AuthModal";
 import AuthConfigError from "@/components/AuthConfigError";
 import { isAuthInFlightInOtherTab } from "@/lib/authBroadcast";
-import { getOnboardingCompleted } from "@/lib/onboarding";
 import { backfillShowStatus } from "@/utils/backfillShowStatus";
 import { backfillSynopsis } from "@/utils/backfillSynopsis";
 import DebugAuthHUD from "@/components/DebugAuthHUD";
@@ -73,7 +71,6 @@ import {
   type AppView,
   type LibrarySegment,
   type NavTarget,
-  isLibrarySegment,
   resolveNavigation,
   readStoredLibrarySegment,
   writeStoredLibrarySegment,
@@ -195,7 +192,7 @@ export default function App() {
     type: "all",
   });
 
-  // Search handlers (defined early for use in onboarding effects)
+  // Search handlers
   const handleSearch = useCallback(
     (
       q: string,
@@ -244,64 +241,7 @@ export default function App() {
     writeStoredLibrarySegment(segment);
   });
 
-  // Handle onboarding navigation to search
-  useEffect(() => {
-    const handleNavigateToSearch = () => {
-      // Trigger search view by setting an empty query (will show search input)
-      handleSearch("", null, "all");
-    };
 
-    window.addEventListener(
-      "onboarding:navigate-to-search",
-      handleNavigateToSearch,
-    );
-    return () => {
-      window.removeEventListener(
-        "onboarding:navigate-to-search",
-        handleNavigateToSearch,
-      );
-    };
-  }, [handleSearch]);
-
-  // Handle first show added event (from onboarding)
-  useEffect(() => {
-    const handleFirstShowAdded = () => {
-      addToast("Added to Your Shows", "success");
-      // Navigate to home (onboarding step advancement handled by OnboardingCoachmarks)
-      navigateTo("home");
-    };
-
-    window.addEventListener("onboarding:firstShowAdded", handleFirstShowAdded);
-    return () => {
-      window.removeEventListener(
-        "onboarding:firstShowAdded",
-        handleFirstShowAdded,
-      );
-    };
-  }, [addToast, navigateTo]);
-
-  // Navigate to tab (e.g. from home CW rail "Go to Currently Watching" button)
-  useEffect(() => {
-    const handleNavigateToTab = (e: Event) => {
-      const detail = (e as CustomEvent<{ tab: string }>).detail;
-      const tab = detail?.tab;
-      if (!tab) return;
-      if (tab === "returning" || tab === "up-next") {
-        navigateTo(tab);
-        return;
-      }
-      if (tab === "home" || tab === "discovery" || tab === "library") {
-        navigateTo(tab as NavTarget);
-        return;
-      }
-      if (isLibrarySegment(tab)) {
-        navigateTo(tab);
-      }
-    };
-    window.addEventListener("navigate-to-tab", handleNavigateToTab);
-    return () =>
-      window.removeEventListener("navigate-to-tab", handleNavigateToTab);
-  }, [navigateTo]);
 
   // Handle "Search Works" button click from person search results
   useEffect(() => {
@@ -422,53 +362,9 @@ export default function App() {
       otherTabBlocking;
 
     if (!authLoading && authInitialized && !isAuthenticated && !shouldBlock) {
-      // Check if onboarding is completed before showing auth modal
-      let timeoutId: ReturnType<typeof setTimeout> | null = null;
-      let eventHandler: (() => void) | null = null;
-      let fallbackTimeoutId: ReturnType<typeof setTimeout> | null = null;
-
-      const showAuthModalIfReady = () => {
-        // If onboarding is already completed, show auth modal immediately
-        if (getOnboardingCompleted()) {
-          setShowAuthModal(true);
-          return;
-        }
-
-        // Otherwise, wait for onboarding completion event
-        eventHandler = () => {
-          setShowAuthModal(true);
-          if (eventHandler) {
-            window.removeEventListener("onboarding:completed", eventHandler);
-          }
-          if (fallbackTimeoutId) {
-            clearTimeout(fallbackTimeoutId);
-          }
-        };
-
-        window.addEventListener("onboarding:completed", eventHandler);
-
-        // Fallback: if onboarding doesn't complete within 3 minutes, show auth modal anyway
-        // This gives users plenty of time to complete the onboarding flow
-        fallbackTimeoutId = setTimeout(() => {
-          if (eventHandler) {
-            window.removeEventListener("onboarding:completed", eventHandler);
-          }
-          setShowAuthModal(true);
-        }, 180000); // 3 minutes
-      };
-
-      // Small delay to ensure the app has fully loaded
-      timeoutId = setTimeout(() => {
-        showAuthModalIfReady();
-      }, 1000);
-
-      return () => {
-        if (timeoutId) clearTimeout(timeoutId);
-        if (eventHandler) {
-          window.removeEventListener("onboarding:completed", eventHandler);
-        }
-        if (fallbackTimeoutId) clearTimeout(fallbackTimeoutId);
-      };
+      // Preserve the existing post-initialization delay without tour gating.
+      const timeoutId = setTimeout(() => setShowAuthModal(true), 1000);
+      return () => clearTimeout(timeoutId);
     }
   }, [authLoading, authInitialized, isAuthenticated, status]);
 
@@ -961,7 +857,6 @@ export default function App() {
                     <div className="space-y-4">
                       <HomeYourShowsRail />
                       <div
-                        data-onboarding-id="home-your-shows-between"
                         className="h-4"
                       />
                       <HomeUpNextRail />
@@ -1185,11 +1080,6 @@ export default function App() {
         {/* Auth Config Error Surface */}
         <AuthConfigError />
 
-        {/* Onboarding Coachmarks */}
-        {(() => {
-          console.log("[App] Rendering OnboardingCoachmarks component");
-          return <OnboardingCoachmarks />;
-        })()}
 
         {/* Debug HUD */}
         {showDebugHUD && (

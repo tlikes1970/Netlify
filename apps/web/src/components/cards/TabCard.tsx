@@ -825,8 +825,8 @@ export default function TabCard({
                 e.currentTarget.style.backgroundColor = "transparent";
               }
             }}
-            title="Drag to reorder (Arrow Up/Down to move with keyboard)"
-            aria-label="Drag to reorder. Press Arrow Up or Down to move with keyboard."
+            title="Drag to reorder; on touch, hold then drag. Use Arrow Up/Down with a keyboard."
+            aria-label="Drag to reorder. On touch, hold then drag. Press Arrow Up or Down to move with keyboard."
             tabIndex={0}
             draggable={true}
             onDragStart={(e) => {

@@ -1230,8 +1230,6 @@ export default function AdminExtrasPage({
                       <li>Theme Packs</li>
                       <li>Bloopers Access</li>
                       <li>Extras Access</li>
-                      <li>3 FlickWord games per day (vs 1 for free)</li>
-                      <li>50 Trivia questions (vs 10 for free)</li>
                     </ul>
                   </div>
                 )}
@@ -1254,8 +1252,6 @@ export default function AdminExtrasPage({
                       className="list-disc list-inside space-y-1 text-sm text-gray-700"
                       style={{ color: "var(--text)" }}
                     >
-                      <li>1 FlickWord game per day</li>
-                      <li>10 Trivia questions per day</li>
                       <li>No watch reminders</li>
                       <li>No theme packs</li>
                       <li>No bloopers/extras access</li>

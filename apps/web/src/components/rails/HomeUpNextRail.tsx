@@ -24,7 +24,7 @@ export default function HomeUpNextRail() {
   );
 
   return (
-    <div data-onboarding-id="up-next-section">
+    <div>
       <h3
         className="text-base font-semibold mb-3"
         style={{ color: "var(--text)" }}

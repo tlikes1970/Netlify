@@ -169,3 +169,28 @@ describe('Discovery real card behavior', () => {
     expect(screen.getByText('Building Your Recommendations')).toBeInTheDocument();
   });
 });
+
+describe('Discovery gesture uses the visible Want to Watch contract',()=>{
+ it.each(['button','swipe'])('signed-in %s saves one wishlist entry',method=>{
+  Reflect.deleteProperty(window,'PointerEvent');
+  let frame:FrameRequestCallback=()=>{};
+  vi.spyOn(window,'requestAnimationFrame').mockImplementation(callback=>{frame=callback;return 1;});
+  render(<DiscoveryPage/>);
+  if(method==='button') fireEvent.click(screen.getByRole('button',{name:'Want to Watch',exact:true}));
+  else {
+   const surface=document.querySelector('.swipeable')!;
+   fireEvent.touchStart(surface,{touches:[{clientX:100,clientY:100}]});
+   fireEvent.touchMove(surface,{touches:[{clientX:210,clientY:100}]});
+   act(()=>frame(0));fireEvent.touchEnd(surface);
+  }
+  expect(Library.getCurrentList('10','movie')).toBe('wishlist');
+  expect(Library.getAll()).toHaveLength(1);
+  expect(screen.queryByText('Discovery Movie')).toBeNull();
+ });
+ it('signed-out Discovery exposes sign-in rather than swipeable recommendations',()=>{
+  mocks.uid=null;const listener=vi.fn();window.addEventListener('auth:sign-in-required',listener);
+  render(<DiscoveryPage/>);expect(document.querySelector('.swipeable')).toBeNull();
+  fireEvent.click(screen.getByRole('button',{name:'Sign In'}));expect(listener).toHaveBeenCalledOnce();expect(Library.getAll()).toHaveLength(0);
+  window.removeEventListener('auth:sign-in-required',listener);
+ });
+});
