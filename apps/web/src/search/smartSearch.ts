@@ -10,7 +10,7 @@ import type { MediaItem } from '../components/cards/card.types';
 import type { SearchResult, SearchResultWithPagination } from './api';
 import { mapTMDBToMediaItem } from './api';
 import { computeSearchScore, tieBreak, tokensLower } from './rank';
-import { normalizeQuery, generateQueryVariations } from '../lib/string';
+import { normalizeQuery } from '../lib/string';
 import { TMDB_PROXY_BASE } from '../lib/apiConfig';
 
 type SearchType = 'all' | 'movies-tv' | 'people';
@@ -221,9 +221,6 @@ export async function smartSearch(
     };
   }
 
-  // Generate query variations for fuzzy matching (handles typos like "haikyuu" vs "haikyu")
-  const queryVariations = generateQueryVariations(query);
-  
   // Get multi search results for the requested page (uncached for fresh pagination)
   const multiJson = await fetchTMDB('search/multi', {
     query, page, include_adult: false, language, region
@@ -254,37 +251,6 @@ export async function smartSearch(
     }
   }
   
-  // If primary query yielded few results and we have query variations, try them
-  // This handles typos like "haikyuu" vs "haikyu" or "cancled" vs "cancelled"
-  if (page === 1 && allItems.length < 5 && queryVariations.length > 1) {
-    for (const variant of queryVariations.slice(1)) { // Skip first (it's the original query)
-      if (variant === query) continue;
-      
-      try {
-        const variantJson = await fetchTMDB('search/multi', {
-          query: variant, page: 1, include_adult: false, language, region
-        }, opts?.signal);
-        
-        const variantItems = (variantJson.results ?? [])
-          .map(mapTMDBToMediaItem)
-          .filter(Boolean) as MediaItem[];
-        
-        // Add new items not already in results (dedupe by id)
-        const existingIds = new Set(allItems.map(i => i.id));
-        const newItems = variantItems.filter(item => 
-          item.mediaType !== 'person' && !existingIds.has(item.id)
-        );
-        
-        if (newItems.length > 0) {
-          console.log(`🔍 Fuzzy match: "${variant}" found ${newItems.length} additional results`);
-          allItems = [...allItems, ...newItems];
-        }
-      } catch (_err) {
-        // Ignore variant search failures
-      }
-    }
-  }
-
   // Score items
   const allWithMeta = allItems.map(item => {
     const scored = computeSearchScore(query, {

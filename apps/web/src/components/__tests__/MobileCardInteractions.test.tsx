@@ -8,11 +8,13 @@ import { TitlePoster, getTitleResearchUrl } from "../cards/TitlePoster";
 import { MetadataIndicators } from "../cards/MetadataIndicators";
 import type { MediaItem } from "../cards/card.types";
 const mocks = vi.hoisted(() => ({
+  search: vi.fn(),
   entry: null as any,
   move: vi.fn(),
   add: vi.fn(),
   remove: vi.fn(),
 }));
+vi.mock("@/search/smartSearch", () => ({ smartSearch: mocks.search }));
 vi.mock("@/lib/statusTransitions", () => ({ setPrimaryStatus: mocks.move }));
 vi.mock("@/lib/storage", () => ({
   getListDisplayName: (list: string) => ({watching: "Watching", wishlist: "Want to Watch", watched: "Watched", not: "Not Interested"})[list as "watching"],
@@ -28,6 +30,7 @@ vi.mock("@/lib/storage", () => ({
 }));
 vi.mock("@/lib/language", () => ({
   useTranslations: () => ({
+    searchCorrection: "Showing results for “{query}”",
     notesAndTags: "Notes & Tags",
     wantToWatchAction: "Want to Watch",
     currentlyWatchingAction: "Watching",
@@ -248,4 +251,36 @@ describe('card consistency contract', () => {
   await waitFor(()=>expect(screen.queryByText('Movie collision (2025)')).toBeNull());
   expect(screen.getByText('TV collision (2025)')).toBeInTheDocument();
  });
+});
+
+describe("search correction and request ordering", () => {
+  it("shows correction and retains the original query", async () => {
+    mocks.search.mockImplementation(async (term: string) => ({items: term === "Braking Bad" ? [] : [{...item,title:"Breaking Bad"}],page:1,totalPages:1}));
+    render(<SearchResults query="Braking Bad"/>);
+    expect(await screen.findByRole("status")).toHaveTextContent("Showing results for “Breaking Bad”");
+    expect(screen.getByRole("heading", {name:'Search results for "Braking Bad"'})).toBeVisible();
+  });
+  it("ignores stale completion and clears results", async () => {
+    let finish!: (value: any) => void;
+    mocks.search.mockImplementation((term: string) => term === "Old search" ? new Promise(resolve => {finish=resolve}) : Promise.resolve({items:[{...item,title:term}],page:1,totalPages:1}));
+    const view=render(<SearchResults query="Old search"/>);
+    view.rerender(<SearchResults query="New search"/>);
+    expect(await screen.findByText("New search (2025)")).toBeVisible();
+    finish({items:[{...item,title:"Old search"}],page:1,totalPages:1});
+    await waitFor(() => expect(screen.queryByText("Old search (2025)")).toBeNull());
+    view.rerender(<SearchResults query=""/>);
+    expect(screen.queryByText("New search (2025)")).toBeNull();
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+});
+
+it.each(["movie", "tv"] as const)("keeps the %s-only filter during correction", async mediaType => {
+  mocks.search.mockImplementation(async (term: string) => ({items: term === "Braking Bad" ? [] : [
+    {...item,id:"7",title:"Breaking Bad",mediaType:"movie"},
+    {...item,id:"7",title:"Breaking Bad",mediaType:"tv"}
+  ],page:1,totalPages:1}));
+  render(<SearchResults query="Braking Bad" searchType="movies-tv" mediaTypeFilter={mediaType}/>);
+  expect(await screen.findByRole("status")).toBeVisible();
+  expect(screen.getAllByLabelText("View Breaking Bad on TMDB")).toHaveLength(1);
+  expect(screen.getByLabelText("View Breaking Bad on TMDB")).toHaveAttribute("href",`https://www.themoviedb.org/${mediaType}/7`);
 });

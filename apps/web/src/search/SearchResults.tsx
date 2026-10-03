@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import type { MediaItem, CardActionHandlers } from "../components/cards/card.types";
 import { cachedSearchMulti } from "./cache";
 import { smartSearch } from "./smartSearch";
+import { typoSearch } from "./typoSearch";
 import { discoverByGenre } from "./api";
 import { emit } from "../lib/events";
 import { removeMediaItemWithConfirmation } from "../lib/confirmRemoveShow";
@@ -29,6 +30,7 @@ type SearchResultWithPagination = {
   items: MediaItem[];
   page: number;
   totalPages: number;
+  correctedQuery?: string;
 };
 
 export default function SearchResults({
@@ -130,20 +132,26 @@ export default function SearchResults({
   const [episodeModalOpen, setEpisodeModalOpen] = useState(false);
   const [selectedShow, setSelectedShow] = useState<MediaItem | null>(null);
   const [showDetails, setShowDetails] = useState<any>(null);
+  const [correction, setCorrection] = useState<string | null>(null);
+  const effectiveQuery = useRef(query);
   const abortRef = useRef<AbortController | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const settings = useSettings();
 
   useEffect(() => {
+    abortRef.current?.abort();
+    setCorrection(null);
+    effectiveQuery.current = query;
     if (resolvedItems) { setItems(resolvedItems); setTotalPages(1); setCurrentPage(1); setError(null); setIsLoading(false); return; }
     // reset on any input change
-    abortRef.current?.abort();
     setItems([]);
     setCurrentPage(1);
     setTotalPages(1);
     setError(null);
-    void fetchPage(1, true);
+    if (query.trim() || genre != null) void fetchPage(1, true);
+    else setIsLoading(false);
+    return () => abortRef.current?.abort();
     // eslint-disable-next-line
   }, [query, genre, searchType, mediaTypeFilter, resolvedItems]);
 
@@ -182,7 +190,7 @@ export default function SearchResults({
   }, [query]);
 
   async function fetchPage(nextPage: number, replace = false) {
-    if (isLoading) return;
+    if (isLoading && !replace) return;
     abortRef.current?.abort();
     const ac = new AbortController();
     abortRef.current = ac;
@@ -206,22 +214,22 @@ export default function SearchResults({
         });
         result = searchResult;
       } else {
-        const useSmart = searchType !== "people";
-        const searchResult = useSmart
-          ? await smartSearch(query, nextPage, searchType, {
-              signal: ac.signal,
-            })
-          : await cachedSearchMulti(
-              query,
-              nextPage,
-              genre ?? null,
-              searchType,
-              { signal: ac.signal }
-            );
-
+        const run = async (term: string, page: number) => {
+          const response = searchType !== "people"
+            ? await smartSearch(term, page, searchType, { signal: ac.signal })
+            : await cachedSearchMulti(term, page, genre ?? null, searchType, { signal: ac.signal });
+          return { ...response, items: mediaTypeFilter && searchType === "movies-tv"
+            ? response.items.filter(item => item.mediaType === mediaTypeFilter) : response.items };
+        };
+        const searchResult = await typoSearch(replace ? query : effectiveQuery.current, nextPage, run);
         result = searchResult;
       }
 
+      if (ac.signal.aborted || abortRef.current !== ac) return;
+      if (replace) {
+        setCorrection(result.correctedQuery ?? null);
+        effectiveQuery.current = result.correctedQuery ?? query;
+      }
       // Filter by mediaType if specified
       let filteredItems = result.items;
       if (mediaTypeFilter && searchType === "movies-tv") {
@@ -236,9 +244,9 @@ export default function SearchResults({
       setCurrentPage(result.page);
       setTotalPages(result.totalPages);
     } catch (err: any) {
-      if (err?.name !== "AbortError") setError(err?.message || "Search failed");
+      if (!ac.signal.aborted && abortRef.current === ac && err?.name !== "AbortError") setError(err?.message || "Search failed");
     } finally {
-      setIsLoading(false);
+      if (abortRef.current === ac) setIsLoading(false);
     }
   }
 
@@ -289,6 +297,8 @@ export default function SearchResults({
             ? `Genre results`
             : `Search results for "${query}"`}
       </h2>
+
+      {correction && <p role="status" className="mb-4 text-sm break-words">{translations.searchCorrection.replace("{query}", correction)}</p>}
 
       {isLoading && items.length === 0 && (
         <p className="mt-2 text-sm text-muted-foreground">

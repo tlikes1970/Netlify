@@ -26,6 +26,7 @@ export interface LanguageStrings {
   sharedTitleInvalid: string;
   sharedTitleLegacy: string;
   sharedTitleUnavailable: string;
+  searchCorrection: string;
   sharedTitleHeading: string;
 
   notesAndTags: string;

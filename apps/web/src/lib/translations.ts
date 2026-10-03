@@ -27,6 +27,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     sharedTitleInvalid: "This title link is invalid. Check the ID and media type.",
     sharedTitleLegacy: "This older link does not identify movie or TV. Ask for a new Share link.",
     sharedTitleUnavailable: "This shared title could not be loaded. Please try again.",
+    searchCorrection: "Showing results for “{query}”",
     sharedTitleHeading: "Shared title",
 
     notesAndTags: "Notes & Tags",
@@ -446,6 +447,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     sharedTitleInvalid: "Este enlace no es válido. Comprueba el ID y el tipo.",
     sharedTitleLegacy: "Este enlace antiguo no indica película o serie. Solicita un nuevo enlace.",
     sharedTitleUnavailable: "No se pudo cargar este título. Inténtalo de nuevo.",
+    searchCorrection: "Mostrando resultados para «{query}»",
     sharedTitleHeading: "Título compartido",
 
     notesAndTags: "Notas y etiquetas",
