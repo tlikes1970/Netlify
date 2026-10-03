@@ -1,3 +1,5 @@
+import { profileErrorKey, type AccountMessageKey } from "../lib/accountErrors";
+import { t, useLanguage } from "../lib/language";
 import { useEffect, useId, useState } from "react";
 import { usePreferredName } from "../hooks/usePreferredName";
 
@@ -6,6 +8,7 @@ export default function PreferredNameEditor({
 }: {
   onSaved?: () => void;
 }) {
+  useLanguage();
   const {
     uid,
     preferredName,
@@ -16,13 +19,13 @@ export default function PreferredNameEditor({
   } = usePreferredName();
   const [name, setName] = useState(preferredName);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<AccountMessageKey | "">("");
   const id = useId();
   useEffect(() => {
     setName(preferredName);
     setError("");
   }, [uid, preferredName]);
-  if (!uid) return <p>Sign in to set your preferred name.</p>;
+  if (!uid) return <p>{t("profileSignIn")}</p>;
   return (
     <form
       onSubmit={async (event) => {
@@ -34,30 +37,27 @@ export default function PreferredNameEditor({
           await updatePreferredName(name);
           onSaved?.();
         } catch (cause) {
-          setError(
-            cause instanceof Error
-              ? cause.message
-              : "Your preferred name could not be saved. Please try again.",
-          );
+          console.error("Preferred name save failed", cause);
+          setError(profileErrorKey(cause));
         } finally {
           setSaving(false);
         }
       }}
     >
       <label htmlFor={id} className="block text-sm font-medium mb-2">
-        Flicklet preferred name
+        {t("profileLabel")}
       </label>
       <p className="text-sm mb-2" style={{ color: "var(--muted)" }}>
-        What should Flicklet call you?
+        {t("profileCopy")}
       </p>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <input
           id={id}
           type="text"
           value={name}
           maxLength={100}
           autoComplete="nickname"
-          placeholder="e.g. Travis or Dr. Smith"
+          placeholder={t("profilePlaceholder")}
           disabled={loading || saving || !!loadError}
           onChange={(event) => setName(event.target.value)}
           className="min-w-0 flex-1 px-3 py-2 rounded-lg"
@@ -76,19 +76,19 @@ export default function PreferredNameEditor({
             !name.trim() ||
             (name.trim() === preferredName && !onSaved)
           }
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
+          className="min-h-[44px] px-4 py-2 bg-blue-600 text-white rounded-lg disabled:opacity-50"
         >
-          {saving ? "Saving…" : "Save"}
+          {saving ? t("profileSaving") : t("save")}
         </button>
       </div>
       {(error || loadError) && (
         <p role="alert" className="mt-2">
-          {error || loadError}
+          {error ? t(error) : t("profileLoadError")}
         </p>
       )}
       {loadError && (
         <button type="button" onClick={retry}>
-          Try again
+          {t("profileRetry")}
         </button>
       )}
     </form>

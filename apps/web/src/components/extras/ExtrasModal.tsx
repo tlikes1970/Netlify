@@ -1,3 +1,4 @@
+import { t as accountText, useLanguage as useAccountLanguage } from "@/lib/language";
 import React, { useState, useEffect, useRef } from "react";
 import { ExtrasVideo } from "../../lib/extras/types";
 import { YouTubePlayer } from "./YouTubePlayer";
@@ -29,6 +30,7 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
 }) => {
   console.log("🎭 ExtrasModal render:", { isOpen, showId, showTitle });
 
+  useAccountLanguage();
   const { hasFullAccess } = useEntitlements();
 
   const [extrasVideos, setExtrasVideos] = useState<ExtrasVideo[]>([]);
@@ -298,10 +300,10 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
                   className="text-xl font-semibold mb-2"
                   style={{ color: "var(--text)" }}
                 >
-                  Extras need Full Access
+                  {accountText("accessExtrasNeed")}
                 </h3>
                 <p className="text-sm mb-6" style={{ color: "var(--muted)" }}>
-                  Start your 21-day trial or unlock Full Access in Settings for behind-the-scenes content.
+                  {accountText("accessBehindScenes")}
                 </p>
                 <button
                   onClick={() => {
@@ -311,7 +313,7 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
                   className="px-6 py-3 rounded-lg font-medium transition-colors"
                   style={{ backgroundColor: "var(--accent)", color: "white" }}
                 >
-                  Open Full Access settings
+                  {accountText("accessOpenSettings")}
                 </button>
               </div>
             ) : loading ? (

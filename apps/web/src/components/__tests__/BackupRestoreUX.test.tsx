@@ -1,3 +1,5 @@
+import { changeLanguage, t } from "../../lib/language";
+import { formatDateTime } from "../../lib/localeFormatters";
 import {
   act,
   cleanup,
@@ -28,7 +30,7 @@ const valid = () =>
     local: {},
   });
 async function choose(raw: string) {
-  fireEvent.click(screen.getByRole("button", { name: /Restore from Backup/ }));
+  fireEvent.click(screen.getByRole("button", { name: new RegExp(t("recoveryRestoreButton")) }));
   const file = new File([raw], "backup.json", { type: "application/json" });
   Object.defineProperty(file, "text", { value: async () => raw });
   await act(async () => {
@@ -70,7 +72,7 @@ describe("Backup/Restore confirmation and errors", () => {
     await choose("{bad");
     await waitFor(() =>
       expect(window.alert).toHaveBeenCalledWith(
-        expect.stringMatching(/not valid JSON/),
+        "This is not a valid supported Flicklet backup. Choose another backup file.",
       ),
     );
     expect(window.confirm).not.toHaveBeenCalled();
@@ -97,11 +99,21 @@ describe("Backup/Restore confirmation and errors", () => {
     await choose(valid());
     await waitFor(() =>
       expect(window.alert).toHaveBeenCalledWith(
-        "Restore failed: Cloud restore was rejected",
+        "Restore failed. Please try again.",
       ),
     );
     expect(
-      screen.getByRole("button", { name: /Restore from Backup/ }),
+      screen.getByRole("button", { name: new RegExp(t("recoveryRestoreButton")) }),
     ).not.toBeDisabled();
   });
+});
+
+it("Spanish restore uses the shared date formatter and preserves cancellation semantics", async () => {
+  act(() => changeLanguage("es"));
+  await screen.findByRole("button", { name: /Restaurar desde una copia de seguridad/ });
+  await choose(valid());
+  expect(window.confirm).toHaveBeenCalledWith(t("recoveryConfirm", { date: formatDateTime(new Date("2026-10-01T00:00:00Z")) }));
+  expect(mocks.restore).not.toHaveBeenCalled();
+  expect(localStorage.getItem("flicklet.library.v2")).toBe("original");
+  act(() => changeLanguage("en"));
 });

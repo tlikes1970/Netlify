@@ -1,3 +1,5 @@
+import { purchaseErrorKey } from "./accountErrors";
+import { t } from "./language";
 /**
  * Full Access purchase entrypoint (Google Play one-time INAPP on Android).
  */
@@ -128,7 +130,8 @@ async function startAndroidPurchase(): Promise<void> {
     window.dispatchEvent(
       new CustomEvent('pro-upgrade-error', {
         detail: {
-          message: error instanceof Error ? error.message : 'Purchase failed',
+          message: t(purchaseErrorKey(error)),
+          messageKey: purchaseErrorKey(error),
           error: error instanceof Error ? error.stack : String(error),
         },
       })
@@ -189,7 +192,8 @@ async function validateAndActivatePurchase(
           productId,
           platform,
           purchaseType: 'one_time',
-          message: FULL_ACCESS_PURCHASE_SUCCESS_MESSAGE,
+          message: t("purchaseSuccess"),
+          messageKey: "purchaseSuccess",
         },
       })
     );

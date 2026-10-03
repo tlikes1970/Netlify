@@ -1,3 +1,6 @@
+import { useFocusTrap } from "../lib/a11y/useFocusTrap";
+import { authErrorKey, type AccountMessageKey } from "../lib/accountErrors";
+import { t, useLanguage } from "../lib/language";
 import { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslations } from '../lib/language';
@@ -48,9 +51,10 @@ interface AuthModalProps {
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const { signInWithProvider, signInWithEmail: signInEmail, createAccountWithEmail } = useAuth();
+  useLanguage();
   const translations = useTranslations();
   const [loading, setLoading] = useState<AuthProvider | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<AccountMessageKey | "blocked" | null>(null);
   const [isBlocked] = useState(() => isBlockedOAuthContext());
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState('');
@@ -58,7 +62,15 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
+  const [panel, setPanel] = useState<HTMLDivElement | null>(null);
+  useFocusTrap(panel, isOpen);
   useAndroidBackDismiss(isOpen, onClose);
+  useEffect(() => {
+    if (!isOpen) return;
+    const escape = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
+    window.addEventListener("keydown", escape);
+    return () => window.removeEventListener("keydown", escape);
+  }, [isOpen, onClose]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -121,7 +133,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       if (error.message === 'OAUTH_BLOCKED') {
         setError('blocked');
       } else {
-        setError(error.message || 'Sign-in failed. Please try again.');
+        setError(authErrorKey(error));
       }
       setLoading(null);
       setIsRedirecting(false);
@@ -137,17 +149,17 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     setError(null);
     
     if (!email || !password) {
-      setError('Email and password are required');
+      setError("accountRequired");
       return;
     }
 
     if (!email.includes('@')) {
-      setError('Please enter a valid email address');
+      setError("accountInvalidEmail");
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError("accountPasswordLength");
       return;
     }
 
@@ -169,13 +181,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     } catch (error: any) {
       logger.error(isCreatingAccount ? 'Account creation failed' : 'Email sign-in failed', error);
       
-      // For invalid-credential errors during sign-in, suggest creating account
-      if (error.code === 'auth/invalid-credential' && !isCreatingAccount) {
-        setError('Invalid email or password. No account found. Would you like to create one?');
-      } else {
-        setError(error.message || (isCreatingAccount ? 'Account creation failed' : 'Sign-in failed. Please try again.'));
-      }
-      
+      setError(authErrorKey(error, isCreatingAccount));
+
       setLoading(null);
     }
   };
@@ -186,12 +193,14 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         role="dialog"
         aria-modal="true"
         aria-label={translations.signIn || 'Sign In'}
-        className="auth-modal-overlay fixed inset-0 backdrop-blur-sm flex items-start justify-center pt-48 p-4"
+        className="auth-modal-overlay fixed inset-0 backdrop-blur-sm flex items-center justify-center p-4"
         style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 20000 }}
       >
         <div
-          className="auth-modal-content rounded-xl w-full max-w-md p-6 relative z-10"
-          style={{ backgroundColor: 'var(--card)', border: '1px solid var(--line)', zIndex: 20001 }}
+          ref={setPanel}
+          tabIndex={-1}
+          className="auth-modal-content rounded-xl w-full min-w-0 max-w-md p-4 sm:p-6 relative z-10 overflow-y-auto"
+          style={{ backgroundColor: 'var(--card)', border: '1px solid var(--line)', zIndex: 20001, maxHeight: 'calc(100dvh - 32px - var(--safe-top, 0px) - var(--safe-bottom, 0px))' }}
           onClick={(e) => e.stopPropagation()}
           onTouchStart={(e) => e.stopPropagation()}
         >
@@ -200,8 +209,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <div className="absolute inset-0 bg-black bg-opacity-75 rounded-xl flex items-center justify-center z-50">
               <div className="text-center">
                 <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-white font-semibold">Redirecting to sign in...</p>
-                <p className="text-white text-sm mt-2 opacity-75">Please wait</p>
+                <p role="status" className="text-white font-semibold">{t("accountRedirect")}</p>
+                <p className="text-white text-sm mt-2 opacity-75">{t("accountWait")}</p>
               </div>
             </div>
           )}
@@ -212,11 +221,11 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </h3>
             <button
               onClick={onClose}
-              className="transition-colors"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center transition-colors"
               style={{ color: 'var(--muted)' }}
               onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
               onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
-              aria-label="Close"
+              aria-label={t("coreClose")}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -228,11 +237,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <div className="mb-4 p-4 rounded-lg" 
                  style={{ backgroundColor: '#fff3cd', borderColor: '#ffc107', border: '2px solid' }}>
               <p className="mb-2 font-semibold" style={{ color: '#856404' }}>
-                Sign-in needs your device's browser
+                {t("accountBrowserTitle")}
               </p>
               <p className="mb-3 text-sm" style={{ color: '#856404' }}>
-                Sign-in may not work in this browser or installed web app.
-                Tap 'Open in browser' to continue securely.
+                {t("accountBrowserCopy")}
               </p>
               <a
                 href={getOpenInBrowserURL()}
@@ -241,13 +249,13 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 className="inline-block px-4 py-2 rounded-lg font-semibold text-center"
                 style={{ backgroundColor: '#ffc107', color: '#000' }}
               >
-                Open in Browser
+                {t("accountOpenBrowser")}
               </a>
             </div>
           ) : error ? (
-            <div className="mb-4 p-3 rounded-lg text-sm" 
+            <div role="alert" className="mb-4 p-3 rounded-lg text-sm break-words"
                  style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}>
-              {error}
+              {t(error)}
             </div>
           ) : null}
 
@@ -255,7 +263,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <form onSubmit={handleEmailSubmit} className="space-y-3">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
-                  Email
+                  {t("accountEmail")}
                 </label>
                 <input
                   id="email"
@@ -269,14 +277,14 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     borderColor: 'var(--line)',
                     outline: 'none'
                   }}
-                  placeholder="your@email.com"
+                  placeholder={t("accountEmailPlaceholder")}
                   required
                   autoFocus
                 />
               </div>
               <div>
                 <label htmlFor="password" className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
-                  Password
+                  {t("accountPassword")}
                 </label>
                 <input
                   id="password"
@@ -312,7 +320,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     touchAction: 'manipulation'
                   }}
                 >
-                  Back
+                  {t("coreBack")}
                 </button>
                 <button
                   type="submit"
@@ -326,8 +334,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   }}
                 >
                   {loading === 'email' 
-                    ? (isCreatingAccount ? 'Creating...' : 'Signing in...') 
-                    : (isCreatingAccount ? 'Create Account' : 'Sign In')}
+                    ? (isCreatingAccount ? t("accountCreating") : t("accountSigningIn"))
+                    : (isCreatingAccount ? t("accountCreate") : translations.signIn)}
                 </button>
               </div>
               
@@ -341,7 +349,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   className="w-full text-sm text-center underline"
                   style={{ color: 'var(--muted)' }}
                 >
-                  Don't have an account? Create one
+                  {t("accountNew")}
                 </button>
               )}
               
@@ -355,7 +363,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                   className="w-full text-sm text-center underline"
                   style={{ color: 'var(--muted)' }}
                 >
-                  Already have an account? Sign in
+                  {t("accountExisting")}
                 </button>
               )}
             </form>

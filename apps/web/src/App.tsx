@@ -1,3 +1,5 @@
+import { purchaseErrorKey } from "./lib/accountErrors";
+import { t as accountText } from "./lib/language";
 import { t as coreText } from "./lib/language";
 import SharedTitleExperience from "@/components/SharedTitleExperience";
 import Tabs from "@/components/Tabs";
@@ -515,17 +517,17 @@ export default function App() {
 
   // Full Access purchase feedback + entitlement refresh (proUpgrade dispatches events)
   useEffect(() => {
-    const onPurchaseSuccess = (event: Event) => {
-      const detail = (event as CustomEvent<{ message?: string }>).detail;
+    const onPurchaseSuccess = () => {
       addToast(
-        detail?.message ?? "Purchase confirmed. Full Access unlocked.",
+        accountText("purchaseSuccess"),
         "success",
       );
     };
     const onPurchaseError = (event: Event) => {
       const detail = (event as CustomEvent<{ message?: string }>).detail;
       if (detail?.message) {
-        addToast(detail.message, "error");
+        const key = (event as CustomEvent<{ messageKey?: ReturnType<typeof purchaseErrorKey> }>).detail?.messageKey;
+        addToast(accountText(key ?? purchaseErrorKey(detail)), "error");
       }
     };
     window.addEventListener("pro-upgrade-success", onPurchaseSuccess);

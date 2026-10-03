@@ -1,3 +1,4 @@
+import { useLanguage } from "@/lib/language";
 import { useCallback, useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useTranslations } from "../lib/language";
 import { useAdminRole } from "../hooks/useAdminRole";
@@ -42,6 +43,7 @@ export default function SettingsPage({
     useState(false);
   const [showNotificationCenter, setShowNotificationCenter] = useState(false);
   const [showMobileSectionMenu, setShowMobileSectionMenu] = useState(false);
+  useLanguage();
   const translations = useTranslations();
   const { isAdmin } = useAdminRole();
   const isMobile = useIsMobileScreen();

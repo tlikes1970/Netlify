@@ -1,9 +1,11 @@
+import { ACCOUNT_TRANSLATIONS } from "../i18n/accountTranslations";
 import { CORE_TRANSLATIONS } from "../i18n/coreTranslations";
 import type { Language, LanguageStrings } from "./language.types";
 
 const TRANSLATIONS: Record<Language, LanguageStrings> = {
   en: {
     ...CORE_TRANSLATIONS.en,
+    ...ACCOUNT_TRANSLATIONS.en,
     sharingRetry: "Try again",
     sharingTitle: "Share Your Lists",
     sharingDescription: "Create a text snapshot to paste into messages. Only titles, types and optional TMDB ratings are included.",
@@ -413,6 +415,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
 
   es: {
     ...CORE_TRANSLATIONS.es,
+    ...ACCOUNT_TRANSLATIONS.es,
     sharingRetry: "Intentar de nuevo",
     sharingTitle: "Comparte tus listas",
     sharingDescription: "Crea una copia de texto para mensajes. Solo incluye títulos, tipos y, opcionalmente, puntuaciones de TMDB.",
@@ -521,7 +524,7 @@ const TRANSLATIONS: Record<Language, LanguageStrings> = {
     methodsDeviceNotifications: "En la app y push en este dispositivo",
     layout: "Diseño",
     data: "Datos",
-    pro: "Full Access",
+    pro: "Acceso completo",
     about: "Acerca De",
     accountAndProfile: "Cuenta y perfil",
     resetSettingsToDefaults:

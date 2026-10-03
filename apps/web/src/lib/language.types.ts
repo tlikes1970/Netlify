@@ -1,7 +1,8 @@
+import type { AccountLanguageStrings } from "../i18n/accountTranslations";
 import type { CoreLanguageStrings } from "../i18n/coreTranslations";
 export type Language = "en" | "es";
 
-export interface LanguageStrings extends CoreLanguageStrings {
+export interface LanguageStrings extends CoreLanguageStrings, AccountLanguageStrings {
   sharingRetry: string;
   sharingTitle: string;
   sharingDescription: string;

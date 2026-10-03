@@ -1,3 +1,4 @@
+import { t, useLanguage } from "../lib/language";
 /**
  * Process: Pro Badge Component
  * Purpose: Display gold "PRO" badge next to usernames for Pro users
@@ -12,6 +13,7 @@ interface ProBadgeProps {
 }
 
 export default function ProBadge({ isPro, compact: _compact = false }: ProBadgeProps) {
+  useLanguage();
   if (!isPro) return null;
 
   return (
@@ -21,9 +23,9 @@ export default function ProBadge({ isPro, compact: _compact = false }: ProBadgeP
         backgroundColor: '#fbbf24',
         color: '#1f2937',
       }}
-      title="Full Access"
+      title={t("accessName")}
     >
-      FULL ACCESS
+      {t("accessName")}
     </span>
   );
 }

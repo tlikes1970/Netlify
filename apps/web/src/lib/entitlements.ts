@@ -3,7 +3,8 @@
  * paidPro and activeTrial both grant full access; expired unpaid users are Read-Only.
  */
 
-import { READ_ONLY_PRIMARY } from './copy/access';
+import { t, tPlural } from './language';
+import { formatInteger } from './localeFormatters';
 
 import type { ProStatus } from './proStatus';
 
@@ -250,13 +251,12 @@ export function getTrialStatusLabel(state: EntitlementState): string | null {
   if (state.phase === 'paidPro') return null;
   if (state.phase === 'activeTrial') {
     const days = state.trialDaysRemaining;
-    if (days == null) return 'Full access trial active';
-    if (days <= 0) return 'Trial ends today — unlock Full Access to keep editing';
-    if (days === 1) return 'Full access trial: 1 day left';
-    return `Full access trial: ${days} days left`;
+    if (days == null) return t("accessTrialActive");
+    if (days <= 0) return t("accessTrialToday");
+    return tPlural({ one: "accessTrialOne", other: "accessTrialOther" }, days, { count: formatInteger(days) });
   }
   if (state.phase === 'expiredReadOnly') {
-    return READ_ONLY_PRIMARY;
+    return t("accessReadOnly");
   }
   return null;
 }

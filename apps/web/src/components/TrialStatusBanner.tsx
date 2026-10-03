@@ -1,3 +1,4 @@
+import { t, useLanguage } from "../lib/language";
 import { useEntitlements } from '../hooks/useEntitlements';
 import { getTrialStatusLabel } from '../lib/entitlements';
 import { startProUpgrade } from '../lib/proUpgrade';
@@ -6,6 +7,7 @@ import { startProUpgrade } from '../lib/proUpgrade';
  * Visible trial / read-only reminder (header strip).
  */
 export function TrialStatusBanner() {
+  useLanguage();
   const entitlements = useEntitlements();
   const label = getTrialStatusLabel(entitlements);
 
@@ -33,12 +35,12 @@ export function TrialStatusBanner() {
             className="underline font-semibold ml-1"
             onClick={() => void startProUpgrade()}
           >
-            Unlock Full Access
+            {t("accessUnlock")}
           </button>
         </>
       )}
       {entitlements.phase === 'activeTrial' && (
-        <span className="opacity-90 ml-1">· Unlock anytime to keep full access after trial</span>
+        <span className="opacity-90 ml-1">{t("accessTrialSuffix")}</span>
       )}
     </div>
     </div>

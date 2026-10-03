@@ -1,3 +1,4 @@
+import { t as accountText, useLanguage as useAccountLanguage } from "@/lib/language";
 import React, { useState, useEffect, useRef } from 'react';
 import { ExtrasVideo, BloopersSearchResult } from '../../lib/extras/types';
 import { BloopersSearchAssist } from '../../lib/extras/bloopersSearchAssist';
@@ -30,6 +31,7 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
 }) => {
   console.log('🎬 BloopersModal render:', { isOpen, showId, showTitle });
   
+  useAccountLanguage();
   const { hasFullAccess } = useEntitlements();
   
   const [officialVideos, setOfficialVideos] = useState<ExtrasVideo[]>([]);
@@ -269,10 +271,10 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
               <div className="text-center py-12">
                 <div className="text-4xl mb-4">💎</div>
                 <h3 className="text-xl font-semibold mb-2" style={{ color: "var(--text)" }}>
-                  Extras need Full Access
+                  {accountText("accessExtrasNeed")}
                 </h3>
                 <p className="text-sm mb-6" style={{ color: "var(--muted)" }}>
-                  Start your 21-day Full Access trial or unlock in Settings to view Extras for this title.
+                  {accountText("accessExtrasTrial")}
                 </p>
                 <button
                   onClick={() => {
@@ -282,7 +284,7 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
                   className="px-6 py-3 rounded-lg font-medium transition-colors"
                   style={{ backgroundColor: "var(--accent)", color: "white" }}
                 >
-                  Open Full Access settings
+                  {accountText("accessOpenSettings")}
                 </button>
               </div>
             ) : loading ? (

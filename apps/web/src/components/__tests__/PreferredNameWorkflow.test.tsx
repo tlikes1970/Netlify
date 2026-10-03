@@ -284,7 +284,7 @@ describe("preferred-name workflow", () => {
       target: { value: "Pam" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
-    expect(await screen.findByRole("alert")).toHaveTextContent("Offline");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Your preferred name could not be saved. Please try again.");
     expect(screen.getByRole("dialog")).toBeVisible();
     expect(screen.queryByTestId("home-greeting")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Save" }));

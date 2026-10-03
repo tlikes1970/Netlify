@@ -101,6 +101,7 @@ export class PreferredNameStore {
       if (generation === this.generation)
         this.publish({ uid, preferredName, loading: false, error: null });
     } catch (cause) {
+      console.error("Preferred name load failed", cause);
       if (generation === this.generation)
         this.publish({
           uid,

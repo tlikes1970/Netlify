@@ -94,7 +94,7 @@ describe("account control", () => {
       fireEvent.click(
         screen.getByRole("button", { name: /Sign in with Google/i }),
       );
-      expect(await screen.findByText(message)).toBeInTheDocument();
+      expect(await screen.findByText("Sign-in failed. Please try again.")).toBeInTheDocument();
       expect(
         screen.getByRole("button", { name: /Sign in with Google/i }),
       ).not.toBeDisabled();

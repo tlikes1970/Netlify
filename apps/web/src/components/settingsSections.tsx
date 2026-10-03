@@ -1,3 +1,5 @@
+import { recoveryErrorKey } from "../lib/accountErrors";
+import { formatDateTime } from "../lib/localeFormatters";
 import { t as coreText, tPlural } from "../lib/language";
 import SharingModal from "./modals/SharingModal";
 import StartOverControl from "./StartOverControl";
@@ -20,11 +22,6 @@ import {
 // PersonalityName type used implicitly through PERSONALITY_LIST
 import { useEntitlements } from "../hooks/useEntitlements";
 import { getTrialStatusLabel } from "../lib/entitlements";
-import {
-  READ_ONLY_FULL_ACCESS_EXPLAINER,
-  READ_ONLY_HEADING,
-  READ_ONLY_PRIMARY,
-} from "../lib/copy/access";
 import { useTranslations, useLanguage, changeLanguage } from "../lib/language";
 import { PRO_FEATURES_AVAILABLE } from "./settingsProConfig";
 import { UpgradeToProCTA } from "./UpgradeToProCTA";
@@ -787,21 +784,28 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
 }
 
 function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
+  useLanguage();
   const entitlements = useEntitlements();
   const trialLabel = getTrialStatusLabel(entitlements);
+  const featureCopy = {
+    "shows-like-this": { title: "accessShows", description: "accessShowsCopy" },
+    extras: { title: "accessExtras", description: "accessExtrasCopy" },
+    "watch-reminders": { title: "accessReminders", description: "accessRemindersCopy" },
+    "unlimited-custom-lists": { title: "accessLists", description: "accessListsCopy" },
+  } as const;
   const priceState = useFullAccessProduct();
   const purchaseDisabled =
     priceState.status === "loading" || priceState.status === "unavailable";
 
   const priceLabel = entitlements.paidPro
-    ? "One-time purchase complete"
+    ? coreText("accessComplete")
     : priceState.status === "available"
-      ? `${priceState.product.price} · one-time purchase`
+      ? coreText("accessPrice", { price: priceState.product.price })
       : priceState.status === "loading"
-        ? "Checking Google Play price…"
+        ? coreText("accessPriceLoading")
         : priceState.status === "unavailable"
-          ? "Price temporarily unavailable"
-          : "One-time purchase · price shown in Google Play";
+          ? coreText("accessPriceUnavailable")
+          : coreText("accessPricePlay");
 
   return (
     <div className="space-y-6">
@@ -814,7 +818,7 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
           className="text-2xl font-semibold mb-2"
           style={{ color: "var(--text)" }}
         >
-          Full Access
+          {coreText("accessName")}
         </h3>
         <p
           className="text-xl font-semibold mb-3"
@@ -824,25 +828,25 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
         </p>
         <p className="text-sm font-medium mb-3" style={{ color: "var(--text)" }}>
           {entitlements.paidPro
-            ? "Purchased"
+            ? coreText("accessPurchased")
             : entitlements.trialActive
-              ? trialLabel ?? "21-day Full Access trial active"
+              ? trialLabel ?? coreText("accessTrial21")
               : entitlements.isReadOnlyMode
-                ? READ_ONLY_HEADING
-                : "Sign in to start your 21-day trial"}
+                ? coreText("accessReadOnlyHeading")
+                : coreText("accessSignIn")}
         </p>
         {entitlements.isReadOnlyMode ? (
           <div className="text-sm mb-3 space-y-3" style={{ color: "var(--muted)" }}>
-            <p>{READ_ONLY_PRIMARY}</p>
-            <p>{READ_ONLY_FULL_ACCESS_EXPLAINER}</p>
+            <p>{coreText("accessReadOnly")}</p>
+            <p>{coreText("accessExplainer")}</p>
           </div>
         ) : (
           <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
             {entitlements.paidPro
-              ? "Thanks for supporting Flicklet. Your purchase keeps Full Access unlocked."
+              ? coreText("accessThanks")
               : entitlements.trialActive
-                ? `${trialLabel ?? "21-day Full Access trial active"}. Explore everything — reminders, Shows Like This, Extras, and your full library.`
-                : "Unlock continued library editing, reminders, Shows Like This, Extras, and unlimited custom lists."}
+                ? coreText("accessExplore", { trial: trialLabel ?? coreText("accessTrial21") })
+                : coreText("accessFeaturesCopy")}
           </p>
         )}
         {!entitlements.paidPro && (
@@ -852,12 +856,12 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
         )}
         {priceState.status === "unavailable" && !entitlements.paidPro && (
           <p className="text-xs mt-2" style={{ color: "var(--muted)" }}>
-            Google Play pricing could not be loaded. Try again when Play Billing is available.
+            {coreText("accessPriceRetry")}
           </p>
         )}
         {entitlements.trialActive && !entitlements.paidPro && (
           <p className="text-xs mt-3" style={{ color: "var(--muted)" }}>
-            Unlock Full Access anytime to keep editing after your trial ends.
+            {coreText("accessTrialKeep")}
           </p>
         )}
       </div>
@@ -868,8 +872,8 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
           style={{ color: "var(--text)" }}
         >
           {entitlements.trialActive && !entitlements.paidPro
-            ? "Included during your trial"
-            : "What full access includes"}
+            ? coreText("accessIncluded")
+            : coreText("accessIncludes")}
         </h4>
 
         <div className="mb-6">
@@ -890,10 +894,10 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
                       className="font-medium mb-1"
                       style={{ color: "var(--text)" }}
                     >
-                      {feature.title}
+                      {coreText(featureCopy[feature.id as keyof typeof featureCopy].title)}
                     </h5>
                     <p className="text-sm" style={{ color: "var(--muted)" }}>
-                      {feature.description}
+                      {coreText(featureCopy[feature.id as keyof typeof featureCopy].description)}
                     </p>
                   </div>
                 </div>
@@ -908,6 +912,7 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
 }
 
 function DataSection({ onShowSharingModal }: SettingsSectionProps) {
+  useLanguage();
   const translations = useTranslations();
   /**
    * Process: User Data Backup & Restore
@@ -925,7 +930,8 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
       const backup = await createBackup();
       downloadBackup(backup);
     } catch (error) {
-      alert(`Backup failed: ${error instanceof Error ? error.message : "Please try again."}`);
+      console.error("Backup failed", error);
+      alert(coreText(recoveryErrorKey(error, "backup")));
     } finally { setBackupBusy(false); }
   };
   const handleRestore = () => {
@@ -939,12 +945,13 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
       try {
         if (file.size > 10 * 1024 * 1024) throw new Error("The backup exceeds 10 MB.");
         const backup = parseBackup(await file.text());
-        if (!window.confirm(`Restore the Flicklet backup from ${new Date(backup.createdAt).toLocaleString()}? Your current library, custom lists and backed-up preferences will be replaced. Your login, account handle and access will stay unchanged.`)) return;
+        if (!window.confirm(coreText("recoveryConfirm", { date: formatDateTime(new Date(backup.createdAt)) }))) return;
         const warning = await restoreBackup(backup);
-        alert(warning || "Backup restored successfully. Flicklet will reload to show your restored data.");
+        alert(coreText(warning ? "recoveryReminderWarning" : "recoverySuccess"));
         window.location.reload();
       } catch (error) {
-        alert(`Restore failed: ${error instanceof Error ? error.message : "Please try again."}`);
+        console.error("Restore failed", error);
+        alert(coreText(recoveryErrorKey(error, "restore")));
       } finally { setBackupBusy(false); }
     };
     input.click();
@@ -962,7 +969,7 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
     <>
       <div className="space-y-6">
         <h3 className="text-xl font-semibold" style={{ color: "var(--text)" }}>
-          Data & Backups
+          {coreText("recoveryData")}
         </h3>
 
         {/* Share with Friends */}
@@ -1003,7 +1010,7 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
         {/* Data Management */}
         <div>
           <h4 className="text-lg font-medium mb-3" style={{ color: "var(--text)" }}>
-            💾 Data Management
+            💾 {coreText("recoveryManagement")}
           </h4>
           <div className="space-y-3">
             {/* Backup */}
@@ -1016,18 +1023,18 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
               }}
             >
               <h5 className="font-medium mb-2" style={{ color: "var(--text)" }}>
-                💾 Backup Data
+                💾 {coreText("recoveryBackup")}
               </h5>
               <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
-                Download a portable snapshot of your library, lists, progress, preferences and Flicklet preferred name. Login credentials and paid access are excluded.
+                {coreText("recoveryBackupCopy")}
               </p>
               <button
                 disabled={backupBusy}
                 onClick={handleBackup}
-                className="px-3 py-2 rounded-lg text-sm transition-colors"
+                className="min-h-[44px] px-3 py-2 rounded-lg text-sm transition-colors"
                 style={{ backgroundColor: "var(--accent)", color: "white" }}
               >
-                💾 Download Backup
+                💾 {coreText("recoveryDownload")}
               </button>
             </div>
 
@@ -1041,15 +1048,15 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
               }}
             >
               <h5 className="font-medium mb-2" style={{ color: "var(--text)" }}>
-                📥 Restore Data
+                📥 {coreText("recoveryRestore")}
               </h5>
               <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
-                Restore your library, lists, progress and backed-up preferences. When signed in, supported cloud data is replaced too. Your login, handle and access are preserved.
+                {coreText("recoveryRestoreCopy")}
               </p>
               <button
                 disabled={backupBusy}
                 onClick={handleRestore}
-                className="px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:opacity-90"
+                className="min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:opacity-90"
                 style={{ 
                   backgroundColor: "#10b981", 
                   color: "white",
@@ -1057,7 +1064,7 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
                   cursor: "pointer"
                 }}
               >
-                📥 Restore from Backup
+                📥 {coreText("recoveryRestoreButton")}
               </button>
             </div>
 

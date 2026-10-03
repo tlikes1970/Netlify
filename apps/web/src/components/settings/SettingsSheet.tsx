@@ -1,3 +1,4 @@
+import { useLanguage } from "@/lib/language";
 import SharingModal from "../modals/SharingModal";
 import { useCallback, useEffect, useRef, useState, lazy, Suspense } from 'react';
 import { useFocusTrap } from '../../lib/a11y/useFocusTrap';
@@ -97,6 +98,7 @@ if (typeof window !== 'undefined') {
 
 export default function SettingsSheet({ onNotesEdit, notesEditorOpen = false }: { onNotesEdit?: (item: import("../cards/card.types").MediaItem) => void; notesEditorOpen?: boolean } = {}) {
   console.log('🔧 SettingsSheet component rendering - component function called');
+  useLanguage();
   const [open, setOpen] = useState<boolean>(() => {
     if (typeof document === 'undefined') {
       console.log('🔧 SettingsSheet: document undefined in initial state');

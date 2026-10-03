@@ -747,8 +747,8 @@ export default function TabCard({
                   canUseProFeatures
                     ? coreText('coreViewSimilar')
                     : isReadOnlyMode
-                      ? "Read-Only — unlock Full Access"
-                      : "Included in your Full Access trial"
+                      ? coreText("accessReadOnlyHint")
+                      : coreText("accessTrialHint")
                 }
                 className={buttonClass}
                 style={{
@@ -774,8 +774,8 @@ export default function TabCard({
                   canUseProFeatures
                     ? coreText('coreViewExtras')
                     : isReadOnlyMode
-                      ? "Read-Only — unlock Full Access"
-                      : "Included in your Full Access trial"
+                      ? coreText("accessReadOnlyHint")
+                      : coreText("accessTrialHint")
                 }
                 className={buttonClass}
                 style={{

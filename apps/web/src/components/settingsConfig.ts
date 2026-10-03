@@ -1,3 +1,4 @@
+import { t } from "../lib/language";
 /**
  * Process: Settings Configuration
  * Purpose: Central definition of Settings sections used by both desktop and mobile UIs
@@ -41,7 +42,7 @@ export function getVisibleSections(isAdmin: boolean): SettingsSectionConfig[] {
       return false;
     }
     return true;
-  });
+  }).map(section => ({ ...section, label: section.id === "pro" ? t("accessName") : section.id === "data" ? t("recoveryData") : section.label }));
 }
 
 

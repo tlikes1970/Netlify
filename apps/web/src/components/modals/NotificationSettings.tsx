@@ -1,3 +1,4 @@
+import { t as accountText, useLanguage as useAccountLanguage } from "@/lib/language";
 import { useState, useEffect } from 'react';
 import { notificationManager } from '../../lib/notifications';
 import { useEntitlements } from '../../hooks/useEntitlements';
@@ -8,6 +9,7 @@ interface NotificationSettingsProps {
 }
 
 export function NotificationSettings({ isOpen, onClose }: NotificationSettingsProps) {
+  useAccountLanguage();
   if (!isOpen) return null;
   const [settings, setSettings] = useState(notificationManager.getSettings());
   const [pushPermission, setPushPermission] = useState<NotificationPermission>('default');
@@ -123,7 +125,7 @@ export function NotificationSettings({ isOpen, onClose }: NotificationSettingsPr
                   ))}
                 </div>
                 <p className="text-xs mt-2" style={{ color: 'var(--muted)' }}>
-                  Sign in to start your 21-day trial for hour-by-hour reminder timing.
+                  {accountText("accessReminderTrial")}
                 </p>
               </div>
             )}

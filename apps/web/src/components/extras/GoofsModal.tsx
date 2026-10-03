@@ -1,3 +1,4 @@
+import { t as accountText, useLanguage as useAccountLanguage } from "@/lib/language";
 import React, { useState, useEffect, useRef } from "react";
 import {
   getGoofsForTitle,
@@ -33,6 +34,7 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
 }) => {
   console.log("🎭 GoofsModal render:", { isOpen, tmdbId, title });
 
+  useAccountLanguage();
   const { hasFullAccess } = useEntitlements();
 
   const [goofs, setGoofs] = useState<GoofSet | null>(null);
@@ -273,7 +275,7 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
             className="p-4 overflow-y-auto max-h-96"
           >
             {!hasFullAccess ? (
-              <UpgradeToProCTA variant="panel" message="Shows Like This is included during your trial. Unlock Full Access to keep it after your trial ends." />
+              <UpgradeToProCTA variant="panel" message={accountText("accessSimilarTrial")} />
             ) : (
               renderGoofsContent()
             )}

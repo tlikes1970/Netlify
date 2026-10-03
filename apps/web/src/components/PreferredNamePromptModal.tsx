@@ -1,3 +1,4 @@
+import { t, useLanguage } from "../lib/language";
 import { useCallback, useEffect, useRef } from "react";
 import { useAndroidBackDismiss } from "../hooks/useAndroidBackDismiss";
 import ModalPortal from "./ModalPortal";
@@ -10,6 +11,7 @@ export default function PreferredNamePromptModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
+  useLanguage();
   const panel = useRef<HTMLDivElement>(null);
   const dismiss = useCallback(() => onClose(), [onClose]);
   useAndroidBackDismiss(isOpen, dismiss);
@@ -61,16 +63,16 @@ export default function PreferredNamePromptModal({
           ref={panel}
           role="dialog"
           aria-modal="true"
-          aria-label="What should we call you?"
-          className="w-full max-w-md rounded-2xl p-6"
+          aria-label={t("profilePrompt")}
+          className="w-full min-w-0 max-w-md max-h-[calc(100dvh-32px)] overflow-y-auto rounded-2xl p-6"
           style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}
         >
           <h2 className="text-xl font-semibold mb-4">
-            What should we call you?
+            {t("profilePrompt")}
           </h2>
           <PreferredNameEditor onSaved={onClose} />
-          <button type="button" onClick={onClose} className="mt-4">
-            Not now
+          <button type="button" onClick={onClose} className="mt-4 min-h-[44px]">
+            {t("coreNotNow")}
           </button>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { t, useLanguage } from "../lib/language";
 /**
  * Process: Unified Upgrade CTA Component
  * Purpose: Single reusable component for all "Upgrade to Pro" prompts across Settings
@@ -7,10 +8,6 @@
  */
 
 import { useEntitlements } from "../hooks/useEntitlements";
-import {
-  READ_ONLY_FULL_ACCESS_EXPLAINER,
-  READ_ONLY_PRIMARY,
-} from "../lib/copy/access";
 import { startProUpgrade } from "../lib/proUpgrade";
 
 export type UpgradeCTAVariant = 'banner' | 'panel' | 'inline' | 'button';
@@ -39,6 +36,7 @@ export function UpgradeToProCTA({
   className = '',
   disabled = false,
 }: UpgradeToProCTAProps) {
+  useLanguage();
   const entitlements = useEntitlements();
 
   // Paid Pro or active full-access trial — no upgrade nag
@@ -48,13 +46,13 @@ export function UpgradeToProCTA({
 
   const defaultMessages = {
     banner: entitlements.isReadOnlyMode
-      ? READ_ONLY_PRIMARY
-      : 'Start your 21-day Full Access trial, or unlock Full Access to keep editing after trial.',
+      ? t("accessReadOnly")
+      : t("accessBanner"),
     panel: entitlements.isReadOnlyMode
-      ? `${READ_ONLY_PRIMARY} ${READ_ONLY_FULL_ACCESS_EXPLAINER}`
-      : '21-day Full Access trial — explore everything. A one-time unlock helps support the app and continued development.',
-    inline: 'Unlock Full Access',
-    button: 'Unlock Full Access',
+      ? `${t("accessReadOnly")} ${t("accessExplainer")}`
+      : t("accessPanel"),
+    inline: t("accessUnlock"),
+    button: t("accessUnlock"),
   };
 
   const displayMessage = message || defaultMessages[variant];
@@ -79,7 +77,7 @@ export function UpgradeToProCTA({
                 className="underline font-medium"
                 style={{ color: "var(--accent)" }}
               >
-                Learn more
+                {t("accessLearn")}
               </button>
             </span>
           </div>
@@ -89,10 +87,10 @@ export function UpgradeToProCTA({
     case 'panel':
       return (
         <div className={`p-4 rounded-lg border ${className}`} style={{ backgroundColor: 'var(--btn)', borderColor: 'var(--line)' }}>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {shouldShowIcon && <div className="text-2xl">💎</div>}
-            <div className="flex-1">
-              <h4 className="font-semibold">Unlock Full Access</h4>
+            <div className="min-w-0 flex-1">
+              <h4 className="font-semibold">{t("accessUnlock")}</h4>
               <p className="text-sm" style={{ color: 'var(--muted)' }}>
                 {displayMessage}
               </p>
@@ -101,7 +99,7 @@ export function UpgradeToProCTA({
               onClick={startProUpgrade}
               className="px-4 py-2 rounded text-sm font-medium transition-colors"
               style={{ backgroundColor: 'var(--accent)', color: 'white' }}>
-              Unlock
+              {t("accessUnlockShort")}
             </button>
           </div>
         </div>
