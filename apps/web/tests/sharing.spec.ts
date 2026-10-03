@@ -7,7 +7,6 @@ const root = process.cwd();
 test.beforeAll(async () => {
  const data = `const movie={id:7,mediaType:'movie',title:'Movie '+ 'Very long title '.repeat(8),voteAverage:8.1,userRating:1,userNotes:'PRIVATE-NOTE'};const series={id:7,mediaType:'tv',title:'Series collision'};export function useLibrary(list){return list==='watching'?[movie]:list==='wishlist'?[series]:[]}export const Library={getByList:()=>[movie,...Array.from({length:35},(_,i)=>({...movie,id:100+i,title:'Long item '+i+' '+ 'Title '.repeat(12)}))]};`;
  const mocks: Record<string, string> = {
-  'lib/language': `import t from './src/lib/translations';export function useTranslations(){return t.en}`,
   'lib/storage': data,
   'lib/customLists': `export function useCustomLists(){return {customLists:[{id:'a',name:'Custom '+ 'Long List Name '.repeat(10)}]}}`,
   'hooks/useUsername': `export function useUsername(){return {username:'handle'}}`,

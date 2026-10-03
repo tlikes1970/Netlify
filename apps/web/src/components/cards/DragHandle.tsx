@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "../../lib/language";
 import React, { useState, useRef, useEffect } from "react";
 import { useIsDesktop } from "../../hooks/useDeviceDetection";
 
@@ -67,6 +68,7 @@ export function DragHandle({
   isDragging: externalIsDragging,
   itemTitle,
 }: DragHandleProps) {
+  useLanguage();
   const { ready, isDesktop } = useIsDesktop();
 
   // DEBUG: Log when component renders
@@ -619,8 +621,8 @@ export function DragHandle({
           onKeyboardReorder?.(e.key === "ArrowUp" ? "up" : "down");
         }
       }}
-      title="Drag to reorder; on touch, hold then drag. Use Arrow Up/Down with a keyboard."
-      aria-label={`Drag to reorder${itemTitle ? ` ${itemTitle}` : ""}. On touch, hold then drag. Press Arrow Up or Down to move with keyboard.`}
+      title={coreText("coreReorderTitle")}
+      aria-label={`${coreText("coreReorderAria")} ${itemTitle || ""}`}
       role="button"
       tabIndex={0}
       aria-grabbed={isDraggingState}

@@ -1,3 +1,4 @@
+import { t as coreText } from "../../../lib/language";
 import { useEffect, useState } from 'react';
 import type { MediaItem } from '../card.types';
 import { Library } from '../../../lib/storage';
@@ -64,8 +65,8 @@ export function formatMobileMetaLine(
   item: MediaItem,
   mediaType: 'tv' | 'movie'
 ): string {
-  const yearText = item.year || 'TBA';
-  return `${yearText} • ${mediaType === 'tv' ? 'TV Show' : 'Movie'}`;
+  const yearText = item.year || coreText('coreTBA');
+  return `${yearText} • ${mediaType === 'tv' ? coreText('coreTV') : coreText('coreMovie')}`;
 }
 
 /** Compact metadata from fields already on the library item (no new fetches). */

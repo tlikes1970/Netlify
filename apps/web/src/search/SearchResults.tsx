@@ -1,3 +1,6 @@
+import { genreDisplayName } from "../lib/genreLabels";
+import { formatRating } from "../lib/localeFormatters";
+import { t as coreText, useLanguage } from "@/lib/language";
 import { getListDisplayName } from "../lib/storage";
 import React, { useEffect, useState, useRef } from "react";
 // import CardV2 from '../components/cards/CardV2'; // Unused
@@ -64,6 +67,7 @@ export default function SearchResults({
   onExtrasOpen?: (item: MediaItem) => void;
   onEpisodeTracking?: (item: MediaItem) => void;
 }) {
+  useLanguage();
   const translations = useTranslations();
   // Create actions object using Library methods and passed handlers
   const actions: CardActionHandlers = {
@@ -244,7 +248,7 @@ export default function SearchResults({
       setCurrentPage(result.page);
       setTotalPages(result.totalPages);
     } catch (err: any) {
-      if (!ac.signal.aborted && abortRef.current === ac && err?.name !== "AbortError") setError(err?.message || "Search failed");
+      if (!ac.signal.aborted && abortRef.current === ac && err?.name !== "AbortError") setError(coreText('coreSearchFailed'));
     } finally {
       if (abortRef.current === ac) setIsLoading(false);
     }
@@ -270,7 +274,7 @@ export default function SearchResults({
             color: "var(--text)",
             border: "1px solid var(--line)",
           }}
-          aria-label="Back to home"
+          aria-label={coreText("coreBackHomeAria")}
         >
           <svg
             className="w-5 h-5"
@@ -286,16 +290,16 @@ export default function SearchResults({
               d="M10 19l-7-7m0 0l7-7m-7 7h18"
             />
           </svg>
-          <span className="text-sm font-medium">Back to Home</span>
+          <span className="text-sm font-medium">{coreText("coreBackHome")}</span>
         </button>
       )}
 
       <h2 id="search-results-heading" className="text-base font-semibold mb-6">
         {resolvedItems ? translations.sharedTitleHeading : query.startsWith("tag:")
-          ? `Tag search results for "${query.substring(4)}"`
+          ? coreText('coreTagResults', {query:query.substring(4)})
           : !query.trim() && genre != null
-            ? `Genre results`
-            : `Search results for "${query}"`}
+            ? coreText('coreGenreResults')
+            : coreText('coreSearchResults', {query})}
       </h2>
 
       {correction && <p role="status" className="mb-4 text-sm break-words">{translations.searchCorrection.replace("{query}", correction)}</p>}
@@ -306,7 +310,7 @@ export default function SearchResults({
         </p>
       )}
 
-      {error && <p className="mt-2 text-sm text-red-600">⚠️ {error}</p>}
+      {error && <p className="mt-2 text-sm text-red-600">⚠️ {coreText('coreSearchFailed')}</p>}
 
       <div className="space-y-6">
         {items.map((item, index) => (
@@ -329,7 +333,7 @@ export default function SearchResults({
           className="h-20 flex items-center justify-center"
         >
           {isLoading && (
-            <div className="text-sm text-muted-foreground">Loading more...</div>
+            <div className="text-sm text-muted-foreground">{coreText("coreLoadingMore")}</div>
           )}
         </div>
       )}
@@ -377,6 +381,7 @@ export function SearchResultCard({
   onRemove: () => void;
   actions?: CardActionHandlers;
 }) {
+  useLanguage();
   const translations = useTranslations();
   const [enrichedItem, setEnrichedItem] = React.useState(item);
   const { mediaType, synopsis } = enrichedItem;
@@ -440,7 +445,7 @@ export function SearchResultCard({
       typeof item.title === "string"
         ? item.title
         : String(item.title ?? "").trim();
-    const safe = t || "Untitled";
+    const safe = t || coreText("coreUntitled");
     return item.year ? `${safe} (${item.year})` : safe;
   }
 
@@ -448,7 +453,7 @@ export function SearchResultCard({
 
   // Genre ID to name mapping (common TMDB genres)
   const getGenreName = (genreIds?: number[]) => {
-    if (!genreIds || genreIds.length === 0) return "Genre TBA";
+    if (!genreIds || genreIds.length === 0) return coreText("coreGenreTBA");
 
     const genreMap: Record<number, string> = {
       28: "Action",
@@ -473,7 +478,7 @@ export function SearchResultCard({
     };
 
     const firstGenre = genreIds[0];
-    return genreMap[firstGenre] || "Genre TBA";
+    return genreMap[firstGenre] ? genreDisplayName(genreMap[firstGenre]) : coreText("coreGenreTBA");
   };
 
   // Close more menu when clicking outside
@@ -505,7 +510,7 @@ export function SearchResultCard({
 
   // Use actual data from TMDB or sensible defaults
   const genre = getGenreName((enrichedItem as any).genre_ids);
-  const mediaTypeLabel = mediaType === "movie" ? "Movie" : "TV Show";
+  const mediaTypeLabel = mediaType === "movie" ? coreText("coreMovie") : coreText("coreTV");
   const badges = ["NEW", "TRENDING"]; // TODO: Generate based on actual data
 
   // Get streaming service information
@@ -515,13 +520,13 @@ export function SearchResultCard({
       networkInfo.networks &&
       networkInfo.networks.length > 0
     ) {
-      return `On ${networkInfo.networks[0]}${networkInfo.networks.length > 1 ? ` (+${networkInfo.networks.length - 1} more)` : ""}`;
+      return coreText('coreOnProvider', {provider:networkInfo.networks[0]}) + (networkInfo.networks.length > 1 ? coreText('coreMoreProviders', {count:networkInfo.networks.length-1}) : '');
     } else if (
       mediaType === "movie" &&
       networkInfo.productionCompanies &&
       networkInfo.productionCompanies.length > 0
     ) {
-      return `From ${networkInfo.productionCompanies[0]}${networkInfo.productionCompanies.length > 1 ? ` (+${networkInfo.productionCompanies.length - 1} more)` : ""}`;
+      return coreText('coreFromProvider', {provider:networkInfo.productionCompanies[0]}) + (networkInfo.productionCompanies.length > 1 ? coreText('coreMoreProviders', {count:networkInfo.productionCompanies.length-1}) : '');
     }
     // Don't show placeholder text - only show when we have real data
     return null;
@@ -731,7 +736,7 @@ export function SearchResultCard({
           <span className="line-clamp-2 min-h-[2.5em] leading-tight" title={title}>{title}</span>
           {isMobile && typeof enrichedItem.voteAverage === "number" && Number.isFinite(enrichedItem.voteAverage) && enrichedItem.voteAverage > 0 && (
             <span className="text-muted-foreground text-xs font-normal">
-              TMDB {enrichedItem.voteAverage.toFixed(1)}/10
+              TMDB {formatRating(enrichedItem.voteAverage)}/10
             </span>
           )}
         </div>
@@ -780,13 +785,13 @@ export function SearchResultCard({
           </div>
         )}
 
-        {!isMobile && typeof enrichedItem.voteAverage === 'number' && Number.isFinite(enrichedItem.voteAverage) && enrichedItem.voteAverage > 0 && <div className="text-xs mb-4">TMDB {enrichedItem.voteAverage.toFixed(1)}/10</div>}
+        {!isMobile && typeof enrichedItem.voteAverage === 'number' && Number.isFinite(enrichedItem.voteAverage) && enrichedItem.voteAverage > 0 && <div className="text-xs mb-4">TMDB {formatRating(enrichedItem.voteAverage)}/10</div>}
 
         {/* Actions */}
         {isMobile ? (
           // Mobile: Compact actions with primary button + More menu
           <div className="mt-auto flex gap-2 items-center">
-            {isInList && <button onClick={() => setShowManageSheet(true)} className="px-3 py-2 text-xs font-medium rounded-lg bg-accent text-white min-h-[44px]">Manage</button>}
+            {isInList && <button onClick={() => setShowManageSheet(true)} className="px-3 py-2 text-xs font-medium rounded-lg bg-accent text-white min-h-[44px]">{coreText("coreManage")}</button>}
 
             {/* More Menu Button */}
             <div className="absolute top-2 right-2">
@@ -795,7 +800,7 @@ export function SearchResultCard({
                 onClick={() => setShowMoreMenu(!showMoreMenu)}
                 className="w-11 h-11 bg-transparent flex items-center justify-center"
                 style={{ color: "var(--text)" }}
-                aria-label="More actions"
+                aria-label={coreText("coreMoreActions")}
                 aria-haspopup="menu"
                 aria-expanded={showMoreMenu}
               >
@@ -923,12 +928,10 @@ export function SearchResultCard({
                     </div>
                     {/* Header */}
                     <div className="px-4 pb-3 border-b border-line">
-                      <h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>
-                        Manage {enrichedItem.title}
+                      <h3 className="text-lg font-semibold" style={{ color: "var(--text)" }}>{coreText("coreManage")}{enrichedItem.title}
                       </h3>
                       {currentList && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                          In: {getListDisplayName(currentList ?? libraryEntry!.list)}
+                        <p className="text-sm text-muted-foreground mt-1">{coreText("coreIn")} {getListDisplayName(currentList ?? libraryEntry!.list)}
                         </p>
                       )}
                     </div>
@@ -1009,8 +1012,7 @@ export function SearchResultCard({
                   <span
                     className="inline-block px-3 py-1 text-xs font-medium rounded-lg bg-muted"
                     style={{ color: "var(--text)" }}
-                  >
-                    In list: {getListDisplayName(currentList ?? libraryEntry!.list)}
+                  >{coreText("coreInList")} {getListDisplayName(currentList ?? libraryEntry!.list)}
                   </span>
                 </div>
                 {/* Library management actions */}
@@ -1045,6 +1047,7 @@ export function SearchResultCard({
 }
 
 function PersonCard({ item }: { item: MediaItem }) {
+  useLanguage();
   const { posterUrl } = item;
   const [pressedButtons, setPressedButtons] = React.useState<Set<string>>(
     new Set()
@@ -1056,7 +1059,7 @@ function PersonCard({ item }: { item: MediaItem }) {
       typeof item.title === "string"
         ? item.title
         : String(item.title ?? "").trim();
-    const safe = t || "Untitled";
+    const safe = t || coreText("coreUntitled");
     return item.year ? `${safe} (${item.year})` : safe;
   }
 
@@ -1067,7 +1070,7 @@ function PersonCard({ item }: { item: MediaItem }) {
   const knownForText =
     knownFor.length > 0
       ? knownFor.map((work: any) => work.title || work.name).join(", ")
-      : "Actor/Actress";
+      : coreText("coreActor");
 
   const handleAction = async (action: string) => {
     console.log(
@@ -1146,7 +1149,7 @@ function PersonCard({ item }: { item: MediaItem }) {
         target="_blank"
         rel="noopener noreferrer"
         className="flex-shrink-0 w-24 h-36 bg-muted cursor-pointer"
-        title="View profile on TMDB"
+        title={coreText("coreProfileTmdb")}
       >
         {posterUrl ? (
           <OptimizedImage
@@ -1157,9 +1160,7 @@ function PersonCard({ item }: { item: MediaItem }) {
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full bg-neutral-800 flex items-center justify-center text-sm text-muted-foreground">
-            No photo
-          </div>
+          <div className="w-full h-full bg-neutral-800 flex items-center justify-center text-sm text-muted-foreground">{coreText("coreNoPhoto")}</div>
         )}
       </a>
 
@@ -1169,13 +1170,11 @@ function PersonCard({ item }: { item: MediaItem }) {
         <div className="font-bold text-lg mb-1">{title}</div>
 
         {/* Known For */}
-        <div className="text-muted-foreground text-sm mb-2">
-          Known for: {knownForText}
+        <div className="text-muted-foreground text-sm mb-2">{coreText("coreKnownFor")} {knownForText}
         </div>
 
         {/* Popularity */}
-        <div className="text-accent text-sm mb-2">
-          Popularity: {item.voteAverage ? Math.round(item.voteAverage) : "N/A"}
+        <div className="text-accent text-sm mb-2">{coreText("corePopularity")} {item.voteAverage ? Math.round(item.voteAverage) : "N/A"}
         </div>
 
         {/* Actions */}
@@ -1184,8 +1183,8 @@ function PersonCard({ item }: { item: MediaItem }) {
             className="flex flex-wrap gap-2 p-2 rounded-lg"
             style={{ borderColor: "var(--line)", border: "1px dashed" }}
           >
-            {createButton("view-profile", "View Profile")}
-            {createButton("search-works", "Search Works")}
+            {createButton("view-profile", coreText("coreViewProfile"))}
+            {createButton("search-works", coreText("coreSearchWorks"))}
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
+import { t, useLanguage } from '../lib/language';
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { derr } from '../lib/log';
-import { ERROR_MESSAGES, logErrorDetails } from '../lib/errorMessages';
+import { logErrorDetails } from '../lib/errorMessages';
 
 interface Props {
   children: ReactNode;
@@ -40,29 +41,7 @@ export default class ErrorBoundary extends Component<Props, State> {
         return this.props.fallback;
       }
 
-      return (
-        <div 
-          role="alert" 
-          className="flex flex-col items-center justify-center p-4 text-center"
-          style={{ minHeight: '120px' }}
-        >
-          <p className="text-sm mb-3" style={{ color: 'var(--muted)' }}>
-            {ERROR_MESSAGES.generic}
-          </p>
-          <button
-            onClick={this.handleReset}
-            className="px-3 py-1.5 text-xs rounded transition-colors"
-            style={{ 
-              backgroundColor: 'var(--btn)', 
-              color: 'var(--text)', 
-              borderColor: 'var(--line)', 
-              border: '1px solid' 
-            }}
-          >
-            Retry
-          </button>
-        </div>
-      );
+      return <CoreErrorFallback onReset={this.handleReset} />;
     }
 
     return this.props.children;
@@ -72,3 +51,30 @@ export default class ErrorBoundary extends Component<Props, State> {
 
 
 
+
+function CoreErrorFallback({onReset}: {onReset: () => void}) {
+  useLanguage();
+  return (
+        <div 
+          role="alert" 
+          className="flex flex-col items-center justify-center p-4 text-center"
+          style={{ minHeight: '120px' }}
+        >
+          <p className="text-sm mb-3" style={{ color: 'var(--muted)' }}>
+            {t('coreGenericError')}
+          </p>
+          <button
+            onClick={onReset}
+            className="px-3 py-1.5 text-xs rounded transition-colors"
+            style={{ 
+              backgroundColor: 'var(--btn)', 
+              color: 'var(--text)', 
+              borderColor: 'var(--line)', 
+              border: '1px solid' 
+            }}
+          >
+            {t('coreRetry')}
+          </button>
+        </div>
+      );
+}

@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "@/lib/language";
 import React from "react";
 import type { CardActionHandlers, MediaItem } from "./cards/card.types";
 import type { LibraryEntry } from "../lib/storage";
@@ -36,6 +37,7 @@ export default function LibraryActions({
   mode = "list",
   currentList,
 }: LibraryActionsProps) {
+  useLanguage();
   const translations = useTranslations();
   const settings = useSettings();
   const { hasFullAccess, isReadOnlyMode } = useEntitlements();
@@ -301,9 +303,9 @@ export default function LibraryActions({
               borderColor: "var(--line)",
               border: "1px solid",
             }}
-            title="Set simple reminder (24 hours before)"
+            title={coreText("coreReminderHint")}
           >
-            {isSeriesReminderEnabled(item.id) ? "✓ Reminded" : "Remind Me"}
+            {isSeriesReminderEnabled(item.id) ? coreText("coreReminded") : coreText("coreRemind")}
           </button>
         )}
         
@@ -319,10 +321,8 @@ export default function LibraryActions({
               border: "1px solid",
               opacity: 1,
             }}
-            title="Track episode progress"
-          >
-            Episode Progress
-          </button>
+            title={coreText("coreTrackProgress")}
+          >{coreText("coreEpisodeProgress")}</button>
         )}
         
         {/* Remove button */}
@@ -336,9 +336,7 @@ export default function LibraryActions({
               borderColor: "var(--line)",
               border: "1px solid",
             }}
-          >
-            Remove
-          </button>
+          >{coreText("coreRemove")}</button>
         )}
       </div>
     );
@@ -356,7 +354,7 @@ export default function LibraryActions({
         {/* Rating (if in a list) */}
         {listName && (listName === "watching" || listName === "watched") && (
           <div className="flex items-center gap-2 py-2">
-            <span className="text-sm" style={{ color: "var(--text)" }}>Your Rating:</span>
+            <span className="text-sm" style={{ color: "var(--text)" }}>{coreText("coreYourRating")}</span>
             <StarRating
               value={userRating || 0}
               onChange={handleRatingChange}
@@ -393,7 +391,7 @@ export default function LibraryActions({
               border: "1px solid",
             }}
           >
-            {isSeriesReminderEnabled(item.id) ? "✓ Reminded" : "Remind Me"}
+            {isSeriesReminderEnabled(item.id) ? coreText("coreReminded") : coreText("coreRemind")}
           </button>
         )}
         
@@ -409,10 +407,8 @@ export default function LibraryActions({
               border: "1px solid",
               opacity: 1,
             }}
-            title="Track episode progress"
-          >
-            Episode Progress
-          </button>
+            title={coreText("coreTrackProgress")}
+          >{coreText("coreEpisodeProgress")}</button>
         )}
         
         {/* Pro features */}
@@ -437,8 +433,7 @@ export default function LibraryActions({
                 border: "1px solid",
                 opacity: canUseProFeatures ? 1 : 0.65,
               }}
-            >
-              Extras {!canUseProFeatures && "🔒"}
+            >{coreText("coreExtras")}{!canUseProFeatures && "🔒"}
             </button>
           </div>
         )}
@@ -453,9 +448,7 @@ export default function LibraryActions({
               borderColor: "var(--line)",
               border: "1px solid",
             }}
-          >
-            Remove from Library
-          </button>
+          >{coreText("coreRemoveLibrary")}</button>
         )}
       </div>
     );
@@ -496,9 +489,9 @@ export default function LibraryActions({
             borderColor: "var(--line)",
             border: "1px solid",
           }}
-          title="Set simple reminder (24 hours before)"
+          title={coreText("coreReminderHint")}
         >
-          {isSeriesReminderEnabled(item.id) ? "✓ Reminded" : "Remind Me"}
+          {isSeriesReminderEnabled(item.id) ? coreText("coreReminded") : coreText("coreRemind")}
         </button>
       )}
     </>

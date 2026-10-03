@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "../../lib/language";
 import { useIsDesktop } from '../../hooks/useDeviceDetection';
 
 export interface ProviderBadgeProps {
@@ -68,6 +69,7 @@ function getShortLabel(provider: string): string {
  * - Accessible with aria-label
  */
 export function ProviderBadge({ provider, className = '', mediaType = 'tv' }: ProviderBadgeProps) {
+  useLanguage();
   const { ready, isDesktop: _isDesktop } = useIsDesktop();
   
   // Wait for viewport detection to avoid hydration mismatch
@@ -75,7 +77,7 @@ export function ProviderBadge({ provider, className = '', mediaType = 'tv' }: Pr
     return (
       <span
         className={`provider-badge ${className}`}
-        aria-label={`Available on ${provider}`}
+        aria-label={coreText('coreAvailableProvider', {provider})}
         title={provider}
       >
         {getShortLabel(provider)}
@@ -85,12 +87,12 @@ export function ProviderBadge({ provider, className = '', mediaType = 'tv' }: Pr
 
   // Always show full label on both desktop and mobile (no abbreviations)
   // Format provider name for display (match search results style: "On Netflix" for TV, provider name for movies)
-  const displayText = mediaType === 'tv' ? `On ${provider}` : provider;
+  const displayText = mediaType === 'tv' ? coreText('coreOnProvider', {provider}) : provider;
 
   return (
     <span
       className={`provider-badge ${className}`}
-      aria-label={`Available on ${provider}`}
+      aria-label={coreText('coreAvailableProvider', {provider})}
       title={provider}
     >
       {displayText}
@@ -109,6 +111,7 @@ export interface ProviderBadgesProps {
 }
 
 export function ProviderBadges({ providers, className = '', maxVisible = 3, mediaType = 'tv' }: ProviderBadgesProps) {
+  useLanguage();
   // Debug: Log when providers are missing
   if (!providers || providers.length === 0) {
     if (import.meta.env.DEV) {
@@ -131,7 +134,7 @@ export function ProviderBadges({ providers, className = '', maxVisible = 3, medi
   const remainingCount = validProviders.length - maxVisible;
 
   return (
-    <div className={`provider-badges-container ${className}`} role="list" aria-label="Streaming providers">
+    <div className={`provider-badges-container ${className}`} role="list" aria-label={coreText('coreProviders')}>
       {visibleProviders.map((provider, index) => (
         <ProviderBadge
           key={`${provider}-${index}`}
@@ -143,8 +146,8 @@ export function ProviderBadges({ providers, className = '', maxVisible = 3, medi
       {remainingCount > 0 && (
         <span
           className="provider-badge-more"
-          aria-label={`${remainingCount} more providers`}
-          title={`${remainingCount} more: ${providers.slice(maxVisible).join(', ')}`}
+          aria-label={coreText('coreProvidersMore', {count:remainingCount})}
+          title={`${coreText('coreProvidersMore', {count:remainingCount})}: ${providers.slice(maxVisible).join(', ')}`}
         >
           +{remainingCount}
         </span>

@@ -1,3 +1,5 @@
+import { genreDisplayName } from "../lib/genreLabels";
+import { t as coreText, useLanguage } from "@/lib/language";
 import React, { useEffect, useState } from "react";
 import { APP_VERSION } from "../version";
 import { useTranslations } from "../lib/language";
@@ -64,6 +66,7 @@ export default function FlickletHeader({
   onSettingsOpen,
   onNavigateHome,
 }: FlickletHeaderProps) {
+  useLanguage();
   const { uid, preferredName, loading, error } = usePreferredName();
   const [dismissedUid, setDismissedUid] = useState<string | null>(null);
   // Dismissal is per sign-in, not a permanent substitute for supplying a name.
@@ -91,7 +94,7 @@ export default function FlickletHeader({
             <div className="flex min-w-0 flex-wrap items-center justify-end gap-1 md:col-start-3 md:gap-2">
               <span
                 className="select-none text-[10px] md:text-[11px] leading-none text-muted-foreground"
-                title="App version"
+                title={coreText("coreAppVersion")}
                 data-testid="app-version"
                 data-role="version"
               >
@@ -103,8 +106,8 @@ export default function FlickletHeader({
                 type="button"
                 onClick={onSettingsOpen}
                 className="hidden rounded-full border border-gray-300 p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground md:inline-flex dark:border-gray-600"
-                aria-label="Open Settings"
-                title="Settings"
+                aria-label={coreText("coreOpenSettings")}
+                title={coreText("coreSettings")}
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -124,8 +127,8 @@ export default function FlickletHeader({
                   }
                 }}
                 className="rounded-full border border-gray-300 dark:border-gray-600 px-1.5 py-0.5 md:px-2 md:py-1 text-[10px] md:text-[11px] leading-none text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-                aria-label="Open help"
-                title="Help & Support"
+                aria-label={coreText("coreOpenHelp")}
+                title={coreText("coreHelp")}
                 data-testid="help-button"
                 data-role="help"
               >
@@ -162,6 +165,7 @@ export default function FlickletHeader({
 }
 
 function AppTitle({ text, onClick }: { text: string; onClick?: () => void }) {
+  useLanguage();
   const handleClick = () => {
     if (onClick) {
       onClick();
@@ -172,7 +176,7 @@ function AppTitle({ text, onClick }: { text: string; onClick?: () => void }) {
     <div>
       <h1
         className={`max-w-full select-none text-balance font-extrabold tracking-tight text-2xl leading-tight sm:text-3xl md:text-5xl lg:text-6xl bg-gradient-to-r from-fuchsia-500 via-pink-500 to-amber-400 bg-clip-text text-transparent drop-shadow-[0_1px_0_rgba(255,255,255,0.35)] ${onClick ? "cursor-pointer" : ""}`}
-        title={onClick ? `Go to ${text} home` : text}
+        title={onClick ? coreText('coreGoHome', {app:text}) : text}
         data-testid="app-title"
         onClick={onClick ? handleClick : undefined}
       >
@@ -185,6 +189,7 @@ function AppTitle({ text, onClick }: { text: string; onClick?: () => void }) {
 }
 
 function InstallButtonSlot() {
+  useLanguage();
   const can = useCanInstallPWA();
 
   // Reserve space: match the button width so header doesn't shift
@@ -212,11 +217,11 @@ function InstallButtonSlot() {
       onClick={() => promptInstall()}
       style={style}
       className="rounded-full border border-gray-300 dark:border-gray-600 px-1.5 py-0.5 md:px-2 md:py-1 text-[10px] md:text-[11px] leading-none text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-      aria-label="Install app"
-      title="Install Flicklet"
+      aria-label={coreText('coreInstallApp')}
+      title={coreText('coreInstallFlicklet')}
       data-testid="install-button"
     >
-      Install
+      {coreText('coreInstall')}
     </button>
   );
 }
@@ -251,6 +256,7 @@ function SearchRow({
   ) => void;
   onClear?: () => void;
 }) {
+  useLanguage();
   const translations = useTranslations();
   const [q, setQ] = React.useState("");
   const [g, setG] = React.useState<number | null>(null);
@@ -606,36 +612,36 @@ function SearchRow({
   // Build labels for the filters button
   const selectedGenreName =
     (g === null
-      ? "All Genres"
-      : POPULAR_GENRES.find((genre) => genre.id === g)?.name) ?? "All Genres";
+      ? coreText("coreAllGenres")
+      : POPULAR_GENRES.find((genre) => genre.id === g)?.name) ?? coreText("coreAllGenres");
 
   const selectedTypeName =
     searchType === "all"
       ? ""
       : searchType === "movies-tv"
         ? mediaTypeFilter === "tv"
-          ? "TV"
+          ? coreText("coreTVShort")
           : mediaTypeFilter === "movie"
-            ? "Movie"
-            : "Movies/TV"
-        : "People";
+            ? coreText("coreMovie")
+            : coreText('coreMoviesTV')
+        : coreText("corePeople");
 
   function getFiltersLabel() {
     // Priority: show genre if not default, then media type (TV/Movie), then search type, then mode
-    if (selectedGenreName !== "All Genres") return selectedGenreName;
-    if (mediaTypeFilter === "tv") return "TV";
-    if (mediaTypeFilter === "movie") return "Movie";
+    if (selectedGenreName !== coreText("coreAllGenres")) return genreDisplayName(selectedGenreName);
+    if (mediaTypeFilter === "tv") return coreText("coreTVShort");
+    if (mediaTypeFilter === "movie") return coreText("coreMovie");
     if (selectedTypeName) return selectedTypeName;
-    if (searchMode !== "title") return "Tag";
-    return "Filters";
+    if (searchMode !== "title") return coreText("coreTag");
+    return coreText("coreFilters");
   }
 
   // Optional: keep the full summary for tooltip/aria
   function getFiltersSummary() {
     const parts = [];
-    parts.push(selectedGenreName);
-    parts.push(selectedTypeName || "All");
-    parts.push(searchMode === "tag" ? "Tag mode" : "Title mode");
+    parts.push(genreDisplayName(selectedGenreName));
+    parts.push(selectedTypeName || coreText("coreAll"));
+    parts.push(searchMode === "tag" ? coreText('coreTagMode') : coreText('coreTitleMode'));
     return parts.filter(Boolean).join(" · ");
   }
 
@@ -690,7 +696,7 @@ function SearchRow({
           }`}
           aria-haspopup="menu"
           aria-expanded={showFiltersDropdown}
-          aria-label={`Filters: ${getFiltersSummary()}`}
+          aria-label={coreText('coreFiltersSummary', {summary:getFiltersSummary()})}
           title={getFiltersSummary()}
         >
           {getFiltersLabel()}
@@ -743,9 +749,7 @@ function SearchRow({
                               ? "white"
                               : "var(--text)",
                         }}
-                      >
-                        TV
-                      </button>
+                      >{coreText("coreTVShort")}</button>
 
                       {/* Movie */}
                       <button
@@ -769,9 +773,7 @@ function SearchRow({
                               ? "white"
                               : "var(--text)",
                         }}
-                      >
-                        Movie
-                      </button>
+                      >{coreText("coreMovie")}</button>
 
                       {/* Genre (opens submenu) */}
                       <button
@@ -788,7 +790,7 @@ function SearchRow({
                           color: g !== null ? "white" : "var(--text)",
                         }}
                       >
-                        <span>Genre</span>
+                        <span>{coreText("coreGenre")}</span>
                         <span className="ml-2">→</span>
                       </button>
 
@@ -809,9 +811,7 @@ function SearchRow({
                           color:
                             searchType === "people" ? "white" : "var(--text)",
                         }}
-                      >
-                        People
-                      </button>
+                      >{coreText("corePeople")}</button>
 
                       {/* Divider */}
                       <div
@@ -828,9 +828,7 @@ function SearchRow({
                         }}
                         className="w-full text-left px-3 py-2.5 text-sm font-medium rounded transition-colors hover:bg-muted/80"
                         style={{ color: "var(--muted)" }}
-                      >
-                        Advanced Search →
-                      </button>
+                      >{coreText("coreAdvancedArrow")}</button>
                     </div>
                   </div>
                 ) : showGenreSubmenu ? (
@@ -862,7 +860,7 @@ function SearchRow({
                         style={{ color: "var(--muted)" }}
                       >
                         <span className="mr-2">←</span>
-                        <span>Back</span>
+                        <span>{coreText("coreBack")}</span>
                       </button>
 
                       {/* Divider */}
@@ -888,7 +886,7 @@ function SearchRow({
                             color: g === genre.id ? "white" : "var(--text)",
                           }}
                         >
-                          {genre.name}
+                          {genreDisplayName(genre.name)}
                         </button>
                       ))}
                     </div>
@@ -918,7 +916,7 @@ function SearchRow({
                       ref={menuRef}
                       role="dialog"
                       aria-modal="true"
-                      aria-label="Advanced Search Filters"
+                      aria-label={coreText("coreAdvancedFilters")}
                       className="fixed left-0 right-0 bottom-0 rounded-t-2xl border-t border-l border-r shadow-2xl"
                       style={{
                         zIndex: 10001, // Above mobile nav (9999) and backdrop (10000)
@@ -938,9 +936,7 @@ function SearchRow({
                         <h3
                           className="text-base font-semibold"
                           style={{ color: "var(--text)" }}
-                        >
-                          Advanced Search
-                        </h3>
+                        >{coreText("coreAdvanced")}</h3>
                         <button
                           type="button"
                           onClick={() => {
@@ -948,7 +944,7 @@ function SearchRow({
                             closeFilters();
                           }}
                           className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
-                          aria-label="Close filters"
+                          aria-label={coreText("coreCloseFilters")}
                         >
                           <svg
                             className="w-5 h-5"
@@ -977,9 +973,7 @@ function SearchRow({
                           <h4
                             className="text-sm font-medium mb-3"
                             style={{ color: "var(--muted)" }}
-                          >
-                            Search Mode
-                          </h4>
+                          >{coreText("coreSearchMode")}</h4>
                           <div className="flex gap-2">
                             <button
                               type="button"
@@ -1004,9 +998,7 @@ function SearchRow({
                                     ? "white"
                                     : "var(--text)",
                               }}
-                            >
-                              Title
-                            </button>
+                            >{coreText("coreTitle")}</button>
                             <button
                               type="button"
                               onClick={() =>
@@ -1030,9 +1022,7 @@ function SearchRow({
                                     ? "white"
                                     : "var(--text)",
                               }}
-                            >
-                              Tag
-                            </button>
+                            >{coreText("coreTag")}</button>
                           </div>
                         </div>
 
@@ -1041,9 +1031,7 @@ function SearchRow({
                           <h4
                             className="text-sm font-medium mb-3"
                             style={{ color: "var(--muted)" }}
-                          >
-                            Search In
-                          </h4>
+                          >{coreText("coreSearchIn")}</h4>
                           <div className="space-y-2">
                             {(["all", "movies-tv", "people"] as const).map(
                               (type) => (
@@ -1070,10 +1058,10 @@ function SearchRow({
                                   }}
                                 >
                                   {type === "all"
-                                    ? "All"
+                                    ? coreText("coreAll")
                                     : type === "movies-tv"
-                                      ? "Movies/TV"
-                                      : "People"}
+                                      ? coreText('coreMoviesTV')
+                                      : coreText("corePeople")}
                                 </button>
                               )
                             )}
@@ -1086,9 +1074,7 @@ function SearchRow({
                             <h4
                               className="text-sm font-medium mb-3"
                               style={{ color: "var(--muted)" }}
-                            >
-                              Media Type
-                            </h4>
+                            >{coreText("coreMediaType")}</h4>
                             <div className="flex gap-2">
                               <button
                                 type="button"
@@ -1113,9 +1099,7 @@ function SearchRow({
                                       ? "white"
                                       : "var(--text)",
                                 }}
-                              >
-                                All
-                              </button>
+                              >{coreText("coreAll")}</button>
                               <button
                                 type="button"
                                 onClick={() =>
@@ -1139,9 +1123,7 @@ function SearchRow({
                                       ? "white"
                                       : "var(--text)",
                                 }}
-                              >
-                                TV
-                              </button>
+                              >{coreText("coreTVShort")}</button>
                               <button
                                 type="button"
                                 onClick={() =>
@@ -1165,9 +1147,7 @@ function SearchRow({
                                       ? "white"
                                       : "var(--text)",
                                 }}
-                              >
-                                Movie
-                              </button>
+                              >{coreText("coreMovie")}</button>
                             </div>
                           </div>
                         )}
@@ -1177,9 +1157,7 @@ function SearchRow({
                           <h4
                             className="text-sm font-medium mb-3"
                             style={{ color: "var(--muted)" }}
-                          >
-                            Genre
-                          </h4>
+                          >{coreText("coreGenre")}</h4>
                           <div className="flex flex-wrap gap-2">
                             {POPULAR_GENRES.map((genre) => (
                               <button
@@ -1207,7 +1185,7 @@ function SearchRow({
                                       : "var(--text)",
                                 }}
                               >
-                                {genre.name}
+                                {genreDisplayName(genre.name)}
                               </button>
                             ))}
                           </div>
@@ -1224,16 +1202,12 @@ function SearchRow({
                           onClick={resetFilters}
                           className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg bg-muted hover:bg-muted/80 transition-colors"
                           style={{ color: "var(--text)" }}
-                        >
-                          Reset
-                        </button>
+                        >{coreText("coreReset")}</button>
                         <button
                           type="button"
                           onClick={applyFilters}
                           className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg bg-accent text-white hover:opacity-90 transition-opacity"
-                        >
-                          Apply
-                        </button>
+                        >{coreText("coreApply")}</button>
                       </div>
                     </div>
                   </>
@@ -1281,9 +1255,7 @@ function SearchRow({
                             ? "bg-blue-500 text-white"
                             : "hover:bg-gray-100 text-black"
                         }`}
-                      >
-                        TV
-                      </button>
+                      >{coreText("coreTVShort")}</button>
 
                       {/* Movie */}
                       <button
@@ -1295,9 +1267,7 @@ function SearchRow({
                             ? "bg-blue-500 text-white"
                             : "hover:bg-gray-100 text-black"
                         }`}
-                      >
-                        Movie
-                      </button>
+                      >{coreText("coreMovie")}</button>
 
                       {/* Genre (opens submenu) */}
                       <button
@@ -1309,7 +1279,7 @@ function SearchRow({
                             : "hover:bg-gray-100 text-black"
                         }`}
                       >
-                        <span>Genre</span>
+                        <span>{coreText("coreGenre")}</span>
                         <span className="ml-2">→</span>
                       </button>
 
@@ -1322,9 +1292,7 @@ function SearchRow({
                             ? "bg-blue-500 text-white"
                             : "hover:bg-gray-100 text-black"
                         }`}
-                      >
-                        People
-                      </button>
+                      >{coreText("corePeople")}</button>
 
                       {/* Divider */}
                       <div className="h-px bg-gray-300 my-1"></div>
@@ -1337,9 +1305,7 @@ function SearchRow({
                           setShowGenreSubmenu(false);
                         }}
                         className="w-full text-left px-3 py-2 text-sm font-medium rounded transition-colors hover:bg-gray-100 text-gray-600"
-                      >
-                        Advanced Search →
-                      </button>
+                      >{coreText("coreAdvancedArrow")}</button>
                     </div>
                   </div>
                 ) : showGenreSubmenu ? (
@@ -1368,7 +1334,7 @@ function SearchRow({
                         className="w-full text-left px-3 py-2 text-sm font-medium rounded transition-colors hover:bg-gray-100 text-gray-600 flex items-center"
                       >
                         <span className="mr-2">←</span>
-                        <span>Back</span>
+                        <span>{coreText("coreBack")}</span>
                       </button>
 
                       {/* Divider */}
@@ -1386,7 +1352,7 @@ function SearchRow({
                               : "hover:bg-gray-100 text-black"
                           }`}
                         >
-                          {genre.name}
+                          {genreDisplayName(genre.name)}
                         </button>
                       ))}
                     </div>
@@ -1408,7 +1374,7 @@ function SearchRow({
                       ref={menuRef}
                       role="dialog"
                       aria-modal="true"
-                      aria-label="Advanced Search Filters"
+                      aria-label={coreText("coreAdvancedFilters")}
                       className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-2xl border shadow-2xl"
                       style={{
                         zIndex: 10001,
@@ -1430,9 +1396,7 @@ function SearchRow({
                         <h3
                           className="text-base font-semibold"
                           style={{ color: "var(--text)" }}
-                        >
-                          Advanced Search
-                        </h3>
+                        >{coreText("coreAdvanced")}</h3>
                         <button
                           type="button"
                           onClick={() => {
@@ -1440,7 +1404,7 @@ function SearchRow({
                             closeFilters();
                           }}
                           className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
-                          aria-label="Close filters"
+                          aria-label={coreText("coreCloseFilters")}
                         >
                           <svg
                             className="w-5 h-5"
@@ -1469,9 +1433,7 @@ function SearchRow({
                           <h4
                             className="text-sm font-medium mb-3"
                             style={{ color: "var(--muted)" }}
-                          >
-                            Search Mode
-                          </h4>
+                          >{coreText("coreSearchMode")}</h4>
                           <div className="flex gap-2">
                             <button
                               type="button"
@@ -1496,9 +1458,7 @@ function SearchRow({
                                     ? "white"
                                     : "var(--text)",
                               }}
-                            >
-                              Title
-                            </button>
+                            >{coreText("coreTitle")}</button>
                             <button
                               type="button"
                               onClick={() =>
@@ -1522,9 +1482,7 @@ function SearchRow({
                                     ? "white"
                                     : "var(--text)",
                               }}
-                            >
-                              Tag
-                            </button>
+                            >{coreText("coreTag")}</button>
                           </div>
                         </div>
 
@@ -1533,9 +1491,7 @@ function SearchRow({
                           <h4
                             className="text-sm font-medium mb-3"
                             style={{ color: "var(--muted)" }}
-                          >
-                            Search In
-                          </h4>
+                          >{coreText("coreSearchIn")}</h4>
                           <div className="space-y-2">
                             {(["all", "movies-tv", "people"] as const).map(
                               (type) => (
@@ -1562,10 +1518,10 @@ function SearchRow({
                                   }}
                                 >
                                   {type === "all"
-                                    ? "All"
+                                    ? coreText("coreAll")
                                     : type === "movies-tv"
-                                      ? "Movies/TV"
-                                      : "People"}
+                                      ? coreText('coreMoviesTV')
+                                      : coreText("corePeople")}
                                 </button>
                               )
                             )}
@@ -1577,9 +1533,7 @@ function SearchRow({
                           <h4
                             className="text-sm font-medium mb-3"
                             style={{ color: "var(--muted)" }}
-                          >
-                            Media Type
-                          </h4>
+                          >{coreText("coreMediaType")}</h4>
                           <div className="flex gap-2">
                             <button
                               type="button"
@@ -1604,9 +1558,7 @@ function SearchRow({
                                     ? "white"
                                     : "var(--text)",
                               }}
-                            >
-                              All
-                            </button>
+                            >{coreText("coreAll")}</button>
                             <button
                               type="button"
                               onClick={() =>
@@ -1630,9 +1582,7 @@ function SearchRow({
                                     ? "white"
                                     : "var(--text)",
                               }}
-                            >
-                              TV
-                            </button>
+                            >{coreText("coreTVShort")}</button>
                             <button
                               type="button"
                               onClick={() =>
@@ -1656,9 +1606,7 @@ function SearchRow({
                                     ? "white"
                                     : "var(--text)",
                               }}
-                            >
-                              Movie
-                            </button>
+                            >{coreText("coreMovie")}</button>
                           </div>
                         </div>
 
@@ -1667,9 +1615,7 @@ function SearchRow({
                           <h4
                             className="text-sm font-medium mb-3"
                             style={{ color: "var(--muted)" }}
-                          >
-                            Genre
-                          </h4>
+                          >{coreText("coreGenre")}</h4>
                           <div className="flex flex-wrap gap-2">
                             {POPULAR_GENRES.map((genre) => (
                               <button
@@ -1697,7 +1643,7 @@ function SearchRow({
                                       : "var(--text)",
                                 }}
                               >
-                                {genre.name}
+                                {genreDisplayName(genre.name)}
                               </button>
                             ))}
                           </div>
@@ -1714,16 +1660,12 @@ function SearchRow({
                           onClick={resetFilters}
                           className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg bg-muted hover:bg-muted/80 transition-colors"
                           style={{ color: "var(--text)" }}
-                        >
-                          Reset
-                        </button>
+                        >{coreText("coreReset")}</button>
                         <button
                           type="button"
                           onClick={applyFilters}
                           className="flex-1 px-4 py-2.5 text-sm font-medium rounded-lg bg-accent text-white hover:opacity-90 transition-opacity"
-                        >
-                          Apply
-                        </button>
+                        >{coreText("coreApply")}</button>
                       </div>
                     </div>
                   </>
@@ -1768,11 +1710,11 @@ function SearchRow({
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"
-              aria-label="Search movies, shows, people"
+              aria-label={coreText("coreSearchAria")}
               data-testid="search-input"
               placeholder={
                 searchMode === "tag"
-                  ? "Search by tag..."
+                  ? coreText('coreSearchTagPlaceholder')
                   : translations.searchPlaceholder
               }
               value={q}
@@ -1805,7 +1747,7 @@ function SearchRow({
                   inputRef.current?.focus();
                 }}
                 className="absolute right-1 flex items-center justify-center w-8 h-8 rounded-full hover:bg-muted transition-colors"
-                aria-label="Clear search"
+                aria-label={coreText("coreClearSearch")}
                 style={{ right: hasVoiceSearch ? "40px" : "4px" }}
               >
                 <svg

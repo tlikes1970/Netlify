@@ -7,7 +7,7 @@ import { getShowStatusInfo } from '@/utils/showStatus';
 
 const lists = vi.hoisted(() => ({ watching: [] as LibraryEntry[], watched: [] as LibraryEntry[] }));
 vi.mock('@/lib/storage', () => ({ useLibrary: (list: keyof typeof lists) => lists[list] }));
-vi.mock('@/lib/language', () => ({ useTranslations: () => ({ upNext: 'Up Next', noPoster: 'No poster' }) }));
+vi.mock('@/lib/language', async (importOriginal) => ({...await importOriginal<typeof import("@/lib/language")>(), useTranslations: () => ({ upNext: 'Up Next', noPoster: 'No poster' }) }));
 vi.mock('@/lib/settings', () => ({ useSettings: () => ({ personalityLevel: 2 }), resolveFlickletLine: () => 'Nothing queued yet.' }));
 vi.mock('@/tmdb/tv', () => ({ fetchCurrentEpisodeInfo: async () => ({ season: 2, episode: 3 }) }));
 vi.mock('@/components/OptimizedImage', () => ({ OptimizedImage: () => null }));

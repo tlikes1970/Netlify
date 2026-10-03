@@ -20,7 +20,7 @@ vi.mock('@/lib/storage', () => ({
   },
 }));
 
-vi.mock('@/lib/language', () => ({
+vi.mock('@/lib/language', async (importOriginal) => ({...await importOriginal<typeof import("@/lib/language")>(),
   useTranslations: () => ({
     wantToWatchAction: 'Want to Watch',
     watchedAction: 'Watched',

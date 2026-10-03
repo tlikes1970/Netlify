@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "@/lib/language";
 import React from 'react';
 import type { MediaItem, CardActionHandlers, CardContext } from '../components/cards/card.types';
 import { useSwipe } from '../lib/useSwipe';
@@ -24,6 +25,7 @@ export default function SwipeableCard({
   style = {},
   disableSwipe = false
 }: SwipeableCardProps) {
+  useLanguage();
   // Auto-disable swipe on desktop
   const { isDesktop: isDesktopDevice } = useIsDesktop();
   const swipeDisabled = disableSwipe || isDesktopDevice;
@@ -35,7 +37,7 @@ export default function SwipeableCard({
         return [
           {
             id: 'watched',
-            label: 'Watched',
+            label: coreText("coreWatched"),
             icon: '',
             color: '#ffffff',
             backgroundColor: '#10b981',
@@ -43,7 +45,7 @@ export default function SwipeableCard({
           },
           {
             id: 'want',
-            label: 'Want to Watch',
+            label: coreText("coreWant"),
             icon: '',
             color: '#ffffff',
             backgroundColor: '#ef4444',
@@ -55,7 +57,7 @@ export default function SwipeableCard({
         return [
           {
             id: 'watched',
-            label: 'Watched',
+            label: coreText("coreWatched"),
             icon: '',
             color: '#ffffff',
             backgroundColor: '#10b981',
@@ -63,7 +65,7 @@ export default function SwipeableCard({
           },
           {
             id: 'watching',
-            label: 'Watching',
+            label: coreText("coreWatching"),
             icon: '',
             color: '#ffffff',
             backgroundColor: '#3b82f6',
@@ -75,7 +77,7 @@ export default function SwipeableCard({
         return [
           {
             id: 'want',
-            label: 'Want to Watch',
+            label: coreText("coreWant"),
             icon: '',
             color: '#ffffff',
             backgroundColor: '#ef4444',
@@ -83,7 +85,7 @@ export default function SwipeableCard({
           },
           {
             id: 'watching',
-            label: 'Watching',
+            label: coreText("coreWatching"),
             icon: '',
             color: '#ffffff',
             backgroundColor: '#3b82f6',
@@ -93,7 +95,7 @@ export default function SwipeableCard({
 
       case 'tab-foryou':
         return [{
-          id: 'want', label: 'Want to Watch', icon: '', color: '#ffffff',
+          id: 'want', label: coreText("coreWant"), icon: '', color: '#ffffff',
           backgroundColor: '#ef4444', action: () => actions?.onWant?.(item)
         }];
 
@@ -102,7 +104,7 @@ export default function SwipeableCard({
         return [
           {
             id: 'want',
-            label: 'Want to Watch',
+            label: coreText("coreWant"),
             icon: '',
             color: '#ffffff',
             backgroundColor: '#ef4444',
@@ -114,7 +116,7 @@ export default function SwipeableCard({
         return [
           {
             id: 'watching',
-            label: 'Watching',
+            label: coreText("coreWatching"),
             icon: '',
             color: '#ffffff',
             backgroundColor: '#3b82f6',
@@ -122,7 +124,7 @@ export default function SwipeableCard({
           },
           {
             id: 'delete',
-            label: 'Delete',
+            label: coreText("coreDelete"),
             icon: '',
             color: '#ffffff',
             backgroundColor: '#dc2626',
@@ -242,8 +244,7 @@ export default function SwipeableCard({
                       textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
                       WebkitTextStroke: '0.3px rgba(0,0,0,0.8)'
                     }}
-                  >
-                    Swipe to {previewAction.label.toLowerCase()}
+                  >{coreText('coreSwipeDestination', {destination: previewAction.label.toLowerCase()})}
                   </div>
                 </div>
               </div>
@@ -276,8 +277,7 @@ export default function SwipeableCard({
                       textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
                       WebkitTextStroke: '0.3px rgba(0,0,0,0.8)'
                     }}
-                  >
-                    Swipe to {previewAction.label.toLowerCase()}
+                  >{coreText('coreSwipeDestination', {destination: previewAction.label.toLowerCase()})}
                   </div>
                 </div>
                 {previewAction.icon && <span className="text-2xl">{previewAction.icon}</span>}

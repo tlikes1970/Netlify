@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "@/lib/language";
 import LibrarySegmentBar from '@/components/LibrarySegmentBar';
 import type { LibrarySegmentCounts } from '@/components/LibrarySegmentBar';
 import type { LibrarySegment } from '@/lib/navigation';
@@ -41,6 +42,7 @@ export default function LibraryPage({
   onGoofsOpen,
   onExtrasOpen,
 }: LibraryPageProps) {
+  useLanguage();
   const userLists = useCustomLists();
 
   const segmentCounts: LibrarySegmentCounts = {
@@ -77,7 +79,7 @@ export default function LibraryPage({
           {segment === 'watching' && (
             <div data-page="lists" data-list="watching">
               <ListPage
-                title="Watching"
+                title={coreText("coreWatching")}
                 items={watchingItems}
                 mode="watching"
                 {...listHandlers}
@@ -87,7 +89,7 @@ export default function LibraryPage({
           {segment === 'want' && (
             <div data-page="lists" data-list="wishlist">
               <ListPage
-                title="Want to Watch"
+                title={coreText("coreWant")}
                 items={wishlistItems}
                 mode="want"
                 {...listHandlers}
@@ -97,7 +99,7 @@ export default function LibraryPage({
           {segment === 'watched' && (
             <div data-page="lists" data-list="watched">
               <ListPage
-                title="Watched"
+                title={coreText("coreWatched")}
                 items={watchedItems}
                 mode="watched"
                 {...listHandlers}

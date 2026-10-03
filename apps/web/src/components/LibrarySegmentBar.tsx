@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage, tPlural } from "@/lib/language";
 import type { LibrarySegment } from '@/lib/navigation';
 
 export type LibrarySegmentCounts = Record<LibrarySegment, number>;
@@ -10,13 +11,13 @@ export type LibrarySegmentBarProps = {
 
 const SEGMENTS: {
   id: LibrarySegment;
-  label: string;
-  shortLabel: string;
+  label: 'coreWatching' | 'coreWant' | 'coreWatched' | 'coreCustomLists';
+  shortLabel: 'coreWatching' | 'coreWant' | 'coreWatched' | 'coreLists';
 }[] = [
-  { id: 'watching', label: 'Watching', shortLabel: 'Watching' },
-  { id: 'want', label: 'Want to Watch', shortLabel: 'Want to Watch' },
-  { id: 'watched', label: 'Watched', shortLabel: 'Watched' },
-  { id: 'mylists', label: 'Custom Lists', shortLabel: 'Lists' },
+  { id: 'watching', label: 'coreWatching', shortLabel: 'coreWatching' },
+  { id: 'want', label: 'coreWant', shortLabel: 'coreWant' },
+  { id: 'watched', label: 'coreWatched', shortLabel: 'coreWatched' },
+  { id: 'mylists', label: 'coreCustomLists', shortLabel: 'coreLists' },
 ];
 
 function formatCount(count: number): string {
@@ -33,13 +34,14 @@ export default function LibrarySegmentBar({
   counts,
   onChange,
 }: LibrarySegmentBarProps) {
+  useLanguage();
   return (
-    <nav aria-label="Library sections" className="library-segment-bar">
-      <div role="tablist" aria-label="Library lists" className="library-segment-bar__grid">
+    <nav aria-label={coreText("coreLibrarySections")} className="library-segment-bar">
+      <div role="tablist" aria-label={coreText("coreLibraryLists")} className="library-segment-bar__grid">
         {SEGMENTS.map((item) => {
           const active = segment === item.id;
           const count = counts[item.id] ?? 0;
-          const ariaLabel = `${item.label}, ${count} ${item.id === 'mylists' ? (count === 1 ? 'list' : 'lists') : (count === 1 ? 'item' : 'items')}`;
+          const ariaLabel = `${coreText(item.label)}, ${tPlural(item.id === 'mylists' ? {one:'coreListOne',other:'coreListsOther'} : {one:'coreItemOne',other:'coreItemsOther'},count)}`;
 
           return (
             <button
@@ -57,8 +59,8 @@ export default function LibrarySegmentBar({
                 border: active ? 'none' : '1px solid var(--line)',
               }}
             >
-              <span className="library-segment-bar__label md:hidden">{item.shortLabel}</span>
-              <span className="library-segment-bar__label hidden md:inline">{item.label}</span>
+              <span className="library-segment-bar__label md:hidden">{coreText(item.shortLabel)}</span>
+              <span className="library-segment-bar__label hidden md:inline">{coreText(item.label)}</span>
               <span className="library-segment-bar__count">{formatCount(count)}</span>
             </button>
           );

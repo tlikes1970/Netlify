@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "@/lib/language";
 import { useId } from 'react';
 /**
  * Process: Sort Dropdown Component
@@ -15,22 +16,21 @@ interface SortDropdownProps {
   disabled?: boolean;
 }
 
-const sortOptions: Array<{ value: SortMode; label: string }> = [
-  { value: 'date-newest', label: 'Date Added (newest → oldest)' },
-  { value: 'date-oldest', label: 'Date Added (oldest → newest)' },
-  { value: 'alphabetical-az', label: 'Alphabetical (A → Z)' },
-  { value: 'alphabetical-za', label: 'Alphabetical (Z → A)' },
-  { value: 'streaming-service', label: 'Network' },
-  { value: 'custom', label: 'Custom Order' },
-];
+const sortOptions = [
+  { value: 'date-newest', label: 'coreNewest' },
+  { value: 'date-oldest', label: 'coreOldest' },
+  { value: 'alphabetical-az', label: 'coreAZ' },
+  { value: 'alphabetical-za', label: 'coreZA' },
+  { value: 'streaming-service', label: 'coreNetwork' },
+  { value: 'custom', label: 'coreCustomOrder' },
+] as const;
 
 export default function SortDropdown({ value, onChange, disabled = false }: SortDropdownProps) {
+  useLanguage();
   const id = useId();
   return (
     <div className="library-sort-control flex items-center gap-2">
-      <label htmlFor={id} className="text-sm" style={{ color: 'var(--muted)' }}>
-        Sort:
-      </label>
+      <label htmlFor={id} className="text-sm" style={{ color: 'var(--muted)' }}>{coreText("coreSort")}</label>
       <>
         <style>{`
           .sort-dropdown-select {
@@ -84,7 +84,7 @@ export default function SortDropdown({ value, onChange, disabled = false }: Sort
                 fontWeight: value === option.value ? 600 : 500,
               }}
             >
-              {option.label}
+              {coreText(option.label)}
               {value === option.value && option.value !== 'custom' ? ' ✓' : ''}
             </option>
           ))}
@@ -94,9 +94,7 @@ export default function SortDropdown({ value, onChange, disabled = false }: Sort
         <span
           className="px-2 py-1 rounded-full text-xs font-medium"
           style={{ backgroundColor: 'var(--accent-primary)', color: 'white' }}
-        >
-          Custom
-        </span>
+        >{coreText("coreCustom")}</span>
       )}
     </div>
   );

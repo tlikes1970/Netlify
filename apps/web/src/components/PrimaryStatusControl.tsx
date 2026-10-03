@@ -1,9 +1,12 @@
+import { t as coreText, useLanguage } from "@/lib/language";
 import { useCallback, useEffect, useState } from 'react';
 import type { MediaItem } from './cards/card.types';
 import { Library } from '@/lib/storage';
 import { PRIMARY_STATUS_LABELS, setPrimaryStatus, type PrimaryStatus } from '@/lib/statusTransitions';
+import { getWatchStatusLabel } from '@/lib/watchStatus';
 
 export default function PrimaryStatusControl({ item, compact = false }: { item: MediaItem; compact?: boolean }) {
+  useLanguage();
   const readStatus = useCallback(() => {
     const current = Library.getCurrentList(item.id, item.mediaType);
     return current === 'watching' || current === 'wishlist' || current === 'watched' ? current : '';
@@ -16,9 +19,9 @@ export default function PrimaryStatusControl({ item, compact = false }: { item: 
 
   return (
     <label className={`flex items-center gap-2 ${compact ? 'text-[11px]' : 'text-xs'}`}>
-      <span className="sr-only">Watch status</span>
+      <span className="sr-only">{coreText("coreWatchStatus")}</span>
       <select
-        aria-label={`Watch status for ${item.title}`}
+        aria-label={coreText('coreWatchStatusTitle', {title: item.title})}
         value={value}
         onChange={(event) => {
           const next = event.target.value as PrimaryStatus;
@@ -27,9 +30,9 @@ export default function PrimaryStatusControl({ item, compact = false }: { item: 
         className="w-full rounded-lg border px-2 py-1.5"
         style={{ backgroundColor: 'var(--btn)', borderColor: 'var(--line)', color: 'var(--text)' }}
       >
-        <option value="" disabled>Set watch status…</option>
+        <option value="" disabled>{coreText("coreSetStatus")}</option>
         {(Object.keys(PRIMARY_STATUS_LABELS) as PrimaryStatus[]).map((status) => (
-          <option key={status} value={status}>{PRIMARY_STATUS_LABELS[status]}</option>
+          <option key={status} value={status}>{getWatchStatusLabel(status)}</option>
         ))}
       </select>
     </label>

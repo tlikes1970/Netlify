@@ -1,3 +1,5 @@
+import {changeLanguage, t} from '@/lib/language';
+import {getSnapshot} from '@/i18n/translationStore';
 import { CompactOverflowMenu } from '@/features/compact/CompactOverflowMenu';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
@@ -170,4 +172,11 @@ describe('swipe card with real overflow menu', () => {
     expect(screen.queryByText('Swipe for actions')).toBeNull();
     rerender(card(false));
   });
+});
+it('Spanish gesture preview changes presentation without changing the destination',async()=>{
+ await act(async()=>{changeLanguage('es');await Promise.resolve();frame(0)});expect(getSnapshot().locale).toBe('es');
+ const {surface}=fixture();touch(surface,100);
+ expect(screen.getByText(t('coreSwipeDestination',{destination:t('coreWatched').toLowerCase()}))).toBeInTheDocument();
+ fireEvent.touchEnd(surface);expect(setPrimaryStatus).toHaveBeenCalledWith(item,'watched',{feedback:true});
+ await act(async()=>{changeLanguage('en');await Promise.resolve();frame(0)});expect(getSnapshot().locale).toBe('en');
 });

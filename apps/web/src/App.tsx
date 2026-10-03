@@ -1,3 +1,4 @@
+import { t as coreText } from "./lib/language";
 import SharedTitleExperience from "@/components/SharedTitleExperience";
 import Tabs from "@/components/Tabs";
 import MobileTabs, { useViewportOffset } from "@/components/MobileTabs";
@@ -909,7 +910,7 @@ export default function App() {
                         role="status"
                       >
                         <div className="loading-spinner" aria-hidden="true" />
-                        <span>Loading library...</span>
+                        <span>{coreText('coreLoadingLibrary')}</span>
                       </div>
                     }
                   >
@@ -943,7 +944,7 @@ export default function App() {
                   <Suspense
                     fallback={
                       <div className="loading-spinner">
-                        Loading discovery...
+                        {coreText("coreLoadingDiscovery")}
                       </div>
                     }
                   >
@@ -961,7 +962,7 @@ export default function App() {
 
         {!isOnline && (
           <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-yellow-500 text-black px-4 py-2 rounded-lg shadow-lg text-sm font-medium">
-            📱 You&apos;re offline - viewing cached content
+            {coreText('coreOfflineCached')}
           </div>
         )}
 
@@ -979,7 +980,7 @@ export default function App() {
         {showSettings && (
           <Suspense
             fallback={
-              <div className="loading-spinner">Loading settings...</div>
+              <div className="loading-spinner">{coreText('coreLoadingSettings')}</div>
             }
           >
             <SettingsPage
@@ -999,7 +1000,7 @@ export default function App() {
         {/* Notes and Tags Modal */}
         {showNotesModal && notesModalItem && (
           <Suspense
-            fallback={<div className="loading-spinner">Loading notes...</div>}
+            fallback={<div className="loading-spinner">{coreText('coreLoadingNotes')}</div>}
           >
             <NotesAndTagsModal
               item={notesModalItem}

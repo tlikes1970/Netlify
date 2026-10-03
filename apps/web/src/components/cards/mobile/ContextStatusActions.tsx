@@ -1,4 +1,6 @@
 import { Library } from "../../../lib/storage";
+import { useLanguage } from '../../../lib/language';
+import { getWatchStatusLabel } from '../../../lib/watchStatus';
 import type { MediaItem } from "../card.types";
 import {
   setPrimaryStatus,
@@ -14,6 +16,7 @@ export function ContextStatusActions({
   tabKey?: "watching" | "want" | "watched";
   omitCurrentStatus?: boolean;
 }) {
+  useLanguage();
   const targets: PrimaryStatus[] =
     tabKey === "watching"
       ? ["wishlist", "watched"]
@@ -22,11 +25,6 @@ export function ContextStatusActions({
         : tabKey === "watched"
           ? ["watching", "wishlist"]
           : ["watching", "wishlist"];
-  const labels = {
-    watching: "Watching",
-    wishlist: "Want to Watch",
-    watched: "Watched",
-  };
   return (
     <div
       className="grid grid-cols-2 gap-1"
@@ -46,7 +44,7 @@ export function ContextStatusActions({
           }}
           onClick={() => setPrimaryStatus(item, target, { feedback: true })}
         >
-          {labels[target]}
+          {getWatchStatusLabel(target)}
         </button>
       ))}
     </div>

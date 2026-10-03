@@ -28,7 +28,7 @@ vi.mock("@/lib/storage", () => ({
   },
   addToListWithConfirmation: mocks.add,
 }));
-vi.mock("@/lib/language", () => ({
+vi.mock("@/lib/language", async (importOriginal) => ({...await importOriginal<typeof import("@/lib/language")>(),
   useTranslations: () => ({
     searchCorrection: "Showing results for “{query}”",
     notesAndTags: "Notes & Tags",

@@ -4,7 +4,7 @@ import ListSelectorModal from '../ListSelectorModal';
 import { Library } from '@/lib/storage';
 vi.mock('@/lib/auth',()=>({authManager:{getCurrentUser:()=>null}}));
 vi.mock('@/lib/readOnlyGuard',()=>({guardMutation:()=>true}));
-vi.mock('@/lib/language',()=>({useTranslations:()=>({})}));
+vi.mock('@/lib/language',async (importOriginal) => ({...await importOriginal<typeof import("@/lib/language")>(),useTranslations:()=>({})}));
 vi.mock('@/hooks/useEntitlements',()=>({useEntitlements:()=>({hasFullAccess:true})}));
 vi.mock('@/components/UpgradeToProCTA',()=>({UpgradeToProCTA:()=>null}));
 vi.mock('@/lib/events',()=>({emit:vi.fn()}));

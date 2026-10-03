@@ -1,10 +1,11 @@
+import { t as coreText, useLanguage } from "@/lib/language";
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { customListManager, useCustomLists } from '../lib/customLists';
 import { Library, getListDisplayName } from '../lib/storage';
 import { emit } from '../lib/events';
 import type { MediaItem } from '../components/cards/card.types';
-import { useTranslations } from '../lib/language';
+import { tPlural, useTranslations } from '../lib/language';
 import { UpgradeToProCTA } from './UpgradeToProCTA';
 import { useEntitlements } from '../hooks/useEntitlements';
 
@@ -15,6 +16,7 @@ interface ListSelectorModalProps {
 }
 
 export default function ListSelectorModal({ isOpen, onClose, item }: ListSelectorModalProps) {
+  useLanguage();
   const [selectedListId, setSelectedListId] = useState<string>('');
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [existingListName, setExistingListName] = useState<string>('');
@@ -68,7 +70,7 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
       const newList = customListManager.createList(name.trim());
       setSelectedListId(newList.id);
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to create list');
+      alert(error instanceof Error ? error.message : coreText("coreCreateFailed"));
     }
   };
 
@@ -103,16 +105,14 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
       >
         
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>
-            Add to Custom List
-          </h3>
+          <h3 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>{coreText("coreAddCustomList")}</h3>
           <button
             onClick={onClose}
             className="transition-colors"
             style={{ color: 'var(--muted)' }}
             onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text)'}
             onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted)'}
-            aria-label="Close"
+            aria-label={coreText("coreClose")}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -122,7 +122,7 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
 
         <div className="mb-4">
           <p className="text-sm" style={{ color: 'var(--muted)' }}>
-            Select a custom list for <strong>{item.title}</strong>. Watch status will not change.
+            {coreText('coreSelectList', {title: item.title})}
           </p>
         </div>
 
@@ -176,13 +176,13 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
                 <div className="font-medium">{list.name}</div>
                 {(Library.getEntry(item.id, item.mediaType)?.customListIds?.includes(list.id)
                   || Library.getEntry(item.id, item.mediaType)?.list === `custom:${list.id}`) && (
-                  <span className="text-xs" style={{color:'var(--muted)'}}>Already added</span>
+                  <span className="text-xs" style={{color:'var(--muted)'}}>{coreText("coreAlreadyAdded")}</span>
                 )}
                 {list.description && (
                   <div className="text-sm opacity-75">{list.description}</div>
                 )}
                 <div className="text-xs opacity-60">
-                  {list.itemCount} {translations.items || 'items'}
+                  {tPlural({one:'coreItemOne',other:'coreItemsOther'},list.itemCount)}
                 </div>
               </div>
             </label>
@@ -229,9 +229,7 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
             disabled={!selectedListId}
             className="flex-1 px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-          >
-            Add to Custom List
-          </button>
+          >{coreText("coreAddCustomList")}</button>
         </div>
 
         {/* Confirmation Dialog */}
@@ -256,24 +254,20 @@ export default function ListSelectorModal({ isOpen, onClose, item }: ListSelecto
               <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
                 <strong>{item.title}</strong> {translations.alreadyInList || 'is already in'} <strong>{existingListName}</strong>.
               </p>
-              <p className="text-sm mb-6" style={{ color: 'var(--muted)' }}>
-                This custom-list membership is already active. Its watch status has not changed.
-              </p>
+              <p className="text-sm mb-6" style={{ color: 'var(--muted)' }}>{coreText("coreMembershipActive")}</p>
               <div className="flex gap-3">
                 <button
                   onClick={handleCancelMove}
                   className="flex-1 px-4 py-2 rounded-lg transition-colors"
                   style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
                 >
-                  {translations.cancel || 'Cancel'}
+                  {translations.cancel || coreText("coreCancel")}
                 </button>
                 <button
                   onClick={handleConfirmMove}
                   className="flex-1 px-4 py-2 rounded-lg transition-colors"
                   style={{ backgroundColor: 'var(--accent)', color: 'white' }}
-                >
-                    OK
-                </button>
+                >{coreText("coreOK")}</button>
               </div>
             </div>
           </div>

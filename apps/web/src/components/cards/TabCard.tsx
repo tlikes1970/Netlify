@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "@/lib/language";
 import { CompactOverflowMenu } from '../../features/compact/CompactOverflowMenu';
 import { ContextStatusActions } from './mobile/ContextStatusActions';
 import { TitlePoster } from './TitlePoster';
@@ -69,6 +70,7 @@ export default function TabCard({
   onDrop,
   onKeyboardReorder,
 }: TabCardProps) {
+  useLanguage();
   const { hasFullAccess, isReadOnlyMode } = useEntitlements();
   const canUseProFeatures = hasFullAccess;
   const backdropCallbacks = useBackdropCallbacks();
@@ -190,9 +192,9 @@ export default function TabCard({
                   borderColor: "var(--line)",
                   border: "1px solid",
                 }}
-                title="Set simple reminder (24 hours before)"
+                title={coreText("coreReminderHint")}
               >
-                {isSeriesReminderEnabled(item.id) ? "✓ Reminded" : "Remind Me"}
+                {isSeriesReminderEnabled(item.id) ? coreText("coreReminded") : coreText("coreRemind")}
               </button>
             )}
           </>
@@ -272,9 +274,9 @@ export default function TabCard({
                   borderColor: "var(--line)",
                   border: "1px solid",
                 }}
-                title="Set simple reminder (24 hours before)"
+                title={coreText("coreReminderHint")}
               >
-                {isSeriesReminderEnabled(item.id) ? "✓ Reminded" : "Remind Me"}
+                {isSeriesReminderEnabled(item.id) ? coreText("coreReminded") : coreText("coreRemind")}
               </button>
             )}
           </>
@@ -354,9 +356,9 @@ export default function TabCard({
                   borderColor: "var(--line)",
                   border: "1px solid",
                 }}
-                title="Set simple reminder (24 hours before)"
+                title={coreText("coreReminderHint")}
               >
-                {isSeriesReminderEnabled(item.id) ? "✓ Reminded" : "Remind Me"}
+                {isSeriesReminderEnabled(item.id) ? coreText("coreReminded") : coreText("coreRemind")}
               </button>
             )}
           </>
@@ -646,17 +648,17 @@ export default function TabCard({
           <h3>{title}</h3>
           <div className="flex items-center gap-2">
             <span className="meta">
-              {year || "TBA"} • {mediaType === "tv" ? "TV Show" : "Movie"}
+              {year || coreText("coreTBA")} • {mediaType === "tv" ? coreText("coreTV") : coreText("coreMovie")}
             </span>
 
             {/* Status badge for TV shows */}
             {mediaType === "tv" && item.showStatus && (
               <span className="status-badge">
-                {item.showStatus === "Returning Series" && "RETURNING"}
-                {item.showStatus === "Ended" && "COMPLETE"}
-                {item.showStatus === "In Production" && "IN PRODUCTION"}
-                {item.showStatus === "Canceled" && "CANCELED"}
-                {item.showStatus === "Planned" && "UPCOMING"}
+                {item.showStatus === "Returning Series" && coreText("coreReturning")}
+                {item.showStatus === "Ended" && coreText("coreComplete")}
+                {item.showStatus === "In Production" && coreText("coreProduction")}
+                {item.showStatus === "Canceled" && coreText("coreCanceled")}
+                {item.showStatus === "Planned" && coreText("coreUpcoming")}
               </span>
             )}
           </div>
@@ -723,10 +725,8 @@ export default function TabCard({
                   border: "1px solid",
                   opacity: 1,
                 }}
-                title="Track episode progress"
-              >
-                Episode Progress
-              </button>
+                title={coreText("coreTrackProgress")}
+              >{coreText("coreEpisodeProgress")}</button>
             )}
           </div>
 
@@ -745,7 +745,7 @@ export default function TabCard({
                 }}
                 title={
                   canUseProFeatures
-                    ? "View Shows Like This"
+                    ? coreText('coreViewSimilar')
                     : isReadOnlyMode
                       ? "Read-Only — unlock Full Access"
                       : "Included in your Full Access trial"
@@ -759,9 +759,7 @@ export default function TabCard({
                   opacity: canUseProFeatures ? 1 : 0.65,
                   cursor: "pointer",
                 }}
-              >
-                Shows Like This
-              </button>
+              >{coreText("coreShowsLikeThis")}</button>
               <button
                 onClick={() => {
                   if (canUseProFeatures) {
@@ -774,7 +772,7 @@ export default function TabCard({
                 }}
                 title={
                   canUseProFeatures
-                    ? "View Extras"
+                    ? coreText('coreViewExtras')
                     : isReadOnlyMode
                       ? "Read-Only — unlock Full Access"
                       : "Included in your Full Access trial"
@@ -788,9 +786,7 @@ export default function TabCard({
                   opacity: canUseProFeatures ? 1 : 0.65,
                   cursor: "pointer",
                 }}
-              >
-                Extras
-              </button>
+              >{coreText("coreExtras")}</button>
             </div>
           )}
         </div>
@@ -825,8 +821,8 @@ export default function TabCard({
                 e.currentTarget.style.backgroundColor = "transparent";
               }
             }}
-            title="Drag to reorder; on touch, hold then drag. Use Arrow Up/Down with a keyboard."
-            aria-label="Drag to reorder. On touch, hold then drag. Press Arrow Up or Down to move with keyboard."
+            title={coreText("coreReorderTitle")}
+            aria-label={coreText("coreReorderAria")}
             tabIndex={0}
             draggable={true}
             onDragStart={(e) => {
@@ -860,10 +856,8 @@ export default function TabCard({
             borderColor: "#ef4444",
             border: "1px solid",
           }}
-          title="Delete this item"
-        >
-          🗑️ Delete
-        </button>}
+          title={coreText("coreDeleteItem")}
+        >{coreText("coreDeleteIcon")}</button>}
       </div>
     </article>
   );

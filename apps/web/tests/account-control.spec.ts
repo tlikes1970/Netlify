@@ -20,7 +20,6 @@ test.beforeAll(async () => {
     "hooks/useDeviceDetection": `export function useIsMobileScreen(){return window.innerWidth<768}`,
     "lib/settings": `export function useSettings(){return {personality:"Zen"}}`,
     "lib/auth": `export const authManager={getCurrentUser:()=>null}`,
-    "lib/language": `export function useTranslations(){return {search:'Search',clear:'Clear',searchPlaceholder:'Search movies, shows, people...'}}`,
     "lib/capacitorEnv": `export function isCapacitorNative(){return true} export function isCapacitorAndroid(){return true}`,
     "lib/mobileViewportLayout": `export function dispatchKeyboardDismiss(){} `,
     "pwa/useInstall": `export function useCanInstallPWA(){return false}`,
@@ -39,6 +38,7 @@ test.beforeAll(async () => {
     bundle: true,
     write: false,
     format: "iife",
+    define: {"import.meta.env":"{}"},
     jsx: "automatic",
     plugins: [
       {

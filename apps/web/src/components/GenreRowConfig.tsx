@@ -1,3 +1,5 @@
+import { genreDisplayName } from "../lib/genreLabels";
+import { t as coreText, useLanguage } from "@/lib/language";
 // import { useState, useEffect } from 'react'; // Unused
 // import { useTranslations } from '@/lib/language'; // Unused
 
@@ -160,7 +162,14 @@ export const FOR_YOU_AVAILABLE_GENRES: GenreConfig[] = [
   }
 ];
 
+export function displayRowTitle(row: ForYouRow): string {
+  const main = FOR_YOU_AVAILABLE_GENRES.find(genre => genre.id === row.mainGenre);
+  const sub = main?.subgenres.find(genre => genre.id === row.subGenre);
+  return main && sub ? `${genreDisplayName(main.name)}/${genreDisplayName(sub.name)}` : row.title;
+}
+
 export default function GenreRowConfig({ row, onUpdate, onRemove, canRemove }: GenreRowConfigProps) {
+  useLanguage();
   // const translations = useTranslations(); // Unused
   
   const selectedGenre = FOR_YOU_AVAILABLE_GENRES.find(g => g.id === row.mainGenre);
@@ -198,8 +207,7 @@ export default function GenreRowConfig({ row, onUpdate, onRemove, canRemove }: G
       }}
     >
       <div className="flex items-center justify-between mb-3">
-        <h4 className="font-medium" style={{ color: 'var(--text)' }}>
-          Row {row.id}
+        <h4 className="font-medium" style={{ color: 'var(--text)' }}>{coreText("coreRow")} {row.id}
         </h4>
         {canRemove && (
           <button
@@ -210,20 +218,16 @@ export default function GenreRowConfig({ row, onUpdate, onRemove, canRemove }: G
               borderColor: 'var(--line)',
               backgroundColor: 'transparent'
             }}
-          >
-            Remove
-          </button>
+          >{coreText("coreRemove")}</button>
         )}
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         {/* Main Genre Dropdown */}
         <div>
-          <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
-            Main Genre
-          </label>
+          <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>{coreText("coreMainGenre")}</label>
           <select
-            value={row.mainGenre}
+            aria-label={coreText("coreMainGenre")} value={row.mainGenre}
             onChange={(e) => handleMainGenreChange(e.target.value)}
             className="w-full px-3 py-2 rounded border text-sm"
             style={{
@@ -232,10 +236,10 @@ export default function GenreRowConfig({ row, onUpdate, onRemove, canRemove }: G
               borderColor: 'var(--line)'
             }}
           >
-            <option value="">Select Genre</option>
+            <option value="">{coreText("coreSelectGenre")}</option>
             {FOR_YOU_AVAILABLE_GENRES.map(genre => (
               <option key={genre.id} value={genre.id}>
-                {genre.name}
+                {genreDisplayName(genre.name)}
               </option>
             ))}
           </select>
@@ -243,11 +247,9 @@ export default function GenreRowConfig({ row, onUpdate, onRemove, canRemove }: G
 
         {/* Sub Genre Dropdown */}
         <div>
-          <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
-            Sub Genre
-          </label>
+          <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>{coreText("coreSubGenre")}</label>
           <select
-            value={row.subGenre}
+            aria-label={coreText("coreSubGenre")} value={row.subGenre}
             onChange={(e) => handleSubGenreChange(e.target.value)}
             className="w-full px-3 py-2 rounded border text-sm"
             style={{
@@ -257,10 +259,10 @@ export default function GenreRowConfig({ row, onUpdate, onRemove, canRemove }: G
             }}
             disabled={!selectedGenre}
           >
-            <option value="">Select Sub Genre</option>
+            <option value="">{coreText("coreSelectSubGenre")}</option>
             {availableSubgenres.map(subGenre => (
               <option key={subGenre.id} value={subGenre.id}>
-                {subGenre.name}
+                {genreDisplayName(subGenre.name)}
               </option>
             ))}
           </select>
@@ -273,7 +275,7 @@ export default function GenreRowConfig({ row, onUpdate, onRemove, canRemove }: G
           backgroundColor: 'var(--btn)',
           color: 'var(--muted)'
         }}>
-          <strong>Preview:</strong> "{row.title}" will appear in For You section
+          <strong>{coreText("corePreview")}</strong> {coreText('coreRowPreview', {title:displayRowTitle(row)})}
         </div>
       )}
     </div>

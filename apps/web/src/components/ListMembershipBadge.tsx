@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "../lib/language";
 /**
  * Process: List Membership Badge Display
  * Purpose: Read-only visual indicator showing which list a media item belongs to
@@ -25,6 +26,7 @@ export function ListMembershipBadge({
   item,
   className = "",
 }: ListMembershipBadgeProps): JSX.Element | null {
+  useLanguage();
   const { list, displayName } = getMembershipInfo(item);
 
   // Phase 1: Return null if not in any list
@@ -32,7 +34,7 @@ export function ListMembershipBadge({
     return null;
   }
 
-  const label = list.startsWith('custom:') ? `Custom list: ${displayName}` : `Status: ${displayName}`;
+  const label = list.startsWith('custom:') ? coreText('coreCustomListBadge', {name:displayName}) : coreText('coreStatus', {status:displayName});
 
   return (
     <span

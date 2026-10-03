@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import Tabs from '@/components/Tabs';
 import MobileTabs from '@/components/MobileTabs';
 
-vi.mock('@/lib/language', () => ({ useTranslations: () => ({ home: 'Home', discovery: 'Discovery' }) }));
+vi.mock('@/lib/language', async (importOriginal) => ({...await importOriginal<typeof import("@/lib/language")>(), useTranslations: () => ({ home: 'Home', discovery: 'Discovery' }) }));
 vi.mock('@/lib/capacitorEnv', () => ({ isCapacitorNative: () => false, isCapacitorAndroid: () => false }));
 vi.mock('@/lib/mobileViewportLayout', () => ({
   KEYBOARD_DISMISS_EVENT: 'keyboard-dismiss', KEYBOARD_OPEN_THRESHOLD: 50, useNavViewportLift: () => false,

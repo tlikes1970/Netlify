@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "@/lib/language";
 import { networkOptions } from '@/lib/tabState';
 import { useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -13,6 +14,7 @@ interface ListFiltersProps {
 }
 
 export default function ListFilters({value,onChange,availableProviders,disabled=false}: ListFiltersProps) {
+  useLanguage();
   const id=useId();
   const trigger=useRef<HTMLButtonElement>(null);
   const popup=useRef<HTMLDivElement>(null);
@@ -40,30 +42,29 @@ export default function ListFilters({value,onChange,availableProviders,disabled=
   const selected=(name:string) => value.providers.some(p=>p.toLowerCase()===name.toLowerCase());
   return <div className="flex items-center gap-2 flex-wrap">
     <div className="flex items-center gap-2">
-      <label htmlFor={`${id}-type`} className="text-sm" style={{color:'var(--muted)'}}>Type:</label>
+      <label htmlFor={`${id}-type`} className="text-sm" style={{color:'var(--muted)'}}>{coreText("coreType")}</label>
       <select id={`${id}-type`} value={value.type} disabled={disabled} onChange={e=>onChange({...value,type:e.target.value as FilterType})}
         className="library-filter-control px-2 rounded text-sm border" style={{backgroundColor:'var(--menu-bg)',color:'var(--menu-text)',borderColor:'var(--menu-border)'}}>
-        <option value="all">All</option><option value="movie">Movie</option><option value="tv">TV</option>
+        <option value="all">{coreText("coreAll")}</option><option value="movie">{coreText("coreMovie")}</option><option value="tv">{coreText("coreTVShort")}</option>
       </select>
     </div>
     {(availableProviders.length>0 || value.providers.length>0) && <button type="button" ref={trigger} disabled={disabled}
       aria-expanded={open} aria-haspopup="dialog" aria-controls={`${id}-networks`} onClick={()=>setOpen(!open)}
-      className="library-filter-control px-2 rounded text-sm border" style={{backgroundColor:value.providers.length?'var(--accent-primary)':'var(--menu-bg)',color:value.providers.length?'white':'var(--menu-text)'}}>
-      Network{value.providers.length ? ` (${value.providers.length})` : ''} <span aria-hidden="true">{open?'▲':'▼'}</span>
+      className="library-filter-control px-2 rounded text-sm border" style={{backgroundColor:value.providers.length?'var(--accent-primary)':'var(--menu-bg)',color:value.providers.length?'white':'var(--menu-text)'}}>{coreText("coreNetwork")}{value.providers.length ? ` (${value.providers.length})` : ''} <span aria-hidden="true">{open?'▲':'▼'}</span>
     </button>}
     {open && !disabled && createPortal(<>
       <div className="fixed inset-0 z-40" aria-hidden="true" onClick={()=>close(true)}/>
-      <div ref={popup} id={`${id}-networks`} role="dialog" aria-label="Select networks"
+      <div ref={popup} id={`${id}-networks`} role="dialog" aria-label={coreText("coreSelectNetworks")}
         className="fixed z-50 rounded-lg shadow-lg overflow-y-auto p-2" style={{...position,boxSizing:'border-box',backgroundColor:'var(--menu-bg)',color:'var(--menu-text)',border:'1px solid var(--menu-border)'}}
         onKeyDown={e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close(true);}}}
         onBlur={e=>{if(e.relatedTarget && !e.currentTarget.contains(e.relatedTarget as Node) && e.relatedTarget!==trigger.current) close();}}>
-        <p className="text-xs mb-2">Select networks:</p>
+        <p className="text-xs mb-2">{coreText("coreSelectNetworksColon")}</p>
         {options.map(name=><label key={name.toLowerCase()} className="library-filter-control flex items-center gap-2 p-2 rounded cursor-pointer">
           <input type="checkbox" checked={selected(name)} onChange={()=>onChange({...value,providers:selected(name)?value.providers.filter(p=>p.toLowerCase()!==name.toLowerCase()):[...value.providers,name]})}/>
           <span className="text-sm min-w-0" style={{overflowWrap:'anywhere'}}>{name}</span>
         </label>)}
-        {value.providers.length>0 && <button type="button" className="library-filter-control w-full text-sm border rounded" onClick={()=>onChange({...value,providers:[]})}>Clear Networks</button>}
-        <button type="button" className="library-filter-control w-full text-sm" onClick={()=>close(true)}>Done</button>
+        {value.providers.length>0 && <button type="button" className="library-filter-control w-full text-sm border rounded" onClick={()=>onChange({...value,providers:[]})}>{coreText("coreClearNetworks")}</button>}
+        <button type="button" className="library-filter-control w-full text-sm" onClick={()=>close(true)}>{coreText("coreDone")}</button>
       </div>
     </>,document.body)}
   </div>;

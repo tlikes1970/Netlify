@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "@/lib/language";
 import { libraryIdentity, processLibraryItems } from '@/lib/libraryView';
 import TabCard from "@/components/cards/TabCard";
 import type { MediaItem } from "@/components/cards/card.types";
@@ -63,6 +64,7 @@ export default function ListPage({
   onExtrasOpen?: (item: MediaItem) => void;
   onEpisodeTracking?: (item: MediaItem) => void;
 }) {
+  useLanguage();
   const settings = useSettings();
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [sortByTag, setSortByTag] = useState<boolean>(false);
@@ -309,7 +311,7 @@ export default function ListPage({
       const item = processedItems[fromIndex];
       const direction = toIndex > fromIndex ? "down" : "up";
       announceChange(
-        `${item.title} moved ${direction}, now at position ${toIndex + 1} of ${processedItems.length}`
+        coreText('coreReordered', {title:item.title,direction:coreText(direction === 'up' ? 'coreUp' : 'coreDown'),position:toIndex+1,total:processedItems.length})
       );
 
       // Maintain focus on handle after reorder
@@ -565,16 +567,15 @@ export default function ListPage({
         "No upcoming releases yet. Add TV series to Currently Watching or Watched and they'll appear here when schedule information is available."
       );
     }
-    if (title.toLowerCase().includes("watching")) {
+    if (mode === 'watching') {
       return resolveFlickletLine("empty.watching", level);
     }
     if (
-      title.toLowerCase().includes("wishlist") ||
-      title.toLowerCase().includes("want")
+      mode === 'want'
     ) {
       return resolveFlickletLine("empty.want", level);
     }
-    if (title.toLowerCase().includes("watched")) {
+    if (mode === 'watched') {
       return resolveFlickletLine("empty.watched", level);
     }
     if (title.toLowerCase().includes("not interested")) {
@@ -666,9 +667,7 @@ export default function ListPage({
             <span
               className="px-2 py-1 rounded-full text-xs font-medium"
               style={{ backgroundColor: "var(--accent)", color: "white" }}
-            >
-              🏷️ Sorted by Tag
-            </span>
+            >{coreText("coreSortedTag")}</span>
           )}
         </div>
 
@@ -681,9 +680,7 @@ export default function ListPage({
               disabled={false}
             />
             {(sortMode !== 'date-newest' || sortByTag) && (
-              <button type="button" className="library-filter-control px-3 rounded text-xs border" onClick={() => handleSortModeChange('date-newest')}>
-                Reset Sort to Newest
-              </button>
+              <button type="button" className="library-filter-control px-3 rounded text-xs border" onClick={() => handleSortModeChange('date-newest')}>{coreText("coreResetSort")}</button>
             )}
           </>
 
@@ -699,7 +696,7 @@ export default function ListPage({
             <button type="button" className="library-filter-control px-3 rounded text-sm border" onClick={() => {
               setSelectedTag(null);
               handleFilterChange({type: 'all', providers: []});
-            }}>Clear Filters</button>
+            }}>{coreText("coreClearFilters")}</button>
           )}
 
           {/* Tag Controls */}
@@ -719,18 +716,14 @@ export default function ListPage({
                   }}
                   className="rounded"
                 />
-                <span className="text-sm" style={{ color: "var(--muted)" }}>
-                  Sort by tag
-                </span>
+                <span className="text-sm" style={{ color: "var(--muted)" }}>{coreText("coreSortTag")}</span>
               </label>
 
               {/* Tag Filter */}
               <div className="flex items-center gap-2">
-                <span className="text-sm" style={{ color: "var(--muted)" }}>
-                  Filter by tag:
-                </span>
+                <span className="text-sm" style={{ color: "var(--muted)" }}>{coreText("coreFilterTag")}</span>
                 <select
-                  aria-label="Filter by tag"
+                  aria-label={coreText("coreFilterTagAria")}
                   value={selectedTag || ""}
                   onChange={(e) => setSelectedTag(e.target.value || null)}
                   className="library-filter-control px-2 py-1 rounded text-sm border"
@@ -740,7 +733,7 @@ export default function ListPage({
                     color: "var(--menu-text)",
                   }}
                 >
-                  <option value="">All items</option>
+                  <option value="">{coreText("coreAllItems")}</option>
                   {selectedTag && !allTags.includes(selectedTag) && <option value={selectedTag}>{selectedTag}</option>}
                   {allTags.map((tag) => (
                     <option
@@ -953,11 +946,11 @@ export default function ListPage({
         <div className="text-center py-8" style={{ color: "var(--muted)" }}>
           <p className="text-sm">
             {items.length === 0 ? getEmptyText() : selectedTag && filters.type === 'all' && !filters.providers.length
-              ? `No items found with tag "${selectedTag}"`
-              : 'No items match your filters'}
+              ? coreText('coreNoTagMatches', {tag:selectedTag})
+              : coreText('coreNoFilterResults')}
           </p>
           <p className="text-xs mt-2">
-            {items.length === 0 ? 'Add some shows to get started!' : 'Adjust your filters or choose Clear Filters to see all items.'}
+            {items.length === 0 ? coreText('coreGetStarted') : coreText('coreFilterHelp')}
           </p>
         </div>
       )}

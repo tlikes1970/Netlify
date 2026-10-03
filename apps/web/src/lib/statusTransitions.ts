@@ -2,7 +2,7 @@ import { authManager } from "./auth";
 import { guardMutation } from "./readOnlyGuard";
 import { languageManager } from "./language";
 import { isRestoring } from "./restoreBarrier";
-import { WATCH_STATUS_LABELS } from './watchStatus';
+import { WATCH_STATUS_LABELS, getWatchStatusLabel } from './watchStatus';
 import type { MediaItem } from '@/components/cards/card.types';
 import type { ListName } from '@/state/library.types';
 import { getGlobalToastCallback } from './toastBridge';
@@ -77,10 +77,10 @@ export function setPrimaryStatus(
 
   if (options.feedback) {
     getGlobalToastCallback()?.(
-      `Moved “${item.title}” to ${PRIMARY_STATUS_LABELS[target]}.`,
+      languageManager.translate('coreMoved', {title:item.title, status:getWatchStatusLabel(target)}),
       'success',
       {
-        label: 'Undo',
+        label: languageManager.translate('coreUndo'),
         onClick: () => {
           if (isRestoring()) return;
           if (previous) Library.move(item.id, item.mediaType, previous as ListName);

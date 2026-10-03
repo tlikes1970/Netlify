@@ -19,7 +19,6 @@ test.beforeAll(async () => {
     "hooks/usePreferredName": `import {useSyncExternalStore} from 'react';const listeners=new Set();window.setNameState=(next)=>{window.nameState=next;listeners.forEach(f=>f())};const subscribe=f=>{listeners.add(f);return ()=>listeners.delete(f)};export function usePreferredName(){return {...useSyncExternalStore(subscribe,()=>window.nameState),updatePreferredName:async(name)=>{window.nameWrites.push(name.trim());window.setNameState({...window.nameState,preferredName:name.trim()})},retry:()=>{}}}`,
     "lib/settings": `export function useSettings(){return {personality:'Zen'}}`,
     "hooks/useDeviceDetection": `export function useIsMobileScreen(){return window.innerWidth<768}`,
-    "lib/language": `export function useTranslations(){return {home:'Home',discovery:'Discovery',search:'Search',clear:'Clear',searchPlaceholder:'Search movies, shows, people...'}}`,
     "lib/capacitorEnv": `export function isCapacitorNative(){return true} export function isCapacitorAndroid(){return true} export function getCapacitorPlatform(){return "android"}`,
     "lib/mobileViewportLayout": `export function dispatchKeyboardDismiss(){} export const KEYBOARD_DISMISS_EVENT="keyboard-dismiss";export const KEYBOARD_OPEN_THRESHOLD=50;export function useNavViewportLift(){return false}`,
     "pwa/useInstall": `export function useCanInstallPWA(){return false}`,
@@ -37,6 +36,7 @@ test.beforeAll(async () => {
     bundle: true,
     write: false,
     format: "iife",
+    define: {"import.meta.env":"{}"},
     jsx: "automatic",
     plugins: [
       {

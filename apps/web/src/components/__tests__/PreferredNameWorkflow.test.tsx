@@ -56,7 +56,7 @@ vi.mock("../SearchSuggestions", () => ({
 vi.mock("../VoiceSearch", () => ({ default: () => null }));
 vi.mock("../../pwa/useInstall", () => ({ useCanInstallPWA: () => false }));
 vi.mock("../../pwa/installSignal", () => ({ promptInstall: vi.fn() }));
-vi.mock("../../lib/language", () => ({
+vi.mock("../../lib/language", async (importOriginal) => ({...await importOriginal<typeof import("@/lib/language")>(),
   useTranslations: () => ({ search: "Search" }),
 }));
 vi.mock("../../lib/capacitorEnv", () => ({

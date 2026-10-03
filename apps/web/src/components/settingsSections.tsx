@@ -1,3 +1,4 @@
+import { t as coreText, tPlural } from "../lib/language";
 import SharingModal from "./modals/SharingModal";
 import StartOverControl from "./StartOverControl";
 import { downloadBackup } from "../lib/downloadBackup";
@@ -432,7 +433,7 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
       }
 
       const confirmed = window.confirm(
-        `${translations.confirmDeleteList || "Are you sure you want to delete"} "${list.name}"? Titles will stay in your Library.`
+        coreText('coreDeleteListConfirm', {name:list.name})
       );
 
       if (confirmed) {
@@ -672,7 +673,7 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
                       className="text-xs mt-1"
                       style={{ color: "var(--muted)" }}
                     >
-                      {list.itemCount} {translations.items}
+                      {tPlural({one:'coreItemOne',other:'coreItemsOther'},list.itemCount)}
                     </p>
                   </div>
                   <div className="flex gap-1">

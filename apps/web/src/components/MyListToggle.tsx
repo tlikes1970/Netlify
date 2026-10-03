@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "../lib/language";
 /**
  * Process: My List Toggle Button
  * Purpose: Action button to add/change list membership for a media item
@@ -37,6 +38,7 @@ interface MyListToggleProps {
 }
 
 export default function MyListToggle({ item, currentListContext }: MyListToggleProps) {
+  useLanguage();
   const [showModal, setShowModal] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   
@@ -77,31 +79,31 @@ export default function MyListToggle({ item, currentListContext }: MyListToggleP
     // Custom lists are organization and are separate from primary watch status.
     // This prevents redundant "In list: Currently Watching" text on list pages
     if (currentListContext) {
-      return 'Custom Lists +';
+      return `${coreText('coreCustomLists')} +`;
     }
     
     // If not in any list, show "My List +"
     if (membershipInfo.displayName === null) {
-      return 'Custom Lists +';
+      return `${coreText('coreCustomLists')} +`;
     }
     
     // Otherwise, show "In list: <DisplayName>" (useful in mixed contexts like search/home)
-    return 'Custom Lists +';
+    return `${coreText('coreCustomLists')} +`;
   };
 
   const getButtonTitle = () => {
     // If not in any list
     if (membershipInfo.displayName === null) {
-      return 'Add to a custom list without changing watch status';
+      return coreText('coreAddCustomHint');
     }
     
     // If we're on a list-specific page, show simple tooltip (context already implies membership)
     if (currentListContext) {
-      return 'Add to a custom list without changing watch status';
+      return coreText('coreAddCustomHint');
     }
     
     // Otherwise, show full info
-    return 'Add to a custom list without changing watch status';
+    return coreText('coreAddCustomHint');
   };
 
   return (

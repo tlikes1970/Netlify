@@ -26,7 +26,7 @@ vi.mock("@/hooks/useAuth", () => ({
   }),
 }));
 vi.mock("@/lib/authLogin", () => ({ googleLogin: mocks.googleLogin }));
-vi.mock("@/lib/language", () => ({
+vi.mock("@/lib/language", async (importOriginal) => ({...await importOriginal<typeof import("@/lib/language")>(),
   useTranslations: () => ({ signIn: "Sign In" }),
 }));
 vi.mock("@/lib/capacitorEnv", () => ({ isCapacitorNative: () => true }));

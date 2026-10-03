@@ -9,7 +9,7 @@ vi.mock('@/lib/proConfig', () => ({ getMaxCustomLists: () => 3 }));
 vi.mock('@/lib/auth', () => ({authManager: {getCurrentUser: () => null}}));
 vi.mock('@/lib/readOnlyGuard', () => ({guardMutation: () => true}));
 vi.mock('@/lib/settings', () => ({useSettings: () => ({personality:'Zen'}), getPersonalityText: () => 'Empty list', DEFAULT_PERSONALITY:'Zen'}));
-vi.mock('@/lib/language', () => ({useTranslations: () => ({sharingAction:"Share"})}));
+vi.mock('@/lib/language', async (importOriginal) => ({...await importOriginal<typeof import("@/lib/language")>(),useTranslations: () => ({sharingAction:"Share"})}));
 vi.mock('@/lib/shareLinks', () => ({shareListWithFallback: vi.fn()}));
 vi.mock('@/state/actions', () => ({getToastCallback: () => vi.fn()}));
 vi.mock('@/components/cards/TabCard', () => ({default: ({item}: {item:{title:string}}) => <article>{item.title}</article>}));

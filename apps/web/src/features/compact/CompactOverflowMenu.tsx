@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "@/lib/language";
 import { useTranslations } from "../../lib/language";
 import { Library } from "../../lib/storage";
 import ListSelectorModal from "../../components/ListSelectorModal";
@@ -38,6 +39,7 @@ export function CompactOverflowMenu({
   secondaryWatching = false,
   customListContext = false,
 }: CompactOverflowMenuProps) {
+  useLanguage();
   const translations = useTranslations();
   const [showLists, setShowLists] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -254,7 +256,7 @@ export function CompactOverflowMenu({
         if (handlers.onOpen)
           menuItems.push({
             id: "open",
-            label: "Open Details",
+            label: coreText("coreOpenDetails"),
             onClick: handlers.onOpen,
           });
         // Share this show
@@ -266,19 +268,19 @@ export function CompactOverflowMenu({
         if (handlers.onWant)
           menuItems.push({
             id: "want",
-            label: "Want to Watch",
+            label: coreText("coreWant"),
             onClick: handlers.onWant,
           });
         if (handlers.onNotInterested)
           menuItems.push({
             id: "not-interested",
-            label: "Not Interested",
+            label: coreText("coreNot"),
             onClick: handlers.onNotInterested,
           });
         if (isTVShow && episodeTrackingEnabled && handlers.onEpisodeTracking)
           menuItems.push({
             id: "episodes",
-            label: "Episodes",
+            label: coreText("coreEpisodes"),
             onClick: handlers.onEpisodeTracking,
           });
         if (handlers.onNotesEdit)
@@ -291,27 +293,27 @@ export function CompactOverflowMenu({
         if (isTVShow && handlers.onSimpleReminder)
           menuItems.push({
             id: "reminder",
-            label: isSeriesReminderEnabled(_item.id) ? "✓ Reminded" : "Remind Me",
+            label: isSeriesReminderEnabled(_item.id) ? coreText("coreReminded") : coreText("coreRemind"),
             onClick: handlers.onSimpleReminder,
           });
         if (handlers.onGoofsOpen)
           menuItems.push({
             id: "goofs",
-            label: "Shows Like This",
+            label: coreText("coreShowsLikeThis"),
             onClick: handlers.onGoofsOpen,
             proOnly: !hasFullAccess,
           });
         if (handlers.onExtrasOpen)
           menuItems.push({
             id: "extras",
-            label: "Extras",
+            label: coreText("coreExtras"),
             onClick: handlers.onExtrasOpen,
             proOnly: !hasFullAccess,
           });
         if (handlers.onDelete)
           menuItems.push({
             id: "delete",
-            label: customListContext ? "Remove from this List" : "Delete",
+            label: customListContext ? coreText("coreRemoveList") : coreText("coreDelete"),
             onClick: handlers.onDelete,
           });
         break;
@@ -321,7 +323,7 @@ export function CompactOverflowMenu({
         if (handlers.onOpen)
           menuItems.push({
             id: "open",
-            label: "Open Details",
+            label: coreText("coreOpenDetails"),
             onClick: handlers.onOpen,
           });
         // Share this show
@@ -333,19 +335,19 @@ export function CompactOverflowMenu({
         if (handlers.onWant)
           menuItems.push({
             id: "want",
-            label: "Want to Watch",
+            label: coreText("coreWant"),
             onClick: handlers.onWant,
           });
         if (handlers.onNotInterested)
           menuItems.push({
             id: "not-interested",
-            label: "Not Interested",
+            label: coreText("coreNot"),
             onClick: handlers.onNotInterested,
           });
         if (isTVShow && episodeTrackingEnabled && handlers.onEpisodeTracking)
           menuItems.push({
             id: "episodes",
-            label: "Episodes",
+            label: coreText("coreEpisodes"),
             onClick: handlers.onEpisodeTracking,
           });
         if (handlers.onNotesEdit)
@@ -358,27 +360,27 @@ export function CompactOverflowMenu({
         if (isTVShow && handlers.onSimpleReminder)
           menuItems.push({
             id: "reminder",
-            label: isSeriesReminderEnabled(_item.id) ? "✓ Reminded" : "Remind Me",
+            label: isSeriesReminderEnabled(_item.id) ? coreText("coreReminded") : coreText("coreRemind"),
             onClick: handlers.onSimpleReminder,
           });
         if (handlers.onGoofsOpen)
           menuItems.push({
             id: "goofs",
-            label: "Shows Like This",
+            label: coreText("coreShowsLikeThis"),
             onClick: handlers.onGoofsOpen,
             proOnly: !hasFullAccess,
           });
         if (handlers.onExtrasOpen)
           menuItems.push({
             id: "extras",
-            label: "Extras",
+            label: coreText("coreExtras"),
             onClick: handlers.onExtrasOpen,
             proOnly: !hasFullAccess,
           });
         if (handlers.onDelete)
           menuItems.push({
             id: "delete",
-            label: customListContext ? "Remove from this List" : "Delete",
+            label: customListContext ? coreText("coreRemoveList") : coreText("coreDelete"),
             onClick: handlers.onDelete,
           });
         break;
@@ -388,7 +390,7 @@ export function CompactOverflowMenu({
         if (handlers.onOpen)
           menuItems.push({
             id: "open",
-            label: "Open Details",
+            label: coreText("coreOpenDetails"),
             onClick: handlers.onOpen,
           });
         // Share this show
@@ -400,19 +402,19 @@ export function CompactOverflowMenu({
         if (handlers.onWatched)
           menuItems.push({
             id: "watched",
-            label: "Mark Watched",
+            label: coreText("coreMarkWatched"),
             onClick: handlers.onWatched,
           });
         if (handlers.onNotInterested)
           menuItems.push({
             id: "not-interested",
-            label: "Not Interested",
+            label: coreText("coreNot"),
             onClick: handlers.onNotInterested,
           });
         if (isTVShow && episodeTrackingEnabled && handlers.onEpisodeTracking)
           menuItems.push({
             id: "episodes",
-            label: "Episodes",
+            label: coreText("coreEpisodes"),
             onClick: handlers.onEpisodeTracking,
           });
         if (handlers.onNotesEdit)
@@ -425,27 +427,27 @@ export function CompactOverflowMenu({
         if (isTVShow && handlers.onSimpleReminder)
           menuItems.push({
             id: "reminder",
-            label: isSeriesReminderEnabled(_item.id) ? "✓ Reminded" : "Remind Me",
+            label: isSeriesReminderEnabled(_item.id) ? coreText("coreReminded") : coreText("coreRemind"),
             onClick: handlers.onSimpleReminder,
           });
         if (handlers.onGoofsOpen)
           menuItems.push({
             id: "goofs",
-            label: "Shows Like This",
+            label: coreText("coreShowsLikeThis"),
             onClick: handlers.onGoofsOpen,
             proOnly: !hasFullAccess,
           });
         if (handlers.onExtrasOpen)
           menuItems.push({
             id: "extras",
-            label: "Extras",
+            label: coreText("coreExtras"),
             onClick: handlers.onExtrasOpen,
             proOnly: !hasFullAccess,
           });
         if (handlers.onDelete)
           menuItems.push({
             id: "delete",
-            label: customListContext ? "Remove from this List" : "Delete",
+            label: customListContext ? coreText("coreRemoveList") : coreText("coreDelete"),
             onClick: handlers.onDelete,
           });
         break;
@@ -457,7 +459,7 @@ export function CompactOverflowMenu({
         if (handlers.onOpen)
           menuItems.push({
             id: "open",
-            label: "Open Details",
+            label: coreText("coreOpenDetails"),
             onClick: handlers.onOpen,
           });
         // Share this show
@@ -469,19 +471,19 @@ export function CompactOverflowMenu({
         if (handlers.onWant)
           menuItems.push({
             id: "want",
-            label: "Want to Watch",
+            label: coreText("coreWant"),
             onClick: handlers.onWant,
           });
         if (handlers.onWatched)
           menuItems.push({
             id: "watched",
-            label: "Mark Watched",
+            label: coreText("coreMarkWatched"),
             onClick: handlers.onWatched,
           });
         if (handlers.onNotInterested)
           menuItems.push({
             id: "not-interested",
-            label: "Not Interested",
+            label: coreText("coreNot"),
             onClick: handlers.onNotInterested,
           });
         if (handlers.onNotesEdit)
@@ -494,27 +496,27 @@ export function CompactOverflowMenu({
         if (isTVShow && episodeTrackingEnabled && handlers.onEpisodeTracking)
           menuItems.push({
             id: "episodes",
-            label: "Episodes",
+            label: coreText("coreEpisodes"),
             onClick: handlers.onEpisodeTracking,
           });
         // Simple Reminder for TV shows
         if (isTVShow && handlers.onSimpleReminder)
           menuItems.push({
             id: "reminder",
-            label: isSeriesReminderEnabled(_item.id) ? "✓ Reminded" : "Remind Me",
+            label: isSeriesReminderEnabled(_item.id) ? coreText("coreReminded") : coreText("coreRemind"),
             onClick: handlers.onSimpleReminder,
           });
         if (handlers.onGoofsOpen)
           menuItems.push({
             id: "goofs",
-            label: "Shows Like This",
+            label: coreText("coreShowsLikeThis"),
             onClick: handlers.onGoofsOpen,
             proOnly: !hasFullAccess,
           });
         if (handlers.onExtrasOpen)
           menuItems.push({
             id: "extras",
-            label: "Extras",
+            label: coreText("coreExtras"),
             onClick: handlers.onExtrasOpen,
             proOnly: !hasFullAccess,
           });
@@ -525,22 +527,22 @@ export function CompactOverflowMenu({
         if (handlers.onOpen)
           menuItems.push({
             id: "open",
-            label: "Open Details",
+            label: coreText("coreOpenDetails"),
             onClick: handlers.onOpen,
           });
         if (handlers.onDelete)
           menuItems.push({
             id: "delete",
-            label: customListContext ? "Remove from this List" : "Delete",
+            label: customListContext ? coreText("coreRemoveList") : coreText("coreDelete"),
             onClick: handlers.onDelete,
           });
     }
 
     if (secondaryWatching && handlers.onWatching) {
-      menuItems.push({id: "watching", label: "Watching", onClick: handlers.onWatching});
+      menuItems.push({id: "watching", label: coreText("coreWatching"), onClick: handlers.onWatching});
     }
-    menuItems.push({ id: "custom-lists", label: customListContext ? "Add to Lists" : "Custom Lists", onClick: () => setShowLists(true) });
-    if (customListContext && handlers.onWatched) menuItems.push({id:"watched",label:"Watched",onClick:handlers.onWatched});
+    menuItems.push({ id: "custom-lists", label: customListContext ? coreText("coreAddLists") : coreText("coreCustomLists"), onClick: () => setShowLists(true) });
+    if (customListContext && handlers.onWatched) menuItems.push({id:"watched",label:coreText("coreWatched"),onClick:handlers.onWatched});
     return menuItems.filter(action => !(customListContext && action.id === "not-interested" && Library.getCurrentList(_item.id, isTVShow ? "tv" : "movie") === "not")).filter(action => !hideStatusActions || !["want", "watching", "watched"].includes(action.id) || (customListContext && action.id === "watched") || (secondaryWatching && action.id === "watching"));
   }
 
@@ -550,7 +552,7 @@ export function CompactOverflowMenu({
         onClick={handleToggle}
         aria-expanded={isOpen}
         aria-haspopup="menu"
-        aria-label={showText ? "More" : "More options"}
+        aria-label={showText ? coreText('coreMore') : coreText('coreMoreOptions')}
         className="compact-overflow-trigger focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
         style={{
           padding: "var(--space-2, 8px)",
@@ -584,9 +586,7 @@ export function CompactOverflowMenu({
         }}
       >
         {showText ? (
-          <>
-            More
-            <svg
+          <>{coreText("coreMore")}<svg
               width="12"
               height="12"
               viewBox="0 0 24 24"

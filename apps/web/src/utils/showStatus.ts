@@ -1,3 +1,4 @@
+import { t as coreText } from "../lib/language";
 export type ShowStatus = 'Ended' | 'Returning Series' | 'In Production' | 'Canceled' | 'Planned';
 
 export interface ShowStatusInfo {
@@ -13,7 +14,7 @@ export function getShowStatusInfo(status?: ShowStatus): ShowStatusInfo | null {
   switch (status) {
     case 'Ended':
       return {
-        badge: 'ENDED',
+        badge: coreText('coreEnded'),
         color: 'white',
         backgroundColor: 'var(--muted)',
         isCompleted: true
@@ -21,7 +22,7 @@ export function getShowStatusInfo(status?: ShowStatus): ShowStatusInfo | null {
     
     case 'Canceled':
       return {
-        badge: 'CANCELLED',
+        badge: coreText('coreCancelled'),
         color: 'white',
         backgroundColor: '#dc2626', // red-600
         isCompleted: true
@@ -29,7 +30,7 @@ export function getShowStatusInfo(status?: ShowStatus): ShowStatusInfo | null {
     
     case 'Returning Series':
       return {
-        badge: 'RETURNING',
+        badge: coreText('coreReturning'),
         color: 'white',
         backgroundColor: '#16a34a', // green-600
         isCompleted: false
@@ -37,7 +38,7 @@ export function getShowStatusInfo(status?: ShowStatus): ShowStatusInfo | null {
     
     case 'In Production':
       return {
-        badge: 'IN PRODUCTION',
+        badge: coreText('coreProduction'),
         color: 'white',
         backgroundColor: '#ea580c', // orange-600
         isCompleted: false
@@ -45,7 +46,7 @@ export function getShowStatusInfo(status?: ShowStatus): ShowStatusInfo | null {
     
     case 'Planned':
       return {
-        badge: 'PLANNED',
+        badge: coreText('corePlanned'),
         color: 'white',
         backgroundColor: '#7c3aed', // violet-600
         isCompleted: false

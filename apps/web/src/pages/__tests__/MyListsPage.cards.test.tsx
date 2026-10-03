@@ -10,7 +10,7 @@ vi.mock('@/lib/customLists', async () => {
   return {useCustomLists: () => ({customLists: lists,maxLists:3}), customListManager: {getListById: (id: string) => lists.find(l => l.id === id), setSelectedList: vi.fn(), updateItemCount: mocks.count}};
 });
 vi.mock('@/lib/settings', () => ({useSettings: () => ({layout:{episodeTracking:false}, personality:'Zen'}), getPersonalityText: () => 'Nothing here yet', DEFAULT_PERSONALITY:'Zen'}));
-vi.mock('@/lib/language', () => ({useTranslations: () => ({wantToWatchAction:'Want to Watch',currentlyWatchingAction:'Watching',notesAndTags:'Notes & Tags',watchedAction:'Watched',notInterestedAction:'Not Interested'})}));
+vi.mock('@/lib/language', async (importOriginal) => ({...await importOriginal<typeof import("@/lib/language")>(),useTranslations: () => ({wantToWatchAction:'Want to Watch',currentlyWatchingAction:'Watching',notesAndTags:'Notes & Tags',watchedAction:'Watched',notInterestedAction:'Not Interested'})}));
 vi.mock('@/hooks/useDeviceDetection', () => ({useIsDesktop: () => ({isDesktop:false,ready:true})}));
 vi.mock('@/hooks/useEntitlements', () => ({useEntitlements: () => ({hasFullAccess:true,isReadOnlyMode:false})}));
 vi.mock('@/components/Toast', () => ({useToast: () => ({addToast:mocks.toast})}));

@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "@/lib/language";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useAndroidBackDismiss } from "../hooks/useAndroidBackDismiss";
@@ -5,6 +6,7 @@ import AuthModal from "./AuthModal";
 import ModalPortal from "./ModalPortal";
 
 export default function AccountButton() {
+  useLanguage();
   const { signOut, isAuthenticated } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [surface, setSurface] = useState<"confirm" | null>(null);
@@ -83,7 +85,7 @@ export default function AccountButton() {
       setSurface(null);
     } catch (cause) {
       console.error("Sign-out failed:", cause);
-      setError("Could not log out. Please try again.");
+      setError(coreText("coreLogoutFailed"));
     } finally {
       pending.current = false;
       setLoggingOut(false);
@@ -112,7 +114,7 @@ export default function AccountButton() {
         data-role="avatar"
       >
         <span aria-hidden="true">👤</span>
-        <span>{isAuthenticated ? "Log Out" : "Log In"}</span>
+        <span>{isAuthenticated ? coreText("coreLogOut") : coreText("coreLogIn")}</span>
       </button>
       {open && (
         <ModalPortal>
@@ -137,19 +139,15 @@ export default function AccountButton() {
               }}
               onClick={(event) => event.stopPropagation()}
             >
-              <h2 id={titleId} className="text-lg font-semibold mb-3">
-                Log out?
-              </h2>
+              <h2 id={titleId} className="text-lg font-semibold mb-3">{coreText("coreLogOutTitle")}</h2>
               <p
                 id={bodyId}
                 className="text-sm mb-6"
                 style={{ color: "var(--muted)" }}
-              >
-                Are you sure you want to log out?
-              </p>
+              >{coreText("coreLogOutConfirm")}</p>
               {error && (
                 <p role="alert" className="text-sm mb-3">
-                  {error}
+                  {coreText('coreLogoutFailed')}
                 </p>
               )}
               <div className="flex justify-end gap-3">
@@ -159,9 +157,7 @@ export default function AccountButton() {
                   onClick={dismiss}
                   className={actionClass}
                   style={buttonStyle}
-                >
-                  Cancel
-                </button>
+                >{coreText("coreCancel")}</button>
                 <button
                   type="button"
                   disabled={loggingOut}
@@ -169,7 +165,7 @@ export default function AccountButton() {
                   className={actionClass}
                   style={{ backgroundColor: "#dc2626", color: "#fff" }}
                 >
-                  {loggingOut ? "Logging out…" : "Log Out"}
+                  {loggingOut ? coreText("coreLoggingOut") : coreText("coreLogOut")}
                 </button>
               </div>
             </div>

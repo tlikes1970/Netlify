@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage, tPlural } from "@/lib/language";
 import React, { useState } from 'react';
 import TabCard from '../components/cards/TabCard';
 import { useCustomLists, customListManager } from '../lib/customLists';
@@ -10,6 +11,7 @@ import { getToastCallback } from '../state/actions';
 import { setPrimaryStatus, setNotInterested } from '../lib/statusTransitions';
 
 export default function MyListsPage({onBack, onNotesEdit}: {onBack?: () => void; onNotesEdit?: (item: import("../components/cards/card.types").MediaItem) => void} = {}) {
+  useLanguage();
   const userLists = useCustomLists();
   const [selectedListId, setSelectedListId] = useState<string>(() => customListManager.getSelectedList?.()?.id || '');
   const translations = useTranslations();
@@ -81,7 +83,7 @@ export default function MyListsPage({onBack, onNotesEdit}: {onBack?: () => void;
       const newList = customListManager.createList(name.trim());
       handleListChange(newList.id);
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to create list');
+      alert(error instanceof Error ? error.message : coreText("coreCreateFailed"));
     }
   };
 
@@ -90,7 +92,7 @@ export default function MyListsPage({onBack, onNotesEdit}: {onBack?: () => void;
     if (!list) return;
 
     const confirmed = window.confirm(
-      `${translations.confirmDeleteList || 'Are you sure you want to delete'} "${list.name}"? Titles will stay in your Library.`
+      coreText('coreDeleteListConfirm', {name: list.name})
     );
     
     if (confirmed) {
@@ -103,7 +105,7 @@ export default function MyListsPage({onBack, onNotesEdit}: {onBack?: () => void;
           if (next) customListManager.setSelectedList(next.id);
         }
       } catch (error) {
-        alert(error instanceof Error ? error.message : 'Failed to delete list');
+        alert(error instanceof Error ? error.message : coreText("coreDeleteFailed"));
       }
     }
   };
@@ -118,7 +120,7 @@ export default function MyListsPage({onBack, onNotesEdit}: {onBack?: () => void;
     try {
       customListManager.updateList(listId, { name: newName.trim() });
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to rename list');
+      alert(error instanceof Error ? error.message : coreText("coreRenameFailed"));
     }
   };
 
@@ -177,7 +179,7 @@ export default function MyListsPage({onBack, onNotesEdit}: {onBack?: () => void;
       }
     },
     onDelete: (item: any) => {
-      if (selectedListId && window.confirm(`Remove “${item.title}” from this custom list?`)) {
+      if (selectedListId && window.confirm(coreText('coreRemoveCustomConfirm', {title:item.title}))) {
         Library.removeFromCustomList(item.id, item.mediaType, selectedListId);
       }
     },
@@ -185,11 +187,9 @@ export default function MyListsPage({onBack, onNotesEdit}: {onBack?: () => void;
 
   return (
     <section className="px-4 py-4 custom-lists-page">
-      {onBack && <button type="button" onClick={onBack} className="mb-3 min-h-[44px]">← Back</button>}
+      {onBack && <button type="button" onClick={onBack} className="mb-3 min-h-[44px]">{coreText("coreBackArrow")}</button>}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <h1 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>
-          Custom Lists
-        </h1>
+        <h1 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>{coreText("coreCustomLists")}</h1>
         
         <div className="flex gap-2">
           {userLists.customLists.length < userLists.maxLists && (
@@ -232,7 +232,7 @@ export default function MyListsPage({onBack, onNotesEdit}: {onBack?: () => void;
                         handleRenameList(list.id);
                       }}
                       className="custom-list-action text-xs opacity-60 hover:opacity-100"
-                      aria-label={`Rename ${list.name}`}
+                      aria-label={coreText('coreRenameListAria', {name:list.name})}
                       title={translations.rename || 'Rename'}
                     >
                       ✏️
@@ -243,7 +243,7 @@ export default function MyListsPage({onBack, onNotesEdit}: {onBack?: () => void;
                         handleDeleteList(list.id);
                       }}
                       className="custom-list-action text-xs opacity-60 hover:opacity-100"
-                      aria-label={`Delete ${list.name}`}
+                      aria-label={coreText('coreDeleteListAria', {name:list.name})}
                       title={translations.delete || 'Delete'}
                     >
                       🗑️
@@ -270,7 +270,7 @@ export default function MyListsPage({onBack, onNotesEdit}: {onBack?: () => void;
                 )}
               </h2>
               <p className="text-sm" style={{ color: 'var(--muted)' }}>
-                {items.length} {translations.items || 'items'}
+                {tPlural({one:'coreItemOne',other:'coreItemsOther'},items.length)}
               </p>
             </div>
             <button

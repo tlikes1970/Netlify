@@ -18,7 +18,8 @@ describe('retired first-use and game production paths',()=>{
  });
  it('exposes touch and keyboard reorder guidance',()=>{
   const handle=source('components/cards/DragHandle.tsx');
-  expect(handle).toContain('On touch, hold then drag. Press Arrow Up or Down');
+  expect(handle).toContain('coreReorderAria');
+  expect(TRANSLATIONS.en.coreReorderAria).toContain('On touch, hold then drag. Press Arrow Up or Down');
   expect(handle).toContain('onKeyboardReorder?.');
  });
  it('keeps EN/ES genre guidance factual',()=>{

@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "../lib/language";
 import { useEffect, useState } from 'react';
 import { getCurrentSeasonProgress } from '@/utils/episodeProgress';
 
@@ -12,6 +13,7 @@ export function EpisodeProgressDisplay({
   showId, 
   compact = false, 
 }: EpisodeProgressDisplayProps) {
+  useLanguage();
   const [, refresh] = useState(0);
   useEffect(() => {
     const onUpdate = (event: Event) => {
@@ -23,9 +25,9 @@ export function EpisodeProgressDisplay({
   const progress = getCurrentSeasonProgress(showId);
   if (!progress) return null;
   const next = progress.nextEpisode === null
-    ? `Season ${progress.seasonNumber} complete`
-    : `Up next: S${progress.seasonNumber} E${progress.nextEpisode}`;
-  const progressText = `${next} · ${progress.watched}/${progress.total} watched`;
+    ? coreText('coreSeasonComplete', {season:progress.seasonNumber})
+    : coreText('coreUpNextProgress', {season:progress.seasonNumber,episode:progress.nextEpisode});
+  const progressText = `${next} · ${coreText('coreProgressWatched', {watched:progress.watched,total:progress.total})}`;
   
   if (compact) {
     return (

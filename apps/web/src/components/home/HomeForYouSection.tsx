@@ -1,3 +1,5 @@
+import { t as coreText, useLanguage } from "../../lib/language";
+import { displayRowTitle } from "../GenreRowConfig";
 import { useCallback, useEffect, useState } from "react";
 import Rail from "@/components/Rail";
 import Section from "@/components/Section";
@@ -44,6 +46,7 @@ export default function HomeForYouSection({
   forYouLabel,
   onPersonalizeGenres,
 }: Props) {
+  useLanguage();
   const isOnline = useOnlineStatus();
   const [renderReady, setRenderReady] = useState(false);
   const [extraRowsReady, setExtraRowsReady] = useState(false);
@@ -102,8 +105,8 @@ export default function HomeForYouSection({
         color: "var(--muted)",
         border: "1px solid var(--line)",
       }}
-      aria-label="Personalize For You genres"
-      title="Personalize For You genres"
+      aria-label={coreText("corePersonalizeGenres")}
+      title={coreText("corePersonalizeGenres")}
     >
       <svg
         className="w-4 h-4"
@@ -124,7 +127,7 @@ export default function HomeForYouSection({
           d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
         />
       </svg>
-      <span>Genres</span>
+      <span>{coreText("coreGenres")}</span>
     </button>
   );
 
@@ -158,7 +161,7 @@ export default function HomeForYouSection({
               <Rail
                 key={`for-you-${contentQuery.rowId}`}
                 id={`for-you-${contentQuery.rowId}`}
-                title={contentQuery.title}
+                title={row ? displayRowTitle(row) : contentQuery.title}
                 intro={rowIntro || undefined}
                 items={
                   Array.isArray(contentQuery.data) ? contentQuery.data : []

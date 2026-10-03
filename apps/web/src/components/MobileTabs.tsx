@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "@/lib/language";
 import { useTranslations } from "../lib/language";
 
 import {
@@ -49,6 +50,7 @@ export const useViewportOffset = () => useContext(ViewportContext);
 const TOP_TABS: AppView[] = ["home", "library", "discovery"];
 
 export default function MobileTabs({ current, onChange, onSettingsClick }: MobileTabsProps) {
+  useLanguage();
   const translations = useTranslations();
 
   const liftNavWithViewport = useNavViewportLift();
@@ -249,7 +251,7 @@ export default function MobileTabs({ current, onChange, onSettingsClick }: Mobil
 
   const labelFor = (id: AppView) => {
     if (id === "home") return translations.home;
-    if (id === "library") return "Library";
+    if (id === "library") return coreText("coreLibrary");
     return translations.discovery ?? "Discover";
   };
 
@@ -270,7 +272,7 @@ export default function MobileTabs({ current, onChange, onSettingsClick }: Mobil
           ...(navBottom > 0 ? { bottom: `${navBottom}px` } : {}),
           zIndex: 9999,
         }}
-        aria-label="Main navigation"
+        aria-label={coreText("coreMainNavigation")}
         aria-hidden={keyboardOpen}
       >
         <div className="grid grid-cols-4 min-h-[3.25rem] w-full max-w-lg mx-auto gap-1 px-2">
@@ -309,12 +311,10 @@ export default function MobileTabs({ current, onChange, onSettingsClick }: Mobil
             onClick={onSettingsClick}
             className="flex min-w-0 flex-col items-center justify-center rounded-lg px-1 min-h-[3.25rem] py-1 transition-colors relative touch-manipulation"
             style={{ color: "var(--muted)", fontWeight: 500 }}
-            aria-label="Open Settings"
+            aria-label={coreText("coreOpenSettings")}
             tabIndex={keyboardOpen ? -1 : 0}
           >
-            <span className="min-w-0 max-w-full text-xs font-medium leading-tight text-center [overflow-wrap:anywhere]">
-              Settings
-            </span>
+            <span className="min-w-0 max-w-full text-xs font-medium leading-tight text-center [overflow-wrap:anywhere]">{coreText("coreSettings")}</span>
           </button>
         </div>
       </nav>

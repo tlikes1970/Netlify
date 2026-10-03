@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "@/lib/language";
 import { TitlePoster } from './TitlePoster';
 import React from "react";
 import type { CardContext, CardActionHandlers, MediaItem } from "./card.types";
@@ -93,6 +94,7 @@ export default function CardV2({
   disableOverflow = false,
   currentListContext: propCurrentListContext,
 }: CardV2Props) {
+  useLanguage();
   const translations = useTranslations();
   const { title, year, voteAverage } = item;
   const displayPosterUrl = resolvePosterUrl(item.posterUrl);
@@ -232,8 +234,8 @@ export default function CardV2({
             className="mt-0 flex items-center justify-between"
             style={{ fontSize: "var(--font-sm, 11px)", color: "var(--muted)" }}
           >
-            <span>{year || "TBA"}{secondaryWatching ? ` • ${item.mediaType === "tv" ? "TV Show" : "Movie"}` : ""}</span>
-            {showRating && <span aria-label="rating">{rating || "—"}</span>}
+            <span>{year || coreText("coreTBA")}{secondaryWatching ? ` • ${item.mediaType === "tv" ? coreText("coreTV") : coreText("coreMovie")}` : ""}</span>
+            {showRating && <span aria-label={coreText("coreRating")}>{rating || "—"}</span>}
           </div>
         </div>
 
@@ -335,6 +337,7 @@ function CardActions({
   item: MediaItem;
   actions?: CardActionHandlers;
 }) {
+  useLanguage();
   const translations = useTranslations();
   const [pressedButtons, setPressedButtons] = React.useState<Set<string>>(
     new Set(),
@@ -414,9 +417,7 @@ function CardActions({
               aria-hidden="true"
             />
             {!isSquare && (
-              <span className="text-[length:var(--font-sm,11px)]">
-                Working…
-              </span>
+              <span className="text-[length:var(--font-sm,11px)]">{coreText("coreWorking")}</span>
             )}
           </span>
         ) : (

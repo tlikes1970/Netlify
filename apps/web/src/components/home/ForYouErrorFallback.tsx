@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "@/lib/language";
 type ForYouErrorFallbackProps = {
   onRetry: () => void;
   isOnline: boolean;
@@ -10,6 +11,7 @@ export function ForYouErrorFallback({
   isOnline,
   compact = false,
 }: ForYouErrorFallbackProps) {
+  useLanguage();
   return (
     <div
       className={compact ? 'py-2 text-center' : 'px-4 py-3 text-center'}
@@ -24,8 +26,8 @@ export function ForYouErrorFallback({
       </p>
       <p className="text-sm mt-1" style={{ color: 'var(--muted)' }}>
         {isOnline
-          ? 'Check your connection and try again.'
-          : "You're offline. Reconnect to refresh recommendations."}
+          ? coreText("coreCheckConnection")
+          : coreText("coreOfflineRecommendations")}
       </p>
       <button
         type="button"
@@ -36,9 +38,7 @@ export function ForYouErrorFallback({
           color: 'var(--text)',
           border: '1px solid var(--line)',
         }}
-      >
-        Retry
-      </button>
+      >{coreText("coreRetry")}</button>
     </div>
   );
 }

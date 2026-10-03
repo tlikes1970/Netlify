@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "@/lib/language";
 import { useTranslations } from '../lib/language';
 import type { AppView } from '@/lib/navigation';
 
@@ -9,21 +10,22 @@ export type TabsProps = {
 const TOP_TABS: AppView[] = ['home', 'library', 'discovery'];
 
 export default function Tabs({ current, onChange }: TabsProps) {
+  useLanguage();
   const translations = useTranslations();
 
   const labelFor = (id: AppView) => {
     if (id === 'home') return translations.home;
-    if (id === 'library') return 'Library';
+    if (id === 'library') return coreText("coreLibrary");
     return translations.discovery ?? 'Discover';
   };
 
   return (
     <div className="w-full">
       <div className="w-full px-4 py-4">
-        <nav aria-label="Primary" className="w-full">
+        <nav aria-label={coreText("corePrimary")} className="w-full">
           <div
             role="tablist"
-            aria-label="Navigation"
+            aria-label={coreText("coreNavigation")}
             className="flex gap-4 w-full items-center max-w-3xl"
           >
             {TOP_TABS.map((id) => (

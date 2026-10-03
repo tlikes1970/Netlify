@@ -1,3 +1,4 @@
+import { genreDisplayName } from "../lib/genreLabels";
 import { useState, useRef, useEffect } from 'react';
 import { useTranslations } from '../lib/language';
 import Portal from './Portal';
@@ -75,7 +76,7 @@ export default function FilterChips({ selectedGenre, onGenreChange, className = 
           borderColor: 'var(--line)'
         }}
       >
-        <span className="truncate text-xs">{selectedGenreName}</span>
+        <span className="truncate text-xs">{selectedGenre === null ? translations.allGenres : genreDisplayName(selectedGenreName)}</span>
         <span className={`text-xs transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`}>
           ▼
         </span>
@@ -129,7 +130,7 @@ export default function FilterChips({ selectedGenre, onGenreChange, className = 
                       color: selectedGenre === genre.id ? 'var(--accent-foreground)' : 'var(--foreground)'
                     }}
                   >
-                    {genre.name}
+                    {genre.id === null ? translations.allGenres : genreDisplayName(genre.name)}
                   </button>
                 ))}
               </div>

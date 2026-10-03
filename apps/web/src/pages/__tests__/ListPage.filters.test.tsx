@@ -56,7 +56,7 @@ describe('real Library filter toolbar',()=>{
  it('distinguishes truly empty status from tag-specific zero results',()=>{
   const view=render(<ListPage title="Watching" items={[]}/>);expect(screen.getByText('This status is empty.')).toBeInTheDocument();view.rerender(<ListPage title="Watching" items={entries}/>);
   fireEvent.change(screen.getByLabelText('Type:'),{target:{value:'movie'}});fireEvent.change(screen.getByLabelText('Filter by tag'),{target:{value:'drama'}});expect(screen.getByText('No items match your filters')).toBeInTheDocument();
-  fireEvent.change(screen.getByLabelText('Type:'),{target:{value:'all'}});view.rerender(<ListPage title="Watching" items={entries.filter(x=>x.id!=='3')}/>);expect(screen.getByText('No items found with tag "drama"')).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Type:'),{target:{value:'all'}});view.rerender(<ListPage title="Watching" items={entries.filter(x=>x.id!=='3')}/>);expect(screen.getByText('No titles have the tag “drama”.')).toBeInTheDocument();
  });
  it('Clear Filters and changing sort preserve saved Custom Order',async()=>{
   await saveTabState('watching',{sort:'custom',order:{mode:'custom',ids:['3:tv','1:tv','4:tv','2:movie']}});
@@ -102,7 +102,7 @@ it('keeps a removed active tag visible and clearable',()=>{
  const view=render(<ListPage title="Watching" items={entries}/>);
  fireEvent.change(screen.getByLabelText('Filter by tag'),{target:{value:'family'}});
  view.rerender(<ListPage title="Watching" items={entries.map(x=>({...x,tags:[]}))}/>);
- expect(screen.getByLabelText('Filter by tag')).toHaveValue('family');expect(screen.getByText('No items found with tag "family"')).toBeInTheDocument();
+ expect(screen.getByLabelText('Filter by tag')).toHaveValue('family');expect(screen.getByText('No titles have the tag “family”.')).toBeInTheDocument();
  fireEvent.click(screen.getByRole('button',{name:'Clear Filters'}));expect(titles()).toHaveLength(4);
 });
 

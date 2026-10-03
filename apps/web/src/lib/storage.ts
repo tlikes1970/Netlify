@@ -1,6 +1,7 @@
+import { t as coreText } from "./language";
 import { applyCustomOrder, libraryIdentity, reorderedIdentities } from './libraryView';
 import { restoreTabState, saveTabState } from './tabState';
-import { normalizeWatchStatus, WATCH_STATUS_LABELS } from "./watchStatus";
+import { normalizeWatchStatus, getWatchStatusLabel } from "./watchStatus";
 import { recoverLocalRestore } from './restoreRecovery';
 import { isRestoring } from './restoreBarrier';
 import React from "react";
@@ -208,20 +209,20 @@ if (typeof window !== "undefined") {
 export function getListDisplayName(listName: ListName): string {
   switch (listName) {
     case "watching":
-      return WATCH_STATUS_LABELS.watching;
+      return getWatchStatusLabel('watching');
     case "wishlist":
-      return WATCH_STATUS_LABELS.wishlist;
+      return getWatchStatusLabel('wishlist');
     case "watched":
-      return WATCH_STATUS_LABELS.watched;
+      return getWatchStatusLabel('watched');
     case "not":
-      return WATCH_STATUS_LABELS.not;
+      return getWatchStatusLabel('not');
     default:
       if (listName.startsWith("custom:")) {
         const listId = listName.replace("custom:", "");
         const list = customListManager.getListById(listId);
-        return list ? list.name : "Custom List";
+        return list ? list.name : coreText("coreCustomList");
       }
-      return "Unknown List";
+      return coreText("coreUnknownList");
   }
 }
 
@@ -239,7 +240,7 @@ export function addToListWithConfirmation(
     const targetListName = getListDisplayName(targetList);
 
     const confirmed = window.confirm(
-      `${item.title} is already in ${currentListName}.\n\nDo you want to move it to ${targetListName}?`
+      coreText('coreAlreadyMove', {title:item.title,current:currentListName,target:targetListName})
     );
 
     if (confirmed) {

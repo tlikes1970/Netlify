@@ -1,3 +1,5 @@
+import { t as coreText, useLanguage } from "../../lib/language";
+import { formatRating } from "../../lib/localeFormatters";
 import { useState, useRef } from 'react';
 
 export type StarRatingProps = {
@@ -22,6 +24,7 @@ export default function StarRating({
   size = 'md',
   className = ''
 }: StarRatingProps) {
+  useLanguage();
   const [hoverValue, setHoverValue] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
@@ -109,7 +112,8 @@ export default function StarRating({
       aria-valuemin={0.5}
       aria-valuemax={5}
       aria-valuenow={value}
-      aria-valuetext={`${value} out of 5 stars`}
+      aria-label={coreText('coreYourRating')}
+      aria-valuetext={coreText('coreStars', {rating:formatRating(value)})}
       tabIndex={readOnly ? -1 : 0}
       onKeyDown={handleKeyDown}
     >
@@ -179,7 +183,7 @@ export default function StarRating({
         className="text-sm ml-2 font-medium" 
         style={{ color: 'var(--muted)' }}
       >
-        ({displayValue}/5)
+        ({formatRating(displayValue)}/5)
       </span>
     </div>
   );

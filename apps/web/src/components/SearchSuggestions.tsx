@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "@/lib/language";
 import { persistLocalContent } from "../lib/restoreBarrier";
 import { useState, useEffect, useRef } from 'react';
 import { fetchEnhancedAutocomplete } from '../search/enhancedAutocomplete';
@@ -9,6 +10,7 @@ import { isMobileNow } from '../lib/isMobile';
 type AutocompleteSuggestion = {
   title: string;
   subtitle?: string;
+  year?: string;
   type: 'movie' | 'tv' | 'person';
   id: number | string;
 };
@@ -20,6 +22,12 @@ export type SearchSuggestionsProps = {
   isVisible: boolean;
   className?: string;
 };
+
+const POPULAR_LABEL_KEYS = ['coreSuggestion0','coreSuggestion1','coreSuggestion2','coreSuggestion3','coreSuggestion4','coreSuggestion5','coreSuggestion6','coreSuggestion7','coreSuggestion8','coreSuggestion9','coreSuggestion10','coreSuggestion11','coreSuggestion12','coreSuggestion13'] as const;
+function popularLabel(query: string): string {
+ const index = POPULAR_SUGGESTIONS.indexOf(query);
+ return index >= 0 && index < POPULAR_LABEL_KEYS.length ? coreText(POPULAR_LABEL_KEYS[index]) : query;
+}
 
 // Helper to extract year from subtitle (format: "TV Show • 2022" or "Movie • 2022")
 // Removed - no longer used after removing year from search query
@@ -126,6 +134,7 @@ export default function SearchSuggestions({
   isVisible, 
   className = '' 
 }: SearchSuggestionsProps) {
+  const language = useLanguage();
   // const translations = useTranslations(); // Unused
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
@@ -166,12 +175,13 @@ export default function SearchSuggestions({
         // Convert MediaItem[] to AutocompleteSuggestion[] format
         const suggestions: AutocompleteSuggestion[] = mediaItems.map((item: MediaItem) => {
           const subtitle = item.year 
-            ? `${item.mediaType === 'tv' ? 'TV Show' : 'Movie'} • ${item.year}`
-            : `${item.mediaType === 'tv' ? 'TV Show' : 'Movie'}`;
+            ? `${item.mediaType === 'tv' ? coreText("coreTV") : coreText("coreMovie")} • ${item.year}`
+            : `${item.mediaType === 'tv' ? coreText("coreTV") : coreText("coreMovie")}`;
           
           return {
-            title: item.title || 'Untitled',
+            title: item.title || coreText("coreUntitled"),
             subtitle,
+            year: item.year?.toString(),
             type: item.mediaType === 'person' ? 'person' : item.mediaType,
             id: item.id,
           };
@@ -207,7 +217,7 @@ export default function SearchSuggestions({
     
     // Filter popular suggestions that match the query
     const matchingPopular = POPULAR_SUGGESTIONS.filter(suggestion =>
-      suggestion.toLowerCase().includes(queryLower)
+      suggestion.toLowerCase().includes(queryLower) || popularLabel(suggestion).toLowerCase().includes(queryLower)
     );
     
     // Filter search history that matches the query
@@ -223,7 +233,7 @@ export default function SearchSuggestions({
     const limit = isMobile ? 5 : 8;
     setFilteredSuggestions(combined.slice(0, limit));
     setSelectedIndex(-1);
-  }, [query, searchHistory, isMobile]);
+  }, [query, searchHistory, isMobile, language]);
   
   // Handle keyboard navigation across all suggestion sections
   useEffect(() => {
@@ -323,16 +333,12 @@ export default function SearchSuggestions({
         {searchHistory.length > 0 && (
           <div className="mb-3">
             <div className="flex items-center justify-between mb-2">
-              <div className="text-xs font-medium" style={{ color: 'var(--muted)' }}>
-                Recent Searches
-              </div>
+              <div className="text-xs font-medium" style={{ color: 'var(--muted)' }}>{coreText("coreRecent")}</div>
               <button
                 onClick={clearHistory}
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                 style={{ color: 'var(--muted)' }}
-              >
-                Clear
-              </button>
+              >{coreText("coreClear")}</button>
             </div>
             
             <div className="space-y-1">
@@ -419,7 +425,7 @@ export default function SearchSuggestions({
                       <div className="flex-1 min-w-0">
                         <div className="font-medium truncate">{suggestion.title}</div>
                         {suggestion.subtitle && (
-                          <div className="text-xs opacity-75 truncate">{suggestion.subtitle}</div>
+                          <div className="text-xs opacity-75 truncate">{suggestion.type === 'person' ? coreText('corePeople') : suggestion.type === 'tv' ? coreText('coreTV') : coreText('coreMovie')}{suggestion.year ? ` • ${suggestion.year}` : ''}</div>
                         )}
                       </div>
                     </div>
@@ -433,9 +439,7 @@ export default function SearchSuggestions({
         {/* Popular Suggestions Section - Hidden on mobile to reduce clutter */}
         {showPopularSuggestions && (
           <div>
-            <div className="text-xs font-medium mb-2" style={{ color: 'var(--muted)' }}>
-              Popular
-            </div>
+            <div className="text-xs font-medium mb-2" style={{ color: 'var(--muted)' }}>{coreText("corePopular")}</div>
             
             <div className="space-y-1">
               {filteredSuggestions.map((suggestion, index) => {
@@ -472,7 +476,7 @@ export default function SearchSuggestions({
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-xs">{isHistoryItem ? '🕒' : '💡'}</span>
-                      <span>{suggestion}</span>
+                      <span>{isHistoryItem ? suggestion : popularLabel(suggestion)}</span>
                     </div>
                   </button>
                 );

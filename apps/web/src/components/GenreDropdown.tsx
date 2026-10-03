@@ -1,3 +1,5 @@
+import { genreDisplayName } from "../lib/genreLabels";
+import { t as coreText, useLanguage } from "@/lib/language";
 import { useState } from 'react';
 // import { useTranslations } from '@/lib/language'; // Unused
 
@@ -14,6 +16,7 @@ export type GenreDropdownProps = {
  * - Used to customize discovery recommendations
  */
 export default function GenreDropdown({ selectedGenres, onGenresChange, className = '' }: GenreDropdownProps) {
+  useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   // const translations = useTranslations(); // Unused
   
@@ -48,7 +51,7 @@ export default function GenreDropdown({ selectedGenres, onGenresChange, classNam
   
   const getSelectedGenreNames = () => {
     return selectedGenres
-      .map(id => genres.find(g => g.id === id)?.name)
+      .map(id => genres.find(g => g.id === id)?.name).map(name => name ? genreDisplayName(name) : name)
       .filter(Boolean)
       .join(', ');
   };
@@ -65,11 +68,11 @@ export default function GenreDropdown({ selectedGenres, onGenresChange, classNam
           borderColor: 'var(--line)',
           border: '1px solid'
         }}
-        aria-label="Select genres for recommendations"
+        aria-label={coreText("coreSelectGenresAria")}
       >
         <span className="text-lg">🎭</span>
         <span className="flex-1 text-left">
-          {selectedGenres.length > 0 ? getSelectedGenreNames() : 'Select Genres'}
+          {selectedGenres.length > 0 ? getSelectedGenreNames() : coreText("coreSelectGenres")}
         </span>
         <span className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}>
           ▼
@@ -87,9 +90,7 @@ export default function GenreDropdown({ selectedGenres, onGenresChange, classNam
           }}
         >
           <div className="p-2">
-            <div className="text-xs font-medium mb-2" style={{ color: 'var(--menu-text-muted)' }}>
-              Choose your favorite genres:
-            </div>
+            <div className="text-xs font-medium mb-2" style={{ color: 'var(--menu-text-muted)' }}>{coreText("coreFavoriteGenres")}</div>
             <div className="grid grid-cols-2 gap-1">
               {genres.map(genre => (
                 <label
@@ -112,7 +113,7 @@ export default function GenreDropdown({ selectedGenres, onGenresChange, classNam
                     className="rounded"
                     style={{ accentColor: 'var(--accent)' }}
                   />
-                  <span className="text-sm">{genre.name}</span>
+                  <span className="text-sm">{genreDisplayName(genre.name)}</span>
                 </label>
               ))}
             </div>

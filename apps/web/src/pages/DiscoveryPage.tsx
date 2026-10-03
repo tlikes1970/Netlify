@@ -1,3 +1,4 @@
+import { t as coreText, useLanguage } from "@/lib/language";
 import { setNotInterested } from "../lib/statusTransitions";
 import { useMemo, useState, useEffect } from "react";
 import { useSmartDiscovery } from "@/hooks/useSmartDiscovery";
@@ -13,6 +14,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
  * in App when the header search is active — this page never queries Firestore posts.
  */
 export default function DiscoveryPage() {
+  useLanguage();
   const {
     recommendations,
     isLoading: discoveryLoading,
@@ -206,62 +208,41 @@ export default function DiscoveryPage() {
     <section className="px-4 py-4">
       <div className="max-w-screen-2xl mx-auto">
         <div className="mb-4">
-          <h2 className="text-lg font-semibold text-neutral-200 mb-2">
-            🎯 Personalized Recommendations
-          </h2>
-          <p className="text-sm text-neutral-400">
-            Personalized by your tastes and tracking activity. Use the search
-            bar for specific titles.
-          </p>
+          <h2 className="text-lg font-semibold text-neutral-200 mb-2">{coreText("coreRecommendations")}</h2>
+          <p className="text-sm text-neutral-400">{coreText("coreDiscoveryDescription")}</p>
         </div>
 
         {!items.length && !isAuthenticated && (
           <div className="text-center py-8">
             <div className="text-4xl mb-4">🔐</div>
-            <h3 className="text-lg font-medium text-neutral-200 mb-2">
-              Sign In to Discover Content
-            </h3>
-            <p className="text-sm text-neutral-400 mb-4">
-              Sign in for recommendations personalized by your tastes and
-              tracking activity.
-            </p>
+            <h3 className="text-lg font-medium text-neutral-200 mb-2">{coreText("coreSignInDiscover")}</h3>
+            <p className="text-sm text-neutral-400 mb-4">{coreText("coreSignInRecommendations")}</p>
             <button
               type="button"
               onClick={handleSignIn}
               className="px-6 py-3 rounded-lg font-semibold transition-colors"
               style={{ backgroundColor: "var(--accent)", color: "white" }}
-            >
-              Sign In
-            </button>
+            >{coreText("coreSignIn")}</button>
           </div>
         )}
 
         {!items.length && !isLoading && !hasError && isAuthenticated && (
           <div className="text-center py-8">
             <div className="text-4xl mb-4">🎬</div>
-            <h3 className="text-lg font-medium text-neutral-200 mb-2">
-              Building Your Recommendations
-            </h3>
-            <p className="text-sm text-neutral-400 mb-4">
-              Rate a few titles so we can personalize Discovery from your tastes
-              and tracking activity, or search for something specific.
-            </p>
+            <h3 className="text-lg font-medium text-neutral-200 mb-2">{coreText("coreBuilding")}</h3>
+            <p className="text-sm text-neutral-400 mb-4">{coreText("coreBuildingDescription")}</p>
           </div>
         )}
 
         {isLoading && isAuthenticated && (
-          <div className="text-xs text-neutral-500 mb-3">
-            Loading recommendations…
-          </div>
+          <div className="text-xs text-neutral-500 mb-3">{coreText("coreLoadingRecommendations")}</div>
         )}
 
         {hasError && isAuthenticated && (
           <div className="text-center py-8">
             <div className="text-4xl mb-4">❌</div>
-            <h3 className="text-lg font-medium text-neutral-200 mb-2">
-              Failed to Load Recommendations
-            </h3>
-            <p className="text-sm text-neutral-400">Please try again later.</p>
+            <h3 className="text-lg font-medium text-neutral-200 mb-2">{coreText("coreRecommendationsFailed")}</h3>
+            <p className="text-sm text-neutral-400">{coreText("coreTryLater")}</p>
           </div>
         )}
 
@@ -280,7 +261,7 @@ export default function DiscoveryPage() {
                 const mediaItem: MediaItem = {
                   id: String(it.id),
                   mediaType: normalizedMediaType,
-                  title: (it.title as string) || "Untitled",
+                  title: (it.title as string) || coreText("coreUntitled"),
                   posterUrl: it.posterUrl as string | undefined,
                   synopsis: it.synopsis,
                   year: it.year as string | undefined,
@@ -305,7 +286,7 @@ export default function DiscoveryPage() {
                         ) ? (
                           <div
                             className="p-2 space-y-1"
-                            aria-label={`Rate ${mediaItem.title}`}
+                            aria-label={coreText('coreRateTitle', {title:mediaItem.title})}
                           >
                             <p className="text-xs">
                               Added to Watched. Rate it?

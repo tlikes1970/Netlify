@@ -1,3 +1,4 @@
+import { useLanguage } from "../../../lib/language";
 import React from 'react';
 import type { MediaItem, CardActionHandlers } from '../card.types';
 import SwipeableCard from '../../SwipeableCard';
@@ -36,6 +37,7 @@ export function MovieCardMobile({
   onKeyboardReorder,
   isDragging,
 }: MovieCardMobileProps) {
+  useLanguage();
   const enrichedItem = useMobileCardEnrichedItem(item);
 
 

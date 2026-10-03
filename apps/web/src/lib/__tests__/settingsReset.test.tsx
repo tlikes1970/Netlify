@@ -53,7 +53,7 @@ vi.mock("../../components/SearchSuggestions", () => ({
 vi.mock("../../components/VoiceSearch", () => ({ default: () => null }));
 vi.mock("../../pwa/useInstall", () => ({ useCanInstallPWA: () => false }));
 vi.mock("../../pwa/installSignal", () => ({ promptInstall: vi.fn() }));
-vi.mock("../language", async () => ({
+vi.mock("../language", async (importOriginal) => ({...await importOriginal<typeof import("@/lib/language")>(),
   useTranslations: () => awaitTranslations.en,
   useLanguage: () => "en",
   changeLanguage: (language: string) =>
