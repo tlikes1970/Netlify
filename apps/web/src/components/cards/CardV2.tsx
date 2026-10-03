@@ -244,7 +244,7 @@ export default function CardV2({
           </div>
         )}
         {secondaryWatching && item.synopsis?.trim() && (
-          <p className="discovery-card-overview line-clamp-3 break-words px-1 pb-1 text-xs" style={{color: "var(--muted)"}}>{item.synopsis}</p>
+          <p className="discovery-card-overview line-clamp-3 break-words px-1 text-xs" style={{color: "var(--muted)"}}>{item.synopsis}</p>
         )}
 
         {/* Actions per context */}

@@ -1301,6 +1301,42 @@ input:focus-visible {
   .discovery-detail-card [data-testid="cardv2-actions"] button span { overflow-wrap: normal; }
 }
 
+/* Discovery details must remain in normal flow. Padding on a clamped paragraph
+   exposes a partial extra line, so spacing belongs between content sections. */
+.discovery-detail-card .cardv2-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.discovery-detail-card .discovery-card-overview {
+  flex: none;
+  margin: 0;
+  padding-block: 0;
+  line-height: 1.4;
+  overflow: hidden;
+}
+.discovery-detail-card [data-testid="cardv2-actions"] {
+  flex: none;
+  position: static;
+  margin: 0;
+}
+@media (max-width: 1023px) {
+  .discovery-results-grid { grid-template-columns: minmax(0, 1fr); }
+  .discovery-detail-card { width: 100% !important; }
+  .discovery-detail-card .cardv2-shell {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px;
+  }
+  .discovery-detail-card .poster-wrap {
+    width: 112px;
+    height: 168px;
+    flex: 0 0 112px;
+  }
+  .discovery-detail-card .cardv2-content { flex: 1; container-type: inline-size; }
+}
+
 /* Library filtering controls share the app's mobile touch target. */
 .library-filter-control { min-height: 44px; min-width: 44px; max-width: 100%; }
 .library-filter-control:focus-visible { outline: 2px solid var(--menu-focus); outline-offset: 2px; }

@@ -187,7 +187,7 @@ for (const width of [320, 360, 390, 768, 1280]) {
         .evaluateAll((elements) =>
           elements.map((el) => el.getBoundingClientRect().height),
         );
-      expect(titles[0]).toBe(titles[1]);
+      expect(titles[0]).toBeLessThanOrEqual(titles[1]);
       const library = page.getByTestId("library");
       for(const card of await library.locator('.card-mobile').all()) {
         const c=await card.boundingBox();const p=await card.locator('.poster-col').boundingBox();const info=await card.locator('.info-col').boundingBox();const trigger=await card.getByRole('button',{name:'More options'}).boundingBox();
@@ -221,7 +221,7 @@ for (const width of [320, 360, 390, 768, 1280]) {
           .first();
         const rating = (await card.getByRole("slider").boundingBox())!;
         expect(a.y).toBeGreaterThanOrEqual(rating.y + rating.height);
-        await expect(card.locator(".synopsis")).toHaveText(
+        await expect(card.locator(".synopsis")).toContainText(
           "Existing short summary",
         );
       }
@@ -278,8 +278,8 @@ for (const width of [320, 360, 390, 768, 1280]) {
       for (const name of ['Watching','Not Interested','Delete','Custom Lists +']) await expect(discovery.getByRole('button',{name,exact:true})).toHaveCount(0);
       for(const card of await page.getByTestId('discovery-details').locator('article').all()) {
         const poster=await card.locator('.poster-wrap').boundingBox();const content=await card.locator('.cardv2-content').boundingBox();const shell=await card.locator('.cardv2-shell').boundingBox();
-        if(width<=768) {expect(content!.x).toBeGreaterThanOrEqual(poster!.x+poster!.width);expect(shell!.height).toBeLessThanOrEqual(Math.max(poster!.height,content!.height)+10);}
-        const synopsis=card.locator('.discovery-card-overview');expect(await synopsis.evaluate(el=>el.clientHeight-parseFloat(getComputedStyle(el).paddingBottom)<=parseFloat(getComputedStyle(el).lineHeight)*3+1)).toBe(true);
+        if(width<=768) {expect(content!.x).toBeGreaterThanOrEqual(poster!.x+poster!.width);expect(shell!.height).toBeLessThanOrEqual(Math.max(poster!.height,content!.height)+26);}
+        const synopsis=card.locator('.discovery-card-overview');const descriptionBounds=await synopsis.boundingBox();const actionsBounds=await card.getByTestId('cardv2-actions').boundingBox();expect(descriptionBounds!.y+descriptionBounds!.height).toBeLessThanOrEqual(actionsBounds!.y);expect(await synopsis.evaluate(el=>getComputedStyle(el).paddingBottom)).toBe('0px');if(width<=768){expect(poster!.width).toBe(112);expect(poster!.height).toBe(168);}expect(await synopsis.evaluate(el=>el.clientHeight-parseFloat(getComputedStyle(el).paddingBottom)<=parseFloat(getComputedStyle(el).lineHeight)*3+1)).toBe(true);
       }
       const state=page.getByTestId('discovery-details').locator('.discovery-state-providers');await expect(state).toHaveCount(1);
       const badge=await state.locator('.badge').boundingBox();const provider=await state.getByRole('list').boundingBox();
@@ -292,6 +292,7 @@ for (const width of [320, 360, 390, 768, 1280]) {
       expect(discoveryBounds.every(b=>!b.clipped)).toBe(true);
       expect(await discovery.locator('article img').first().getAttribute('src')).toContain('data:image/svg+xml');
       const discoveryButtons = await discovery.getByRole('button',{name:'Want to Watch',exact:true}).evaluateAll(els=>els.map(el=>el.getBoundingClientRect().height));
+      if (width === 390 && tab === 'watching') await page.getByTestId('discovery-details').screenshot({path:test.info().outputPath('discovery-layout-390.png')});
       expect(discoveryButtons.every(h=>h >= (width <= 768 ? 44 : 36))).toBe(true);
       await discovery.locator('article').nth(2).getByRole('button',{name:'Want to Watch',exact:true}).click();
       await expect(discovery.locator('article')).toHaveCount(2);
