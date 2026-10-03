@@ -1,15 +1,21 @@
 import { isRestoring } from "./restoreBarrier";
 import { useEffect, useState, useMemo } from 'react';
 import * as React from 'react';
-import type { Language } from './language.types';
+import type { Language, LanguageStrings } from './language.types';
 import TRANSLATIONS from './translations';
 // ⚠️ REMOVED: i18nDiagnostics import disabled
 // const i18nDiagnostics = null; // Disabled
 import { translationBus, type TranslationUpdate } from '../i18n/translationBus';
-import { queueUpdate, useTranslationSelector, initializeStore, getSnapshot, type Dict } from '../i18n/translationStore';
+import { queueUpdate, useTranslationSelector, initializeStore, type Dict } from '../i18n/translationStore';
 import { stageBootDict, stageBootLocale } from '../i18n/bootCollector';
+import { LANGUAGE_LOCALES, supportedLanguage } from '../i18n/localeConfig';
+import { createTranslationDictionary, interpolate, selectPluralKey, type InterpolationValues, type PluralKeys } from '../i18n/translationHelpers';
 
 const KEY = 'flicklet.language.v2';
+const dictionaries = {
+  en: createTranslationDictionary<LanguageStrings>(TRANSLATIONS as unknown as Parameters<typeof createTranslationDictionary>[0], 'en'),
+  es: createTranslationDictionary<LanguageStrings>(TRANSLATIONS as unknown as Parameters<typeof createTranslationDictionary>[0], 'es'),
+};
 
 // Language state management
 class LanguageManager {
@@ -18,6 +24,7 @@ class LanguageManager {
 
   constructor() {
     this.currentLanguage = this.loadLanguage();
+    this.updateDocumentLanguage();
   }
 
   private loadLanguage(): Language {
@@ -33,8 +40,13 @@ class LanguageManager {
   }
 
   private saveLanguage(): void {
-    localStorage.setItem(KEY, this.currentLanguage);
+    try { localStorage.setItem(KEY, this.currentLanguage); }
+    catch (error) { console.error('Failed to persist Flicklet language', error); }
     this.emitChange();
+  }
+
+  private updateDocumentLanguage(): void {
+    if (typeof document !== 'undefined') document.documentElement.lang = this.currentLanguage;
   }
 
   // Equality guard: track last payload to drop repeats of the exact same payload
@@ -44,13 +56,6 @@ class LanguageManager {
     // SINGLE SOURCE OF TRUTH: Queue updates to frame-coalesced store
     // This ensures at most one render per frame with last-write-wins coalescing
     const translations = this.getTranslations();
-    
-    // Hard guard: check store's current state before queuing
-    const snapshot = getSnapshot();
-    if (snapshot.dict === translations && snapshot.locale === this.currentLanguage) {
-      // Store already has these exact values, skip entirely
-      return;
-    }
     
     // Equality guard: drop repeats of the exact same payload
     if (this.__lastPayload && 
@@ -85,12 +90,14 @@ class LanguageManager {
 
   reloadAfterRestore(): void {
     this.currentLanguage = this.loadLanguage();
+    this.updateDocumentLanguage();
     this.emitChange();
   }
 
   setLanguage(language: Language): void {
     if (isRestoring()) return;
-    this.currentLanguage = language;
+    this.currentLanguage = supportedLanguage(language);
+    this.updateDocumentLanguage();
     this.saveLanguage();
     
     // ⚠️ REMOVED: I18N Diagnostics tracking disabled
@@ -115,13 +122,27 @@ class LanguageManager {
   }
 
   getTranslations() {
-    // Return direct reference - never synthesize new objects
+    // Return the stable fallback-aware dictionary, never a new render-time object.
     // TRANSLATIONS is a constant object, so this is safe
-    return TRANSLATIONS[this.currentLanguage];
+    return dictionaries[this.currentLanguage];
+  }
+
+  translate(key: string, values?: InterpolationValues): string {
+    return interpolate((this.getTranslations() as unknown as Record<string, string>)[key], values);
+  }
+
+  plural(keys: PluralKeys, count: number, values?: InterpolationValues): string {
+    return this.translate(selectPluralKey(keys, count, this.currentLanguage), {
+      count: new Intl.NumberFormat(getFormattingLocale()).format(count), ...values,
+    });
   }
 }
 
 export const languageManager = new LanguageManager();
+
+export function getFormattingLocale(): string { return LANGUAGE_LOCALES[languageManager.getLanguage()].formatting; }
+/** Future metadata requests only: existing TMDB callers are unchanged in #28A. */
+export function getMetadataLanguage(): string { return LANGUAGE_LOCALES[languageManager.getLanguage()].metadata; }
 
 // Stage boot data for coordinated first-frame emission
 // This prevents initialization burst by collecting dict and locale separately
@@ -196,7 +217,7 @@ export function useT(keys?: string[] | null) {
 
   // Return a simple getter - memoized to prevent recreation
   const t = useMemo(() => {
-    return (k: string) => (slice as any)[k];
+    return (k: string, values?: InterpolationValues) => interpolate((slice as Record<string, string>)[k] ?? (languageManager.getTranslations() as unknown as Record<string, string>)[k], values);
   }, [slice, keysStr]);
 
   return t;
@@ -274,8 +295,12 @@ export function useTranslations() {
 }
 
 // Helper function to get translation by key
-export function t(key: keyof typeof TRANSLATIONS.en): string {
-  return languageManager.getTranslations()[key];
+export function t(key: keyof typeof TRANSLATIONS.en, values?: InterpolationValues): string {
+  return languageManager.translate(key, values);
+}
+
+export function tPlural(keys: PluralKeys, count: number, values?: InterpolationValues): string {
+  return languageManager.plural(keys, count, values);
 }
 
 // Helper function to change language

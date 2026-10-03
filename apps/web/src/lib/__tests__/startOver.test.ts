@@ -34,6 +34,7 @@ import { RESTORE_JOURNAL_KEY } from "../restoreRecovery";
 import { resolvePreferredName } from "../preferredName";
 import { saveTabState } from "../tabState";
 import { writeStoredEpisodeProgress } from "../../utils/episodeProgress";
+import { languageManager } from "../language";
 const entry = { id: "10", mediaType: "tv", title: "Show", list: "watching", addedAt: 1, customListIds: ["a"], userRating: 4, userNotes: "Notes", tags: ["family"], isFavorite: true };
 let release: (() => void) | undefined;
 const snapshot = () => Object.fromEntries(Object.keys(localStorage).map(k=>[k,localStorage.getItem(k)]));
@@ -50,6 +51,32 @@ beforeEach(() => {
 });
 afterEach(()=>{release?.();release=undefined;vi.restoreAllMocks();});
 describe("Start Over coordinated replacement",()=>{
+ it("a replacement backup without language reloads the actual default instead of retaining stale Spanish",async()=>{
+  languageManager.setLanguage('es');const backup=await createBackup();delete backup.local['flicklet.language.v2'];
+  await restoreBackup(backup);expect(localStorage.getItem('flicklet.language.v2')).toBeNull();
+  expect(languageManager.getLanguage()).toBe('en');expect(document.documentElement.lang).toBe('en');
+ });
+ it("Spanish backup restores device language and document semantics through the real managers",async()=>{
+  languageManager.setLanguage('es');const backup=await createBackup();expect(backup.local['flicklet.language.v2']).toBe('es');
+  languageManager.setLanguage('en');await restoreBackup(backup);
+  expect(languageManager.getLanguage()).toBe('es');expect(document.documentElement.lang).toBe('es');
+  expect(Library.getAll()[0]).toMatchObject({userNotes:'Notes',tags:['family'],customListIds:['a']});
+  expect(m.docs['users/owner/billing/status']).toEqual({isPro:true});
+ });
+ it("Reset Settings resets actual language and document to English without deleting content",async()=>{
+  m.uid=null;languageManager.setLanguage('es');const titles=Library.getAll();await settingsManager.resetToDefaults();
+  expect(languageManager.getLanguage()).toBe('en');expect(document.documentElement.lang).toBe('en');
+  expect(localStorage.getItem('flicklet.language.v2')).toBe('en');expect(Library.getAll()).toEqual(titles);
+ });
+ it("Start Over resets actual language and document to English",async()=>{
+  languageManager.setLanguage('es');await startOver(vi.fn());expect(languageManager.getLanguage()).toBe('en');
+  expect(document.documentElement.lang).toBe('en');expect(localStorage.getItem('flicklet.language.v2')).toBe('en');
+ });
+ it.each([['es','en'],['en','es']] as const)("legacy cloud %s cannot override device %s",async(cloud,device)=>{
+  m.docs['users/owner'].settings.lang=cloud;languageManager.setLanguage(device);await settingsManager.loadSettingsFromFirebase('owner');
+  expect(languageManager.getLanguage()).toBe(device);expect(document.documentElement.lang).toBe(device);
+  expect(localStorage.getItem('flicklet.language.v2')).toBe(device);expect(m.docs['users/owner'].settings.lang).toBe(cloud);
+ });
  it.each(["owner",null])("clears content and mounted managers while preserving identity/access for %s",async(uid)=>{
   m.uid=uid;const preserved=structuredClone(m.docs);const reload=vi.fn(()=>{expect(Library.getAll()).toEqual([]);expect(customListManager.getUserLists().customLists).toEqual([]);expect(barrier.isRestoring()).toBe(true);});await startOver(reload);
   expect(reload).toHaveBeenCalledOnce();expect(localStorage.getItem("episode-progress-10")).toBeNull();expect(localStorage.getItem("flk.tab.watching.sort")).toBeNull();expect(localStorage.getItem("flickword:stats")).toBeNull();expect(localStorage.getItem("flicklet.onboardingCompleted")).toBeNull();expect(localStorage.getItem("flicklet.series-reminders.v1")).toBeNull();

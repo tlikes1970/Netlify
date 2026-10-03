@@ -165,17 +165,17 @@ function schedule() {
 
 export function queueUpdate(u: Update) {
   // no-op guards to avoid pointless re-renders
-  if (u.type === 'dict' && u.dict === current.dict) return;
-  if (u.type === 'locale' && u.locale === current.locale) return;
+  if (!queued.length && u.type === 'dict' && u.dict === current.dict) return;
+  if (!queued.length && u.type === 'locale' && u.locale === current.locale) return;
   if (u.type === 'patch' && Object.keys(u.patch).length === 0) return;
   
   // Drop redundant first-paint dict update (if initial dict equals current and version is 0)
-  if (u.type === 'dict' && u.dict === current.dict && current.version === 0) {
+  if (!queued.length && u.type === 'dict' && u.dict === current.dict && current.version === 0) {
     return; // redundant initial dict
   }
   
   // Hash-based guard: drop if content hash matches (catches object recreation with same content)
-  if (u.type === 'dict') {
+  if (!queued.length && u.type === 'dict') {
     const hash = hashDict(u.dict);
     if (hash === current.dictHash) return;
   }

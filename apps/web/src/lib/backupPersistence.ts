@@ -294,8 +294,7 @@ export async function restoreBackup(input: Backup): Promise<string | null> {
     Library.reloadFromStorage(true);
     settingsManager.reloadAfterRestore();
     notificationManager.reloadAfterRestore();
-    const language = backup.local["flicklet.language.v2"];
-    if (language === "en" || language === "es") languageManager.reloadAfterRestore();
+    languageManager.reloadAfterRestore();
     if (uid) preferredNameStore.retry();
     window.dispatchEvent(new CustomEvent("customLists:updated"));
     Library.notifyUpdate();
