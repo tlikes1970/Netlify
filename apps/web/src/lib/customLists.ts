@@ -28,9 +28,11 @@ class CustomListManager {
     // Update maxLists based on current Pro status
     this.updateMaxLists();
     subscribeEntitlements(() => {
-      const previousLimit = this.userLists.maxLists;
       this.updateMaxLists();
-      if (previousLimit !== this.userLists.maxLists) this.emitChange();
+      // A React render can already refresh the manager's limit through
+      // getUserLists(), while useCustomLists still holds its previous snapshot.
+      // Always publish access changes so mounted controls receive that snapshot.
+      this.emitChange();
     });
     // Initialize last synced counts
     this.userLists.customLists.forEach((list) => {
