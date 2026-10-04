@@ -1,3 +1,5 @@
+import { t } from "@/lib/language";
+import { formatDate } from "@/lib/localeFormatters";
 import { t as accountText, useLanguage as useAccountLanguage } from "@/lib/language";
 import React, { useState, useEffect, useRef } from "react";
 import { ExtrasVideo } from "../../lib/extras/types";
@@ -30,7 +32,7 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
 }) => {
   console.log("🎭 ExtrasModal render:", { isOpen, showId, showTitle });
 
-  useAccountLanguage();
+  const language = useAccountLanguage();
   const { hasFullAccess } = useEntitlements();
 
   const [extrasVideos, setExtrasVideos] = useState<ExtrasVideo[]>([]);
@@ -52,7 +54,8 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
       loadExtras();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, showId, hasFullAccess]);
+    return () => { requestVersion.current += 1; };
+  }, [isOpen, showId, mediaType, hasFullAccess, language]);
 
   // Focus management
   useEffect(() => {
@@ -95,7 +98,9 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
+  const requestVersion = useRef(0);
   const loadExtras = async () => {
+    const request = ++requestVersion.current;
     setLoading(true);
     setExtrasError(null);
     try {
@@ -108,6 +113,7 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
         mediaType
       );
 
+      if (request !== requestVersion.current) return;
       // Handle structured result
       if (result.kind === "success") {
         setExtrasVideos(result.videos);
@@ -142,13 +148,14 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
       }
     } catch (error) {
       console.error("Failed to load extras:", error);
+      if (request !== requestVersion.current) return;
       setExtrasVideos([]);
       setExtrasError({
         kind: "api-error",
         message: "Extras are temporarily unavailable. Please check back later.",
       });
     } finally {
-      setLoading(false);
+      if (request === requestVersion.current) setLoading(false);
     }
   };
 
@@ -187,10 +194,10 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
       return (
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           <h3 className="text-lg font-medium mb-2">
-            Extras Temporarily Unavailable
+            {t("contentExtrasTemporarilyUnavailable")}
           </h3>
           <p className="text-sm">
-            {extrasError.message || "Please check back later."}
+            {extrasError.kind === "config-error" ? t("contentExtrasAreTemporarilyUnavailableDueToConfigurationIssues") : t("contentExtrasAreTemporarilyUnavailablePleaseCheckBackLater")}
           </p>
         </div>
       );
@@ -200,10 +207,9 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
     if (extrasVideos.length === 0) {
       return (
         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          <h3 className="text-lg font-medium mb-2">No extras found</h3>
+          <h3 className="text-lg font-medium mb-2">{t("contentNoExtrasFound")}</h3>
           <p className="text-sm">
-            We couldn&apos;t find official extras for this title. Some movies
-            and shows simply don&apos;t have them.
+            {t("contentWeCouldnTFindOfficialExtrasForThisTitleSomeMoviesAndShowsSimplyDonTHaveThem")}
           </p>
         </div>
       );
@@ -225,11 +231,11 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
             className="cursor-pointer bg-gray-50 dark:bg-gray-700 rounded-lg overflow-hidden hover:shadow-lg transition-shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
             tabIndex={0}
             role="button"
-            aria-label={`Play ${video.title} from ${video.channelName}`}
+            aria-label={t("contentPlayVideo", { title: video.title, channel: video.channelName })}
           >
             <img
               src={video.thumbnail}
-              alt={`Thumbnail for ${video.title}`}
+              alt={t("contentThumbnail", { title: video.title })}
               className="w-full h-32 object-cover"
             />
             <div className="p-3">
@@ -241,7 +247,7 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
               </p>
               <div className="flex items-center justify-between mt-2">
                 <span className="text-xs text-gray-400">
-                  {new Date(video.publishedAt).toLocaleDateString()}
+                  {formatDate(new Date(video.publishedAt))}
                 </span>
                 <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 rounded">
                   {video.provider}
@@ -262,27 +268,27 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
         className="fixed inset-0 z-40 bg-black bg-opacity-50"
         onClick={onClose}
       />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pt-32">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
           ref={modalRef}
-          className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-7xl max-h-[75vh] overflow-hidden"
+          className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-7xl max-h-[75dvh] overflow-hidden flex flex-col"
           role="dialog"
           aria-modal="true"
           aria-labelledby="extras-modal-title"
           aria-describedby="extras-modal-description"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex shrink-0 items-center justify-between gap-2 p-4 border-b border-gray-200 dark:border-gray-700">
             <h2
               id="extras-modal-title"
-              className="text-xl font-semibold text-gray-900 dark:text-white"
+              className="text-xl font-semibold text-gray-900 dark:text-white break-words min-w-0"
             >
-              {showTitle} - Behind the Scenes
+              {showTitle} - {t("contentBehindTheScenes")}
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
-              aria-label="Close modal"
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl min-w-[44px] min-h-[44px] shrink-0"
+              aria-label={t("contentCloseModal")}
             >
               ×
             </button>
@@ -291,7 +297,7 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
           {/* Content */}
           <div
             id="extras-modal-description"
-            className="p-4 overflow-y-auto max-h-96"
+            className="p-4 overflow-y-auto min-h-0 flex-1"
           >
             {!hasFullAccess ? (
               <div className="text-center py-12">
@@ -320,7 +326,7 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                 <span className="ml-2 text-gray-600 dark:text-gray-400">
-                  Loading extras...
+                  {t("contentLoadingExtras")}
                 </span>
               </div>
             ) : (

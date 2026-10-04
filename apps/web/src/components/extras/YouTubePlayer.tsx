@@ -1,3 +1,4 @@
+import { t, useLanguage } from "@/lib/language";
 import React from 'react';
 import { ExtrasVideo } from '../../lib/extras/types';
 
@@ -15,13 +16,14 @@ interface YouTubePlayerProps {
  */
 
 export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({ video, onClose }) => {
+  useLanguage();
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black bg-opacity-75 pt-48">
-      <div className="relative w-full max-w-4xl mx-4 mt-24">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4">
+      <div className="relative w-full max-w-4xl max-h-[90dvh] overflow-y-auto pt-12">
         <button
           onClick={onClose}
-          className="absolute -top-12 right-0 text-white hover:text-gray-300 text-2xl font-bold z-10"
-          aria-label="Close video player"
+          className="absolute top-0 right-0 min-w-[44px] min-h-[44px] text-white hover:text-gray-300 text-2xl font-bold z-10"
+          aria-label={t("contentCloseVideoPlayer")}
         >
           ×
         </button>
@@ -37,7 +39,7 @@ export const YouTubePlayer: React.FC<YouTubePlayerProps> = ({ video, onClose }) 
         </div>
         
         <div className="mt-4 text-white">
-          <h3 className="text-lg font-semibold">{video.title}</h3>
+          <h3 className="text-lg font-semibold break-words">{video.title}</h3>
           <p className="text-sm text-gray-300">{video.channelName}</p>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { t } from "@/lib/language";
 import { recoveryErrorKey } from "../lib/accountErrors";
 import { formatDateTime } from "../lib/localeFormatters";
 import { t as coreText, tPlural } from "../lib/language";
@@ -247,14 +248,14 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
           {translations.personalityLevel}
         </label>
         <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
-          Flicklet notices your lists and comments when it fits. Minimal keeps things quiet; Maximum is more opinionated.
+          {t("contentFlickletNoticesYourListsAndCommentsWhenItFitsMinimalKeepsThingsQuietMaximumIsMoreOpinion")}
         </p>
         <div className="grid grid-cols-1 gap-2">
           {(
             [
-              { level: 1 as PersonalityLevel, label: "Minimal", hint: "Quiet. Marquee off." },
-              { level: 2 as PersonalityLevel, label: "Standard", hint: "Recommended." },
-              { level: 3 as PersonalityLevel, label: "Maximum", hint: "More observations, stronger tone." },
+              { level: 1 as PersonalityLevel, label: t("contentMinimal"), hint: t("contentQuietMarqueeOff") },
+              { level: 2 as PersonalityLevel, label: t("contentStandard"), hint: t("contentRecommended") },
+              { level: 3 as PersonalityLevel, label: t("contentMaximum"), hint: t("contentMoreObservationsStrongerTone") },
             ] as const
           ).map(({ level, label, hint }) => {
             const isSelected = (settings.personalityLevel ?? 2) === level;
@@ -298,7 +299,7 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
           </p>
           <p className="text-sm mt-1" style={{ color: "var(--text)" }}>
             &ldquo;
-            {resolveFlickletLine("home.header", settings.personalityLevel) || "Your lists are here."}
+            {resolveFlickletLine("home.header", settings.personalityLevel) || t("contentYourListsAreHere")}
             &rdquo;
           </p>
         </div>

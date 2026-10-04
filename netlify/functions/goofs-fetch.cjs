@@ -1,3 +1,4 @@
+const spanishInsights = require("../../apps/web/src/data/insightTranslations.json");
 /**
  * Netlify Function: Generate Insights & Easter Eggs for a Movie/TV Show
  *
@@ -286,7 +287,7 @@ function buildInsightsForTitle(meta) {
   }
 
   // Limit to 8 items max
-  return items.slice(0, 8);
+  return items.slice(0, 8).map(item => ({ ...item, translations: { en: item.text, es: spanishInsights[item.text] || item.text } }));
 }
 
 exports.handler = async function handler(event) {

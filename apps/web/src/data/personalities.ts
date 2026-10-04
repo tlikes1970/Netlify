@@ -1,3 +1,5 @@
+import { languageManager } from "../lib/language";
+import { LEGACY_PERSONALITY_SPANISH } from "./legacyPersonalitySpanish";
 /**
  * Process: Personality Text System
  * Purpose: Provides personality-driven text variants for app commentary (empty states, errors, confirmations, marquee, etc.)
@@ -1110,7 +1112,9 @@ export function getPersonalityText(
     variantCache.set(cacheKey, variantIndex);
   }
   
-  let text = variants[variantIndex];
+  const localized = LEGACY_PERSONALITY_SPANISH[validPersonality as keyof typeof LEGACY_PERSONALITY_SPANISH];
+  const translated = key in localized ? localized?.[key as keyof typeof localized]?.[variantIndex] : undefined;
+  let text = languageManager.getLanguage() === "es" && translated ? translated : variants[variantIndex];
   
   // Replace {username} placeholder if provided
   if (context?.username) {

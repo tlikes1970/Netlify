@@ -1,3 +1,6 @@
+import { languageManager } from "../language";
+import type { Language } from "../language.types";
+import spanishInsights from "../../data/insightTranslations.json";
 /**
  * Process: Insights & Easter Eggs Store
  * Purpose: Store and retrieve original, Flicklet-generated "Insights & Easter Eggs" per title
@@ -20,6 +23,8 @@ export interface GoofItem {
   id: string;
   type: "continuity" | "prop" | "crew" | "logic" | "style" | "world" | "other"; // Extended categories
   kind?: "insight" | "easterEgg" | "pattern"; // New: distinguishes insight types
+  translations?: Partial<Record<Language, string>>;
+  textLanguage?: Language;
   text: string; // Original, template-generated text (not scraped from external sources)
   subtlety?: "blink" | "obvious";
 }
@@ -75,8 +80,8 @@ function saveToStorage(data: Record<string, GoofSet>): void {
 /**
  * Get storage key for a TMDB ID
  */
-function getStorageKey(tmdbId: number | string): string {
-  return String(tmdbId);
+function getStorageKey(tmdbId: number | string, language: Language): string {
+  return `${language}:${tmdbId}`;
 }
 
 /**
@@ -84,9 +89,17 @@ function getStorageKey(tmdbId: number | string): string {
  */
 function initializeCache(): void {
   goofsCache = loadFromStorage();
+  // Retain older cached/manual observations and give their display copies a locale.
+  for (const [key, value] of Object.entries(goofsCache)) {
+    if (key.includes(":") || !Array.isArray(value?.items)) continue;
+    for (const language of ["en", "es"] as const) {
+      const localizedKey = getStorageKey(value.tmdbId ?? key, language);
+      goofsCache[localizedKey] ??= { ...value, items: localizeInsightItems(value.items, language) };
+    }
+  }
 
   // Always merge seed data (seed data takes precedence if localStorage is empty)
-  const seedData = getSeedGoofs();
+  const seedData = { ...getSeedGoofs("en"), ...getSeedGoofs("es") };
   let cacheUpdated = false;
 
   Object.entries(seedData).forEach(([key, goofSet]) => {
@@ -108,9 +121,10 @@ function initializeCache(): void {
  * Get goofs for a specific title by TMDB ID
  */
 export async function getGoofsForTitle(
-  tmdbId: number | string
+  tmdbId: number | string,
+  language: Language = languageManager.getLanguage()
 ): Promise<GoofSet | null> {
-  const key = getStorageKey(tmdbId);
+  const key = getStorageKey(tmdbId, language);
 
   // Always ensure cache is initialized
   if (Object.keys(goofsCache).length === 0) {
@@ -140,7 +154,7 @@ export async function getGoofsForTitle(
   }
 
   // If not in cache, check seed data as fallback
-  const seedData = getSeedGoofs();
+  const seedData = getSeedGoofs(language);
   if (seedData[key]) {
     if (import.meta.env.DEV) {
       console.log(
@@ -161,7 +175,7 @@ export async function getGoofsForTitle(
       console.log(`🌐 Fetching insights from Firestore for TMDB ID ${tmdbId}`);
     }
 
-    const firestoreResult = await fetchInsightsFromFirestore(tmdbId);
+    const firestoreResult = await fetchInsightsFromFirestore(tmdbId, language);
     if (
       firestoreResult &&
       firestoreResult.items &&
@@ -199,9 +213,10 @@ export async function getGoofsForTitle(
  */
 export function subscribeToGoofs(
   tmdbId: number | string,
-  callback: (goofs: GoofSet | null) => void
+  callback: (goofs: GoofSet | null) => void,
+  language: Language = languageManager.getLanguage()
 ): UnsubscribeFn {
-  const key = getStorageKey(tmdbId);
+  const key = getStorageKey(tmdbId, language);
 
   // Initialize cache if needed
   if (Object.keys(goofsCache).length === 0) {
@@ -217,7 +232,7 @@ export function subscribeToGoofs(
   // Get current value (check cache first, then seed data)
   let currentValue = goofsCache[key] || null;
   if (!currentValue) {
-    const seedData = getSeedGoofs();
+    const seedData = getSeedGoofs(language);
     if (seedData[key]) {
       // Add to cache for future lookups
       goofsCache[key] = seedData[key];
@@ -225,7 +240,7 @@ export function subscribeToGoofs(
       currentValue = seedData[key];
     } else {
       // Try fetching from Firestore in background
-      fetchInsightsFromFirestore(tmdbId)
+      fetchInsightsFromFirestore(tmdbId, language)
         .then((firestoreResult) => {
           if (
             firestoreResult &&
@@ -267,7 +282,8 @@ export function subscribeToGoofs(
  * No external API calls for user-facing features
  */
 async function fetchInsightsFromFirestore(
-  tmdbId: number | string
+  tmdbId: number | string,
+  language: Language = languageManager.getLanguage()
 ): Promise<GoofSet | null> {
   try {
     // Import Firestore dynamically to avoid issues if Firebase isn't initialized
@@ -291,11 +307,11 @@ async function fetchInsightsFromFirestore(
           tmdbId: data.tmdbId || tmdbId,
           source: data.source || "auto",
           lastUpdated: data.lastUpdated || new Date().toISOString(),
-          items: data.items,
+          items: localizeInsightItems(data.items, language),
         };
 
         // Cache in localStorage
-        const key = getStorageKey(tmdbId);
+        const key = getStorageKey(tmdbId, language);
         goofsCache[key] = insightsSet;
         saveToStorage(goofsCache);
 
@@ -338,7 +354,7 @@ function notifyListeners(key: string, goofSet: GoofSet | null): void {
  * NOTE: In production, insights are generated via Netlify function and stored in Firestore.
  * This seed data is only used as a fallback for development/testing.
  */
-function getSeedGoofs(): Record<string, GoofSet> {
+function getRawSeedGoofs(): Record<string, GoofSet> {
   // Example goofs for popular shows/movies
   // These are manually seeded for testing purposes only
   return {
@@ -414,3 +430,15 @@ if (typeof window !== "undefined") {
  * - Currently uses polling via subscribeToGoofs
  * - Future: could add Firestore onSnapshot listeners for real-time updates
  */
+
+/** Localize only known authored templates or explicit bilingual payloads. Source text stays intact otherwise. */
+export function localizeInsightItems(items: GoofItem[], language: Language): GoofItem[] {
+  const known = spanishInsights as Record<string, string>;
+  return items.map(item => {
+    const translated = item.translations?.[language] || (language === "es" ? known[item.text] : undefined);
+    return { ...item, text: translated || item.text, textLanguage: translated ? language : item.textLanguage };
+  });
+}
+function getSeedGoofs(language: Language): Record<string, GoofSet> {
+  return Object.fromEntries(Object.entries(getRawSeedGoofs()).map(([id, set]) => [getStorageKey(id, language), { ...set, items: localizeInsightItems(set.items, language) }]));
+}

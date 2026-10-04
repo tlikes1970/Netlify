@@ -1,8 +1,10 @@
+import { t, useLanguage } from "../lib/language";
 import { usePreferredName } from "../hooks/usePreferredName";
 import { useSettings } from "../lib/settings";
 import { getPersonalityText } from "../data/personalities";
 
 export default function HomeGreeting() {
+  useLanguage();
   const { uid, preferredName, loading, error } = usePreferredName();
   const settings = useSettings();
   if (!uid || loading || error || !preferredName) return null;
@@ -17,7 +19,7 @@ export default function HomeGreeting() {
       className="min-w-0 text-left text-xs leading-snug md:text-sm break-words line-clamp-2"
       style={{ color: "var(--muted)" }}
     >
-      {greeting || `Hello, ${preferredName}`}
+      {greeting || t("contentHelloName", { name: preferredName })}
     </div>
   );
 }

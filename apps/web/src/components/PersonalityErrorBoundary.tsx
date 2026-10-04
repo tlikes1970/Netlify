@@ -1,3 +1,4 @@
+import { t, useLanguage } from "@/lib/language";
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { derr } from '../lib/log';
 import { settingsManager, getPersonalityText, DEFAULT_PERSONALITY } from '../lib/settings';
@@ -6,6 +7,7 @@ import { logErrorDetails } from '../lib/errorMessages';
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
+  language?: string;
 }
 
 interface State {
@@ -13,7 +15,7 @@ interface State {
   error?: Error;
 }
 
-export default class PersonalityErrorBoundary extends Component<Props, State> {
+class PersonalityErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false };
@@ -35,7 +37,7 @@ export default class PersonalityErrorBoundary extends Component<Props, State> {
       }
 
       // Safely get settings with fallback
-      let errorMessage = "Something went wrong. Please try again.";
+      let errorMessage = t("contentErrorFallback");
       try {
         const settings = settingsManager.getSettings();
         const personality = settings.personality || DEFAULT_PERSONALITY;
@@ -68,7 +70,7 @@ export default class PersonalityErrorBoundary extends Component<Props, State> {
             </svg>
           </div>
           <h2 className="text-lg font-semibold mb-2" style={{ color: 'var(--text)' }}>
-            Hmm, that didn't work
+            {t("contentErrorHeading")}
           </h2>
           <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>
             {errorMessage}
@@ -83,7 +85,7 @@ export default class PersonalityErrorBoundary extends Component<Props, State> {
             className="px-4 py-2 rounded-lg transition-colors"
             style={{ backgroundColor: 'var(--btn)', color: 'var(--text)', borderColor: 'var(--line)', border: '1px solid' }}
           >
-            Try Again
+            {t("contentTryAgain")}
           </button>
         </div>
       );
@@ -91,4 +93,9 @@ export default class PersonalityErrorBoundary extends Component<Props, State> {
 
     return this.props.children;
   }
+}
+
+export default function LocalizedPersonalityErrorBoundary(props: Props) {
+  const language = useLanguage();
+  return <PersonalityErrorBoundary {...props} language={language} />;
 }

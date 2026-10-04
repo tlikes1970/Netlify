@@ -1,3 +1,5 @@
+import { languageManager, t } from "./language";
+import { PERSONALITY_SPANISH } from "../data/flickletPersonalitySpanish";
 /**
  * Flicklet personality resolver — Phase 2 surfaces.
  */
@@ -92,9 +94,9 @@ function interpolate(
     '{notCount}': String(signals.notCount),
     '{totalCount}': String(signals.totalCount),
     '{count}': String(signals.totalCount),
-    '{rowTitle}': ctx.rowTitle ?? 'this genre',
-    '{genre}': ctx.genre ?? ctx.rowTitle ?? 'this genre',
-    '{listName}': ctx.listName ?? 'This list',
+    '{rowTitle}': ctx.rowTitle ?? t('contentThisGenre'),
+    '{genre}': ctx.genre ?? ctx.rowTitle ?? t('contentThisGenre'),
+    '{listName}': ctx.listName ?? t('contentThisList'),
   };
 
   let out = text;
@@ -135,7 +137,7 @@ function pickFromPool(
 
   const chosen = candidates[index];
   markSeen(surface, chosen.id);
-  return interpolate(chosen.text, ctx, signals);
+  return interpolate(localizedPersonalityLine(chosen), ctx, signals);
 }
 
 function resolveContextPool(
@@ -209,7 +211,7 @@ export function getFlickletMarqueeMessages(
   if (pool.length === 0) return [];
 
   const signals = getLibrarySignals();
-  return pool.map((line) => interpolate(line.text, {}, signals));
+  return pool.map((line) => interpolate(localizedPersonalityLine(line), {}, signals));
 }
 
 /** Map legacy TextKey-style empty keys to Flicklet surfaces. */
@@ -222,4 +224,8 @@ export function flickletSurfaceFromLegacyKey(key: string): FlickletSurface | nul
     emptyUpNext: 'empty.upnext',
   };
   return map[key] ?? null;
+}
+
+export function localizedPersonalityLine(line: FlickletLine): string {
+  return languageManager.getLanguage() === "es" ? PERSONALITY_SPANISH[line.id] ?? line.text : line.text;
 }

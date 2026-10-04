@@ -1,3 +1,5 @@
+import { t } from "@/lib/language";
+import { formatDate } from "@/lib/localeFormatters";
 import { t as accountText, useLanguage as useAccountLanguage } from "@/lib/language";
 import React, { useState, useEffect, useRef } from 'react';
 import { ExtrasVideo, BloopersSearchResult } from '../../lib/extras/types';
@@ -31,7 +33,7 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
 }) => {
   console.log('🎬 BloopersModal render:', { isOpen, showId, showTitle });
   
-  useAccountLanguage();
+  const language = useAccountLanguage();
   const { hasFullAccess } = useEntitlements();
   
   const [officialVideos, setOfficialVideos] = useState<ExtrasVideo[]>([]);
@@ -83,13 +85,16 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
+  const requestVersion = useRef(0);
   const loadBloopers = async () => {
+    const request = ++requestVersion.current;
     setLoading(true);
     try {
       // First try to get official bloopers
       const { extrasProvider } = await import('../../lib/extras/extrasProvider');
       const result = await extrasProvider.fetchBloopers(showId, showTitle);
       
+      if (request !== requestVersion.current) return;
       setOfficialVideos(result.videos);
       
       if (result.videos.length > 0) {
@@ -106,6 +111,7 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
           showId
         });
         
+        if (request !== requestVersion.current) return;
         setSearchResults(searchAssistResults);
         
         // Analytics: Track search assist usage
@@ -134,11 +140,12 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
       });
       
     } catch (error) {
+      if (request !== requestVersion.current) return;
       console.error('Failed to load bloopers:', error);
       setOfficialVideos([]);
       setSearchResults([]);
     } finally {
-      setLoading(false);
+      if (request === requestVersion.current) setLoading(false);
     }
   };
 
@@ -154,8 +161,9 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
     }
     // Load bloopers if Pro
     loadBloopers();
+    return () => { requestVersion.current += 1; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, showId, hasFullAccess]);
+  }, [isOpen, showId, hasFullAccess, language]);
 
   const handleSearchResultClick = (result: BloopersSearchResult) => {
     if (result.embeddable) {
@@ -165,7 +173,7 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
         title: result.title,
         description: `Extras from ${result.channel}`,
         thumbnail: result.thumbUrl,
-        duration: result.duration || 'Unknown',
+        duration: result.duration || t("contentUnknown"),
         publishedAt: result.publishedAt || new Date().toISOString(),
         provider: result.provider,
         channelName: result.channel,
@@ -239,24 +247,24 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black bg-opacity-50" onClick={onClose} />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pt-32">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div 
           ref={modalRef}
-          className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-7xl max-h-[75vh] overflow-hidden"
+          className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-7xl max-h-[75dvh] overflow-hidden flex flex-col"
           role="dialog"
           aria-modal="true"
           aria-labelledby="bloopers-modal-title"
           aria-describedby="bloopers-modal-description"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-            <h2 id="bloopers-modal-title" className="text-xl font-semibold text-gray-900 dark:text-white">
-              {showTitle} - Extras
+          <div className="flex shrink-0 items-center justify-between gap-2 p-4 border-b border-gray-200 dark:border-gray-700">
+            <h2 id="bloopers-modal-title" className="text-xl font-semibold text-gray-900 dark:text-white break-words min-w-0">
+              {showTitle} - {t("contentExtras")}
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
-              aria-label="Close modal"
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl min-w-[44px] min-h-[44px] shrink-0"
+              aria-label={t("contentCloseModal")}
             >
               ×
             </button>
@@ -265,7 +273,7 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
           {/* Content */}
           <div 
             id="bloopers-modal-description"
-            className="p-4 overflow-y-auto max-h-96"
+            className="p-4 overflow-y-auto min-h-0 flex-1"
           >
             {!hasFullAccess ? (
               <div className="text-center py-12">
@@ -290,20 +298,20 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
             ) : loading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-2 text-gray-600 dark:text-gray-400">Loading extras...</span>
+                <span className="ml-2 text-gray-600 dark:text-gray-400">{t("contentLoadingExtras")}</span>
               </div>
             ) : officialVideos.length === 0 && searchResults.length === 0 ? (
               <div className="text-center py-8">
                 <div className="text-gray-500 dark:text-gray-400 mb-4">
-                  <h3 className="text-lg font-medium mb-2">{EXTRAS_COPY.emptyStates.bloopers.title}</h3>
-                  <p className="text-sm">{EXTRAS_COPY.emptyStates.bloopers.description}</p>
+                  <h3 className="text-lg font-medium mb-2">{t("contentNoExtrasAvailableYet")}</h3>
+                  <p className="text-sm">{t("contentAdditionalVideosForThisTitleAreNotAvailableYet")}</p>
                 </div>
                 <div className="space-x-4">
                   <button
                     onClick={() => window.open(EXTRAS_COPY.help.bloopersArticle, '_blank')}
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    {EXTRAS_COPY.emptyStates.bloopers.secondaryCta}
+                    {t("contentLearnMore")}
                   </button>
                 </div>
               </div>
@@ -313,7 +321,7 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
                 {officialVideos.length > 0 && (
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      Official Extras
+                      {t("contentOfficialExtras")}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {officialVideos.map((video, index) => (
@@ -330,11 +338,11 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
                           className="cursor-pointer bg-gray-50 dark:bg-gray-700 rounded-lg overflow-hidden hover:shadow-lg transition-shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
                           tabIndex={0}
                           role="button"
-                          aria-label={`Play ${video.title} from ${video.channelName}`}
+                          aria-label={t("contentPlayVideo", { title: video.title, channel: video.channelName })}
                         >
                           <img
                             src={video.thumbnail}
-                            alt={`Thumbnail for ${video.title}`}
+                            alt={t("contentThumbnail", { title: video.title })}
                             className="w-full h-32 object-cover"
                           />
                           <div className="p-3">
@@ -346,7 +354,7 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
                             </p>
                             <div className="flex items-center justify-between mt-2">
                               <span className="text-xs text-gray-400">
-                                {new Date(video.publishedAt).toLocaleDateString()}
+                                {formatDate(new Date(video.publishedAt))}
                               </span>
                               <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded">
                                 Official
@@ -363,7 +371,7 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
                 {searchResults.length > 0 && (
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                      {EXTRAS_COPY.searchAssist.title}
+                      {t("contentExtrasFromAroundTheWeb")}
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {searchResults.map((result, index) => (
@@ -375,7 +383,7 @@ export const BloopersModal: React.FC<BloopersModalProps> = ({
                       ))}
                     </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 italic">
-                      {EXTRAS_COPY.searchAssist.disclaimer}
+                      {t("contentVideosPlayOnTheirHostSiteAvailabilityMayChange")}
                     </p>
                   </div>
                 )}
@@ -401,6 +409,7 @@ const BloopersCard = React.forwardRef<HTMLDivElement, {
   result: BloopersSearchResult;
   onClick: () => void;
 }>(({ result, onClick }, ref) => {
+  useAccountLanguage();
   const providerDisplayName = BloopersSearchAssist.getProviderDisplayName(result.provider);
   
   return (
@@ -416,11 +425,11 @@ const BloopersCard = React.forwardRef<HTMLDivElement, {
       className="cursor-pointer bg-gray-50 dark:bg-gray-700 rounded-lg overflow-hidden hover:shadow-lg transition-shadow focus:outline-none focus:ring-2 focus:ring-blue-500"
       tabIndex={0}
       role="button"
-      aria-label={`${result.embeddable ? 'Play' : 'Watch'} ${result.title} on ${providerDisplayName}`}
+      aria-label={t(result.embeddable ? "contentPlayOnProvider" : "contentWatchOnProvider", { title: result.title, provider: providerDisplayName })}
     >
       <img
         src={result.thumbUrl}
-        alt={`Thumbnail for ${result.title}`}
+        alt={t("contentThumbnail", { title: result.title })}
         className="w-full h-32 object-cover"
       />
       <div className="p-3">
@@ -437,19 +446,19 @@ const BloopersCard = React.forwardRef<HTMLDivElement, {
             </span>
             {result.verified && (
               <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded">
-                ✓ Verified
+                ✓ {t("contentVerified")}
               </span>
             )}
           </div>
           <span className="text-xs text-gray-400">
-            {result.duration || 'Unknown'}
+            {result.duration || t("contentUnknown")}
           </span>
         </div>
         {result.reason && (
           <p className="text-xs text-gray-400 mt-1 italic">
-            {result.reason === 'official' ? 'Official content' : 
-             result.reason === 'allowlisted' ? 'Official channel' :
-             result.reason === 'verified' ? 'Verified channel' : result.reason}
+            {result.reason === 'official' ? t("contentOfficialContent") :
+             result.reason === 'allowlisted' ? t("contentOfficialChannel") :
+             result.reason === 'verified' ? t("contentVerifiedChannel") : result.reason}
           </p>
         )}
       </div>

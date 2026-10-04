@@ -22,3 +22,12 @@ export const PROVIDER_CONFIG = {
     baseUrl: 'https://api.themoviedb.org/3',
   }
 } as const;
+
+export const SPANISH_VIDEO_TERMS: Readonly<Record<string, string>> = {
+  'Best TV Bloopers Ever': 'Las mejores tomas falsas de televisión', 'Classic Comedy Outtakes': 'Tomas falsas de comedias clásicas', 'Funniest Movie Bloopers': 'Las tomas falsas de cine más divertidas', 'Behind the Scenes Fails': 'Errores detrás de cámaras', 'Best Comedy Bloopers': 'Las mejores tomas falsas de comedia', 'Funniest TV Moments': 'Los momentos más divertidos de televisión', 'Classic Outtakes Collection': 'Recopilación de tomas falsas clásicas', 'Behind the Scenes': 'Detrás de cámaras', 'Making of Documentaries': 'Documentales sobre el rodaje', 'Cast Interviews': 'Entrevistas con el reparto',
+  'bloopers': 'tomas falsas', 'gag reel': 'tomas falsas', 'outtakes': 'escenas descartadas', 'funny moments': 'momentos divertidos',
+  'featurette': 'reportaje', 'behind the scenes': 'detrás de cámaras', 'making of': 'cómo se hizo', 'interview': 'entrevista', 'deleted scene': 'escena eliminada',
+};
+export function videoQueryTerms(keywords: readonly string[], language: string): string[] {
+  return language === 'es' ? keywords.map(term => SPANISH_VIDEO_TERMS[term] || term) : [...keywords];
+}

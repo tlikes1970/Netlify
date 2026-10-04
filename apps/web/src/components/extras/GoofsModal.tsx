@@ -1,4 +1,4 @@
-import { t as accountText, useLanguage as useAccountLanguage } from "@/lib/language";
+import { t, useLanguage } from "@/lib/language";
 import React, { useState, useEffect, useRef } from "react";
 import {
   getGoofsForTitle,
@@ -34,7 +34,7 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
 }) => {
   console.log("🎭 GoofsModal render:", { isOpen, tmdbId, title });
 
-  useAccountLanguage();
+  const language = useLanguage();
   const { hasFullAccess } = useEntitlements();
 
   const [goofs, setGoofs] = useState<GoofSet | null>(null);
@@ -58,9 +58,12 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
     }
 
     setLoading(true);
+    setGoofs(null);
+    let current = true;
 
     // Use subscribe for real-time updates (though currently just reads from cache)
     const unsubscribe = subscribeToGoofs(tmdbId, (goofSet) => {
+      if (!current) return;
       if (import.meta.env.DEV) {
         console.log(
           `🎭 GoofsModal: Subscription callback received:`,
@@ -72,7 +75,8 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
     });
 
     // Fallback: also try direct fetch
-    getGoofsForTitle(tmdbId).then((goofSet) => {
+    getGoofsForTitle(tmdbId, language).then((goofSet) => {
+      if (!current) return;
       if (import.meta.env.DEV) {
         console.log(
           `🎭 GoofsModal: Direct fetch result:`,
@@ -86,9 +90,10 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
     });
 
     return () => {
+      current = false;
       unsubscribe();
     };
-  }, [isOpen, tmdbId, hasFullAccess]);
+  }, [isOpen, tmdbId, hasFullAccess, language]);
 
   // Focus management
   useEffect(() => {
@@ -133,13 +138,13 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
 
   const getTypeLabel = (type: GoofSet["items"][0]["type"]): string => {
     const labels: Record<string, string> = {
-      continuity: "Continuity",
-      prop: "Prop",
-      crew: "Crew Visible",
-      logic: "Logic",
-      style: "Style",
-      world: "World Building",
-      other: "Other",
+      continuity: t("contentContinuity"),
+      prop: t("contentProp"),
+      crew: t("contentCrewVisible"),
+      logic: t("contentLogic"),
+      style: t("contentStyle"),
+      world: t("contentWorldBuilding"),
+      other: t("contentOther"),
     };
     return labels[type] || type;
   };
@@ -147,9 +152,9 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
   const getKindLabel = (kind?: string): string => {
     if (!kind) return "";
     const labels: Record<string, string> = {
-      insight: "Insight",
-      easterEgg: "Easter Egg",
-      pattern: "Pattern",
+      insight: t("contentInsight"),
+      easterEgg: t("contentEasterEgg"),
+      pattern: t("contentPattern"),
     };
     return labels[kind] || kind;
   };
@@ -176,7 +181,7 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           <span className="ml-2 text-gray-600 dark:text-gray-400">
-            Loading insights...
+            {t("contentLoadingInsights")}
           </span>
         </div>
       );
@@ -186,10 +191,9 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
       return (
         <div className="text-center py-12">
           <div className="text-gray-500 dark:text-gray-400 mb-4">
-            <h3 className="text-lg font-medium mb-2">No insights found</h3>
+            <h3 className="text-lg font-medium mb-2">{t("contentNoInsightsFound")}</h3>
             <p className="text-sm">
-              We don&apos;t have any insights for this one yet. They&apos;ll
-              appear here as we expand Full Access extras.
+              {t("contentWeDonTHaveAnyInsightsForThisOneYetTheyLlAppearHereAsWeExpandFullAccessExtras")}
             </p>
           </div>
         </div>
@@ -220,13 +224,14 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
                 {goof.subtlety && (
                   <span className="text-xs text-gray-400 dark:text-gray-500">
                     {goof.subtlety === "blink"
-                      ? "👁️ Easy to miss"
-                      : "👀 Obvious"}
+                      ? t("contentEasyToMiss")
+                      : t("contentObvious")}
                   </span>
                 )}
               </div>
             </div>
-            <p className="text-sm text-gray-900 dark:text-white leading-relaxed">
+            <p className="text-sm break-words text-gray-900 dark:text-white leading-relaxed">
+              {language === "es" && goof.textLanguage !== "es" && <span className="block text-xs mb-1">{t(goof.textLanguage === "en" ? "contentSourceTextInEnglish" : "contentOriginalSourceText")}</span>}
               {goof.text}
             </p>
           </div>
@@ -243,27 +248,27 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
         className="fixed inset-0 z-40 bg-black bg-opacity-50"
         onClick={onClose}
       />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pt-32">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
           ref={modalRef}
-          className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-3xl max-h-[75vh] overflow-hidden"
+          className="bg-white dark:bg-gray-800 rounded-lg w-full max-w-3xl max-h-[75dvh] overflow-hidden flex flex-col"
           role="dialog"
           aria-modal="true"
           aria-labelledby="goofs-modal-title"
           aria-describedby="goofs-modal-description"
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between gap-3 shrink-0 p-4 border-b border-gray-200 dark:border-gray-700">
             <h2
               id="goofs-modal-title"
-              className="text-xl font-semibold text-gray-900 dark:text-white"
+              className="min-w-0 break-words text-xl font-semibold text-gray-900 dark:text-white"
             >
-              {title ? `${title} - Shows Like This` : "Shows Like This"}
+              {title ? `${title} - ${t("coreShowsLikeThis")}` : t("coreShowsLikeThis")}
             </h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
-              aria-label="Close modal"
+              className="min-w-[44px] min-h-[44px] shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
+              aria-label={t("contentCloseModal")}
             >
               ×
             </button>
@@ -272,10 +277,10 @@ export const GoofsModal: React.FC<GoofsModalProps> = ({
           {/* Content */}
           <div
             id="goofs-modal-description"
-            className="p-4 overflow-y-auto max-h-96"
+            className="p-4 overflow-y-auto min-h-0 flex-1"
           >
             {!hasFullAccess ? (
-              <UpgradeToProCTA variant="panel" message={accountText("accessSimilarTrial")} />
+              <UpgradeToProCTA variant="panel" message={t("accessSimilarTrial")} />
             ) : (
               renderGoofsContent()
             )}

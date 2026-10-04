@@ -47,7 +47,7 @@ import {
   settingsManager,
   getFlickletMarqueeMessages,
 } from "@/lib/settings";
-import { useTranslations } from "@/lib/language";
+import { useLanguage, useTranslations } from "@/lib/language";
 import Toast, { useToast } from "@/components/Toast";
 import ConfirmHost from "@/components/ConfirmHost";
 import PersonalityErrorBoundary from "@/components/PersonalityErrorBoundary";
@@ -443,10 +443,12 @@ export default function App() {
   const wishlist = useLibrary("wishlist", { includeItemUpdates: true });
   const watched = useLibrary("watched", { includeItemUpdates: true });
 
+  const personalityLanguage = useLanguage();
   const flickletMarqueeMessages = useMemo(
     () => getFlickletMarqueeMessages(settings.personalityLevel),
     [
       settings.personalityLevel,
+      personalityLanguage,
       watching.length,
       wishlist.length,
       watched.length,

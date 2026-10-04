@@ -1,5 +1,5 @@
+import { t, useLanguage, getMetadataLanguage } from "@/lib/language";
 import { useState, useEffect, useRef } from 'react';
-// import { useTranslations } from '../lib/language'; // Unused
 
 // Speech Recognition API types
 declare global {
@@ -48,10 +48,12 @@ export type VoiceSearchProps = {
 };
 
 export default function VoiceSearch({ onVoiceResult, onError, className = '' }: VoiceSearchProps) {
-  // const translations = useTranslations(); // Unused
+  useLanguage();
   const [isListening, setIsListening] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const callbacksRef = useRef({ onVoiceResult, onError });
+  callbacksRef.current = { onVoiceResult, onError };
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
@@ -87,7 +89,7 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
       // Configure recognition settings
       recognitionRef.current.continuous = false;
       recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = 'en-US';
+      recognitionRef.current.lang = getMetadataLanguage();
       // recognitionRef.current.maxAlternatives = 1; // Not supported in all browsers
       
       // Handle successful recognition
@@ -100,7 +102,7 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
         
         // Add to search history
         if (cleanedText) {
-          onVoiceResult(cleanedText);
+          callbacksRef.current.onVoiceResult(cleanedText);
         }
         
         setIsListening(false);
@@ -142,7 +144,7 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
         // Only show error to user if it's not a temporary network issue
         if (shouldShowError) {
           setError(errorMessage);
-          onError?.(errorMessage);
+          callbacksRef.current.onError?.(voiceMessage(errorMessage));
         } else {
           // Clear any existing error for network/aborted issues
           setError(null);
@@ -170,7 +172,7 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
         recognitionRef.current.stop();
       }
     };
-  }, [onVoiceResult, onError]);
+  }, []);
 
   const startListening = () => {
     if (!isSupported || !recognitionRef.current) {
@@ -189,6 +191,7 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
       setIsListening(true);
       
       // Start recognition
+      recognitionRef.current.lang = getMetadataLanguage();
       recognitionRef.current.start();
       
       // Set a timeout to stop listening after 10 seconds
@@ -259,8 +262,8 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
           color: isListening ? '#ffffff' : 'var(--muted)',
           borderColor: isListening ? '#ef4444' : 'var(--line)'
         }}
-        title={isListening ? 'Stop listening' : 'Start voice search'}
-        aria-label={isListening ? 'Stop voice search' : 'Start voice search'}
+        title={isListening ? t("contentStopListening") : t("contentStartVoiceSearch")}
+        aria-label={isListening ? t("contentStopVoiceSearch") : t("contentStartVoiceSearch")}
       >
         {isListening ? (
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
@@ -276,10 +279,10 @@ export default function VoiceSearch({ onVoiceResult, onError, className = '' }: 
       {/* Error tooltip */}
       {error && (
         <div 
-          className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-red-500 text-white text-xs rounded-lg shadow-lg z-50 whitespace-nowrap"
-          style={{ maxWidth: '200px' }}
+          className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-red-500 text-white text-xs rounded-lg shadow-lg z-50 whitespace-normal break-words"
+          style={{ width: '200px', maxWidth: 'calc(100vw - 32px)' }}
         >
-          {error}
+          {voiceMessage(error)}
           <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-red-500 rotate-45"></div>
         </div>
       )}
@@ -298,4 +301,11 @@ declare global {
     SpeechRecognition: typeof SpeechRecognition;
     webkitSpeechRecognition: typeof SpeechRecognition;
   }
+}
+
+function voiceMessage(message: string): string {
+  const keys = {"Voice recognition failed": "contentVoiceRecognitionFailed", "No speech detected. Please try again.": "contentNoSpeechDetectedPleaseTryAgain", "Microphone not available. Please check your microphone.": "contentMicrophoneNotAvailablePleaseCheckYourMicrophone", "Microphone access denied. Please allow microphone access.": "contentMicrophoneAccessDeniedPleaseAllowMicrophoneAccess", "Network error. Please check your connection.": "contentNetworkErrorPleaseCheckYourConnection", "Voice search is not supported in this browser": "contentVoiceSearchIsNotSupportedInThisBrowser", "Voice search is not supported": "contentVoiceSearchIsNotSupported", "Listening timeout. Please try again.": "contentListeningTimeoutPleaseTryAgain", "Failed to start voice recognition": "contentFailedToStartVoiceRecognition", "Stop listening": "contentStopListening", "Start voice search": "contentStartVoiceSearch", "Stop voice search": "contentStopVoiceSearch"} as const;
+  if (message.startsWith("Recognition error: ")) return t("contentRecognitionError", { error: message.slice(19) });
+  const key = keys[message as keyof typeof keys];
+  return key ? t(key) : message;
 }

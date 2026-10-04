@@ -1,5 +1,6 @@
+import { getMetadataLanguage } from "../language";
 import { ExtrasVideo, ProviderResult, ExtrasProvider } from "./types";
-import { PROVIDER_CONFIG, BLOOPERS_KEYWORDS, EXTRAS_KEYWORDS } from "./config";
+import { PROVIDER_CONFIG, BLOOPERS_KEYWORDS, EXTRAS_KEYWORDS, videoQueryTerms } from "./config";
 
 /**
  * Process: Extras Provider
@@ -227,13 +228,14 @@ class ExtrasProviderImpl implements ExtrasProvider {
   private async fetchTMDBVideos(
     showId: number,
     category: "bloopers" | "extras",
-    mediaType: "movie" | "tv" = "tv"
+    mediaType: "movie" | "tv" = "tv",
+    language = getMetadataLanguage()
   ): Promise<ProviderResult> {
     try {
       const endpoint =
         mediaType === "movie"
-          ? `${PROVIDER_CONFIG.tmdb.baseUrl}/movie/${showId}/videos?api_key=${PROVIDER_CONFIG.tmdb.apiKey}`
-          : `${PROVIDER_CONFIG.tmdb.baseUrl}/tv/${showId}/videos?api_key=${PROVIDER_CONFIG.tmdb.apiKey}`;
+          ? `${PROVIDER_CONFIG.tmdb.baseUrl}/movie/${showId}/videos?api_key=${PROVIDER_CONFIG.tmdb.apiKey}&language=${encodeURIComponent(language)}`
+          : `${PROVIDER_CONFIG.tmdb.baseUrl}/tv/${showId}/videos?api_key=${PROVIDER_CONFIG.tmdb.apiKey}&language=${encodeURIComponent(language)}`;
 
       const response = await fetch(endpoint);
 
@@ -252,6 +254,9 @@ class ExtrasProviderImpl implements ExtrasProvider {
       }
 
       const data = await response.json();
+      if (language === "es" && !(data.results || []).some((video: any) => this.isRelevantVideo(video, category))) {
+        return this.fetchTMDBVideos(showId, category, mediaType, "en-US");
+      }
 
       if (!data.results || !Array.isArray(data.results)) {
         if (import.meta.env.DEV) {
@@ -309,12 +314,14 @@ class ExtrasProviderImpl implements ExtrasProvider {
   private async searchYouTube(
     query: string,
     keywords: string[],
-    category: "bloopers" | "extras"
+    category: "bloopers" | "extras",
+    language = getMetadataLanguage(),
+    authoredQuery = false
   ): Promise<ProviderResult> {
     try {
-      const searchQuery = `${query} ${keywords.join(" OR ")}`;
+      const searchQuery = `${authoredQuery ? videoQueryTerms([query], language)[0] : query} ${videoQueryTerms(keywords, language).join(" OR ")}`;
       const response = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&maxResults=${PROVIDER_CONFIG.youtube.maxResults}&key=${PROVIDER_CONFIG.youtube.apiKey}`
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(searchQuery)}${language === "es" ? "&relevanceLanguage=es" : ""}&type=video&maxResults=${PROVIDER_CONFIG.youtube.maxResults}&key=${PROVIDER_CONFIG.youtube.apiKey}`
       );
 
       if (!response.ok) {
@@ -334,6 +341,7 @@ class ExtrasProviderImpl implements ExtrasProvider {
       const data = await response.json();
 
       if (!data.items || !Array.isArray(data.items)) {
+        if (language === "es") return this.searchYouTube(query, keywords, category, "en-US", authoredQuery);
         return {
           videos: [],
           hasMore: false,
@@ -345,6 +353,7 @@ class ExtrasProviderImpl implements ExtrasProvider {
         .filter((item: any) => this.isRelevantYouTubeVideo(item, category))
         .map((item: any) => this.mapYouTubeVideo(item, category));
 
+      if (language === "es" && filteredVideos.length === 0) return this.searchYouTube(query, keywords, category, "en-US", authoredQuery);
       return {
         videos: filteredVideos,
         hasMore: false,
@@ -394,7 +403,7 @@ class ExtrasProviderImpl implements ExtrasProvider {
         "promotional",
         "clip",
         "scene",
-        "exclusive",
+        "exclusive", "detrás de cámaras", "entrevista", "escena eliminada", "cómo se hizo", "reportaje", "tráiler",
         "cast",
         "director",
         "writer",
@@ -426,7 +435,7 @@ class ExtrasProviderImpl implements ExtrasProvider {
       return false;
     } else {
       // For bloopers, use existing keywords
-      return BLOOPERS_KEYWORDS.some((keyword) => title.includes(keyword));
+      return [...BLOOPERS_KEYWORDS, ...videoQueryTerms(BLOOPERS_KEYWORDS, "es")].some((keyword) => title.includes(keyword));
     }
   }
 
@@ -467,7 +476,7 @@ class ExtrasProviderImpl implements ExtrasProvider {
       );
 
       // Check video title relevance
-      const extrasKeywords = EXTRAS_KEYWORDS;
+      const extrasKeywords = [...EXTRAS_KEYWORDS, ...videoQueryTerms(EXTRAS_KEYWORDS, "es")];
       const hasRelevantTitle = extrasKeywords.some((keyword) =>
         videoTitle.includes(keyword)
       );
@@ -727,7 +736,9 @@ class ExtrasProviderImpl implements ExtrasProvider {
         const result = await this.searchYouTube(
           query,
           BLOOPERS_KEYWORDS,
-          "bloopers"
+          "bloopers",
+          getMetadataLanguage(),
+          true
         );
         if (result.kind === "success") {
           videos.push(...result.videos);
@@ -760,7 +771,9 @@ class ExtrasProviderImpl implements ExtrasProvider {
         const result = await this.searchYouTube(
           query,
           BLOOPERS_KEYWORDS,
-          "bloopers"
+          "bloopers",
+          getMetadataLanguage(),
+          true
         );
         if (result.kind === "success") {
           videos.push(...result.videos);
@@ -793,7 +806,9 @@ class ExtrasProviderImpl implements ExtrasProvider {
         const result = await this.searchYouTube(
           query,
           EXTRAS_KEYWORDS,
-          "extras"
+          "extras",
+          getMetadataLanguage(),
+          true
         );
         if (result.kind === "success") {
           videos.push(...result.videos);

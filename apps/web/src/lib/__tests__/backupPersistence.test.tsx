@@ -107,7 +107,7 @@ vi.mock("../seriesReminders", () => ({ cancelSeriesReminderSchedules: async (ids
 vi.mock("../notifications", () => ({
   notificationManager: { reloadAfterRestore: vi.fn() },
 }));
-vi.mock("../language", () => ({ languageManager: { reloadAfterRestore: vi.fn() } }));
+vi.mock("../language", () => ({ useLanguage: () => "en", t: (_key: string, params: { name: string }) => `Hello, ${params.name}`, languageManager: { getLanguage: () => "en", reloadAfterRestore: vi.fn() } }));
 vi.mock("../forYouRowsStorage", () => ({
   normalizeRows: (v: unknown) => (Array.isArray(v) ? v : null),
 }));
