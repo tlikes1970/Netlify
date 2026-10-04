@@ -283,7 +283,7 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
               id="extras-modal-title"
               className="text-xl font-semibold text-gray-900 dark:text-white break-words min-w-0"
             >
-              {showTitle} - {t("contentBehindTheScenes")}
+              {showTitle} - {t("contentExtras")}
             </h2>
             <button
               onClick={onClose}
@@ -319,7 +319,7 @@ export const ExtrasModal: React.FC<ExtrasModalProps> = ({
                   className="px-6 py-3 rounded-lg font-medium transition-colors"
                   style={{ backgroundColor: "var(--accent)", color: "white" }}
                 >
-                  {accountText("accessOpenSettings")}
+                  {accountText("accessUnlock")}
                 </button>
               </div>
             ) : loading ? (
