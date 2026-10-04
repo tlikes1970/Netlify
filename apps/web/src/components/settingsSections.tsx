@@ -1082,6 +1082,7 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
 }
 
 function AboutSection(_props: SettingsSectionProps) {
+  const translations = useTranslations();
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold" style={{ color: "var(--text)" }}>
@@ -1150,8 +1151,7 @@ function AboutSection(_props: SettingsSectionProps) {
           </p>
 
           <p className="text-xs italic" style={{ color: "var(--muted)" }}>
-            Data Attribution: This product uses the TMDB API but is not endorsed
-            or certified by TMDB.
+            {translations.legalAttribution}
           </p>
 
           <p>So we made this instead:</p>
@@ -1166,8 +1166,8 @@ function AboutSection(_props: SettingsSectionProps) {
             <li className="flex items-start gap-2">
               <span className="mt-0.5">•</span>
               <span>
-                <strong>Always free at the core.</strong> No paywalls for the
-                basics.
+                <strong>{translations.legalAccessHeading}</strong>{" "}
+                {translations.legalAccessCopy}
               </span>
             </li>
             <li className="flex items-start gap-2">
@@ -1188,7 +1188,7 @@ function AboutSection(_props: SettingsSectionProps) {
 
       <div className="space-y-4">
         <h4 className="text-lg font-semibold" style={{ color: "var(--text)" }}>
-          📜 Legal & Privacy
+          📜 {translations.legalHeading}
         </h4>
 
         <div
@@ -1200,13 +1200,14 @@ function AboutSection(_props: SettingsSectionProps) {
               href="https://flicklet.netlify.app/privacy.html"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:no-underline transition-all"
+              aria-label={translations.legalOpenPrivacy}
+              className="inline-flex items-center min-h-[44px] underline hover:no-underline transition-all"
               style={{ color: "var(--accent)" }}
             >
-              Privacy Policy
+              {translations.legalPrivacy}
             </a>
             {" - "}
-            Learn how we collect, use, and protect your data.
+            {translations.legalPrivacyDescription}
           </p>
         </div>
       </div>
