@@ -1,83 +1,107 @@
-/**
- * PWA Install Signal - Stable install state management
- * 
- * Prevents header jump by maintaining stable install state throughout the session.
- * State is determined once at boot and doesn't change mid-session.
- */
+/** One authoritative, session-local browser install-event lifecycle. */
+import { isCapacitorNative } from "../lib/capacitorEnv";
 
-let canInstall = false;
-let deferredEvt: any = null;
+export type InstallOutcome =
+  | "accepted"
+  | "dismissed"
+  | "unavailable"
+  | "failed";
+type InstallChoice = { outcome: "accepted" | "dismissed" };
+interface InstallEvent extends Event {
+  prompt(): Promise<InstallChoice | void>;
+  userChoice?: Promise<InstallChoice>;
+}
+
+let initialized = false;
+let installed = false;
+let prompting = false;
+let deferredEvent: InstallEvent | null = null;
+let available = false;
+const retiredEvents = new WeakSet<InstallEvent>();
 const listeners = new Set<() => void>();
 
-export function getCanInstall() {
-  return canInstall;
+function excluded(): boolean {
+  return (
+    installed ||
+    isCapacitorNative() ||
+    Boolean(window.matchMedia?.("(display-mode: standalone)").matches) ||
+    Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
+  );
 }
-
-export function onInstallChange(fn: () => void) {
-  listeners.add(fn);
-  return () => listeners.delete(fn);
-}
-
-function notify() {
-  listeners.forEach(fn => fn());
-}
-
-export function initInstallSignal() {
-  // Idempotent - only initialize once
-  if ((window as any).__installInit) return;
-  (window as any).__installInit = true;
-
-  window.addEventListener('beforeinstallprompt', (e: any) => {
-    e.preventDefault();
-    deferredEvt = e;
-    if (!canInstall) {
-      canInstall = true;
-      notify();
-    }
-  });
-
-  window.addEventListener('appinstalled', () => {
-    if (canInstall) {
-      canInstall = false;
-      deferredEvt = null;
-      notify();
-    }
-  });
-
-  // Optional: standalone mode detection at boot. Don't flip later.
-  const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches || (navigator as any).standalone;
-  if (standalone && canInstall) {
-    canInstall = false;
-    deferredEvt = null;
-    notify();
+function publish(): void {
+  const next = !excluded() && !prompting && deferredEvent !== null;
+  if (next !== available) {
+    available = next;
+    listeners.forEach((listener) => listener());
   }
 }
-
-export async function promptInstall(): Promise<boolean> {
-  if (!deferredEvt) return false;
-
-  const p = deferredEvt;
-  deferredEvt = null;
-
-  const res = await p.prompt();
-  canInstall = false;
-  notify();
-
-  return !!res;
+function clearEvent(): void {
+  if (deferredEvent) retiredEvents.add(deferredEvent);
+  deferredEvent = null;
+  publish();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export function getCanInstall(): boolean {
+  return available && !excluded();
+}
+export function onInstallChange(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+export function initInstallSignal(): void {
+  if (initialized) return;
+  initialized = true;
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    const incoming = event as InstallEvent;
+    if (excluded()) {
+      retiredEvents.add(incoming);
+      clearEvent();
+      return;
+    }
+    if (retiredEvents.has(incoming) || typeof incoming.prompt !== "function")
+      return;
+    if (deferredEvent && deferredEvent !== incoming)
+      retiredEvents.add(deferredEvent);
+    deferredEvent = incoming;
+    publish();
+  });
+  window.addEventListener("appinstalled", () => {
+    installed = true;
+    clearEvent();
+  });
+  const displayMode = window.matchMedia?.("(display-mode: standalone)");
+  displayMode?.addEventListener?.("change", () => {
+    if (excluded()) clearEvent();
+    else publish();
+  });
+  publish();
+}
+export async function promptInstall(): Promise<InstallOutcome> {
+  if (excluded()) {
+    clearEvent();
+    return "unavailable";
+  }
+  if (prompting || !deferredEvent) return "unavailable";
+  const event = deferredEvent;
+  retiredEvents.add(event);
+  deferredEvent = null;
+  prompting = true;
+  publish();
+  try {
+    const response = await event.prompt();
+    const userChoice = event.userChoice;
+    const choice = userChoice ? await userChoice : response;
+    if (choice?.outcome === "accepted") return "accepted";
+    if (choice?.outcome === "dismissed") return "dismissed";
+    return "failed";
+  } catch {
+    return "failed";
+  } finally {
+    prompting = false;
+    // Completion owns only the consumed event; a newer event stays retained.
+    if (excluded()) clearEvent();
+    else publish();
+  }
+}

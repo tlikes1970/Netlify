@@ -214,7 +214,7 @@ function InstallButtonSlot() {
     <button
       id="install-slot"
       data-role="install"
-      onClick={() => promptInstall()}
+      onClick={() => { void promptInstall(); }}
       style={style}
       className="rounded-full border border-gray-300 dark:border-gray-600 px-1.5 py-0.5 md:px-2 md:py-1 text-[10px] md:text-[11px] leading-none text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
       aria-label={coreText('coreInstallApp')}
