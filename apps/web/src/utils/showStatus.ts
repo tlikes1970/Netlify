@@ -1,3 +1,4 @@
+import { formatDate } from "../lib/localeFormatters";
 import { t as coreText } from "../lib/language";
 export type ShowStatus = 'Ended' | 'Returning Series' | 'In Production' | 'Canceled' | 'Planned';
 
@@ -62,7 +63,7 @@ export function formatLastAirDate(lastAirDate?: string): string {
   
   try {
     const date = new Date(lastAirDate);
-    return date.toLocaleDateString('en-US', { 
+    return formatDate(date, {
       year: 'numeric', 
       month: 'short', 
       day: 'numeric' 

@@ -1,3 +1,5 @@
+import { t, tPlural, useLanguage } from "@/lib/language";
+import { formatDate, formatDateTime } from "@/lib/localeFormatters";
 import { useState, useEffect } from 'react';
 import { notificationManager, NotificationLogEntry } from '../../lib/notifications';
 
@@ -7,6 +9,7 @@ interface NotificationCenterProps {
 }
 
 export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps) {
+  useLanguage();
   const [logEntries, setLogEntries] = useState<NotificationLogEntry[]>([]);
   const [filter, setFilter] = useState<'all' | 'sent' | 'failed' | 'read'>('all');
 
@@ -26,6 +29,7 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
     setLogEntries(notificationManager.getLog());
   };
 
+  const statusLabels = {"all": "episodesAll", "sent": "episodesSent", "failed": "episodesFailed", "read": "episodesRead", "delivered": "episodesDelivered"} as const;
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'sent':
@@ -56,6 +60,7 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
     }
   };
 
+  const methodLabels = {"push": "episodesPush", "email": "episodesEmail", "in-app": "episodesInApp"} as const;
   const getMethodIcon = (method: string) => {
     switch (method) {
       case 'in-app':
@@ -81,20 +86,22 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
       
       {/* Modal */}
       <div 
-        className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden"
+        role="dialog" aria-modal="true" aria-labelledby="notification-history-title"
+        className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90dvh] overflow-hidden flex flex-col"
         style={{ backgroundColor: 'var(--card)', color: 'var(--text)' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: 'var(--line)' }}>
           <div>
-            <h2 className="text-xl font-bold">📋 Notification History</h2>
+            <h2 id="notification-history-title" className="text-xl font-bold">📋 {t("episodesNotificationHistory")}</h2>
             <p className="text-sm" style={{ color: 'var(--muted)' }}>
-              Track all your episode notifications
+              {t("episodesTrackAllYourEpisodeNotifications")}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-2xl hover:opacity-70 transition-opacity"
+            aria-label={t("episodesClose")}
+            className="min-w-[44px] min-h-[44px] text-2xl hover:opacity-70 transition-opacity"
             style={{ color: 'var(--muted)' }}
           >
             ×
@@ -103,12 +110,12 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
 
         {/* Filters */}
         <div className="p-4 border-b" style={{ borderColor: 'var(--line)' }}>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {[
-              { key: 'all', label: 'All' },
-              { key: 'sent', label: 'Sent' },
-              { key: 'failed', label: 'Failed' },
-              { key: 'read', label: 'Read' },
+              { key: 'all', label: t("episodesAll") },
+              { key: 'sent', label: t("episodesSent") },
+              { key: 'failed', label: t("episodesFailed") },
+              { key: 'read', label: t("episodesRead") },
             ].map(filterOption => (
               <button
                 key={filterOption.key}
@@ -126,15 +133,15 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+        <div className="p-6 overflow-y-auto min-h-0 flex-1">
           {filteredEntries.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-4xl mb-4">📭</div>
-              <h3 className="text-lg font-semibold mb-2">No notifications yet</h3>
+              <h3 className="text-lg font-semibold mb-2">{t("episodesNoNotificationsYet")}</h3>
               <p className="text-sm" style={{ color: 'var(--muted)' }}>
                 {filter === 'all' 
-                  ? 'You haven\'t received any episode notifications yet.'
-                  : `No ${filter} notifications found.`
+                  ? t("episodesYouHavenTReceivedAnyEpisodeNotificationsYet")
+                  : t("episodesNoNotificationsMatchThisFilter")
                 }
               </p>
             </div>
@@ -151,13 +158,13 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
                     borderColor: 'var(--line)' 
                   }}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0 break-words">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
                         <span className="text-lg">{getMethodIcon(entry.method)}</span>
                         <h4 className="font-semibold">{entry.showName}</h4>
                         <span className={`text-sm ${getStatusColor(entry.status)}`}>
-                          {getStatusIcon(entry.status)} {entry.status}
+                          {getStatusIcon(entry.status)} {t(statusLabels[entry.status])}
                         </span>
                       </div>
                       
@@ -165,10 +172,10 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
                         {entry.episodeTitle}
                       </p>
                       
-                      <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--muted)' }}>
-                        <span>📅 Air Date: {new Date(entry.airDate).toLocaleDateString()}</span>
-                        <span>⏰ Sent: {new Date(entry.notificationTime).toLocaleString()}</span>
-                        <span>📱 Method: {entry.method}</span>
+                      <div className="flex flex-wrap items-center gap-4 text-xs" style={{ color: 'var(--muted)' }}>
+                        <span>📅 {t("episodesAirDate")} {formatDate(new Date(entry.airDate))}</span>
+                        <span>⏰ {t("episodesSent61")} {formatDateTime(new Date(entry.notificationTime), { second: "2-digit" })}</span>
+                        <span>📱 {t("episodesMethod")} {t(methodLabels[entry.method])}</span>
                       </div>
                     </div>
                     
@@ -182,7 +189,7 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
                           borderColor: 'var(--line)' 
                         }}
                       >
-                        Mark as Read
+                        {t("episodesMarkAsRead")}
                       </button>
                     )}
                   </div>
@@ -193,12 +200,13 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
         </div>
 
         {/* Footer */}
-        <div className="flex justify-between items-center p-6 border-t" style={{ borderColor: 'var(--line)' }}>
+        <div className="flex flex-wrap gap-2 justify-between items-center p-6 border-t" style={{ borderColor: 'var(--line)' }}>
           <div className="text-sm" style={{ color: 'var(--muted)' }}>
-            Showing {filteredEntries.length} of {logEntries.length} notifications
+            {tPlural({ one: "episodesShowingShownOfTotalNotification", other: "episodesShowingShownOfTotalNotifications" }, logEntries.length, { shown: filteredEntries.length, total: logEntries.length })}
           </div>
           <button
             onClick={onClose}
+            aria-label={t("episodesClose")}
             className="px-4 py-2 rounded border transition-colors"
             style={{ 
               backgroundColor: 'var(--btn)', 
@@ -206,7 +214,7 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
               borderColor: 'var(--line)' 
             }}
           >
-            Close
+            {t("episodesClose")}
           </button>
         </div>
       </div>

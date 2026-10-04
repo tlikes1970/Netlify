@@ -1,4 +1,5 @@
-import { getMetadataLanguage } from './language';
+import { mergeEpisodeText, needsEpisodeFallback } from "./episodeMetadata";
+import { getMetadataLanguage, t } from './language';
 import { metadataTitle, metadataText } from './metadataText';
 // TMDB calls use TMDB_PROXY_BASE from apiConfig (relative on web; absolute on Capacitor).
 
@@ -1038,17 +1039,22 @@ export interface TVShowDetails {
 /**
  * Fetch TV show details including all seasons and episodes
  */
-export async function getTVShowDetails(tvId: number): Promise<TVShowDetails> {
-  const data = await get(`/tv/${tvId}`);
+export async function getTVShowDetails(tvId: number, language = getMetadataLanguage(), existing?: TVShowDetails): Promise<TVShowDetails> {
+  const localized = await get(`/tv/${tvId}`, { language });
+  const fallback = language !== "en-US" && !localized.name?.trim() && !existing?.name?.trim()
+    ? await get(`/tv/${tvId}`, { language: "en-US" }).catch(() => undefined) : undefined;
+  const data = mergeEpisodeText(localized, existing, fallback);
 
   // Fetch detailed season data for each season
   const seasonsWithEpisodes: Season[] = [];
 
   for (const season of data.seasons || []) {
     try {
-      const seasonData = await get(
-        `/tv/${tvId}/season/${season.season_number}`
-      );
+      const localizedSeason = await get(`/tv/${tvId}/season/${season.season_number}`, { language });
+      const previous = existing?.seasons.find(item => item.season_number === season.season_number);
+      const english = language !== "en-US" && needsEpisodeFallback(mergeEpisodeText(localizedSeason, previous))
+        ? await get(`/tv/${tvId}/season/${season.season_number}`, { language: "en-US" }).catch(() => undefined) : undefined;
+      const seasonData = mergeEpisodeText(localizedSeason, previous, english);
       seasonsWithEpisodes.push({
         id: seasonData.id,
         season_number: seasonData.season_number,
@@ -1059,7 +1065,7 @@ export async function getTVShowDetails(tvId: number): Promise<TVShowDetails> {
         poster_path: seasonData.poster_path,
         episodes: (seasonData.episodes || []).map((ep: any) => ({
           id: ep.id,
-          name: ep.name,
+          name: ep.name || t("episodesNotificationBodyWithoutTitle", { season: ep.season_number, episode: ep.episode_number }),
           episode_number: ep.episode_number,
           season_number: ep.season_number,
           air_date: ep.air_date,
@@ -1098,13 +1104,17 @@ export async function getTVShowDetails(tvId: number): Promise<TVShowDetails> {
  */
 export async function getSeasonEpisodes(
   tvId: number,
-  seasonNumber: number
+  seasonNumber: number,
+  language = getMetadataLanguage()
 ): Promise<Episode[]> {
-  const data = await get(`/tv/${tvId}/season/${seasonNumber}`);
+  const localized = await get(`/tv/${tvId}/season/${seasonNumber}`, { language });
+  const english = language !== "en-US" && needsEpisodeFallback(localized)
+    ? await get(`/tv/${tvId}/season/${seasonNumber}`, { language: "en-US" }).catch(() => undefined) : undefined;
+  const data = mergeEpisodeText(localized, undefined, english);
 
   return (data.episodes || []).map((ep: any) => ({
     id: ep.id,
-    name: ep.name,
+    name: ep.name || t("episodesNotificationBodyWithoutTitle", { season: ep.season_number, episode: ep.episode_number }),
     episode_number: ep.episode_number,
     season_number: ep.season_number,
     air_date: ep.air_date,

@@ -1,9 +1,11 @@
+import { getMetadataLanguage, t } from "../lib/language";
+import { mergeEpisodeText, needsEpisodeFallback } from "../lib/episodeMetadata";
 import { TMDB_PROXY_BASE } from '../lib/apiConfig';
 import type { Episode } from '../lib/tmdb';
 
-export async function fetchNextAirDate(tvId: number): Promise<string | null> {
+export async function fetchNextAirDate(tvId: number, language = getMetadataLanguage()): Promise<string | null> {
   const TMDB_PROXY_URL = TMDB_PROXY_BASE;
-  const url = `${TMDB_PROXY_URL}?path=tv/${tvId}&language=en-US`;
+  const url = `${TMDB_PROXY_URL}?path=tv/${tvId}&language=${encodeURIComponent(language)}`;
   const res = await fetch(url);
   if (!res.ok) return null;
   const json = await res.json();
@@ -19,9 +21,9 @@ export async function fetchNextAirDate(tvId: number): Promise<string | null> {
   return next || null;
 }
 
-export async function fetchShowStatus(tvId: number): Promise<{status: string, lastAirDate: string | null} | null> {
+export async function fetchShowStatus(tvId: number, language = getMetadataLanguage()): Promise<{status: string, lastAirDate: string | null} | null> {
   const TMDB_PROXY_URL = TMDB_PROXY_BASE;
-  const url = `${TMDB_PROXY_URL}?path=tv/${tvId}&language=en-US`;
+  const url = `${TMDB_PROXY_URL}?path=tv/${tvId}&language=${encodeURIComponent(language)}`;
   const res = await fetch(url);
   if (!res.ok) return null;
   const json = await res.json();
@@ -32,9 +34,9 @@ export async function fetchShowStatus(tvId: number): Promise<{status: string, la
   };
 }
 
-export async function fetchCurrentEpisodeInfo(tvId: number): Promise<{season: number, episode: number} | null> {
+export async function fetchCurrentEpisodeInfo(tvId: number, language = getMetadataLanguage()): Promise<{season: number, episode: number} | null> {
   const TMDB_PROXY_URL = TMDB_PROXY_BASE;
-  const url = `${TMDB_PROXY_URL}?path=tv/${tvId}&language=en-US`;
+  const url = `${TMDB_PROXY_URL}?path=tv/${tvId}&language=${encodeURIComponent(language)}`;
   const res = await fetch(url);
   if (!res.ok) return null;
   const json = await res.json();
@@ -50,8 +52,8 @@ export async function fetchCurrentEpisodeInfo(tvId: number): Promise<{season: nu
   return null;
 }
 
-export async function fetchRelevantSeasonEpisodes(tvId: number): Promise<Episode[]> {
-  const showResponse = await fetch(`${TMDB_PROXY_BASE}?path=tv/${tvId}&language=en-US`);
+export async function fetchRelevantSeasonEpisodes(tvId: number, language = getMetadataLanguage()): Promise<Episode[]> {
+  const showResponse = await fetch(`${TMDB_PROXY_BASE}?path=tv/${tvId}&language=${encodeURIComponent(language)}`);
   if (!showResponse.ok) throw new Error(`Unable to load TV schedule (${showResponse.status})`);
   const show = await showResponse.json();
   const futureSeason = (show?.seasons || [])
@@ -69,10 +71,18 @@ export async function fetchRelevantSeasonEpisodes(tvId: number): Promise<Episode
   console.info("[SeriesReminder] Selected season", { tvId, seasonNumber });
   if (!Number.isInteger(seasonNumber) || seasonNumber < 1) return [];
   const seasonResponse = await fetch(
-    `${TMDB_PROXY_BASE}?path=tv/${tvId}/season/${seasonNumber}&language=en-US`,
+    `${TMDB_PROXY_BASE}?path=tv/${tvId}/season/${seasonNumber}&language=${encodeURIComponent(language)}`,
   );
   if (!seasonResponse.ok) throw new Error(`Unable to load season schedule (${seasonResponse.status})`);
-  const season = await seasonResponse.json();
+  const localized = await seasonResponse.json();
+  let english;
+  if (language !== "en-US" && needsEpisodeFallback(localized)) {
+    try {
+      const response = await fetch(`${TMDB_PROXY_BASE}?path=tv/${tvId}/season/${seasonNumber}&language=en-US`);
+      if (response.ok) english = await response.json();
+    } catch { /* Keep useful selected-language metadata if fallback is unavailable. */ }
+  }
+  const season = mergeEpisodeText(localized, undefined, english);
   console.info("[SeriesReminder] Season episode dates", {
     tvId,
     seasonNumber,
@@ -83,7 +93,7 @@ export async function fetchRelevantSeasonEpisodes(tvId: number): Promise<Episode
   });
   return (season.episodes || []).map((episode: any) => ({
     id: episode.id,
-    name: episode.name || "",
+    name: episode.name || t("episodesNotificationBodyWithoutTitle", { season: episode.season_number ?? seasonNumber, episode: episode.episode_number }),
     episode_number: episode.episode_number,
     season_number: episode.season_number ?? seasonNumber,
     air_date: episode.air_date || "",

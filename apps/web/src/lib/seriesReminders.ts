@@ -1,3 +1,4 @@
+import { t } from "./language";
 import { isRestoring, trackedWrite } from "./restoreBarrier";
 import { Capacitor } from "@capacitor/core";
 import { LocalNotifications } from "@capacitor/local-notifications";
@@ -70,8 +71,8 @@ async function ensurePermission(): Promise<boolean> {
 async function ensureChannel(): Promise<void> {
   await LocalNotifications.createChannel({
     id: CHANNEL_ID,
-    name: "Episode reminders",
-    description: "Notifications when new TV episodes air",
+    name: t("episodesEpisodeReminders"),
+    description: t("episodesNotificationsWhenNewTVEpisodesAir"),
     importance: 4,
     visibility: 1,
   });
@@ -137,10 +138,10 @@ async function reconcileOne(reminder: SeriesReminder): Promise<void> {
   if (changes.add.length > 0) {
     const notifications = changes.add.map((episode) => ({
       id: episode.id,
-      title: `${reminder.title} airs today`,
+      title: t("episodesTitleAirsToday", { title: reminder.title }),
       body: episode.episodeTitle
-        ? `S${episode.seasonNumber} E${episode.episodeNumber} · ${episode.episodeTitle}`
-        : `S${episode.seasonNumber} E${episode.episodeNumber}`,
+        ? t("episodesNotificationBody", { season: episode.seasonNumber, episode: episode.episodeNumber, title: episode.episodeTitle })
+        : t("episodesNotificationBodyWithoutTitle", { season: episode.seasonNumber, episode: episode.episodeNumber }),
       schedule: { at: episode.scheduledAt },
       channelId: CHANNEL_ID,
       extra: {

@@ -1,3 +1,4 @@
+import { t, tPlural } from "./language";
 import { isRestoring } from "./restoreBarrier";
 import { getEntitlementsSync } from './entitlements';
 import { guardMutation } from './readOnlyGuard';
@@ -422,8 +423,8 @@ class NotificationManager {
 
   getAvailableTimingOptions(): Array<{ value: string; label: string; proOnly?: boolean }> {
     const options: Array<{ value: string; label: string; proOnly?: boolean }> = [
-      { value: '24-hours-before', label: '24 hours before' },
-      { value: '7-days-before', label: '7 days before' },
+      { value: '24-hours-before', label: t("episodesHoursBefore") },
+      { value: '7-days-before', label: t("episodesDaysBefore") },
     ];
 
     if (this.isProUser()) {
@@ -431,7 +432,7 @@ class NotificationManager {
       for (let hours = 1; hours <= 24; hours++) {
         options.push({
           value: hours.toString(),
-          label: `${hours} hour${hours !== 1 ? 's' : ''} before`,
+          label: tPlural({ one: "episodesCountHourBefore", other: "episodesCountHoursBefore" }, hours),
           proOnly: true,
         });
       }

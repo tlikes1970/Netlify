@@ -1,8 +1,9 @@
+import type { EpisodeLanguageStrings } from "../i18n/episodeTranslations";
 import type { AccountLanguageStrings } from "../i18n/accountTranslations";
 import type { CoreLanguageStrings } from "../i18n/coreTranslations";
 export type Language = "en" | "es";
 
-export interface LanguageStrings extends CoreLanguageStrings, AccountLanguageStrings {
+export interface LanguageStrings extends CoreLanguageStrings, AccountLanguageStrings, EpisodeLanguageStrings {
   sharingRetry: string;
   sharingTitle: string;
   sharingDescription: string;

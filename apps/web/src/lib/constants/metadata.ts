@@ -1,3 +1,5 @@
+import { t } from "../language";
+import { formatDate } from "../localeFormatters";
 // Constants and helpers for "Returning" smart view
 
 export const RETURNING_STATUS = 'Returning Series';
@@ -109,11 +111,11 @@ export function isWithinWindow(d: Date | null | undefined, days: number = RETURN
 export function getDisplayAirDate(show: PossibleShow | null | undefined): string {
   const d = getNextAirDate(show);
   const validated = getValidatedNextAirDate(d);
-  if (!validated) return 'TBA';
+  if (!validated) return t("episodesTBA");
   try {
-    return validated.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    return formatDate(validated, { year: 'numeric', month: 'short', day: 'numeric' });
   } catch {
-    return 'TBA';
+    return t("episodesTBA");
   }
 }
 
@@ -122,18 +124,18 @@ export function getDisplayAirDate(show: PossibleShow | null | undefined): string
  */
 export function formatUpNextDate(date: Date | null | undefined): string {
   const validated = getValidatedNextAirDate(date);
-  if (!validated) return 'TBA';
+  if (!validated) return t("episodesTBA");
   try {
     // Parse as UTC to avoid timezone issues
     const isoString = validated.toISOString().split('T')[0];
     const utcDate = new Date(isoString + 'T00:00:00Z');
-    return utcDate.toLocaleDateString('en-US', { 
+    return formatDate(utcDate, { year: undefined,
       month: 'short', 
       day: 'numeric',
       timeZone: 'UTC'
     });
   } catch {
-    return 'TBA';
+    return t("episodesTBA");
   }
 }
 
@@ -142,7 +144,7 @@ export function formatUpNextDate(date: Date | null | undefined): string {
  */
 export function getHumanizedAirDate(date: Date | null | undefined): string {
   const validated = getValidatedNextAirDate(date);
-  if (!validated) return 'TBA';
+  if (!validated) return t("episodesTBA");
 
   const today = new Date();
   const todayUtc = Date.UTC(
@@ -152,9 +154,9 @@ export function getHumanizedAirDate(date: Date | null | undefined): string {
   );
   const daysDiff = Math.round((validated.getTime() - todayUtc) / (24 * 60 * 60 * 1000));
 
-  if (daysDiff === 0) return 'Today';
-  if (daysDiff === 1) return 'Tomorrow';
-  if (daysDiff <= RETURNING_NEAR_WINDOW_DAYS) return `In ${daysDiff} days`;
+  if (daysDiff === 0) return t("episodesToday");
+  if (daysDiff === 1) return t("episodesTomorrow");
+  if (daysDiff <= RETURNING_NEAR_WINDOW_DAYS) return t("episodesInCountDays", { count: daysDiff });
 
   return formatUpNextDate(validated);
 }

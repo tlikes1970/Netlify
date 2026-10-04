@@ -1,4 +1,5 @@
-import { t as accountText, useLanguage as useAccountLanguage } from "@/lib/language";
+import { t, tPlural } from "@/lib/language";
+import { t as accountText, useLanguage as useAccountLanguage } from "@/lib/language";
 import { useState, useEffect } from 'react';
 import { notificationManager } from '../../lib/notifications';
 import { useEntitlements } from '../../hooks/useEntitlements';
@@ -9,8 +10,8 @@ interface NotificationSettingsProps {
 }
 
 export function NotificationSettings({ isOpen, onClose }: NotificationSettingsProps) {
-  useAccountLanguage();
-  if (!isOpen) return null;
+  useAccountLanguage();
+
   const [settings, setSettings] = useState(notificationManager.getSettings());
   const [pushPermission, setPushPermission] = useState<NotificationPermission>('default');
   const { hasFullAccess } = useEntitlements();
@@ -42,6 +43,7 @@ export function NotificationSettings({ isOpen, onClose }: NotificationSettingsPr
 
   const timingOptions = notificationManager.getAvailableTimingOptions();
 
+  if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-modal flex items-center justify-center">
       <div 
@@ -50,29 +52,31 @@ export function NotificationSettings({ isOpen, onClose }: NotificationSettingsPr
       />
       
       <div 
-        className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden"
+        role="dialog" aria-modal="true" aria-labelledby="reminder-settings-title"
+        className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90dvh] overflow-hidden flex flex-col"
         style={{ backgroundColor: 'var(--card)', color: 'var(--text)' }}
       >
         <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: 'var(--line)' }}>
           <div>
-            <h2 className="text-xl font-bold">🔔 Reminder Settings</h2>
+            <h2 id="reminder-settings-title" className="text-xl font-bold">🔔 {t("episodesReminderSettings")}</h2>
             <p className="text-sm" style={{ color: 'var(--muted)' }}>
-              Watch reminders and release alerts on this device
+              {t("episodesWatchRemindersAndReleaseAlertsOnThisDevice")}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-2xl hover:opacity-70 transition-opacity"
+            aria-label={t("episodesClose")}
+            className="min-w-[44px] min-h-[44px] text-2xl hover:opacity-70 transition-opacity"
             style={{ color: 'var(--muted)' }}
           >
             ×
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)] space-y-6">
+        <div className="p-6 overflow-y-auto min-h-0 flex-1 space-y-6">
           
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold">Episode Reminders</h3>
+            <h3 className="text-lg font-semibold">{t("episodesEpisodeReminders26")}</h3>
             <label className="flex items-center space-x-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -80,17 +84,17 @@ export function NotificationSettings({ isOpen, onClose }: NotificationSettingsPr
                 onChange={(e) => handleSettingChange('globalEnabled', e.target.checked)}
                 className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
               />
-              <span>Enable watch reminders</span>
+              <span>{t("episodesEnableWatchReminders")}</span>
             </label>
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold">Reminder Timing</h3>
+            <h3 className="text-lg font-semibold">{t("episodesReminderTiming")}</h3>
             
             {isProUser ? (
               <div className="space-y-2">
-                <label className="block text-sm font-medium">Hours before episode airs:</label>
-                <select
+                <label htmlFor="reminder-timing" className="block text-sm font-medium">{t("episodesHoursBeforeEpisodeAirs")}</label>
+                <select id="reminder-timing"
                   value={settings.proTierTiming}
                   onChange={(e) => handleSettingChange('proTierTiming', parseInt(e.target.value))}
                   className="w-full p-2 border rounded"
@@ -98,17 +102,17 @@ export function NotificationSettings({ isOpen, onClose }: NotificationSettingsPr
                 >
                   {Array.from({ length: 24 }, (_, i) => i + 1).map(hours => (
                     <option key={hours} value={hours}>
-                      {hours} hour{hours !== 1 ? 's' : ''} before
+                      {tPlural({ one: "episodesCountHourBefore", other: "episodesCountHoursBefore" }, hours)}
                     </option>
                   ))}
                 </select>
                 <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                  Choose how far ahead episode alerts fire on your device
+                  {t("episodesChooseHowFarAheadEpisodeAlertsFireOnYourDevice")}
                 </p>
               </div>
             ) : (
               <div className="space-y-2">
-                <label className="block text-sm font-medium">When to remind you:</label>
+                <label className="block text-sm font-medium">{t("episodesWhenToRemindYou")}</label>
                 <div className="space-y-2">
                   {timingOptions.filter(opt => !opt.proOnly).map(option => (
                     <label key={option.value} className="flex items-center space-x-3 cursor-pointer">
@@ -125,14 +129,14 @@ export function NotificationSettings({ isOpen, onClose }: NotificationSettingsPr
                   ))}
                 </div>
                 <p className="text-xs mt-2" style={{ color: 'var(--muted)' }}>
-                  {accountText("accessReminderTrial")}
+                  {accountText("accessReminderTrial")}
                 </p>
               </div>
             )}
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold">Device Notifications</h3>
+            <h3 className="text-lg font-semibold">{t("episodesDeviceNotifications")}</h3>
             
             <label className="flex items-center space-x-3 cursor-pointer">
               <input
@@ -142,9 +146,9 @@ export function NotificationSettings({ isOpen, onClose }: NotificationSettingsPr
                 className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
               />
               <div>
-                <span>In-app alerts</span>
+                <span>{t("episodesInAppAlerts")}</span>
                 <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                  Show reminders while you are using Flicklet
+                  {t("episodesShowRemindersWhileYouAreUsingFlicklet")}
                 </p>
               </div>
             </label>
@@ -158,21 +162,21 @@ export function NotificationSettings({ isOpen, onClose }: NotificationSettingsPr
                 className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
               />
               <div className="flex-1">
-                <span>Push notifications</span>
+                <span>{t("episodesPushNotifications")}</span>
                 <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                  Browser or device alerts when the app is in the background
+                  {t("episodesBrowserOrDeviceAlertsWhenTheAppIsInTheBackground")}
                 </p>
                 {pushPermission === 'default' && (
                   <button
                     onClick={requestPushPermission}
                     className="text-xs text-blue-500 hover:underline mt-1"
                   >
-                    Enable device notifications
+                    {t("episodesEnableDeviceNotifications")}
                   </button>
                 )}
                 {pushPermission === 'denied' && (
                   <p className="text-xs text-red-500 mt-1">
-                    Notifications are blocked. Turn them on in your browser or device settings.
+                    {t("episodesNotificationsAreBlockedTurnThemOnInYourBrowserOrDeviceSettings")}
                   </p>
                 )}
               </div>
@@ -180,9 +184,9 @@ export function NotificationSettings({ isOpen, onClose }: NotificationSettingsPr
           </div>
 
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold">Per-Show Reminders</h3>
+            <h3 className="text-lg font-semibold">{t("episodesPerShowReminders")}</h3>
             <p className="text-sm" style={{ color: 'var(--muted)' }}>
-              Open Watch Reminders from any show card to customize alerts for that title.
+              {t("episodesOpenWatchRemindersFromAnyShowCardToCustomizeAlertsForThatTitle")}
             </p>
           </div>
         </div>
@@ -197,7 +201,7 @@ export function NotificationSettings({ isOpen, onClose }: NotificationSettingsPr
               borderColor: 'var(--line)' 
             }}
           >
-            Done
+            {t("episodesDone")}
           </button>
         </div>
       </div>

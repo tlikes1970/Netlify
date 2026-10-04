@@ -16,7 +16,8 @@ vi.mock("@/components/cards/UpNextCard", () => ({
   ),
 }));
 
-vi.mock("@/lib/language", () => ({
+vi.mock("@/lib/language", async (importOriginal) => ({
+  ...await importOriginal<typeof import("@/lib/language")>(),
   useTranslations: () => ({
     upNext: "Up Next",
     addTvShowsToWatchingList: "Add TV shows to Watching.",

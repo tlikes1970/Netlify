@@ -1,3 +1,4 @@
+import { t, useLanguage, getMetadataLanguage } from "@/lib/language";
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { getTVShowDetails, type Episode, type Season } from '@/lib/tmdb';
@@ -23,7 +24,10 @@ interface EpisodeTrackingModalProps {
 export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingModalProps) {
   const [seasons, setSeasons] = useState<(Season & { episodes: EpisodeWithWatched[] })[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<boolean>(false);
+  const language = useLanguage();
+  const requestVersion = useRef(0);
+  const existingDetails = useRef<Awaited<ReturnType<typeof getTVShowDetails>>>();
   const modalRef = useRef<HTMLDivElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   
@@ -35,7 +39,8 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
     if (isOpen && show.id) {
       loadEpisodeData();
     }
-  }, [isOpen, show.id]);
+    return () => { requestVersion.current += 1; };
+  }, [isOpen, show.id, language]);
 
   // Handle scroll lock when modal opens/closes
   useEffect(() => {
@@ -52,14 +57,18 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
 
   const loadEpisodeData = async () => {
     setLoading(true);
-    setError(null);
+    setError(false);
+    const request = ++requestVersion.current;
     
     try {
       // Get saved episode progress from localStorage
-      const savedProgress = getSavedEpisodeProgress(show.id);
+      // Progress is read after the response so current user choices are retained.
       
       // Fetch real episode data from TMDB
-      const tvShowDetails = await getTVShowDetails(show.id);
+      const tvShowDetails = await getTVShowDetails(show.id, getMetadataLanguage(), existingDetails.current?.id === show.id ? existingDetails.current : undefined);
+      if (request !== requestVersion.current) return;
+      existingDetails.current = tvShowDetails;
+      const savedProgress = getSavedEpisodeProgress(show.id);
       
       // Map TMDB data to our format with watched state
       const seasonsWithWatchedState = tvShowDetails.seasons.map(season => ({
@@ -87,10 +96,10 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
       
       setSeasons(seasonsWithWatchedState);
     } catch (err) {
-      setError('Failed to load episode data from TMDB');
+      if (request === requestVersion.current) setError(true);
       console.error('Episode loading error:', err);
     } finally {
-      setLoading(false);
+      if (request === requestVersion.current) setLoading(false);
     }
   };
 
@@ -203,20 +212,22 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
       {/* Modal */}
       <div 
         ref={modalRef}
-        className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden"
+        role="dialog" aria-modal="true" aria-labelledby="episode-progress-title"
+        className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90dvh] overflow-hidden flex flex-col"
         style={{ backgroundColor: 'var(--card)', color: 'var(--text)' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: 'var(--line)' }}>
+        <div className="flex shrink-0 items-center justify-between gap-2 p-6 border-b" style={{ borderColor: 'var(--line)' }}>
           <div>
-            <h2 className="text-xl font-bold">{show.name}</h2>
+            <h2 id="episode-progress-title" className="text-xl font-bold break-words">{existingDetails.current?.id === show.id ? existingDetails.current.name : show.name}</h2>
             <p className="text-sm" style={{ color: 'var(--muted)' }}>
-              Episode Progress: {getTotalWatchedCount()}/{getTotalEpisodeCount()} watched
+              {t("episodesEpisodeProgressWatchedTotalWatched", { watched: getTotalWatchedCount(), total: getTotalEpisodeCount() })}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="text-2xl hover:opacity-70 transition-opacity"
+            aria-label={t("episodesClose")}
+            className="min-w-[44px] min-h-[44px] text-2xl hover:opacity-70 transition-opacity"
             style={{ color: 'var(--muted)' }}
           >
             ×
@@ -225,7 +236,7 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
 
         {/* Content */}
         <div 
-          className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]"
+          className="p-6 overflow-y-auto min-h-0 flex-1"
           style={{ 
             overscrollBehavior: 'contain',
             touchAction: 'pan-y'
@@ -233,16 +244,16 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
         >
           {loading ? (
             <div className="text-center py-8">
-              <div className="text-lg" style={{ color: 'var(--muted)' }}>Loading episodes...</div>
+              <div className="text-lg" style={{ color: 'var(--muted)' }}>{t("episodesLoadingEpisodes")}</div>
             </div>
           ) : error ? (
             <div className="text-center py-8">
-              <div className="text-lg text-red-500">{error}</div>
+              <div className="text-lg text-red-500">{t("episodesFailedToLoadEpisodeDataFromTMDB")}</div>
               <button 
                 onClick={loadEpisodeData}
                 className="mt-4 px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600"
               >
-                Retry
+                {t("episodesRetry")}
               </button>
             </div>
           ) : (
@@ -258,9 +269,9 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
                       {/* Season Header */}
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
-                          <h3 className="text-lg font-semibold">Season {season.season_number}</h3>
+                          <h3 className="text-lg font-semibold">{season.name || t("episodesSeasonNumber", { number: season.season_number })}</h3>
                           <span className="text-sm" style={{ color: 'var(--muted)' }}>
-                            ({watchedCount}/{season.episodes.length} watched)
+                            ({t("episodesWatchedTotalWatched", { watched: watchedCount, total: season.episodes.length })})
                           </span>
                         </div>
                         <button
@@ -273,7 +284,7 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
                               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                           }`}
                         >
-                          {allWatched ? 'All Watched' : someWatched ? 'Mark All' : 'Mark All'}
+                          {allWatched ? t("episodesAllWatched") : t("episodesMarkAll")}
                         </button>
                       </div>
 
@@ -310,7 +321,7 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
                 {seasons.length === 0 && !loading && !error && (
                   <div className="text-center py-8">
                     <div className="text-lg" style={{ color: 'var(--muted)' }}>
-                      No episode data available for this show.
+                      {t("episodesNoEpisodeDataAvailableForThisShow")}
                     </div>
                   </div>
                 )}
@@ -330,7 +341,7 @@ export function EpisodeTrackingModal({ isOpen, onClose, show }: EpisodeTrackingM
               borderColor: 'var(--line)' 
             }}
           >
-            Done
+            {t("episodesDone")}
           </button>
         </div>
       </div>

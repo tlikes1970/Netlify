@@ -1,3 +1,4 @@
+import { t } from "../../lib/language";
 import { useMemo } from "react";
 
 import UpNextCard from "../cards/UpNextCard";
@@ -50,10 +51,10 @@ export default function HomeUpNextRail() {
         <div className="text-sm text-neutral-400">
           <p>
             {resolveFlickletLine("empty.upnext", settings.personalityLevel) ||
-              "No upcoming shows on the radar."}
+              t("episodesNoUpcomingShowsOnTheRadar")}
           </p>
 
-          <p className="mt-1">Add TV shows to Currently Watching or Watched to follow their release schedule.</p>
+          <p className="mt-1">{t("episodesAddTVShowsToCurrentlyWatchingOrWatchedToFollowTheirReleaseSchedule")}</p>
         </div>
       )}
     </div>

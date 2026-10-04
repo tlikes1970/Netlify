@@ -1,3 +1,4 @@
+import { t, useLanguage } from "@/lib/language";
 import { TitlePoster } from './TitlePoster';
 import { useState, useEffect } from 'react';
 import type { MediaItem } from './card.types';
@@ -18,6 +19,7 @@ export type UpNextCardProps = {
  * - Matches the design mockup exactly
  */
 export default function UpNextCard({ item }: UpNextCardProps) {
+  useLanguage();
   const { title, year, nextAirDate, mediaType, id, showStatus, lastAirDate } = item;
   const [episodeInfo, setEpisodeInfo] = useState<string | null>(null);
 
@@ -56,9 +58,9 @@ export default function UpNextCard({ item }: UpNextCardProps) {
   const getStatusMessage = () => {
     if (isCompleted) {
       if (showStatus === 'Ended') {
-        return `Series Complete`;
+        return t("episodesSeriesComplete");
       } else if (showStatus === 'Canceled') {
-        return `Series Cancelled`;
+        return t("episodesSeriesCancelled");
       }
     }
     
@@ -67,10 +69,10 @@ export default function UpNextCard({ item }: UpNextCardProps) {
       const humanized = getHumanizedAirDate(rawDate);
       if (airStatus === 'soon') {
         // For soon dates, use humanized format (Today, Tomorrow, In X days)
-        return `Up Next: ${humanized}`;
+        return t("episodesUpNextDate", { date: humanized });
       } else {
         // For future dates, use formatted date (Jan 14)
-        return `Up Next: ${formatUpNextDate(rawDate)}`;
+        return t("episodesUpNextDate", { date: formatUpNextDate(rawDate) });
       }
     }
     
@@ -78,17 +80,17 @@ export default function UpNextCard({ item }: UpNextCardProps) {
     if (showStatus) {
       switch (showStatus) {
         case 'Returning Series':
-          return 'Returning Soon';
-        case 'In Production':
-          return 'In Production';
-        case 'Planned':
-          return 'Planned';
+          return t("episodesReturningSoon");
+        case t("episodesInProduction"):
+          return t("episodesInProduction");
+        case t("episodesPlanned"):
+          return t("episodesPlanned");
         default:
-          return 'Coming Soon';
+          return t("episodesComingSoon");
       }
     }
     
-    return 'Coming Soon';
+    return t("episodesComingSoon");
   };
 
   const getStatusColor = () => {
@@ -101,9 +103,9 @@ export default function UpNextCard({ item }: UpNextCardProps) {
       switch (showStatus) {
         case 'Returning Series':
           return '#16a34a'; // green - same as badge
-        case 'In Production':
+        case t("episodesInProduction"):
           return '#ea580c'; // orange - same as badge
-        case 'Planned':
+        case t("episodesPlanned"):
           return '#7c3aed'; // violet - same as badge
         default:
           return 'var(--accent)';
@@ -155,7 +157,7 @@ export default function UpNextCard({ item }: UpNextCardProps) {
             className="text-xs mb-1" 
             style={{ color: 'var(--muted)' }}
           >
-            {year || 'TBA'}{episodeInfo ? ` • ${episodeInfo}` : ''}
+            {year || t("episodesTBA")}{episodeInfo ? ` • ${episodeInfo}` : ''}
           </div>
 
           {/* Status Message */}
@@ -172,7 +174,7 @@ export default function UpNextCard({ item }: UpNextCardProps) {
               className="text-xs mt-1" 
               style={{ color: 'var(--muted)' }}
             >
-              Last aired: {formatLastAirDate(lastAirDate)}
+              {t("episodesLastAired")} {formatLastAirDate(lastAirDate)}
             </div>
           )}
         </div>
