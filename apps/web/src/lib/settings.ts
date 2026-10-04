@@ -212,7 +212,7 @@ export class SettingsManager {
   private settings: Settings;
   private subscribers: Set<() => void> = new Set();
   private syncTimeout: ReturnType<typeof setTimeout> | null = null;
-  private isSyncing = false;
+  private pendingSync: { uid: string; settings: Settings } | null = null;
   private syncInFlight: Promise<void> | null = null;
 
   constructor() {
@@ -252,56 +252,51 @@ export class SettingsManager {
    * Debounced to avoid excessive writes
    */
   private syncSettingsToFirebase(): void {
-    // Clear existing timeout
-    if (this.syncTimeout) {
-      clearTimeout(this.syncTimeout);
+    if (this.syncTimeout) clearTimeout(this.syncTimeout);
+    this.syncTimeout = null;
+    const user = authManager.getCurrentUser();
+    if (!user || isRestoring()) {
+      this.pendingSync = null;
+      return;
     }
+    // Freeze each save so an active write cannot observe later in-memory mutations.
+    this.pendingSync = { uid: user.uid, settings: structuredClone(this.settings) };
+    if (this.syncInFlight) return; // The active drain will consume the latest save.
+    this.syncTimeout = setTimeout(() => {
+      this.syncTimeout = null;
+      this.syncInFlight = this.drainSettingsWrites().finally(() => {
+        this.syncInFlight = null;
+        if (this.pendingSync) this.syncSettingsToFirebase();
+      });
+    }, 1000);
+  }
 
-    // Debounce sync calls (1 second delay)
-    this.syncTimeout = setTimeout(async () => {
-      if (this.isSyncing) {
-        return; // Skip if sync already in progress
-      }
-
+  private async drainSettingsWrites(): Promise<void> {
+    while (this.pendingSync) {
+      const pending = this.pendingSync;
+      this.pendingSync = null;
+      if (isRestoring() || authManager.getCurrentUser()?.uid !== pending.uid) return;
+      const snapshot = pending.settings;
+      const firebaseSettings: FirebaseUserSettings = {
+        displayName: snapshot.displayName,
+        personalityLevel: snapshot.personalityLevel,
+        theme: snapshot.layout.theme,
+        notifications: snapshot.notifications,
+        layout: snapshot.layout,
+        pro: snapshot.pro,
+        fullSettings: snapshot,
+      };
       try {
-        // Get current user
-        const currentUser = authManager.getCurrentUser();
-        if (!currentUser) {
-          // User not logged in, skip sync
-          return;
-        }
-
-        this.isSyncing = true;
-
-        // Convert Settings to format compatible with Firebase UserSettings
-        // We'll store the full settings object
-        // Note: updateUserSettings accepts Partial<UserSettings> but Firebase will accept additional fields
-        const firebaseSettings: FirebaseUserSettings = {
-          // Map Settings to Firebase format
-          displayName: this.settings.displayName,
-          personalityLevel: this.settings.personalityLevel,
-          theme: this.settings.layout.theme,
-          notifications: this.settings.notifications,
-          layout: this.settings.layout,
-          pro: this.settings.pro,
-          fullSettings: this.settings,
-        };
-
-        // Update only this manager's fields. Replacing the whole settings map
-        // could overwrite a preferred-name save made while this sync is pending.
-        this.syncInFlight = updateDoc(doc(db, 'users', currentUser.uid), Object.fromEntries(
+        // Keep the existing dotted-field ownership and compatibility mirror.
+        await updateDoc(doc(db, 'users', pending.uid), Object.fromEntries(
           Object.entries(firebaseSettings).map(([key, value]) => [`settings.${key}`, value])
         ));
-        await this.syncInFlight;
         console.log('✅ Settings synced to Firebase');
       } catch (error) {
-        // Don't block UI on sync failure - settings are saved locally
+        // Local state survives failure. A newer queued save is still attempted.
         console.warn('Failed to sync settings to Firebase:', error);
-      } finally {
-        this.isSyncing = false;
-        this.syncInFlight = null;
       }
-    }, 1000); // 1 second debounce
+    }
   }
 
   /**
@@ -388,7 +383,7 @@ export class SettingsManager {
   }
 
   updatePersonalityLevel(level: PersonalityLevel): void {
-    if (isRestoring()) return;
+    if (!guardMutation()) return;
     this.settings.personalityLevel = level;
     clearFlickletPersonalitySession();
     this.saveSettings();
@@ -452,6 +447,7 @@ export class SettingsManager {
   async prepareRestore(): Promise<void> {
     if (this.syncTimeout) clearTimeout(this.syncTimeout);
     this.syncTimeout = null;
+    this.pendingSync = null;
     await this.syncInFlight?.catch(() => undefined);
   }
 
@@ -461,6 +457,7 @@ export class SettingsManager {
     // An older queued/in-flight full-settings sync must finish before reset.
     if (this.syncTimeout) clearTimeout(this.syncTimeout);
     this.syncTimeout = null;
+    this.pendingSync = null;
     await this.syncInFlight?.catch(() => undefined);
     if (authManager.getCurrentUser()?.uid !== uid) throw new Error('The signed-in account changed. Please try again.');
     const next = resetPreferences(this.settings);

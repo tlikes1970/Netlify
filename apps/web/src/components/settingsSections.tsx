@@ -240,13 +240,13 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
       </div>
 
       {/* Flicklet personality intensity (Phase 1 — single voice) */}
-      <div>
-        <label
+      <fieldset className="min-w-0">
+        <legend
           className="block text-sm font-medium mb-2"
           style={{ color: "var(--text)" }}
         >
           {translations.personalityLevel}
-        </label>
+        </legend>
         <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
           {t("contentFlickletNoticesYourListsAndCommentsWhenItFitsMinimalKeepsThingsQuietMaximumIsMoreOpinion")}
         </p>
@@ -303,7 +303,7 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
             &rdquo;
           </p>
         </div>
-      </div>
+      </fieldset>
 
       {/* Reset to Defaults */}
       <ResetSettingsButton />
