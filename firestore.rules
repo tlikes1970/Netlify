@@ -54,7 +54,7 @@ service cloud.firestore {
           && !exists(/databases/$(database)/documents/users/$(userId)/entitlements/trial)
           && request.resource.data.trialStartMs is int
           && request.resource.data.version == 2
-          && request.resource.data.trialStartMs <= request.time.toMillis() + duration.value(5, 'm');
+          && request.resource.data.trialStartMs <= request.time.toMillis() + 300000;
         allow update, delete: if isAdmin();
       }
     }

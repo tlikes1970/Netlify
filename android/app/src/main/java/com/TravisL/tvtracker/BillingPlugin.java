@@ -1,238 +1,125 @@
 package com.TravisL.tvtracker;
 
-import android.app.Activity;
-import android.util.Log;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.android.billingclient.api.*;
-
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.BiConsumer;
 import org.json.JSONException;
 
 @CapacitorPlugin(name = "Billing")
 public class BillingPlugin extends Plugin implements PurchasesUpdatedListener, BillingClientStateListener {
-    
-    private static final String TAG = "BillingPlugin";
     private BillingClient billingClient;
     private PluginCall pendingPurchaseCall;
     private PluginCall pendingInitializeCall;
-    
+    private String pendingProductId;
+
     @PluginMethod
     public void initialize(PluginCall call) {
-        Log.d(TAG, "Initializing BillingClient");
-        
-        pendingInitializeCall = call;
-        
-        billingClient = BillingClient.newBuilder(getContext())
-            .setListener(this)
-            .enablePendingPurchases()
-            .build();
-        
+        if (billingClient != null && billingClient.isReady()) { JSObject value=new JSObject(); value.put("ready",true); call.resolve(value); return; }
+        if (pendingInitializeCall != null) { call.reject("Billing initialization in progress"); return; }
+        pendingInitializeCall=call;
+        if (billingClient == null) billingClient=BillingClient.newBuilder(getContext()).setListener(this)
+            .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
+            .enableAutoServiceReconnection().build();
         billingClient.startConnection(this);
     }
-    
+
+    private ProductDetails.OneTimePurchaseOfferDetails buyOffer(ProductDetails product) {
+        List<ProductDetails.OneTimePurchaseOfferDetails> offers=product.getOneTimePurchaseOfferDetailsList();
+        if (offers == null) return null;
+        for (ProductDetails.OneTimePurchaseOfferDetails offer: offers)
+            if (offer.getRentalDetails() == null) return offer;
+        return null;
+    }
+
+    private void query(List<String> ids, BiConsumer<BillingResult,List<ProductDetails>> callback) {
+        List<QueryProductDetailsParams.Product> products=new ArrayList<>();
+        for(String id:ids) products.add(QueryProductDetailsParams.Product.newBuilder().setProductId(id).setProductType(BillingClient.ProductType.INAPP).build());
+        billingClient.queryProductDetailsAsync(QueryProductDetailsParams.newBuilder().setProductList(products).build(),
+            (result,details)->callback.accept(result,details.getProductDetailsList()));
+    }
+
     @PluginMethod
     public void getProducts(PluginCall call) {
-        if (billingClient == null || !billingClient.isReady()) {
-            call.reject("BillingClient not initialized. Call initialize() first.");
-            return;
-        }
-        
-        List<String> productIds;
-        try {
-            productIds = call.getArray("productIds").toList();
-        } catch (JSONException e) {
-            call.reject("Invalid productIds array: " + e.getMessage());
-            return;
-        }
-        String productType = call.getString("productType", "subscription");
-        
-        String skuTypeString = productType.equals("subscription") ? "subs" : "inapp";
-        
-        SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder()
-            .setSkusList(productIds)
-            .setType(skuTypeString);
-        
-        billingClient.querySkuDetailsAsync(params.build(), (billingResult, skuDetailsList) -> {
-            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && skuDetailsList != null) {
-                List<JSObject> products = new ArrayList<>();
-                for (SkuDetails skuDetails : skuDetailsList) {
-                    JSObject product = new JSObject();
-                    product.put("productId", skuDetails.getSku());
-                    product.put("title", skuDetails.getTitle());
-                    product.put("description", skuDetails.getDescription());
-                    product.put("price", skuDetails.getPrice());
-                    product.put("currency", skuDetails.getPriceCurrencyCode());
-                    products.add(product);
-                }
-                
-                JSObject result = new JSObject();
-                result.put("products", products);
-                call.resolve(result);
-            } else {
-                call.reject("Failed to query products: " + billingResult.getDebugMessage());
+        if(billingClient==null||!billingClient.isReady()){call.reject("BillingClient not initialized. Call initialize() first.");return;}
+        List<String> ids;
+        try { if(call.getArray("productIds")==null)throw new JSONException("missing"); ids=call.getArray("productIds").toList(); }
+        catch(JSONException error){call.reject("Invalid productIds");return;}
+        query(ids,(result,details)->{
+            if(result.getResponseCode()!=BillingClient.BillingResponseCode.OK){call.reject("Failed to query products");return;}
+            List<JSObject> products=new ArrayList<>();
+            for(ProductDetails product:details){
+                ProductDetails.OneTimePurchaseOfferDetails offer=buyOffer(product);if(offer==null)continue;
+                JSObject value=new JSObject();value.put("productId",product.getProductId());value.put("title",product.getTitle());
+                value.put("description",product.getDescription());value.put("price",offer.getFormattedPrice());value.put("currency",offer.getPriceCurrencyCode());products.add(value);
             }
+            JSObject value=new JSObject();value.put("products",products);call.resolve(value);
         });
     }
-    
+
     @PluginMethod
-    public void purchase(PluginCall call) {
-        if (billingClient == null || !billingClient.isReady()) {
-            call.reject("BillingClient not initialized. Call initialize() first.");
-            return;
-        }
-        
-        String productId = call.getString("productId");
-        String productType = call.getString("productType", "subscription");
-        
-        if (productId == null) {
-            call.reject("productId is required");
-            return;
-        }
-        
-        // Query product details first
-        List<String> productIds = new ArrayList<>();
-        productIds.add(productId);
-        
-        String skuTypeString = productType.equals("subscription") ? "subs" : "inapp";
-        
-        SkuDetailsParams.Builder params = SkuDetailsParams.newBuilder()
-            .setSkusList(productIds)
-            .setType(skuTypeString);
-        
-        billingClient.querySkuDetailsAsync(params.build(), (billingResult, skuDetailsList) -> {
-            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK 
-                && skuDetailsList != null 
-                && !skuDetailsList.isEmpty()) {
-                
-                SkuDetails skuDetails = skuDetailsList.get(0);
-                pendingPurchaseCall = call;
-                
-                // Launch billing flow
-                BillingFlowParams flowParams = BillingFlowParams.newBuilder()
-                    .setSkuDetails(skuDetails)
-                    .build();
-                
-                Activity activity = getActivity();
-                if (activity != null) {
-                    BillingResult result = billingClient.launchBillingFlow(activity, flowParams);
-                    if (result.getResponseCode() != BillingClient.BillingResponseCode.OK) {
-                        pendingPurchaseCall = null;
-                        call.reject("Failed to launch billing flow: " + result.getDebugMessage());
-                    }
-                } else {
-                    pendingPurchaseCall = null;
-                    call.reject("Activity not available");
-                }
-            } else {
-                call.reject("Product not found: " + productId);
-            }
+    public void purchase(PluginCall call){
+        if(billingClient==null||!billingClient.isReady()){call.reject("BillingClient not initialized. Call initialize() first.");return;}
+        if(pendingPurchaseCall!=null){call.reject("Purchase in progress");return;}
+        String id=call.getString("productId"),account=call.getString("obfuscatedAccountId");
+        if(!"flicklet_full_access".equals(id)||account==null||!account.matches("[a-f0-9]{64}")){call.reject("Product and account identity required");return;}
+        pendingPurchaseCall=call;pendingProductId=id;
+        query(Collections.singletonList(id),(result,details)->{
+            ProductDetails product=details.stream().filter(p->id.equals(p.getProductId())).findFirst().orElse(null);
+            ProductDetails.OneTimePurchaseOfferDetails offer=product==null?null:buyOffer(product);
+            if(result.getResponseCode()!=BillingClient.BillingResponseCode.OK||offer==null){pendingPurchaseCall=null;call.reject("Product not found: "+id);return;}
+            BillingFlowParams.ProductDetailsParams item=BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(product).setOfferToken(offer.getOfferToken()).build();
+            if(getActivity()==null){pendingPurchaseCall=null;call.reject("Activity not available");return;}
+            BillingResult launched=billingClient.launchBillingFlow(getActivity(),BillingFlowParams.newBuilder().setProductDetailsParamsList(Collections.singletonList(item)).setObfuscatedAccountId(account).build());
+            if(launched.getResponseCode()!=BillingClient.BillingResponseCode.OK){pendingPurchaseCall=null;call.reject("Failed to launch billing flow",launched.getResponseCode()==BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED?"ITEM_ALREADY_OWNED":"BILLING_ERROR");}
         });
     }
-    
+
     @PluginMethod
-    public void restorePurchases(PluginCall call) {
-        if (billingClient == null || !billingClient.isReady()) {
-            call.reject("BillingClient not initialized. Call initialize() first.");
-            return;
-        }
-        
-        billingClient.queryPurchasesAsync(
-            QueryPurchasesParams.newBuilder()
-                .setProductType(BillingClient.ProductType.INAPP)
-                .build(),
-            (billingResult, purchases) -> {
-                if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                    List<JSObject> purchaseList = new ArrayList<>();
-                    for (Purchase purchase : purchases) {
-                        JSObject purchaseObj = new JSObject();
-                        purchaseObj.put("productId", purchase.getProducts().get(0));
-                        purchaseObj.put("purchaseToken", purchase.getPurchaseToken());
-                        purchaseObj.put("transactionReceipt", purchase.getPurchaseToken());
-                        purchaseList.add(purchaseObj);
-                    }
-                    
-                    JSObject result = new JSObject();
-                    result.put("purchases", purchaseList);
-                    call.resolve(result);
-                } else {
-                    call.reject("Failed to restore purchases: " + billingResult.getDebugMessage());
-                }
+    public void restorePurchases(PluginCall call){
+        if(billingClient==null||!billingClient.isReady()){call.reject("BillingClient not initialized. Call initialize() first.");return;}
+        billingClient.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build(),(result,purchases)->{
+            if(result.getResponseCode()!=BillingClient.BillingResponseCode.OK){call.reject("Failed to restore purchases");return;}
+            List<JSObject> values=new ArrayList<>();
+            for(Purchase purchase:purchases)for(String product:purchase.getProducts()){
+                JSObject value=new JSObject();value.put("productId",product);value.put("purchaseState",purchase.getPurchaseState());
+                if(purchase.getPurchaseState()==Purchase.PurchaseState.PURCHASED)value.put("purchaseToken",purchase.getPurchaseToken());
+                values.add(value);
             }
-        );
+            JSObject value=new JSObject();value.put("purchases",values);call.resolve(value);
+        });
     }
-    
-    // BillingClientStateListener implementation
-    @Override
-    public void onBillingSetupFinished(BillingResult billingResult) {
-        Log.d(TAG, "Billing setup finished: " + billingResult.getResponseCode());
-        
-        if (pendingInitializeCall != null) {
-            if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                JSObject result = new JSObject();
-                result.put("ready", true);
-                pendingInitializeCall.resolve(result);
-            } else {
-                pendingInitializeCall.reject("Billing setup failed: " + billingResult.getDebugMessage());
+
+    @Override public void onBillingSetupFinished(BillingResult result){
+        if(pendingInitializeCall==null)return;
+        if(result.getResponseCode()==BillingClient.BillingResponseCode.OK){JSObject value=new JSObject();value.put("ready",true);pendingInitializeCall.resolve(value);}
+        else pendingInitializeCall.reject("Billing setup failed: "+result.getDebugMessage());
+        pendingInitializeCall=null;
+    }
+    @Override public void onBillingServiceDisconnected(){ /* Billing 8 reconnects on the next operation. */ }
+    @Override protected void handleOnResume(){super.handleOnResume();notifyListeners("ownershipChanged",new JSObject());}
+    @Override protected void handleOnDestroy(){if(billingClient!=null)billingClient.endConnection();super.handleOnDestroy();}
+
+    // Server verifies, binds and acknowledges. Native never consumes this non-consumable.
+    @Override public void onPurchasesUpdated(BillingResult result,List<Purchase> purchases){
+        if(pendingPurchaseCall==null){notifyListeners("ownershipChanged",new JSObject());return;}
+        PluginCall call=pendingPurchaseCall;
+        if(result.getResponseCode()==BillingClient.BillingResponseCode.OK&&purchases!=null){
+            for(Purchase purchase:purchases){
+                if(!purchase.getProducts().contains(pendingProductId))continue;
+                pendingPurchaseCall=null;JSObject value=new JSObject();value.put("productId",pendingProductId);value.put("purchaseState",purchase.getPurchaseState());
+                if(purchase.getPurchaseState()==Purchase.PurchaseState.PURCHASED)value.put("purchaseToken",purchase.getPurchaseToken());
+                call.resolve(value);return;
             }
-            pendingInitializeCall = null;
         }
-    }
-    
-    @Override
-    public void onBillingServiceDisconnected() {
-        Log.w(TAG, "Billing service disconnected");
-        // Try to restart connection
-        if (billingClient != null) {
-            billingClient.startConnection(this);
-        }
-    }
-    
-    // PurchasesUpdatedListener implementation
-    @Override
-    public void onPurchasesUpdated(BillingResult billingResult, List<Purchase> purchases) {
-        Log.d(TAG, "Purchases updated: " + billingResult.getResponseCode());
-        
-        if (pendingPurchaseCall == null) {
-            return;
-        }
-        
-        if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.OK && purchases != null) {
-            for (Purchase purchase : purchases) {
-                // Acknowledge purchase if needed
-                if (!purchase.isAcknowledged()) {
-                    AcknowledgePurchaseParams acknowledgeParams = AcknowledgePurchaseParams.newBuilder()
-                        .setPurchaseToken(purchase.getPurchaseToken())
-                        .build();
-                    
-                    billingClient.acknowledgePurchase(acknowledgeParams, (ackResult) -> {
-                        if (ackResult.getResponseCode() == BillingClient.BillingResponseCode.OK) {
-                            Log.d(TAG, "Purchase acknowledged");
-                        }
-                    });
-                }
-                
-                // Return purchase result
-                JSObject result = new JSObject();
-                result.put("purchaseToken", purchase.getPurchaseToken());
-                result.put("productId", purchase.getProducts().get(0));
-                result.put("transactionReceipt", purchase.getPurchaseToken());
-                pendingPurchaseCall.resolve(result);
-                pendingPurchaseCall = null;
-                return;
-            }
-        } else if (billingResult.getResponseCode() == BillingClient.BillingResponseCode.USER_CANCELED) {
-            pendingPurchaseCall.reject("User canceled purchase");
-            pendingPurchaseCall = null;
-        } else {
-            pendingPurchaseCall.reject("Purchase failed: " + billingResult.getDebugMessage());
-            pendingPurchaseCall = null;
-        }
+        pendingPurchaseCall=null;
+        String code=result.getResponseCode()==BillingClient.BillingResponseCode.USER_CANCELED?"USER_CANCELED":result.getResponseCode()==BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED?"ITEM_ALREADY_OWNED":"BILLING_ERROR";
+        call.reject(code.equals("USER_CANCELED")?"User canceled purchase":"Purchase failed",code);
     }
 }
-
-

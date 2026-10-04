@@ -371,13 +371,13 @@ export class SettingsManager {
   }
 
   updateSettings(updates: Partial<Settings>): void {
-    if (isRestoring()) return;
+    if (isRestoring() || !guardMutation()) return;
     this.settings = { ...this.settings, ...updates };
     this.saveSettings();
   }
 
   updateDisplayName(name: string): void {
-    if (isRestoring()) return;
+    if (isRestoring() || !guardMutation()) return;
     this.settings.displayName = name;
     this.saveSettings();
   }
@@ -390,7 +390,7 @@ export class SettingsManager {
   }
 
   updatePersonality(personality: PersonalityName): void {
-    if (isRestoring()) return;
+    if (isRestoring() || !guardMutation()) return;
     this.settings.personality = personality;
     // Clear variant cache so new personality gets fresh variants
     clearVariantCache();
@@ -398,7 +398,7 @@ export class SettingsManager {
   }
 
   updateTheme(theme: Theme): void {
-    if (isRestoring()) return;
+    if (isRestoring() || !guardMutation()) return;
     this.settings.layout.theme = theme;
     this.applyTheme(theme);
     this.saveSettings();
@@ -411,19 +411,19 @@ export class SettingsManager {
   }
 
   toggleEpisodeTracking(): void {
-    if (isRestoring()) return;
+    if (isRestoring() || !guardMutation()) return;
     this.settings.layout.episodeTracking = !this.settings.layout.episodeTracking;
     this.saveSettings();
   }
 
   updateDiscoveryLimit(limit: 25 | 50 | 75 | 100): void {
-    if (isRestoring()) return;
+    if (isRestoring() || !guardMutation()) return;
     this.settings.layout.discoveryLimit = limit;
     this.saveSettings();
   }
 
   updateProStatus(isPro: boolean): void {
-    if (isRestoring()) return;
+    if (isRestoring() || !guardMutation()) return;
     this.settings.pro.isPro = isPro;
     // Update feature flags based on Pro status
     this.settings.pro.features = {

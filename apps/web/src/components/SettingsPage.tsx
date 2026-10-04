@@ -1,4 +1,4 @@
-import { useLanguage } from "@/lib/language";
+import { useLanguage, t } from "@/lib/language";
 import { useCallback, useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useTranslations } from "../lib/language";
 import { useAdminRole } from "../hooks/useAdminRole";
@@ -383,7 +383,7 @@ export default function SettingsPage({
                 className="text-sm mt-0.5"
                 style={{ color: "var(--muted)" }}
               >
-                {user?.email ? `Signed in as ${user.email}` : "Signed in"}
+                {user?.email ? t("accountSignedInAs", { email: user.email }) : t(user ? "accountSignedIn" : "accountSignedOut")}
               </p>
             </div>
             <button

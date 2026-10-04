@@ -54,9 +54,8 @@ vi.mock("@/hooks/useAdminRole", () => ({
 }));
 
 vi.mock("@/lib/proStatus", async () => {
-  const actual = await vi.importActual<typeof import("@/lib/proStatus")>(
-    "@/lib/proStatus"
-  );
+  const actual =
+    await vi.importActual<typeof import("@/lib/proStatus")>("@/lib/proStatus");
   return {
     ...actual,
     useProStatus: () => mockUseProStatus(),
@@ -112,7 +111,9 @@ describe("Settings approval paths", () => {
 
     expect(handled).toBe(true);
     await waitFor(() => {
-      expect(screen.queryByRole("dialog", { name: "Settings" })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("dialog", { name: "Settings" }),
+      ).not.toBeInTheDocument();
     });
     expect(document.documentElement).not.toHaveAttribute("data-settings-sheet");
   });
@@ -134,18 +135,23 @@ describe("Settings approval paths", () => {
 
     render(<SettingsSheet />);
     expect(
-      screen.getByRole("button", { name: "Account & Profile" })
+      screen.getByRole("button", { name: "Account & Profile" }),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Admin" })).toBeNull();
 
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Full Access" }));
     expect(
-      screen.getByRole("heading", { name: "Full Access", level: 3 })
+      screen.getByRole("heading", { name: "Full Access", level: 3 }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/one-time purchase · price shown in Google Play/i)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Unlock Full Access" })
+      screen.getByText(/one-time purchase · price shown in Google Play/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Unlock Full Access" }),
+    ).toBeNull();
+    expect(
+      screen.getByText(/Purchase and Restore Purchases are available/),
     ).toBeInTheDocument();
     expect(screen.queryByText("Episode Tracking")).not.toBeInTheDocument();
   });
@@ -174,13 +180,18 @@ describe("Settings approval paths", () => {
     await user.click(screen.getByRole("button", { name: "Full Access" }));
     expect(screen.getByText("Trial ended — Read-Only")).toBeInTheDocument();
     expect(
-      screen.getByText(/Your trial has ended, but your library is still yours/i)
+      screen.getByText(
+        /Your trial has ended, but your library is still yours/i,
+      ),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Full Access is a one-time purchase/i)
+      screen.getByText(/Full Access is a one-time purchase/i),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Unlock Full Access" })
+      screen.queryByRole("button", { name: "Unlock Full Access" }),
+    ).toBeNull();
+    expect(
+      screen.getByText(/Purchase and Restore Purchases are available/),
     ).toBeInTheDocument();
   });
 
@@ -206,11 +217,11 @@ describe("Settings approval paths", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Full Access" }));
     expect(
-      screen.getByRole("heading", { name: "Full Access", level: 3 })
+      screen.getByRole("heading", { name: "Full Access", level: 3 }),
     ).toBeInTheDocument();
     expect(screen.getByText("Purchased")).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Unlock Full Access" })
+      screen.queryByRole("button", { name: "Unlock Full Access" }),
     ).toBeNull();
   });
 
@@ -236,11 +247,10 @@ describe("Settings approval paths", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Full Access" }));
     expect(
-      screen.getByRole("heading", { name: "Full Access", level: 3 })
+      screen.getByRole("heading", { name: "Full Access", level: 3 }),
     ).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "Unlock Full Access" })
+      screen.queryByRole("button", { name: "Unlock Full Access" }),
     ).toBeNull();
   });
 });
-

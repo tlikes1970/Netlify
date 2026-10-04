@@ -1,3 +1,4 @@
+import { guardMutation } from "../lib/readOnlyGuard";
 import { persistLocalContent } from "../lib/restoreBarrier";
 // Episode progress utilities
 export interface EpisodeProgress {
@@ -18,9 +19,13 @@ export interface StoredEpisodeProgress {
   seasons?: EpisodeSeasonSummary[];
 }
 
-export function readStoredEpisodeProgress(showId: number): StoredEpisodeProgress {
+export function readStoredEpisodeProgress(
+  showId: number,
+): StoredEpisodeProgress {
   try {
-    const parsed = JSON.parse(localStorage.getItem(`episode-progress-${showId}`) || '{}');
+    const parsed = JSON.parse(
+      localStorage.getItem(`episode-progress-${showId}`) || "{}",
+    );
     if (parsed.episodes) return parsed;
     return { episodes: parsed };
   } catch {
@@ -28,9 +33,16 @@ export function readStoredEpisodeProgress(showId: number): StoredEpisodeProgress
   }
 }
 
-export function writeStoredEpisodeProgress(showId: number, data: StoredEpisodeProgress): void {
+export function writeStoredEpisodeProgress(
+  showId: number,
+  data: StoredEpisodeProgress,
+): boolean {
+  if (!guardMutation()) return false;
   persistLocalContent(`episode-progress-${showId}`, JSON.stringify(data));
-  window.dispatchEvent(new CustomEvent('episode-progress:updated', { detail: { showId } }));
+  window.dispatchEvent(
+    new CustomEvent("episode-progress:updated", { detail: { showId } }),
+  );
+  return true;
 }
 
 export function getCurrentSeasonProgress(showId: number): {
@@ -40,22 +52,35 @@ export function getCurrentSeasonProgress(showId: number): {
   nextEpisode: number | null;
 } | null {
   const stored = readStoredEpisodeProgress(showId);
-  const seasons = stored.seasons?.filter((season) => season.seasonNumber > 0 && season.episodeNumbers.length > 0);
+  const seasons = stored.seasons?.filter(
+    (season) => season.seasonNumber > 0 && season.episodeNumbers.length > 0,
+  );
   if (!seasons?.length) return null;
-  const current = [...seasons].sort((a, b) => b.seasonNumber - a.seasonNumber)[0];
+  const current = [...seasons].sort(
+    (a, b) => b.seasonNumber - a.seasonNumber,
+  )[0];
   const watched = current.episodeNumbers.filter(
     (episode) => stored.episodes[`S${current.seasonNumber}E${episode}`],
   ).length;
-  const nextEpisode = current.episodeNumbers.find(
-    (episode) => !stored.episodes[`S${current.seasonNumber}E${episode}`],
-  ) ?? null;
-  return { seasonNumber: current.seasonNumber, watched, total: current.episodeNumbers.length, nextEpisode };
+  const nextEpisode =
+    current.episodeNumbers.find(
+      (episode) => !stored.episodes[`S${current.seasonNumber}E${episode}`],
+    ) ?? null;
+  return {
+    seasonNumber: current.seasonNumber,
+    watched,
+    total: current.episodeNumbers.length,
+    nextEpisode,
+  };
 }
 
 /**
  * Get episode progress for a TV show
  */
-export function getEpisodeProgress(showId: number, totalEpisodes?: number): EpisodeProgress {
+export function getEpisodeProgress(
+  showId: number,
+  totalEpisodes?: number,
+): EpisodeProgress {
   try {
     const saved = localStorage.getItem(`episode-progress-${showId}`);
     if (!saved) {
@@ -63,37 +88,40 @@ export function getEpisodeProgress(showId: number, totalEpisodes?: number): Epis
         watched: 0,
         total: totalEpisodes || 0,
         percentage: 0,
-        hasProgress: (totalEpisodes || 0) > 0
+        hasProgress: (totalEpisodes || 0) > 0,
       };
     }
-    
+
     const data = JSON.parse(saved);
-    
+
     // Handle both old format (just episodes) and new format (with totalEpisodes)
     const episodes = data.episodes || data;
     const savedTotalEpisodes = data.totalEpisodes;
-    
+
     const watched = Object.values(episodes).filter(Boolean).length;
-    
+
     // Use provided total episodes, saved total episodes, or fall back to counting saved episodes
-    const total = totalEpisodes !== undefined ? totalEpisodes : 
-                  savedTotalEpisodes !== undefined ? savedTotalEpisodes : 
-                  Object.keys(episodes).length;
-    
+    const total =
+      totalEpisodes !== undefined
+        ? totalEpisodes
+        : savedTotalEpisodes !== undefined
+          ? savedTotalEpisodes
+          : Object.keys(episodes).length;
+
     const percentage = total > 0 ? Math.round((watched / total) * 100) : 0;
-    
+
     return {
       watched,
       total,
       percentage,
-      hasProgress: total > 0
+      hasProgress: total > 0,
     };
   } catch {
     return {
       watched: 0,
       total: totalEpisodes || 0,
       percentage: 0,
-      hasProgress: (totalEpisodes || 0) > 0
+      hasProgress: (totalEpisodes || 0) > 0,
     };
   }
 }
@@ -102,12 +130,13 @@ export function getEpisodeProgress(showId: number, totalEpisodes?: number): Epis
  * Format episode progress for display
  */
 export function formatEpisodeProgress(progress: EpisodeProgress): string {
-  if (!progress.hasProgress) return '';
-  
-  if (progress.total === 0) return 'No episodes';
+  if (!progress.hasProgress) return "";
+
+  if (progress.total === 0) return "No episodes";
   if (progress.watched === 0) return `0/${progress.total} episodes`;
-  if (progress.watched === progress.total) return `All ${progress.total} episodes`;
-  
+  if (progress.watched === progress.total)
+    return `All ${progress.total} episodes`;
+
   return `${progress.watched}/${progress.total} episodes`;
 }
 
@@ -115,44 +144,56 @@ export function formatEpisodeProgress(progress: EpisodeProgress): string {
  * Get progress color based on completion
  */
 export function getProgressColor(progress: EpisodeProgress): string {
-  if (!progress.hasProgress) return 'var(--muted)';
-  if (progress.percentage === 100) return '#10b981'; // green-500
-  if (progress.percentage >= 50) return '#f59e0b'; // amber-500
-  return '#6b7280'; // gray-500
+  if (!progress.hasProgress) return "var(--muted)";
+  if (progress.percentage === 100) return "#10b981"; // green-500
+  if (progress.percentage >= 50) return "#f59e0b"; // amber-500
+  return "#6b7280"; // gray-500
 }
 
 /**
  * Clean up invalid episode keys for a show
  * This removes episode keys that don't correspond to actual episodes
  */
-export function cleanupInvalidEpisodeKeys(showId: number, validEpisodeKeys: string[]): void {
+export function cleanupInvalidEpisodeKeys(
+  showId: number,
+  validEpisodeKeys: string[],
+): void {
+  if (!guardMutation()) return;
   try {
     const saved = localStorage.getItem(`episode-progress-${showId}`);
     if (!saved) return;
-    
+
     const data = JSON.parse(saved);
     const episodes = data.episodes || data;
-    
+
     // Find invalid keys (keys that don't exist in validEpisodeKeys)
-    const invalidKeys = Object.keys(episodes).filter(key => !validEpisodeKeys.includes(key));
-    
+    const invalidKeys = Object.keys(episodes).filter(
+      (key) => !validEpisodeKeys.includes(key),
+    );
+
     if (invalidKeys.length > 0) {
-      console.log(`Cleaning up ${invalidKeys.length} invalid episode keys for show ${showId}:`, invalidKeys);
-      
+      console.log(
+        `Cleaning up ${invalidKeys.length} invalid episode keys for show ${showId}:`,
+        invalidKeys,
+      );
+
       // Remove invalid keys
-      invalidKeys.forEach(key => delete episodes[key]);
-      
+      invalidKeys.forEach((key) => delete episodes[key]);
+
       // Save cleaned data
       const cleanedData = {
         episodes: episodes,
-        totalEpisodes: data.totalEpisodes
+        totalEpisodes: data.totalEpisodes,
       };
-      
-      persistLocalContent(`episode-progress-${showId}`, JSON.stringify(cleanedData));
+
+      persistLocalContent(
+        `episode-progress-${showId}`,
+        JSON.stringify(cleanedData),
+      );
       console.log(`Cleaned episode progress for show ${showId}`);
     }
   } catch (error) {
-    console.error('Error cleaning up episode keys:', error);
+    console.error("Error cleaning up episode keys:", error);
   }
 }
 
@@ -161,12 +202,12 @@ export function cleanupInvalidEpisodeKeys(showId: number, validEpisodeKeys: stri
  */
 export function getValidEpisodeKeys(seasons: any[]): string[] {
   const validKeys: string[] = [];
-  
-  seasons.forEach(season => {
+
+  seasons.forEach((season) => {
     season.episodes.forEach((episode: any) => {
       validKeys.push(`S${episode.season_number}E${episode.episode_number}`);
     });
   });
-  
+
   return validKeys;
 }

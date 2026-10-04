@@ -1,3 +1,7 @@
+import {
+  isAndroidBillingAvailable,
+  restoreFullAccess,
+} from "../lib/proUpgrade";
 import { t } from "@/lib/language";
 import { recoveryErrorKey } from "../lib/accountErrors";
 import { formatDateTime } from "../lib/localeFormatters";
@@ -44,7 +48,7 @@ import { lazy, Suspense } from "react";
 const NotificationCenter = lazy(() =>
   import("./modals/NotificationCenter").then((m) => ({
     default: m.NotificationCenter,
-  }))
+  })),
 );
 const AdminExtrasPage = lazy(() => import("../pages/AdminExtrasPage"));
 
@@ -62,7 +66,7 @@ export interface SettingsSectionProps {
  */
 export function renderSettingsSection(
   sectionId: SettingsSectionId,
-  props: SettingsSectionProps = {}
+  props: SettingsSectionProps = {},
 ): JSX.Element | null {
   switch (sectionId) {
     case "account":
@@ -248,14 +252,28 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
           {translations.personalityLevel}
         </legend>
         <p className="text-xs mb-3" style={{ color: "var(--muted)" }}>
-          {t("contentFlickletNoticesYourListsAndCommentsWhenItFitsMinimalKeepsThingsQuietMaximumIsMoreOpinion")}
+          {t(
+            "contentFlickletNoticesYourListsAndCommentsWhenItFitsMinimalKeepsThingsQuietMaximumIsMoreOpinion",
+          )}
         </p>
         <div className="grid grid-cols-1 gap-2">
           {(
             [
-              { level: 1 as PersonalityLevel, label: t("contentMinimal"), hint: t("contentQuietMarqueeOff") },
-              { level: 2 as PersonalityLevel, label: t("contentStandard"), hint: t("contentRecommended") },
-              { level: 3 as PersonalityLevel, label: t("contentMaximum"), hint: t("contentMoreObservationsStrongerTone") },
+              {
+                level: 1 as PersonalityLevel,
+                label: t("contentMinimal"),
+                hint: t("contentQuietMarqueeOff"),
+              },
+              {
+                level: 2 as PersonalityLevel,
+                label: t("contentStandard"),
+                hint: t("contentRecommended"),
+              },
+              {
+                level: 3 as PersonalityLevel,
+                label: t("contentMaximum"),
+                hint: t("contentMoreObservationsStrongerTone"),
+              },
             ] as const
           ).map(({ level, label, hint }) => {
             const isSelected = (settings.personalityLevel ?? 2) === level;
@@ -299,7 +317,8 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
           </p>
           <p className="text-sm mt-1" style={{ color: "var(--text)" }}>
             &ldquo;
-            {resolveFlickletLine("home.header", settings.personalityLevel) || t("contentYourListsAreHere")}
+            {resolveFlickletLine("home.header", settings.personalityLevel) ||
+              t("contentYourListsAreHere")}
             &rdquo;
           </p>
         </div>
@@ -333,7 +352,8 @@ function NotificationsSection({
         </h3>
 
         <p className="text-sm" style={{ color: "var(--muted)" }}>
-          Episode reminders are managed from each TV show card. Flicklet reminds you on the day new episodes air.
+          Episode reminders are managed from each TV show card. Flicklet reminds
+          you on the day new episodes air.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <button
@@ -348,7 +368,9 @@ function NotificationsSection({
             <div className="flex items-center space-x-3">
               <div className="text-2xl">📋</div>
               <div className="text-left">
-                <div className="font-medium">{translations.notificationCenter}</div>
+                <div className="font-medium">
+                  {translations.notificationCenter}
+                </div>
                 <div className="text-sm" style={{ color: "var(--muted)" }}>
                   {translations.notificationCenterDescription}
                 </div>
@@ -387,7 +409,11 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
     try {
       customListManager.createList(name.trim());
     } catch (error) {
-      alert(error instanceof Error ? error.message : translations.failedToCreateList);
+      alert(
+        error instanceof Error
+          ? error.message
+          : translations.failedToCreateList,
+      );
     }
   };
 
@@ -412,7 +438,11 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
       setEditName("");
       setEditDescription("");
     } catch (error) {
-      alert(error instanceof Error ? error.message : translations.failedToUpdateList);
+      alert(
+        error instanceof Error
+          ? error.message
+          : translations.failedToUpdateList,
+      );
     }
   };
 
@@ -431,14 +461,18 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
       }
 
       const confirmed = window.confirm(
-        coreText('coreDeleteListConfirm', {name:list.name})
+        coreText("coreDeleteListConfirm", { name: list.name }),
       );
 
       if (confirmed) {
         customListManager.deleteList(listId);
       }
-      } catch (error) {
-      alert(error instanceof Error ? error.message : translations.failedToDeleteList);
+    } catch (error) {
+      alert(
+        error instanceof Error
+          ? error.message
+          : translations.failedToDeleteList,
+      );
     }
   };
 
@@ -447,7 +481,9 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
       customListManager.setSelectedList(listId);
     } catch (error) {
       alert(
-        error instanceof Error ? error.message : translations.failedToSetDefaultList
+        error instanceof Error
+          ? error.message
+          : translations.failedToSetDefaultList,
       );
     }
   };
@@ -544,7 +580,7 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
                   checked={settings.layout.discoveryLimit === limit}
                   onChange={() =>
                     settingsManager.updateDiscoveryLimit(
-                      limit as 25 | 50 | 75 | 100
+                      limit as 25 | 50 | 75 | 100,
                     )
                   }
                   className="w-4 h-4 text-blue-600 bg-neutral-800 border-neutral-600 focus:ring-blue-500"
@@ -563,13 +599,13 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
             {translations.myLists}
           </h4>
           {userLists.customLists.length < userLists.maxLists && (
-              <button
-                onClick={handleCreateList}
-                className="px-3 py-1.5 rounded-lg text-sm transition-colors"
-                style={{ backgroundColor: "var(--accent)", color: "white" }}
-              >
-                {translations.createNewList}
-              </button>
+            <button
+              onClick={handleCreateList}
+              className="px-3 py-1.5 rounded-lg text-sm transition-colors"
+              style={{ backgroundColor: "var(--accent)", color: "white" }}
+            >
+              {translations.createNewList}
+            </button>
           )}
         </div>
 
@@ -671,7 +707,10 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
                       className="text-xs mt-1"
                       style={{ color: "var(--muted)" }}
                     >
-                      {tPlural({one:'coreItemOne',other:'coreItemsOther'},list.itemCount)}
+                      {tPlural(
+                        { one: "coreItemOne", other: "coreItemsOther" },
+                        list.itemCount,
+                      )}
                     </p>
                   </div>
                   <div className="flex gap-1">
@@ -733,8 +772,8 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
         </div>
 
         <div className="mt-3 text-xs" style={{ color: "var(--muted)" }}>
-          {translations.listsUsed}:{" "}
-          {userLists.customLists.length}/{userLists.maxLists}
+          {translations.listsUsed}: {userLists.customLists.length}/
+          {userLists.maxLists}
         </div>
       </div>
 
@@ -748,9 +787,7 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
         </h4>
         <div className="space-y-3">
           <div className="space-y-1">
-            <label
-              className="flex items-center space-x-3 cursor-pointer"
-            >
+            <label className="flex items-center space-x-3 cursor-pointer">
               <input
                 type="checkbox"
                 checked={settings.layout.episodeTracking}
@@ -779,7 +816,6 @@ function DisplaySection({ isMobile: _isMobile }: SettingsSectionProps) {
 
         <ForYouGenreConfig />
       </div>
-
     </div>
   );
 }
@@ -791,8 +827,14 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
   const featureCopy = {
     "shows-like-this": { title: "accessShows", description: "accessShowsCopy" },
     extras: { title: "accessExtras", description: "accessExtrasCopy" },
-    "watch-reminders": { title: "accessReminders", description: "accessRemindersCopy" },
-    "unlimited-custom-lists": { title: "accessLists", description: "accessListsCopy" },
+    "watch-reminders": {
+      title: "accessReminders",
+      description: "accessRemindersCopy",
+    },
+    "unlimited-custom-lists": {
+      title: "accessLists",
+      description: "accessListsCopy",
+    },
   } as const;
   const priceState = useFullAccessProduct();
   const purchaseDisabled =
@@ -823,21 +865,29 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
         </h3>
         <p
           className="text-xl font-semibold mb-3"
-          style={{ color: entitlements.paidPro ? "var(--text)" : "var(--accent)" }}
+          style={{
+            color: entitlements.paidPro ? "var(--text)" : "var(--accent)",
+          }}
         >
           {priceLabel}
         </p>
-        <p className="text-sm font-medium mb-3" style={{ color: "var(--text)" }}>
+        <p
+          className="text-sm font-medium mb-3"
+          style={{ color: "var(--text)" }}
+        >
           {entitlements.paidPro
             ? coreText("accessPurchased")
             : entitlements.trialActive
-              ? trialLabel ?? coreText("accessTrial21")
+              ? (trialLabel ?? coreText("accessTrial21"))
               : entitlements.isReadOnlyMode
                 ? coreText("accessReadOnlyHeading")
                 : coreText("accessSignIn")}
         </p>
         {entitlements.isReadOnlyMode ? (
-          <div className="text-sm mb-3 space-y-3" style={{ color: "var(--muted)" }}>
+          <div
+            className="text-sm mb-3 space-y-3"
+            style={{ color: "var(--muted)" }}
+          >
             <p>{coreText("accessReadOnly")}</p>
             <p>{coreText("accessExplainer")}</p>
           </div>
@@ -846,13 +896,30 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
             {entitlements.paidPro
               ? coreText("accessThanks")
               : entitlements.trialActive
-                ? coreText("accessExplore", { trial: trialLabel ?? coreText("accessTrial21") })
+                ? coreText("accessExplore", {
+                    trial: trialLabel ?? coreText("accessTrial21"),
+                  })
                 : coreText("accessFeaturesCopy")}
           </p>
         )}
-        {!entitlements.paidPro && (
+        {(!entitlements.paidPro || isAndroidBillingAvailable()) && (
           <div className="mt-3">
-            <UpgradeToProCTA variant="button" disabled={purchaseDisabled} />
+            {isAndroidBillingAvailable() ? (
+              <>
+                <UpgradeToProCTA variant="button" disabled={purchaseDisabled} />
+                <button
+                  type="button"
+                  className="px-4 py-3 mt-3 rounded border block mx-auto"
+                  onClick={() => {
+                    void restoreFullAccess().catch(() => undefined);
+                  }}
+                >
+                  {coreText("purchaseRestore")}
+                </button>
+              </>
+            ) : (
+              <p className="text-sm">{coreText("purchaseAndroidOnly")}</p>
+            )}
           </div>
         )}
         {priceState.status === "unavailable" && !entitlements.paidPro && (
@@ -895,10 +962,16 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
                       className="font-medium mb-1"
                       style={{ color: "var(--text)" }}
                     >
-                      {coreText(featureCopy[feature.id as keyof typeof featureCopy].title)}
+                      {coreText(
+                        featureCopy[feature.id as keyof typeof featureCopy]
+                          .title,
+                      )}
                     </h5>
                     <p className="text-sm" style={{ color: "var(--muted)" }}>
-                      {coreText(featureCopy[feature.id as keyof typeof featureCopy].description)}
+                      {coreText(
+                        featureCopy[feature.id as keyof typeof featureCopy]
+                          .description,
+                      )}
                     </p>
                   </div>
                 </div>
@@ -906,7 +979,6 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
             ))}
           </div>
         </div>
-
       </div>
     </div>
   );
@@ -933,7 +1005,9 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
     } catch (error) {
       console.error("Backup failed", error);
       alert(coreText(recoveryErrorKey(error, "backup")));
-    } finally { setBackupBusy(false); }
+    } finally {
+      setBackupBusy(false);
+    }
   };
   const handleRestore = () => {
     const input = document.createElement("input");
@@ -944,16 +1018,28 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
       if (!file) return;
       setBackupBusy(true);
       try {
-        if (file.size > 10 * 1024 * 1024) throw new Error("The backup exceeds 10 MB.");
+        if (file.size > 10 * 1024 * 1024)
+          throw new Error("The backup exceeds 10 MB.");
         const backup = parseBackup(await file.text());
-        if (!window.confirm(coreText("recoveryConfirm", { date: formatDateTime(new Date(backup.createdAt)) }))) return;
+        if (
+          !window.confirm(
+            coreText("recoveryConfirm", {
+              date: formatDateTime(new Date(backup.createdAt)),
+            }),
+          )
+        )
+          return;
         const warning = await restoreBackup(backup);
-        alert(coreText(warning ? "recoveryReminderWarning" : "recoverySuccess"));
+        alert(
+          coreText(warning ? "recoveryReminderWarning" : "recoverySuccess"),
+        );
         window.location.reload();
       } catch (error) {
         console.error("Restore failed", error);
         alert(coreText(recoveryErrorKey(error, "restore")));
-      } finally { setBackupBusy(false); }
+      } finally {
+        setBackupBusy(false);
+      }
     };
     input.click();
   };
@@ -975,7 +1061,10 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
 
         {/* Share with Friends */}
         <div>
-          <h4 className="text-lg font-medium mb-3" style={{ color: "var(--text)" }}>
+          <h4
+            className="text-lg font-medium mb-3"
+            style={{ color: "var(--text)" }}
+          >
             📤 {translations.sharingTitle}
           </h4>
           <div className="space-y-3">
@@ -1010,7 +1099,10 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
 
         {/* Data Management */}
         <div>
-          <h4 className="text-lg font-medium mb-3" style={{ color: "var(--text)" }}>
+          <h4
+            className="text-lg font-medium mb-3"
+            style={{ color: "var(--text)" }}
+          >
             💾 {coreText("recoveryManagement")}
           </h4>
           <div className="space-y-3">
@@ -1058,11 +1150,11 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
                 disabled={backupBusy}
                 onClick={handleRestore}
                 className="min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:opacity-90"
-                style={{ 
-                  backgroundColor: "#10b981", 
+                style={{
+                  backgroundColor: "#10b981",
                   color: "white",
                   border: "none",
-                  cursor: "pointer"
+                  cursor: "pointer",
                 }}
               >
                 📥 {coreText("recoveryRestoreButton")}
@@ -1217,21 +1309,34 @@ function AboutSection(_props: SettingsSectionProps) {
 
 function AdminSection(props: SettingsSectionProps) {
   const { isAdmin, loading } = useAdminRole();
-  
+
   if (loading) {
-    return <div style={{ color: "var(--muted)" }}>Checking admin access...</div>;
+    return (
+      <div style={{ color: "var(--muted)" }}>Checking admin access...</div>
+    );
   }
-  
+
   if (!isAdmin) {
     return null;
   }
-  
+
   return (
-    <div className="w-full" style={{ minWidth: 0, maxWidth: "100%", overflow: "hidden", boxSizing: "border-box" }}>
-      <Suspense fallback={<div style={{ color: "var(--muted)" }}>Loading admin tools...</div>}>
+    <div
+      className="w-full"
+      style={{
+        minWidth: 0,
+        maxWidth: "100%",
+        overflow: "hidden",
+        boxSizing: "border-box",
+      }}
+    >
+      <Suspense
+        fallback={
+          <div style={{ color: "var(--muted)" }}>Loading admin tools...</div>
+        }
+      >
         <AdminExtrasPage isMobile={props.isMobile ?? false} />
       </Suspense>
     </div>
   );
 }
-

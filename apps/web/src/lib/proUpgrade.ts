@@ -1,26 +1,16 @@
 import { purchaseErrorKey } from "./accountErrors";
 import { t } from "./language";
-/**
- * Full Access purchase entrypoint (Google Play one-time INAPP on Android).
- */
-
-import { auth } from './firebaseBootstrap';
-import { apiUrl } from './apiConfig';
-import { clearBillingCache } from './proStatus';
+import { auth } from "./firebaseBootstrap";
+import { apiUrl } from "./apiConfig";
+import { clearBillingCache } from "./proStatus";
 import {
   FULL_ACCESS_PRODUCT_ID,
   FULL_ACCESS_PRODUCT_TYPE,
-  FULL_ACCESS_PURCHASE_SUCCESS_MESSAGE,
-} from './billingProducts';
-
+} from "./billingProducts";
+import type { User } from "firebase/auth";
 function getCapacitor(): any {
-  if (typeof window === 'undefined') return null;
-  if ((window as any).Capacitor) {
-    return (window as any).Capacitor;
-  }
-  return null;
+  return typeof window === "undefined" ? null : (window as any).Capacitor;
 }
-
 export interface FullAccessProductDetails {
   productId: string;
   price: string;
@@ -28,178 +18,201 @@ export interface FullAccessProductDetails {
   description?: string;
   currency?: string;
 }
-
 export function isAndroidBillingAvailable(): boolean {
-  const Capacitor = getCapacitor();
-  return (
-    Capacitor?.getPlatform?.() === 'android' &&
-    Boolean(Capacitor?.Plugins?.Billing)
-  );
+  const cap = getCapacitor();
+  return cap?.getPlatform?.() === "android" && Boolean(cap?.Plugins?.Billing);
 }
-
-/** Read the localized Play price without initiating a purchase. */
+const error = (code: string) => Object.assign(new Error(code), { code });
+let initialization: Promise<unknown> | null = null;
+let initializedPlugin: any;
+async function billingPlugin(): Promise<any> {
+  if (!isAndroidBillingAvailable()) throw error("billing-unavailable");
+  const plugin = getCapacitor().Plugins.Billing;
+  if (initializedPlugin !== plugin) {
+    initializedPlugin = plugin;
+    initialization = null;
+  }
+  if (!initialization)
+    initialization = plugin.initialize().catch((cause: unknown) => {
+      initialization = null;
+      throw cause;
+    });
+  await initialization;
+  return plugin;
+}
 export async function getFullAccessProductDetails(): Promise<FullAccessProductDetails | null> {
   if (!isAndroidBillingAvailable()) return null;
-
-  const Billing = getCapacitor().Plugins.Billing;
-  await Billing.initialize();
-  const result = await Billing.getProducts({
+  const plugin = await billingPlugin();
+  const result = await plugin.getProducts({
     productIds: [FULL_ACCESS_PRODUCT_ID],
     productType: FULL_ACCESS_PRODUCT_TYPE,
   });
-  const product = result.products?.find(
-    (candidate: FullAccessProductDetails) =>
-      candidate.productId === FULL_ACCESS_PRODUCT_ID,
+  return (
+    result.products?.find(
+      (p: FullAccessProductDetails) =>
+        p.productId === FULL_ACCESS_PRODUCT_ID && p.price,
+    ) ?? null
   );
-
-  return product?.price ? product : null;
 }
-
-/** Start Full Access purchase flow (Android: Play Billing one-time product). */
-export async function startProUpgrade(): Promise<void> {
-  console.log('[Full Access] startProUpgrade() called');
-
-  const Capacitor = getCapacitor();
-  const platform = Capacitor?.getPlatform() || 'web';
-
-  if (!auth.currentUser) {
-    console.log('[Full Access] User not authenticated, opening auth flow');
-    window.dispatchEvent(new CustomEvent('auth:sign-in-required'));
-    return;
-  }
-
-  if (platform === 'android') {
-    await startAndroidPurchase();
-  } else if (platform === 'ios') {
-    await startIOSPurchase();
-  } else {
-    await startWebPurchase();
-  }
+function sameAccount(user: User): void {
+  if (auth.currentUser?.uid !== user.uid) throw error("account-changed");
 }
-
-async function startAndroidPurchase(): Promise<void> {
-  try {
-    console.log('[Full Access] Starting Android one-time purchase');
-
-    const CapacitorGlobal = (window as any).Capacitor;
-    if (!CapacitorGlobal?.Plugins?.Billing) {
-      throw new Error(
-        'Billing plugin not available. Rebuild the Android app after cap sync.'
-      );
-    }
-
-    const Billing = CapacitorGlobal.Plugins.Billing;
-
-    await Billing.initialize();
-
-    const productsResult = await Billing.getProducts({
-      productIds: [FULL_ACCESS_PRODUCT_ID],
-      productType: FULL_ACCESS_PRODUCT_TYPE,
-    });
-
-    if (!productsResult.products?.length) {
-      throw new Error(
-        `Product "${FULL_ACCESS_PRODUCT_ID}" not found. Create the INAPP product in Play Console.`
-      );
-    }
-
-    const selectedProduct =
-      productsResult.products.find(
-        (p: { productId: string }) => p.productId === FULL_ACCESS_PRODUCT_ID
-      ) || productsResult.products[0];
-
-    console.log('[Full Access] Launching purchase for:', selectedProduct.productId);
-
-    const purchaseResult = await Billing.purchase({
-      productId: selectedProduct.productId,
-      productType: FULL_ACCESS_PRODUCT_TYPE,
-    });
-
-    if (purchaseResult.purchaseToken) {
-      await validateAndActivatePurchase(
-        purchaseResult.purchaseToken,
-        'android',
-        selectedProduct.productId
-      );
-    } else {
-      throw new Error('Purchase failed: No purchase token returned');
-    }
-  } catch (error) {
-    console.error('[Full Access] Android purchase failed:', error);
-
-    window.dispatchEvent(
-      new CustomEvent('pro-upgrade-error', {
-        detail: {
-          message: t(purchaseErrorKey(error)),
-          messageKey: purchaseErrorKey(error),
-          error: error instanceof Error ? error.stack : String(error),
-        },
-      })
-    );
-
-    throw error;
-  }
+async function obfuscatedAccount(uid: string): Promise<string> {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(`flicklet:${uid}`),
+  );
+  return Array.from(new Uint8Array(digest), (v) =>
+    v.toString(16).padStart(2, "0"),
+  ).join("");
 }
-
-async function startIOSPurchase(): Promise<void> {
-  console.log('[Full Access] iOS purchase (not implemented yet)');
+function report(cause: unknown): void {
+  const key = purchaseErrorKey(cause);
   window.dispatchEvent(
-    new CustomEvent('settings:open-page', { detail: { section: 'pro' as const } })
+    new CustomEvent("pro-upgrade-error", {
+      detail: { message: t(key), messageKey: key },
+    }),
   );
 }
-
-async function startWebPurchase(): Promise<void> {
-  console.log('[Full Access] Web purchase (not implemented yet)');
-  window.dispatchEvent(
-    new CustomEvent('settings:open-page', { detail: { section: 'pro' as const } })
-  );
-}
-
-async function validateAndActivatePurchase(
-  purchaseToken: string,
-  platform: 'android' | 'ios',
-  productId: string
-): Promise<void> {
-  const userId = auth.currentUser?.uid;
-  if (!userId) {
-    throw new Error('User not authenticated');
-  }
-
-  const response = await fetch(apiUrl('/api/billing/validate'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+async function validate(
+  user: User,
+  purchaseToken?: string,
+  announce = true,
+): Promise<boolean> {
+  sameAccount(user);
+  const idToken = await user.getIdToken(true);
+  sameAccount(user);
+  const response = await fetch(apiUrl("/api/billing/validate"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${idToken}`,
+    },
     body: JSON.stringify({
-      purchaseToken,
-      platform,
-      productId,
-      userId,
+      platform: "android",
+      productId: FULL_ACCESS_PRODUCT_ID,
+      ...(purchaseToken ? { purchaseToken } : { reconcileAccount: true }),
     }),
   });
-
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.message || error.error || 'Validation failed');
+  sameAccount(user);
+  const result = await response.json();
+  if (!response.ok) throw error(result.error || "verification-unavailable");
+  if (!result.isValid) {
+    if (result.noPurchase) return false;
+    throw error("verification-unavailable");
   }
-
-  const validationData = await response.json();
-
-  if (validationData.isValid) {
-    clearBillingCache();
-
-    window.dispatchEvent(
-      new CustomEvent('pro-upgrade-success', {
-        detail: {
-          productId,
-          platform,
-          purchaseType: 'one_time',
-          message: t("purchaseSuccess"),
-          messageKey: "purchaseSuccess",
-        },
-      })
-    );
-
-    console.log(`[Full Access] ${FULL_ACCESS_PURCHASE_SUCCESS_MESSAGE}`);
-  } else {
-    throw new Error('Purchase validation failed');
+  if (result.userId !== user.uid) throw error("account-changed");
+  clearBillingCache();
+  window.dispatchEvent(
+    announce
+      ? new CustomEvent("pro-upgrade-success", {
+          detail: {
+            message: t("purchaseSuccess"),
+            messageKey: "purchaseSuccess",
+            productId: FULL_ACCESS_PRODUCT_ID,
+          },
+        })
+      : new Event("billing:changed"),
+  );
+  return true;
+}
+let operation: { uid: string; promise: Promise<void> } | null = null;
+function run(
+  user: User,
+  work: () => Promise<void>,
+  quiet = false,
+): Promise<void> {
+  if (operation) {
+    if (operation.uid === user.uid) return operation.promise;
+    return Promise.reject(error("account-changed"));
   }
+  const promise = work()
+    .catch((cause) => {
+      if (!quiet || cause?.code === "purchase-account-mismatch") report(cause);
+      throw cause;
+    })
+    .finally(() => {
+      if (operation?.promise === promise) operation = null;
+    });
+  operation = { uid: user.uid, promise };
+  return promise;
+}
+interface OwnedPurchase {
+  productId: string;
+  purchaseToken?: string;
+  purchaseState: number;
+}
+async function recover(user: User, explicit: boolean): Promise<void> {
+  const plugin = await billingPlugin();
+  sameAccount(user);
+  const result = await plugin.restorePurchases();
+  sameAccount(user);
+  const owned: OwnedPurchase[] =
+    result.purchases?.filter(
+      (p: OwnedPurchase) => p.productId === FULL_ACCESS_PRODUCT_ID,
+    ) ?? [];
+  let restored = false,
+    pending = false;
+  for (const p of owned) {
+    if (p.purchaseState === 2) {
+      pending = true;
+      continue;
+    }
+    if (p.purchaseState !== 1 || !p.purchaseToken)
+      throw error("purchase-not-owned");
+    restored = (await validate(user, p.purchaseToken, explicit)) || restored;
+  }
+  // Absence in this device's Play account is not revocation. Recheck known server ownership.
+  if (!restored) restored = await validate(user, undefined, explicit);
+  if (!restored && pending) throw error("purchase-pending");
+  if (!restored && explicit) throw error("restore-empty");
+}
+export async function restoreFullAccess(explicit = true): Promise<void> {
+  if (!isAndroidBillingAvailable()) throw error("purchase-android-only");
+  const user = auth.currentUser;
+  if (!user) {
+    window.dispatchEvent(new CustomEvent("auth:sign-in-required"));
+    return;
+  }
+  return run(user, () => recover(user, explicit), !explicit);
+}
+export async function startProUpgrade(): Promise<void> {
+  if (!isAndroidBillingAvailable()) return;
+  const user = auth.currentUser;
+  if (!user) {
+    window.dispatchEvent(new CustomEvent("auth:sign-in-required"));
+    return;
+  }
+  return run(user, async () => {
+    const plugin = await billingPlugin();
+    sameAccount(user);
+    const product = await getFullAccessProductDetails();
+    sameAccount(user);
+    if (!product) throw error("product-unavailable");
+    const account = await obfuscatedAccount(user.uid);
+    sameAccount(user);
+    let result: OwnedPurchase;
+    try {
+      result = await plugin.purchase({
+        productId: FULL_ACCESS_PRODUCT_ID,
+        productType: FULL_ACCESS_PRODUCT_TYPE,
+        obfuscatedAccountId: account,
+      });
+    } catch (cause) {
+      if ((cause as { code?: string }).code === "ITEM_ALREADY_OWNED") {
+        await recover(user, true);
+        return;
+      }
+      throw cause;
+    }
+    sameAccount(user);
+    if (result.purchaseState === 2) throw error("purchase-pending");
+    if (
+      result.purchaseState !== 1 ||
+      result.productId !== FULL_ACCESS_PRODUCT_ID ||
+      !result.purchaseToken
+    )
+      throw error("purchase-not-owned");
+    await validate(user, result.purchaseToken);
+  });
 }

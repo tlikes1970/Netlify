@@ -1,6 +1,7 @@
+import { t } from "./language";
 import { Library } from "./storage";
-import { recoverLocalRestore } from './restoreRecovery';
-import { isRestoring } from './restoreBarrier';
+import { recoverLocalRestore } from "./restoreRecovery";
+import { isRestoring } from "./restoreBarrier";
 import { useEffect, useState } from "react";
 import type { CustomList, UserLists, ListName } from "../state/library.types";
 import { getMaxCustomLists } from "./proConfig";
@@ -110,7 +111,10 @@ class CustomListManager {
   getUserLists(): UserLists {
     // Always update maxLists based on current Pro status before returning
     this.updateMaxLists();
-    return { ...this.userLists, customLists: this.userLists.customLists.map(list => ({ ...list })) };
+    return {
+      ...this.userLists,
+      customLists: this.userLists.customLists.map((list) => ({ ...list })),
+    };
   }
 
   subscribe(callback: () => void): () => void {
@@ -126,15 +130,16 @@ class CustomListManager {
    */
   createList(name: string, description?: string, color?: string): CustomList {
     if (!guardMutation()) {
-      throw new Error(
-        'Your trial has ended. Export or restore your library anytime, or unlock Full Access to keep editing.'
-      );
+      throw new Error(t("accessReadOnly"));
     }
     // Update maxLists to ensure we have the latest Pro status
     this.updateMaxLists();
-    
-    if (this.userLists.maxLists !== Infinity && this.userLists.customLists.length >= this.userLists.maxLists) {
-      throw new Error(`Maximum ${this.userLists.maxLists} custom lists allowed without Full Access. Unlock Full Access for unlimited lists in Settings → Full Access.`);
+
+    if (
+      this.userLists.maxLists !== Infinity &&
+      this.userLists.customLists.length >= this.userLists.maxLists
+    ) {
+      throw new Error(t("accessListLimit", { count: this.userLists.maxLists }));
     }
 
     const id = `list_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -156,11 +161,11 @@ class CustomListManager {
 
   updateList(
     id: string,
-    updates: Partial<Pick<CustomList, "name" | "description" | "color">>
+    updates: Partial<Pick<CustomList, "name" | "description" | "color">>,
   ): CustomList | null {
     if (!guardMutation()) return null;
     const listIndex = this.userLists.customLists.findIndex(
-      (list) => list.id === id
+      (list) => list.id === id,
     );
     if (listIndex === -1) return null;
 
@@ -180,7 +185,7 @@ class CustomListManager {
   deleteList(id: string): boolean {
     if (!guardMutation()) return false;
     const listIndex = this.userLists.customLists.findIndex(
-      (list) => list.id === id
+      (list) => list.id === id,
     );
     if (listIndex === -1) return false;
 
@@ -197,9 +202,10 @@ class CustomListManager {
     // If we deleted the selected list, select the default list
     if (this.userLists.selectedListId === id) {
       const defaultList = this.userLists.customLists.find(
-        (list) => list.isDefault
+        (list) => list.isDefault,
       );
-      this.userLists.selectedListId = defaultList?.id || this.userLists.customLists[0]?.id;
+      this.userLists.selectedListId =
+        defaultList?.id || this.userLists.customLists[0]?.id;
     }
 
     // If we deleted the default list, make the first remaining list the default
@@ -231,7 +237,7 @@ class CustomListManager {
     }
     return (
       this.userLists.customLists.find(
-        (list) => list.id === this.userLists.selectedListId
+        (list) => list.id === this.userLists.selectedListId,
       ) || null
     );
   }
@@ -263,7 +269,7 @@ class CustomListManager {
     try {
       // Get Library data from localStorage
       const libraryData = JSON.parse(
-        localStorage.getItem("flicklet.library.v2") || "{}"
+        localStorage.getItem("flicklet.library.v2") || "{}",
       );
 
       // Calculate new counts
@@ -335,20 +341,29 @@ export const customListManager = new CustomListManager();
 
 // React hook for using custom lists
 export function useCustomLists(): UserLists {
-  const [userLists, setUserLists] = useState(() => customListManager.getUserLists());
+  const [userLists, setUserLists] = useState(() =>
+    customListManager.getUserLists(),
+  );
 
   useEffect(() => {
     const publish = () => {
       const next = customListManager.getUserLists();
-      setUserLists(previous => {
-        const changed = previous.selectedListId !== next.selectedListId
-          || previous.maxLists !== next.maxLists
-          || previous.customLists.length !== next.customLists.length
-          || next.customLists.some((list, index) => {
+      setUserLists((previous) => {
+        const changed =
+          previous.selectedListId !== next.selectedListId ||
+          previous.maxLists !== next.maxLists ||
+          previous.customLists.length !== next.customLists.length ||
+          next.customLists.some((list, index) => {
             const old = previous.customLists[index];
-            return !old || list.id !== old.id || list.name !== old.name
-              || list.description !== old.description || list.color !== old.color
-              || list.itemCount !== old.itemCount || list.isDefault !== old.isDefault;
+            return (
+              !old ||
+              list.id !== old.id ||
+              list.name !== old.name ||
+              list.description !== old.description ||
+              list.color !== old.color ||
+              list.itemCount !== old.itemCount ||
+              list.isDefault !== old.isDefault
+            );
           });
         return changed ? next : previous;
       });
@@ -364,7 +379,7 @@ export function useCustomLists(): UserLists {
 // Helper hook for selected list
 export function useSelectedList(): CustomList | null {
   const [selectedList, setSelectedList] = useState(
-    customListManager.getSelectedList()
+    customListManager.getSelectedList(),
   );
 
   useEffect(() => {

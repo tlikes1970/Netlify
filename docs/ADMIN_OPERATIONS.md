@@ -89,9 +89,11 @@ Purchased access is separate from trial and remains account-bound.
 |------|----------------|
 | **Firestore doc** | `users/{uid}/billing/status` |
 | **Client read** | `apps/web/src/lib/billing.ts` → `getBillingStatus()` |
-| **Paid flag** | `isPro: true`, `purchaseType: one_time` (Play INAPP) |
+| **Paid flag** | Verified version-2 Play ownership; unverified legacy paid flags are ignored |
 | **Override** | Paid status wins over expired trial in `useEntitlements` |
-| **Validation** | `POST /api/billing/validate` (Netlify) — stub; real Play API TODO |
+| **Validation** | `POST /api/billing/validate` — Firebase identity + real Play ProductPurchaseV2 validation, account binding and acknowledgement |
+
+Current security/configuration/recovery contract: [Full Access purchase and recovery](./FULL_ACCESS_PURCHASE_RECOVERY.md).
 
 Manual billing QA: [tests/manual/PLAY_BILLING_ONE_TIME.md](../tests/manual/PLAY_BILLING_ONE_TIME.md)
 

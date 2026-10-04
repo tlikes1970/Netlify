@@ -1,153 +1,103 @@
-/**
- * Process: Pro Status Helper
- * Purpose: Centralized Pro status resolution (settings + billing)
- * Data Source: settingsManager, billing status from Firestore
- * Update Path: Settings changes, billing updates
- * Dependencies: settings, billing
- */
-
-import { useState, useEffect } from 'react';
-import { settingsManager } from './settings';
-import { getBillingStatus } from './billing';
-
+import { useEffect, useState } from "react";
+import { auth } from "./firebaseBootstrap";
+import { useAuth } from "../hooks/useAuth";
+import { getBillingStatus } from "./billing";
 export interface ProStatus {
   isPro: boolean;
-  source: 'alpha' | 'gift' | 'stripe' | 'ios' | 'android' | 'manual' | null;
+  source: "alpha" | "gift" | "stripe" | "ios" | "android" | "manual" | null;
 }
-
-// Cache for billing status to avoid repeated Firestore reads
-let billingCache: { isPro: boolean; source: string | null; expiresAt: number } | null = null;
-const CACHE_DURATION = 60000; // 1 minute cache
-
-/**
- * Get Pro status for non-React usage
- * Resolves Pro status from billing (takes precedence) and settings (fallback)
- */
-export async function getProStatus(): Promise<ProStatus> {
-  // Check cache first
-  const now = Date.now();
-  if (billingCache && billingCache.expiresAt > now) {
-    // Use cached billing status (alpha toggle removed)
-    return { 
-      isPro: billingCache.isPro, 
-      source: (billingCache.source as ProStatus['source']) || null
-    };
-  }
-  
-  // Get billing status from Firestore
-  const billing = await getBillingStatus();
-  
-  // Cache the result
-  billingCache = {
-    isPro: billing.isPro,
-    source: billing.source,
-    expiresAt: now + CACHE_DURATION,
-  };
-  
-  if (billing.isPro) {
-    // One-time Full Access (Play INAPP) — not subject to subscription period expiry
-    if (billing.purchaseType === 'one_time') {
-      return {
-        isPro: true,
-        source: (billing.source as ProStatus['source']) || 'android',
-      };
-    }
-
-    if (billing.currentPeriodEnd) {
-      const periodEnd = billing.currentPeriodEnd.toDate();
-      if (periodEnd > new Date()) {
-        return {
-          isPro: true,
-          source: (billing.source as ProStatus['source']) || 'android',
-        };
-      }
-    }
-  }
-
-  return {
-    isPro: false,
-    source: null,
-  };
-}
-
-/**
- * Get Pro status synchronously (uses cache only)
- * Returns false if cache is expired or missing
- * For accurate status, use async getProStatus() instead
- */
-export function getProStatusSync(): ProStatus {
-  const now = Date.now();
-  if (billingCache && billingCache.expiresAt > now) {
-    return {
-      isPro: billingCache.isPro,
-      source: (billingCache.source as ProStatus['source']) || null,
-    };
-  }
-  // Cache expired or missing - return false conservatively
-  return { isPro: false, source: null };
-}
-
-/**
- * Clear billing cache (call after purchase or status update)
- */
+const unpaid: ProStatus = { isPro: false, source: null };
+let cache: { uid: string; status: ProStatus; expires: number } | null = null;
+let pending: {
+  uid: string;
+  generation: number;
+  promise: Promise<ProStatus>;
+} | null = null;
+let generation = 0;
 export function clearBillingCache(): void {
-  billingCache = null;
+  generation++;
+  cache = null;
+  pending = null;
 }
-
-/**
- * React hook for Pro status
- * Automatically updates when settings change
- * Note: Billing status is cached and refreshed periodically
- */
-export function useProStatus(): ProStatus {
-  const [proStatus, setProStatus] = useState<ProStatus>({ isPro: false, source: null });
-  
-  useEffect(() => {
-    let mounted = true;
-    
-    // Initial load
-    getProStatus().then((status) => {
-      if (mounted) {
-        setProStatus(status);
-      }
+export async function getProStatus(): Promise<ProStatus> {
+  const uid = auth.currentUser?.uid;
+  if (!uid) {
+    clearBillingCache();
+    return unpaid;
+  }
+  if (cache?.uid === uid && cache.expires > Date.now()) return cache.status;
+  if (pending?.uid === uid && pending.generation === generation)
+    return pending.promise;
+  const started = generation;
+  const promise = getBillingStatus(uid)
+    .then((billing) => {
+      // Legacy paid/test/manual flags are historical data, never proof of Play ownership.
+      const verified =
+        billing.isPro === true &&
+        billing.verified === true &&
+        billing.verificationVersion === 2 &&
+        billing.purchaseType === "one_time" &&
+        billing.productId === "flicklet_full_access" &&
+        /^[a-f0-9]{64}$/.test(billing.ownershipId || "");
+      const status: ProStatus = verified
+        ? { isPro: true, source: "android" }
+        : unpaid;
+      if (started !== generation || auth.currentUser?.uid !== uid)
+        return unpaid;
+      cache = { uid, status, expires: Date.now() + 60000 };
+      return status;
+    })
+    .finally(() => {
+      if (pending?.promise === promise) pending = null;
     });
-    
-    const refreshStatus = () => {
-      if (!mounted) return;
-      clearBillingCache();
-      getProStatus().then((status) => {
-        if (mounted) {
-          setProStatus(status);
-        }
+  pending = { uid, generation: started, promise };
+  return promise;
+}
+export function getProStatusSync(): ProStatus {
+  return cache &&
+    cache.uid === auth.currentUser?.uid &&
+    cache.expires > Date.now()
+    ? cache.status
+    : unpaid;
+}
+function refreshProStatus(): Promise<ProStatus> {
+  if (
+    pending &&
+    pending.uid === auth.currentUser?.uid &&
+    pending.generation === generation
+  )
+    return pending.promise;
+  clearBillingCache();
+  return getProStatus();
+}
+export function useProStatus(): ProStatus {
+  const { user } = useAuth();
+  const uid = user?.uid ?? null;
+  const [result, setResult] = useState<{
+    uid: string | null;
+    status: ProStatus;
+  }>({ uid: null, status: unpaid });
+  useEffect(() => {
+    let cancelled = false;
+    const refresh = () => {
+      void refreshProStatus().then((status) => {
+        if (!cancelled && auth.currentUser?.uid === uid)
+          setResult({ uid, status });
       });
     };
-
-    // Subscribe to settings changes
-    const unsubscribe = settingsManager.subscribe(refreshStatus);
-
-    const onPurchaseSuccess = () => refreshStatus();
-    window.addEventListener('pro-upgrade-success', onPurchaseSuccess);
-    
-    // Refresh billing status periodically
-    const interval = setInterval(() => {
-      if (mounted) {
-        billingCache = null; // Clear cache
-        getProStatus().then((status) => {
-          if (mounted) {
-            setProStatus(status);
-          }
-        });
-      }
-    }, CACHE_DURATION);
-    
+    void getProStatus().then((status) => {
+      if (!cancelled && (auth.currentUser?.uid ?? null) === uid)
+        setResult({ uid, status });
+    });
+    window.addEventListener("pro-upgrade-success", refresh);
+    window.addEventListener("billing:changed", refresh);
+    const timer = window.setInterval(refresh, 60000);
     return () => {
-      mounted = false;
-      unsubscribe();
-      window.removeEventListener('pro-upgrade-success', onPurchaseSuccess);
-      clearInterval(interval);
+      cancelled = true;
+      window.clearInterval(timer);
+      window.removeEventListener("pro-upgrade-success", refresh);
+      window.removeEventListener("billing:changed", refresh);
     };
-  }, []);
-  
-  return proStatus;
+  }, [uid]);
+  return result.uid === uid ? result.status : unpaid;
 }
-

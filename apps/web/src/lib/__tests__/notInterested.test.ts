@@ -6,7 +6,7 @@ import { setGlobalToastCallback } from '../toastBridge';
 const m = vi.hoisted(() => ({ uid: null as string | null, canWrite: true, native: true, cancel: vi.fn(), schedule: vi.fn(), pending: vi.fn(), episodes: vi.fn(), toast: vi.fn() }));
 vi.mock('../auth', () => ({ authManager: { getCurrentUser: () => m.uid ? { uid: m.uid } : null } }));
 vi.mock('../customLists', () => ({ customListManager: { updateItemCount: vi.fn() } }));
-vi.mock('../readOnlyGuard', () => ({ guardMutation: () => m.canWrite }));
+vi.mock('../readOnlyGuard', () => ({ guardMutation: () => m.canWrite, isMutationBlocked: () => !m.canWrite }));
 vi.mock('../tmdb', () => ({ getTVShowDetails: vi.fn().mockRejectedValue(Error('offline')) }));
 vi.mock('@/tmdb/tv', () => ({ fetchRelevantSeasonEpisodes: m.episodes }));
 vi.mock('@capacitor/core', () => ({ Capacitor: { isNativePlatform: () => m.native, getPlatform: () => 'android' } }));

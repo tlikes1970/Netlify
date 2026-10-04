@@ -1,3 +1,4 @@
+import { usePurchaseReconciliation } from "./hooks/usePurchaseReconciliation";
 import { purchaseErrorKey } from "./lib/accountErrors";
 import { t as accountText } from "./lib/language";
 import { t as coreText } from "./lib/language";
@@ -89,6 +90,7 @@ type SearchState = {
 
 export default function App() {
   useEntitlements();
+  usePurchaseReconciliation();
 
 
   const [sharedTitleQuery, setSharedTitleQuery] = useState<string | null>(null);

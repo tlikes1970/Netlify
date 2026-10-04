@@ -6,18 +6,20 @@
  * Dependencies: Firebase Firestore
  */
 
-import { Timestamp, doc, getDoc, setDoc } from 'firebase/firestore';
-import { db, auth } from './firebaseBootstrap';
+import { Timestamp, doc, getDoc, setDoc } from "firebase/firestore";
+import { db, auth } from "./firebaseBootstrap";
 
 export interface BillingStatus {
   isPro: boolean;
-  source: 'alpha' | 'gift' | 'stripe' | 'ios' | 'android' | 'manual' | null;
+  source: "alpha" | "gift" | "stripe" | "ios" | "android" | "manual" | null;
   currentPeriodEnd: Timestamp | null;
   cancelAtPeriodEnd: boolean;
   /** `one_time` = Play INAPP Full Access unlock (no subscription renewal). */
-  purchaseType?: 'one_time' | 'subscription';
+  purchaseType?: "one_time" | "subscription";
   productId?: string;
-  purchaseToken?: string;
+  verified?: boolean;
+  verificationVersion?: number;
+  ownershipId?: string;
 }
 
 /**
@@ -26,7 +28,7 @@ export interface BillingStatus {
  */
 export async function getBillingStatus(uid?: string): Promise<BillingStatus> {
   const userId = uid || auth.currentUser?.uid;
-  
+
   if (!userId) {
     return {
       isPro: false,
@@ -35,10 +37,12 @@ export async function getBillingStatus(uid?: string): Promise<BillingStatus> {
       cancelAtPeriodEnd: false,
     };
   }
-  
+
   try {
-    const billingDoc = await getDoc(doc(db, 'users', userId, 'billing', 'status'));
-    
+    const billingDoc = await getDoc(
+      doc(db, "users", userId, "billing", "status"),
+    );
+
     if (billingDoc.exists()) {
       const data = billingDoc.data();
       return {
@@ -48,13 +52,15 @@ export async function getBillingStatus(uid?: string): Promise<BillingStatus> {
         cancelAtPeriodEnd: data.cancelAtPeriodEnd || false,
         purchaseType: data.purchaseType,
         productId: data.productId,
-        purchaseToken: data.purchaseToken,
+        verified: data.verified,
+        verificationVersion: data.verificationVersion,
+        ownershipId: data.ownershipId,
       };
     }
   } catch (error) {
-    console.error('[Billing] Error reading billing status:', error);
+    console.error("[Billing] Error reading billing status:", error);
   }
-  
+
   return {
     isPro: false,
     source: null,
@@ -70,21 +76,20 @@ export async function getBillingStatus(uid?: string): Promise<BillingStatus> {
  */
 export async function updateBillingStatus(
   uid: string,
-  status: Partial<BillingStatus>
+  status: Partial<BillingStatus>,
 ): Promise<void> {
   try {
     await setDoc(
-      doc(db, 'users', uid, 'billing', 'status'),
+      doc(db, "users", uid, "billing", "status"),
       {
         ...status,
         updatedAt: Timestamp.now(),
       },
-      { merge: true }
+      { merge: true },
     );
-    console.log('[Billing] Billing status updated:', { uid, status });
+    console.log("[Billing] Billing status updated:", { uid, status });
   } catch (error) {
-    console.error('[Billing] Error updating billing status:', error);
+    console.error("[Billing] Error updating billing status:", error);
     throw error;
   }
 }
-

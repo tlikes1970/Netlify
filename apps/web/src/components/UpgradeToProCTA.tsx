@@ -8,9 +8,9 @@ import { t, useLanguage } from "../lib/language";
  */
 
 import { useEntitlements } from "../hooks/useEntitlements";
-import { startProUpgrade } from "../lib/proUpgrade";
+import { startProUpgrade, isAndroidBillingAvailable } from "../lib/proUpgrade";
 
-export type UpgradeCTAVariant = 'banner' | 'panel' | 'inline' | 'button';
+export type UpgradeCTAVariant = "banner" | "panel" | "inline" | "button";
 
 export interface UpgradeToProCTAProps {
   variant?: UpgradeCTAVariant;
@@ -22,7 +22,7 @@ export interface UpgradeToProCTAProps {
 
 /**
  * Unified Upgrade to Pro CTA component
- * 
+ *
  * Variants:
  * - 'banner': Small banner with icon and text link (used in NotificationsSection)
  * - 'panel': Larger panel with icon, heading, description, and button (used in NotificationSettings modal)
@@ -30,17 +30,17 @@ export interface UpgradeToProCTAProps {
  * - 'button': Button-only style (used in ProSection)
  */
 export function UpgradeToProCTA({
-  variant = 'banner',
+  variant = "banner",
   message,
   showIcon,
-  className = '',
+  className = "",
   disabled = false,
 }: UpgradeToProCTAProps) {
   useLanguage();
   const entitlements = useEntitlements();
 
-  // Paid Pro or active full-access trial — no upgrade nag
-  if (entitlements.paidPro || entitlements.hasFullAccess) {
+  // Purchased accounts need no purchase CTA; Android trials may purchase early.
+  if (entitlements.paidPro || !isAndroidBillingAvailable()) {
     return null;
   }
 
@@ -56,10 +56,13 @@ export function UpgradeToProCTA({
   };
 
   const displayMessage = message || defaultMessages[variant];
-  const shouldShowIcon = showIcon !== undefined ? showIcon : variant === 'banner' || variant === 'panel';
+  const shouldShowIcon =
+    showIcon !== undefined
+      ? showIcon
+      : variant === "banner" || variant === "panel";
 
   switch (variant) {
-    case 'banner':
+    case "banner":
       return (
         <div
           className={`p-3 rounded-lg border text-sm ${className}`}
@@ -73,7 +76,9 @@ export function UpgradeToProCTA({
             <span style={{ color: "var(--muted)" }}>
               {displayMessage}{" "}
               <button
-                onClick={startProUpgrade}
+                onClick={() => {
+                  void startProUpgrade().catch(() => undefined);
+                }}
                 className="underline font-medium"
                 style={{ color: "var(--accent)" }}
               >
@@ -84,31 +89,39 @@ export function UpgradeToProCTA({
         </div>
       );
 
-    case 'panel':
+    case "panel":
       return (
-        <div className={`p-4 rounded-lg border ${className}`} style={{ backgroundColor: 'var(--btn)', borderColor: 'var(--line)' }}>
+        <div
+          className={`p-4 rounded-lg border ${className}`}
+          style={{ backgroundColor: "var(--btn)", borderColor: "var(--line)" }}
+        >
           <div className="flex flex-wrap items-center gap-3">
             {shouldShowIcon && <div className="text-2xl">💎</div>}
             <div className="min-w-0 flex-1">
               <h4 className="font-semibold">{t("accessUnlock")}</h4>
-              <p className="text-sm" style={{ color: 'var(--muted)' }}>
+              <p className="text-sm" style={{ color: "var(--muted)" }}>
                 {displayMessage}
               </p>
             </div>
-            <button 
-              onClick={startProUpgrade}
+            <button
+              onClick={() => {
+                void startProUpgrade().catch(() => undefined);
+              }}
               className="px-4 py-2 rounded text-sm font-medium transition-colors"
-              style={{ backgroundColor: 'var(--accent)', color: 'white' }}>
+              style={{ backgroundColor: "var(--accent)", color: "white" }}
+            >
               {t("accessUnlockShort")}
             </button>
           </div>
         </div>
       );
 
-    case 'inline':
+    case "inline":
       return (
         <button
-          onClick={startProUpgrade}
+          onClick={() => {
+            void startProUpgrade().catch(() => undefined);
+          }}
           className={`underline ${className}`}
           style={{ color: "var(--accent)" }}
         >
@@ -116,10 +129,12 @@ export function UpgradeToProCTA({
         </button>
       );
 
-    case 'button':
+    case "button":
       return (
         <button
-          onClick={startProUpgrade}
+          onClick={() => {
+            void startProUpgrade().catch(() => undefined);
+          }}
           disabled={disabled}
           className={`px-6 py-3 rounded-lg font-medium transition-colors ${className}`}
           style={{
@@ -137,7 +152,3 @@ export function UpgradeToProCTA({
       return null;
   }
 }
-
-
-
-

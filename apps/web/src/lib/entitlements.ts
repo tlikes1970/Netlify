@@ -1,24 +1,25 @@
+import { auth } from "./firebaseBootstrap";
 /**
  * Central trial / Full Access / Read-Only entitlement resolution.
  * paidPro and activeTrial both grant full access; expired unpaid users are Read-Only.
  */
 
-import { t, tPlural } from './language';
-import { formatInteger } from './localeFormatters';
+import { t, tPlural } from "./language";
+import { formatInteger } from "./localeFormatters";
 
-import type { ProStatus } from './proStatus';
+import type { ProStatus } from "./proStatus";
 
 export const TRIAL_LENGTH_DAYS = 21;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
-export const TRIAL_STORAGE_KEY = 'flicklet.trial.v1';
+export const TRIAL_STORAGE_KEY = "flicklet.trial.v1";
 /** Bump when trial start rules change so expired legacy backfills can reset once. */
 export const TRIAL_RECORD_VERSION = 2;
 
 export type EntitlementPhase =
-  | 'anonymous'
-  | 'activeTrial'
-  | 'paidPro'
-  | 'expiredReadOnly';
+  | "anonymous"
+  | "activeTrial"
+  | "paidPro"
+  | "expiredReadOnly";
 
 export interface TrialRecord {
   userId: string;
@@ -29,7 +30,7 @@ export interface TrialRecord {
 export interface EntitlementInput {
   isAuthenticated: boolean;
   paidPro: boolean;
-  proSource: ProStatus['source'];
+  proSource: ProStatus["source"];
   trialStartMs: number | null;
   /** False while server trial is loading — conservative access until resolved. */
   trialResolved?: boolean;
@@ -45,16 +46,20 @@ export interface EntitlementState {
   isReadOnlyMode: boolean;
   trialStartMs: number | null;
   trialDaysRemaining: number | null;
-  proSource: ProStatus['source'];
+  proSource: ProStatus["source"];
 }
 
 export function loadTrialRecord(userId: string): TrialRecord | null {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(TRIAL_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as TrialRecord;
-    if (parsed?.userId === userId && typeof parsed.startMs === 'number') {
+    if (
+      parsed?.userId === userId &&
+      typeof parsed.startMs === "number" &&
+      Number.isFinite(parsed.startMs)
+    ) {
       return parsed;
     }
   } catch {
@@ -64,7 +69,7 @@ export function loadTrialRecord(userId: string): TrialRecord | null {
 }
 
 export function saveTrialRecord(record: TrialRecord): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
   try {
     localStorage.setItem(TRIAL_STORAGE_KEY, JSON.stringify(record));
   } catch {
@@ -74,7 +79,7 @@ export function saveTrialRecord(record: TrialRecord): void {
 
 export function getTrialDaysRemaining(
   trialStartMs: number | null,
-  nowMs: number = Date.now()
+  nowMs: number = Date.now(),
 ): number | null {
   if (trialStartMs == null) return null;
   const endMs = trialStartMs + TRIAL_LENGTH_DAYS * MS_PER_DAY;
@@ -85,7 +90,7 @@ export function getTrialDaysRemaining(
 
 export function isTrialActive(
   trialStartMs: number | null,
-  nowMs: number = Date.now()
+  nowMs: number = Date.now(),
 ): boolean {
   if (trialStartMs == null) return false;
   return nowMs < trialStartMs + TRIAL_LENGTH_DAYS * MS_PER_DAY;
@@ -95,7 +100,7 @@ export function isTrialExpired(
   trialStartMs: number | null,
   paidPro: boolean,
   isAuthenticated: boolean,
-  nowMs: number = Date.now()
+  nowMs: number = Date.now(),
 ): boolean {
   if (!isAuthenticated || paidPro) return false;
   if (trialStartMs == null) return false;
@@ -108,7 +113,7 @@ export function resolveEntitlements(input: EntitlementInput): EntitlementState {
 
   if (!input.isAuthenticated) {
     return {
-      phase: 'anonymous',
+      phase: "anonymous",
       paidPro: false,
       trialActive: false,
       trialExpired: false,
@@ -122,7 +127,7 @@ export function resolveEntitlements(input: EntitlementInput): EntitlementState {
 
   if (paidPro) {
     return {
-      phase: 'paidPro',
+      phase: "paidPro",
       paidPro: true,
       trialActive: false,
       trialExpired: false,
@@ -136,23 +141,24 @@ export function resolveEntitlements(input: EntitlementInput): EntitlementState {
 
   if (input.trialResolved === false) {
     return {
-      phase: 'anonymous',
+      phase: "anonymous",
       paidPro: false,
       trialActive: false,
       trialExpired: false,
       hasFullAccess: false,
       isReadOnlyMode: true,
       trialStartMs: input.trialStartMs,
-      trialDaysRemaining: input.trialStartMs != null
-        ? getTrialDaysRemaining(input.trialStartMs, nowMs)
-        : null,
+      trialDaysRemaining:
+        input.trialStartMs != null
+          ? getTrialDaysRemaining(input.trialStartMs, nowMs)
+          : null,
       proSource: input.proSource,
     };
   }
 
   if (input.trialStartMs == null) {
     return {
-      phase: 'expiredReadOnly',
+      phase: "expiredReadOnly",
       paidPro: false,
       trialActive: false,
       trialExpired: true,
@@ -165,16 +171,11 @@ export function resolveEntitlements(input: EntitlementInput): EntitlementState {
   }
 
   const trialActive = isTrialActive(input.trialStartMs, nowMs);
-  const trialExpired = isTrialExpired(
-    input.trialStartMs,
-    false,
-    true,
-    nowMs
-  );
+  const trialExpired = isTrialExpired(input.trialStartMs, false, true, nowMs);
 
   if (trialActive) {
     return {
-      phase: 'activeTrial',
+      phase: "activeTrial",
       paidPro: false,
       trialActive: true,
       trialExpired: false,
@@ -188,7 +189,7 @@ export function resolveEntitlements(input: EntitlementInput): EntitlementState {
 
   if (trialExpired) {
     return {
-      phase: 'expiredReadOnly',
+      phase: "expiredReadOnly",
       paidPro: false,
       trialActive: false,
       trialExpired: true,
@@ -202,7 +203,7 @@ export function resolveEntitlements(input: EntitlementInput): EntitlementState {
 
   // Authenticated, no paid, trial not started yet (pre-init)
   return {
-    phase: 'anonymous',
+    phase: "anonymous",
     paidPro: false,
     trialActive: false,
     trialExpired: false,
@@ -233,29 +234,59 @@ const entitlementSubscribers = new Set<() => void>();
 
 export function subscribeEntitlements(callback: () => void): () => void {
   entitlementSubscribers.add(callback);
-  return () => { entitlementSubscribers.delete(callback); };
+  return () => {
+    entitlementSubscribers.delete(callback);
+  };
 }
 
-export function setEntitlementsCache(state: EntitlementState): void {
-  const accessChanged = cachedEntitlements.hasFullAccess !== state.hasFullAccess
-    || cachedEntitlements.isReadOnlyMode !== state.isReadOnlyMode;
+let cachedUid: string | null | undefined;
+export function setEntitlementsCache(
+  state: EntitlementState,
+  uid?: string | null,
+): void {
+  cachedUid = uid;
+  const accessChanged =
+    cachedEntitlements.hasFullAccess !== state.hasFullAccess ||
+    cachedEntitlements.isReadOnlyMode !== state.isReadOnlyMode;
   cachedEntitlements = state;
-  if (accessChanged) entitlementSubscribers.forEach(callback => callback());
+  if (accessChanged) entitlementSubscribers.forEach((callback) => callback());
 }
 
 export function getEntitlementsSync(): EntitlementState {
+  const uid = cachedUid === undefined ? null : (auth.currentUser?.uid ?? null);
+  if (cachedUid !== undefined && cachedUid !== uid)
+    return resolveEntitlements({
+      isAuthenticated: !!uid,
+      paidPro: false,
+      proSource: null,
+      trialStartMs: null,
+      trialResolved: false,
+    });
+  if (
+    cachedEntitlements.phase === "activeTrial" &&
+    !isTrialActive(cachedEntitlements.trialStartMs)
+  )
+    return resolveEntitlements({
+      isAuthenticated: true,
+      paidPro: false,
+      proSource: null,
+      trialStartMs: cachedEntitlements.trialStartMs,
+      trialResolved: true,
+    });
   return cachedEntitlements;
 }
 
 export function getTrialStatusLabel(state: EntitlementState): string | null {
-  if (state.phase === 'paidPro') return null;
-  if (state.phase === 'activeTrial') {
+  if (state.phase === "paidPro") return null;
+  if (state.phase === "activeTrial") {
     const days = state.trialDaysRemaining;
     if (days == null) return t("accessTrialActive");
     if (days <= 0) return t("accessTrialToday");
-    return tPlural({ one: "accessTrialOne", other: "accessTrialOther" }, days, { count: formatInteger(days) });
+    return tPlural({ one: "accessTrialOne", other: "accessTrialOther" }, days, {
+      count: formatInteger(days),
+    });
   }
-  if (state.phase === 'expiredReadOnly') {
+  if (state.phase === "expiredReadOnly") {
     return t("accessReadOnly");
   }
   return null;

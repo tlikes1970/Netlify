@@ -52,7 +52,7 @@
 
 [[redirects]]
   from = "/api/billing/validate"
-  to   = "/.netlify/functions/billing/validate"
+  to   = "/.netlify/functions/billing-validate"
   status = 200
 
 # Hide a path
