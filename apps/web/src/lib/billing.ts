@@ -93,3 +93,12 @@ export async function updateBillingStatus(
     throw error;
   }
 }
+
+/** Separate server/admin-authored grant. Historical manual billing flags remain inert. */
+export async function getAdminFullAccessGrant(uid: string): Promise<boolean> {
+  const snapshot = await getDoc(doc(db, "users", uid, "billing", "adminGrant"));
+  if (!snapshot.exists()) return false;
+  const grant = snapshot.data();
+  return grant.active === true && grant.version === 1 && grant.userId === uid &&
+    typeof grant.updatedBy === "string" && grant.updatedBy.length > 0;
+}

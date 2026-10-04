@@ -6,6 +6,7 @@ import {
   screen,
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
+vi.mock("firebase/firestore", async (original) => ({ ...(await original<typeof import("firebase/firestore")>()), onSnapshot: () => () => {} }));
 const mocks = vi.hoisted(() => ({ billing: vi.fn(), user: { uid: "owner" } }));
 vi.mock("../../lib/firebaseBootstrap", async (original) => ({
   ...(await original<typeof import("../../lib/firebaseBootstrap")>()),
@@ -21,7 +22,7 @@ vi.mock("../../lib/auth", () => ({
 vi.mock("../../hooks/useAuth", () => ({
   useAuth: () => ({ user: mocks.user, isAuthenticated: true }),
 }));
-vi.mock("../../lib/billing", () => ({ getBillingStatus: mocks.billing }));
+vi.mock("../../lib/billing", () => ({ getBillingStatus: mocks.billing, getAdminFullAccessGrant: async () => false }));
 vi.mock("../../lib/trialEntitlement", () => ({
   resolveServerTrialStartMs: () => new Promise(() => {}),
 }));

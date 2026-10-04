@@ -1,12 +1,12 @@
-﻿import { useState, useEffect } from "react";
-import { auth, functions } from "../lib/firebaseBootstrap";
+import { functions } from "../lib/firebaseBootstrap";
+import { httpsCallable } from "firebase/functions";
+import { useState, useEffect } from "react";
 import { ExtrasVideo } from "../lib/extras/types";
 import { extrasProvider } from "../lib/extras/extrasProvider";
-import { useSettings, settingsManager } from "../lib/settings";
 import { useAdminRole } from "../hooks/useAdminRole";
 import { isMobileNow } from "../lib/isMobile";
-import { httpsCallable } from "firebase/functions";
-import { clearBillingCache } from "../lib/proStatus";
+import AdminFullAccess from "../components/admin/AdminFullAccess";
+import { t, useLanguage } from "../lib/language";
 import AdminUserManagement from "../components/admin/AdminUserManagement";
 
 interface UGCSubmission {
@@ -32,7 +32,7 @@ interface UGCSubmission {
 export default function AdminExtrasPage({
   isMobile: isMobileProp,
 }: { isMobile?: boolean } = {}) {
-  const settings = useSettings();
+  useLanguage();
   const { isAdmin } = useAdminRole();
   const [videos, setVideos] = useState<ExtrasVideo[]>([]);
   const [ugcSubmissions, setUgcSubmissions] = useState<UGCSubmission[]>([]);
@@ -69,34 +69,6 @@ export default function AdminExtrasPage({
     failed?: number;
     error?: string;
   } | null>(null);
-
-  // Pro status (settings mirror; useProStatus reads billing/status â€” keep both in sync via manageProStatus)
-  const isPro = settings.pro?.isPro ?? false;
-  const [proTogglePending, setProTogglePending] = useState(false);
-
-  const handleTogglePro = async () => {
-    const user = auth.currentUser;
-    if (!user?.uid) {
-      alert("You must be signed in to change Pro status.");
-      return;
-    }
-    const newProStatus = !isPro;
-    setProTogglePending(true);
-    try {
-      const manageProStatus = httpsCallable(functions, "manageProStatus");
-      await manageProStatus({ userId: user.uid, isPro: newProStatus });
-      clearBillingCache();
-      await settingsManager.loadSettingsFromFirebase(user.uid);
-    } catch (error: unknown) {
-      console.error("[AdminExtrasPage] manageProStatus failed:", error);
-      const err = error as { message?: string; code?: string };
-      alert(
-        `Failed to update Pro status: ${err.message || err.code || "Unknown error"}`
-      );
-    } finally {
-      setProTogglePending(false);
-    }
-  };
 
   const handleFetchVideos = async () => {
     if (!showId) return;
@@ -487,7 +459,7 @@ export default function AdminExtrasPage({
                 : activeTab === "videos"
                   ? "Video Submissions"
                   : activeTab === "pro"
-                    ? "Pro Status"
+                    ? t("adminAccessTitle")
                     : activeTab === "admin"
                       ? "Admin Management"
                       : "Admin"}
@@ -520,7 +492,7 @@ export default function AdminExtrasPage({
             <option value="insights">Insights & Easter Eggs</option>
             <option value="comments">Marquee Comments ({pendingUGC})</option>
             <option value="videos">Video Submissions ({pendingUGC})</option>
-            <option value="pro">Pro Status</option>
+            <option value="pro">{t("adminAccessTitle")}</option>
             {isAdmin && <option value="admin">Admin Management</option>}
           </select>
         ) : (
@@ -559,9 +531,9 @@ export default function AdminExtrasPage({
             <button
               onClick={() => setActiveTab("pro")}
               className={`admin-extras-tab ${activeTab === "pro" ? "admin-extras-tab--active" : ""}`}
-              title="Pro Status"
+              title={t("adminAccessTitle")}
             >
-              Pro Status
+              {t("adminAccessTitle")}
             </button>
             {isAdmin && (
               <button
@@ -1150,136 +1122,7 @@ export default function AdminExtrasPage({
           </div>
         )}
 
-        {/* Pro Status Tab */}
-        {activeTab === "pro" && (
-          <div className="space-y-6">
-            <div
-              className="bg-gray-100 rounded-lg p-6"
-              style={{ backgroundColor: "var(--card)" }}
-            >
-              <h2 className="text-2xl font-bold mb-4">Pro Status Management</h2>
-
-              <div className="space-y-4">
-                <div
-                  className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200"
-                  style={{
-                    backgroundColor: "var(--card)",
-                    borderColor: "var(--line)",
-                  }}
-                >
-                  <div>
-                    <h3
-                      className="text-lg font-semibold mb-1"
-                      style={{ color: "var(--text)" }}
-                    >
-                      Pro Status
-                    </h3>
-                    <p
-                      className="text-sm text-gray-600"
-                      style={{ color: "var(--muted)" }}
-                    >
-                      Current status:{" "}
-                      <strong
-                        className={isPro ? "text-green-600" : "text-gray-500"}
-                      >
-                        {isPro ? "Pro Enabled" : "Pro Disabled"}
-                      </strong>
-                    </p>
-                  </div>
-                  <label
-                    className={`relative inline-flex items-center ${proTogglePending ? "cursor-wait opacity-70" : "cursor-pointer"}`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isPro}
-                      disabled={proTogglePending}
-                      onChange={() => {
-                        void handleTogglePro();
-                      }}
-                      className="sr-only peer"
-                    />
-                    <div
-                      className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"
-                      style={{
-                        backgroundColor: "var(--btn)",
-                        borderColor: "var(--line)",
-                      }}
-                    ></div>
-                  </label>
-                </div>
-
-                {isPro && (
-                  <div
-                    className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200"
-                    style={{
-                      backgroundColor: "var(--card)",
-                      borderColor: "var(--line)",
-                    }}
-                  >
-                    <h4
-                      className="font-semibold text-green-800 mb-2"
-                      style={{ color: "var(--text)" }}
-                    >
-                      Pro Features Enabled:
-                    </h4>
-                    <ul
-                      className="list-disc list-inside space-y-1 text-sm text-green-700"
-                      style={{ color: "var(--text)" }}
-                    >
-                      <li>Episode Reminders</li>
-                      <li>Theme Packs</li>
-                      <li>Bloopers Access</li>
-                      <li>Extras Access</li>
-                    </ul>
-                  </div>
-                )}
-
-                {!isPro && (
-                  <div
-                    className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200"
-                    style={{
-                      backgroundColor: "var(--card)",
-                      borderColor: "var(--line)",
-                    }}
-                  >
-                    <h4
-                      className="font-semibold text-gray-800 mb-2"
-                      style={{ color: "var(--text)" }}
-                    >
-                      Free Tier Limitations:
-                    </h4>
-                    <ul
-                      className="list-disc list-inside space-y-1 text-sm text-gray-700"
-                      style={{ color: "var(--text)" }}
-                    >
-                      <li>No watch reminders</li>
-                      <li>No theme packs</li>
-                      <li>No bloopers/extras access</li>
-                    </ul>
-                  </div>
-                )}
-
-                <div
-                  className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200"
-                  style={{
-                    backgroundColor: "var(--card)",
-                    borderColor: "var(--line)",
-                  }}
-                >
-                  <p
-                    className="text-sm text-blue-800"
-                    style={{ color: "var(--text)" }}
-                  >
-                    <strong>Note:</strong> This updates Pro for the signed-in
-                    account in Firestore (including billing status used by the
-                    app) via the admin backend. It is not for changing other
-                    users&apos; accounts from this screen.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {activeTab === "pro" && isAdmin && <AdminFullAccess />}
 
         {/* Admin Management Tab */}
         {activeTab === "admin" && isAdmin && (

@@ -6,7 +6,7 @@ import {
   screen,
 } from "@testing-library/react";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
-const state = vi.hoisted(() => ({ paid: false, user: { uid: "paid-owner" } }));
+const state = vi.hoisted(() => ({ paid: false, manual: false, user: { uid: "paid-owner" } }));
 vi.mock("../../lib/firebaseBootstrap", async (original) => ({
   ...(await original<typeof import("../../lib/firebaseBootstrap")>()),
   auth: { currentUser: state.user },
@@ -24,7 +24,7 @@ vi.mock("../../hooks/useAuth", () => ({
 vi.mock("../../lib/proStatus", () => ({
   useProStatus: () => ({
     isPro: state.paid,
-    source: state.paid ? "android" : null,
+    source: state.paid ? (state.manual ? "manual" : "android") : null,
   }),
 }));
 vi.mock("../../lib/trialEntitlement", () => ({
@@ -39,6 +39,7 @@ import {
 
 beforeEach(() => {
   state.paid = false;
+  state.manual = false;
   localStorage.clear();
   setEntitlementsCache(
     resolveEntitlements({
@@ -112,4 +113,13 @@ it("does not miss a notification when the manager refreshes its limit before the
   );
   unsubscribe();
   expect(seen).toContain(Infinity);
+});
+
+it("admin-granted access is clearly distinct from Purchased in Full Access settings", async () => {
+ state.paid = true;state.manual = true;
+ render(renderSettingsSection("pro", {isMobile:false}));
+ expect(await screen.findAllByText("Administrator-granted Full Access")).toHaveLength(2);
+ expect(screen.getByText("Full Access has been granted to your Flicklet account by an administrator.")).toBeInTheDocument();
+ expect(screen.queryByText("Purchased")).not.toBeInTheDocument();
+ expect(screen.queryByText("One-time purchase complete")).not.toBeInTheDocument();
 });

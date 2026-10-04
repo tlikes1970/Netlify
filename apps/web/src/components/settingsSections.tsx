@@ -841,7 +841,7 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
     priceState.status === "loading" || priceState.status === "unavailable";
 
   const priceLabel = entitlements.paidPro
-    ? coreText("accessComplete")
+    ? coreText(entitlements.proSource === "manual" ? "accessAdminGranted" : "accessComplete")
     : priceState.status === "available"
       ? coreText("accessPrice", { price: priceState.product.price })
       : priceState.status === "loading"
@@ -876,7 +876,7 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
           style={{ color: "var(--text)" }}
         >
           {entitlements.paidPro
-            ? coreText("accessPurchased")
+            ? coreText(entitlements.proSource === "manual" ? "accessAdminGranted" : "accessPurchased")
             : entitlements.trialActive
               ? (trialLabel ?? coreText("accessTrial21"))
               : entitlements.isReadOnlyMode
@@ -894,7 +894,7 @@ function ProSection({ isMobile: _isMobile }: SettingsSectionProps) {
         ) : (
           <p className="text-sm mb-3" style={{ color: "var(--muted)" }}>
             {entitlements.paidPro
-              ? coreText("accessThanks")
+              ? coreText(entitlements.proSource === "manual" ? "accessAdminCopy" : "accessThanks")
               : entitlements.trialActive
                 ? coreText("accessExplore", {
                     trial: trialLabel ?? coreText("accessTrial21"),

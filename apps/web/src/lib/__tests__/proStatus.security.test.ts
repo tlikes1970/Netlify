@@ -1,10 +1,10 @@
 import { beforeEach, expect, it, vi } from "vitest";
 const m = vi.hoisted(() => ({
   auth: { currentUser: { uid: "owner" } as { uid: string } | null },
-  billing: vi.fn(),
+  billing: vi.fn(), grant: vi.fn(),
 }));
 vi.mock("../firebaseBootstrap", () => ({ auth: m.auth }));
-vi.mock("../billing", () => ({ getBillingStatus: m.billing }));
+vi.mock("../billing", () => ({ getBillingStatus: m.billing, getAdminFullAccessGrant: m.grant }));
 vi.mock("../../hooks/useAuth", () => ({
   useAuth: () => ({ user: m.auth.currentUser }),
 }));
@@ -25,6 +25,7 @@ beforeEach(() => {
   clearBillingCache();
   m.auth.currentUser = { uid: "owner" };
   m.billing.mockReset().mockResolvedValue(paid());
+  m.grant.mockReset().mockResolvedValue(false);
 });
 it("valid verified ownership grants paid access", async () => {
   expect((await getProStatus()).isPro).toBe(true);
@@ -97,4 +98,15 @@ it("concurrent resolvers coalesce provider reads", async () => {
 it("wrong ownership marker fails closed", async () => {
   m.billing.mockResolvedValue({ ...paid(), ownershipId: "bad" });
   expect((await getProStatus()).isPro).toBe(false);
+});
+
+it("explicit admin grant grants access without pretending it was purchased", async () => {
+ m.billing.mockResolvedValue({isPro:false});m.grant.mockResolvedValue(true);
+ expect(await getProStatus()).toEqual({isPro:true,source:"manual"});expect(m.grant).toHaveBeenCalledWith("owner");
+});
+it("revoking a grant does not remove verified purchased access", async () => {
+ m.grant.mockResolvedValue(false);expect(await getProStatus()).toEqual({isPro:true,source:"android"});
+});
+it("failed grant read fails closed without losing verified purchase", async () => {
+ m.grant.mockRejectedValue(new Error("offline"));expect((await getProStatus()).isPro).toBe(true);
 });

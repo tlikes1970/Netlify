@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { auth } from "./firebaseBootstrap";
 import { useAuth } from "../hooks/useAuth";
-import { getBillingStatus } from "./billing";
+import { doc, onSnapshot } from "firebase/firestore";
+import { db } from "./firebaseBootstrap";
+import { getBillingStatus, getAdminFullAccessGrant } from "./billing";
 export interface ProStatus {
   isPro: boolean;
   source: "alpha" | "gift" | "stripe" | "ios" | "android" | "manual" | null;
@@ -29,8 +31,11 @@ export async function getProStatus(): Promise<ProStatus> {
   if (pending?.uid === uid && pending.generation === generation)
     return pending.promise;
   const started = generation;
-  const promise = getBillingStatus(uid)
-    .then((billing) => {
+  const promise = Promise.all([
+    getBillingStatus(uid),
+    getAdminFullAccessGrant(uid).catch(() => false),
+  ])
+    .then(([billing, granted]) => {
       // Legacy paid/test/manual flags are historical data, never proof of Play ownership.
       const verified =
         billing.isPro === true &&
@@ -41,7 +46,9 @@ export async function getProStatus(): Promise<ProStatus> {
         /^[a-f0-9]{64}$/.test(billing.ownershipId || "");
       const status: ProStatus = verified
         ? { isPro: true, source: "android" }
-        : unpaid;
+        : granted
+          ? { isPro: true, source: "manual" }
+          : unpaid;
       if (started !== generation || auth.currentUser?.uid !== uid)
         return unpaid;
       cache = { uid, status, expires: Date.now() + 60000 };
@@ -91,9 +98,17 @@ export function useProStatus(): ProStatus {
     });
     window.addEventListener("pro-upgrade-success", refresh);
     window.addEventListener("billing:changed", refresh);
+    const stopGrant = uid
+      ? onSnapshot(
+          doc(db, "users", uid, "billing", "adminGrant"),
+          refresh,
+          () => undefined,
+        )
+      : () => undefined;
     const timer = window.setInterval(refresh, 60000);
     return () => {
       cancelled = true;
+      stopGrant();
       window.clearInterval(timer);
       window.removeEventListener("pro-upgrade-success", refresh);
       window.removeEventListener("billing:changed", refresh);

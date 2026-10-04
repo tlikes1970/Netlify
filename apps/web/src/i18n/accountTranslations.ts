@@ -1,6 +1,19 @@
 /** Flicklet-owned account, access and recovery display copy. Internal identities stay unchanged. */
 export const ACCOUNT_TRANSLATIONS = {
   en: {
+    adminAccessTitle: "Full Access grants",
+    adminAccessCopy: "Grant or revoke Full Access for an existing Flicklet account. Revoking a grant does not remove purchased access or change the trial.",
+    adminAccessTarget: "Account email or account ID",
+    adminAccessSelf: "Use my account",
+    adminAccessGrant: "Grant Full Access",
+    adminAccessRevoke: "Revoke grant",
+    adminAccessSaving: "Updating…",
+    adminAccessGranted: "Full Access granted to {target}.",
+    adminAccessRevoked: "Full Access grant revoked for {target}.",
+    adminAccessError: "Could not update the grant. Check the account email or ID, your administrator permission and connection, then retry.",
+    accessAdminGranted: "Administrator-granted Full Access",
+    accessAdminCopy: "Full Access has been granted to your Flicklet account by an administrator.",
+
     recoveryUnsupported:
       "This backup version is not supported. Choose a supported Flicklet backup.",
     accessReadOnlyHint: "Read-Only — unlock Full Access",
@@ -189,6 +202,19 @@ export const ACCOUNT_TRANSLATIONS = {
     startOverError: "Start Over failed. Please try again.",
   },
   es: {
+    adminAccessTitle: "Concesiones de Acceso completo",
+    adminAccessCopy: "Concede o revoca Acceso completo para una cuenta existente de Flicklet. Revocar una concesión no elimina el acceso comprado ni cambia la prueba.",
+    adminAccessTarget: "Correo o ID de la cuenta",
+    adminAccessSelf: "Usar mi cuenta",
+    adminAccessGrant: "Conceder Acceso completo",
+    adminAccessRevoke: "Revocar concesión",
+    adminAccessSaving: "Actualizando…",
+    adminAccessGranted: "Acceso completo concedido a {target}.",
+    adminAccessRevoked: "Concesión de Acceso completo revocada para {target}.",
+    adminAccessError: "No se pudo actualizar la concesión. Comprueba el correo o ID de la cuenta, tu permiso de administrador y la conexión, y vuelve a intentarlo.",
+    accessAdminGranted: "Acceso completo concedido por un administrador",
+    accessAdminCopy: "Un administrador ha concedido Acceso completo a tu cuenta de Flicklet.",
+
     recoveryUnsupported:
       "Esta versión de copia de seguridad no es compatible. Elige una copia de Flicklet compatible.",
     accessReadOnlyHint: "Solo lectura — desbloquea Acceso completo",
