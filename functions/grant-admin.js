@@ -59,7 +59,7 @@ async function grantAdmin(email) {
     console.log(`Found user: ${user.uid} (${user.email})`);
 
     // Set custom claims
-    await auth.setCustomUserClaims(user.uid, { role: "admin" });
+    await auth.setCustomUserClaims(user.uid, { ...user.customClaims, role: "admin" });
 
     console.log(`✅ Admin role granted to ${email}`);
     console.log(`   User ID: ${user.uid}`);

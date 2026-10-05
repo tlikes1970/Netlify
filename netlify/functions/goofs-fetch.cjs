@@ -1,3 +1,4 @@
+const { timingSafeEqual } = require("node:crypto");
 const spanishInsights = require("../../apps/web/src/data/insightTranslations.json");
 /**
  * Netlify Function: Generate Insights & Easter Eggs for a Movie/TV Show
@@ -85,21 +86,22 @@ const cors = (contentType = "application/json") => ({
 const ADMIN_TOKEN = process.env.GOOFS_INGESTION_ADMIN_TOKEN;
 
 function isAuthorized(event) {
-  if (!ADMIN_TOKEN) {
+  if (!ADMIN_TOKEN || !ADMIN_TOKEN.trim()) {
     console.warn(
-      "[goofs-fetch] GOOFS_INGESTION_ADMIN_TOKEN not set - allowing all requests (INSECURE)"
+      "[goofs-fetch] GOOFS_INGESTION_ADMIN_TOKEN missing - denying ingestion"
     );
-    // In production, this should return false, but for backward compatibility during migration:
-    return true;
+    return false;
   }
 
   const header =
     event.headers?.["x-admin-token"] || event.headers?.["X-Admin-Token"];
-  if (!header) {
+  if (typeof header !== "string" || !header) {
     return false;
   }
 
-  return header === ADMIN_TOKEN;
+  const expected = Buffer.from(ADMIN_TOKEN);
+  const supplied = Buffer.from(header);
+  return supplied.length === expected.length && timingSafeEqual(supplied, expected);
 }
 
 /**

@@ -12,7 +12,7 @@ const auth = getAuth(app);
 // Grant admin role
 const email = "likes.travis@gmail.com";
 const user = await auth.getUserByEmail(email);
-await auth.setCustomUserClaims(user.uid, { role: "admin" });
+await auth.setCustomUserClaims(user.uid, { ...user.customClaims, role: "admin" });
 console.log("✅ Admin role granted to", user.email);
 console.log("   User ID:", user.uid);
 console.log(

@@ -1,5 +1,4 @@
-// Export setAdminRole from separate file
-export { setAdminRole } from "./setAdminRole";
+// Administrator bootstrap is deliberately out-of-band; no public self-elevation endpoint.
 
 // Export manageAdminRole from separate file
 export { manageAdminRole } from "./manageAdminRole";
