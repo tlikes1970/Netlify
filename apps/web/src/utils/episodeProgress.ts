@@ -54,11 +54,17 @@ export function getCurrentSeasonProgress(showId: number): {
   const stored = readStoredEpisodeProgress(showId);
   const seasons = stored.seasons?.filter(
     (season) => season.seasonNumber > 0 && season.episodeNumbers.length > 0,
-  );
+  ).map(season => ({
+    ...season,
+    episodeNumbers: [...new Set(season.episodeNumbers)].sort((a, b) => a - b),
+  })).sort((a, b) => b.seasonNumber - a.seasonNumber);
   if (!seasons?.length) return null;
-  const current = [...seasons].sort(
-    (a, b) => b.seasonNumber - a.seasonNumber,
-  )[0];
+  // Stored progress has no per-episode chronology or explicit active season.
+  // Follow forward progression: latest numbered season actually begun, retaining
+  // completed-season feedback until a later season has watched progress.
+  const current = seasons.find(season => season.episodeNumbers.some(
+    episode => stored.episodes[`S${season.seasonNumber}E${episode}`],
+  )) ?? seasons[0]; // Preserve the existing no-progress/latest-season fallback.
   const watched = current.episodeNumbers.filter(
     (episode) => stored.episodes[`S${current.seasonNumber}E${episode}`],
   ).length;
