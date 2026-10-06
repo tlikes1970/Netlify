@@ -1,3 +1,5 @@
+import { getMetadataLanguage } from '../lib/language';
+import { authManager } from '../lib/auth';
 import { Library, type LibraryEntry } from '../lib/storage';
 import { fetchFullMediaMetadata } from '../search/api';
 import { getItemSynopsis, itemNeedsSynopsisBackfill } from '../lib/itemSynopsis';
@@ -14,11 +16,15 @@ async function backfillOneItem(item: LibraryEntry): Promise<void> {
   backfilledKeys.add(key);
 
   try {
-    const metadata = await fetchFullMediaMetadata(item);
+    const language = getMetadataLanguage();
+    const uid = authManager.getCurrentUser()?.uid;
+    const metadata = await fetchFullMediaMetadata(item, language);
+    if (language !== getMetadataLanguage() || uid !== authManager.getCurrentUser()?.uid) return;
     const synopsis = getItemSynopsis(metadata as LibraryEntry);
 
     if (synopsis) {
-      Library.upsert({ ...item, synopsis }, item.list);
+      const current = Library.getEntry(item.id, item.mediaType);
+      if (current && itemNeedsSynopsisBackfill(current)) Library.updateMetadata(item.id, item.mediaType, { synopsis });
     }
   } catch (error) {
     backfilledKeys.delete(key);

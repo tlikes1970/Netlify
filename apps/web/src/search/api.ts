@@ -64,14 +64,14 @@ export async function fetchNetworkInfo(id: number, mediaType: 'movie' | 'tv'): P
  * Fetch full metadata from TMDB for a media item
  * This ensures all metadata fields are populated when adding from search
  */
-export async function fetchFullMediaMetadata(item: MediaItem): Promise<Partial<MediaItem>> {
+export async function fetchFullMediaMetadata(item: MediaItem, language = getMetadataLanguage()): Promise<Partial<MediaItem>> {
   try {
     const id = typeof item.id === 'string' ? parseInt(item.id) : item.id;
     if (!id || !item.mediaType || item.mediaType === 'person') {
       return {};
     }
 
-    const data = await getCoreTitleDetails(id, item.mediaType, item);
+    const data = await getCoreTitleDetails(id, item.mediaType, item, language);
 
     // Extract common fields
     const title = item.mediaType === 'movie' ? data.title : data.name;

@@ -10,7 +10,7 @@ import { useTranslations } from "../../lib/language";
 import { useSettings, resolveFlickletLine } from "../../lib/settings";
 
 export default function HomeYourShowsRail() {
-  const items = useLibrary("watching");
+  const items = useLibrary("watching", { includeItemUpdates: true });
 
   const translations = useTranslations();
 

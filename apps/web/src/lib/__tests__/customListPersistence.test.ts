@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 const mocks=vi.hoisted(()=>({uid:'owner' as string|null,allowed:true,write:vi.fn(async()=>undefined)}));
 vi.mock('../auth',()=>({authManager:{getCurrentUser:()=>mocks.uid?{uid:mocks.uid}:null}}));
-vi.mock('../readOnlyGuard',()=>({guardMutation:()=>mocks.allowed}));
+vi.mock('../readOnlyGuard',()=>({guardMutation:()=>mocks.allowed,isMutationBlocked:()=>!mocks.allowed}));
 vi.mock('../proConfig',()=>({getMaxCustomLists:()=>10}));
 vi.mock('../firebaseBootstrap',()=>({db:{}}));
 vi.mock('firebase/firestore',()=>({doc:(_:unknown,...path:string[])=>path.join('/'),setDoc:mocks.write,serverTimestamp:()=>null}));
@@ -74,4 +74,22 @@ it('access and restore guards prevent definition changes and cloud writes',async
   mocks.allowed=true;const release=await beginRestore();
   Library.syncCustomListDefinitions('customListCreate');
   await vi.advanceTimersByTimeAsync(1000);expect(mocks.write).not.toHaveBeenCalled();release();
+});
+
+it.each(['owner',null])('localized canonical metadata uses existing cloud/local persistence for %s',async uid=>{
+ mocks.uid=uid;
+ const list=customListManager.createList('Family');
+ const item={id:'7',mediaType:'tv' as const,title:'English',userNotes:'Keep',tags:['Family'],userRating:4};
+ Library.upsert(item,'watching');Library.addToCustomList(item,list.id);
+ await vi.advanceTimersByTimeAsync(1000);mocks.write.mockClear();
+ const before={...Library.getEntry('7','tv')!};
+ Library.updateMetadata('7','tv',{title:'Español',synopsis:'Resumen'});
+ await vi.advanceTimersByTimeAsync(1000);
+ expect(Library.getEntry('7','tv')).toEqual({...before,title:'Español',synopsis:'Resumen'});
+ expect(mocks.write).toHaveBeenCalledTimes(uid?1:0);
+ if(uid){
+  const [,payload]=mocks.write.mock.calls[0] as unknown as [string,{watchlists:{tv:{watching:unknown[]},customItems:Record<string,unknown[]>}}];
+  expect(payload.watchlists.tv.watching[0]).toMatchObject({id:7,title:'Español',synopsis:'Resumen',user_notes:'Keep',user_tags:['Family']});
+  expect(payload.watchlists.customItems[list.id][0]).toMatchObject({id:7,title:'Español'});
+ }
 });

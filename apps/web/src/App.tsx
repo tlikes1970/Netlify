@@ -62,6 +62,7 @@ import AuthModal from "@/components/AuthModal";
 import AuthConfigError from "@/components/AuthConfigError";
 import { isAuthInFlightInOtherTab } from "@/lib/authBroadcast";
 import { backfillShowStatus } from "@/utils/backfillShowStatus";
+import { mountSavedMetadataLanguageRefresh } from "@/lib/savedMetadataLanguage";
 import { backfillSynopsis } from "@/utils/backfillSynopsis";
 import DebugAuthHUD from "@/components/DebugAuthHUD";
 import { googleLogin } from "@/lib/authLogin";
@@ -512,6 +513,8 @@ export default function App() {
       setShowSettings(true);
     }
   };
+
+  useEffect(() => mountSavedMetadataLanguageRefresh(), []);
 
   // Initialize action bridge and backfill show status
   useEffect(() => {

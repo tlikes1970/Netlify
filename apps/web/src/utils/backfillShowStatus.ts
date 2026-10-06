@@ -1,3 +1,4 @@
+import { authManager } from '../lib/auth';
 // Backfill show status for existing TV shows in the library
 import { Library } from '../lib/storage';
 import { fetchShowStatus } from '../tmdb/tv';
@@ -21,15 +22,15 @@ export async function backfillShowStatus() {
   
   for (const show of tvShows) {
     try {
+      const uid = authManager.getCurrentUser()?.uid;
       const statusData = await fetchShowStatus(Number(show.id));
       
-      if (statusData) {
+      if (statusData && uid === authManager.getCurrentUser()?.uid) {
         // Update the show with status data
-        Library.upsert({
-          ...show,
+        Library.updateMetadata(show.id, show.mediaType, {
           showStatus: statusData.status as 'Ended' | 'Returning Series' | 'In Production' | 'Canceled' | 'Planned' | undefined,
           lastAirDate: statusData.lastAirDate || undefined
-        }, show.list);
+        });
         
         // ⚠️ REMOVED: debugGate diagnostics disabled
       } else {

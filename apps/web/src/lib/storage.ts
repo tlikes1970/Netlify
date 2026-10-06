@@ -10,7 +10,7 @@ import type { ListName } from "../state/library.types";
 import { customListManager } from "./customLists";
 import { authManager } from "./auth";
 import { debounce } from "./debounce";
-import { guardMutation } from "./readOnlyGuard";
+import { guardMutation, isMutationBlocked } from "./readOnlyGuard";
 
 const KEY = "flicklet.library.v2";
 const OLD_KEY = "flicklet:v2:saved";
@@ -262,6 +262,25 @@ export function addToListWithConfirmation(
 }
 
 export const Library = {
+  /** Merge provider fields into the latest canonical entry, never a captured user snapshot. */
+  updateMetadata(id: MediaItem['id'], mediaType: MediaType, metadata: Partial<MediaItem>): boolean {
+    if (isRestoring() || isMutationBlocked()) return false;
+    const current = Library.getEntry(id, mediaType);
+    if (!current) return false;
+    const fields = ['title', 'synopsis', 'year', 'releaseDate', 'posterUrl', 'voteAverage',
+      'voteCount', 'runtimeMins', 'showStatus', 'lastAirDate', 'networks', 'productionCompanies'] as const;
+    const patch: Partial<MediaItem> = {};
+    for (const field of fields) {
+      const value = metadata[field];
+      if (value === undefined || value === null) continue;
+      if (typeof value === 'string' && !value.trim()) continue;
+      if (field === 'title' && (typeof value !== 'string' || value.trim() === String(id) || value.trim() === 'Untitled')) continue;
+      if (JSON.stringify(value) !== JSON.stringify(current[field])) Object.assign(patch, { [field]: value });
+    }
+    if (!Object.keys(patch).length) return false;
+    Library.upsert({ ...current, ...patch }, current.list);
+    return true;
+  },
   getAll(): LibraryEntry[] {
     return Object.values(state);
   },

@@ -72,3 +72,10 @@ it.each(['drama','anime','animation'])('For You %s uses Spanish without changing
  if(genre==='anime')expect(params(fetchMock.mock.calls[0][0]).get('with_origin_country')).toBe('JP');if(genre==='animation')expect(params(fetchMock.mock.calls[0][0]).get('without_origin_country')).toBe('JP');
 });
 it('generic get does not implicitly localize deferred episode/season callers',async()=>{changeLanguage('es');await get('/tv/501/season/1');expect(params(fetchMock.mock.calls[0][0]).has('language')).toBe(false);});
+it.each(['movie','tv'] as const)('saved %s enrichment honors the explicitly captured locale after selection changes',async kind=>{
+ changeLanguage('en');
+ fetchMock.mockResolvedValue(response({id:501,title:'Español',name:'Español',overview:'Resumen'}));
+ const metadata=await fetchFullMediaMetadata({id:501,mediaType:kind,title:'Old'},'es');
+ expect(metadata).toMatchObject({title:'Español',synopsis:'Resumen'});
+ expect(params(fetchMock.mock.calls[0][0]).get('language')).toBe('es');
+});
