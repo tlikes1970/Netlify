@@ -5,7 +5,7 @@
 [build]
   base    = "apps/web"
   publish = "dist"
-  command = "npm run build"
+  command = "npm ci --prefix ../../netlify/functions --omit=dev --no-audit --no-fund && npm run build"
 
 [build.environment]
   NODE_VERSION = "20"

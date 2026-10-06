@@ -1,0 +1,8 @@
+{
+  "name": "flicklet-netlify-functions",
+  "private": true,
+  "dependencies": {
+    "@sendgrid/mail": "8.1.6",
+    "firebase-admin": "11.11.1"
+  }
+}
