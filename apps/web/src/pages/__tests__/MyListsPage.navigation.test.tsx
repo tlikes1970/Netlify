@@ -9,7 +9,7 @@ vi.mock('@/lib/proConfig', () => ({ getMaxCustomLists: () => 3 }));
 vi.mock('@/lib/auth', () => ({authManager: {getCurrentUser: () => null}}));
 vi.mock('@/lib/readOnlyGuard', () => ({guardMutation: () => true}));
 vi.mock('@/lib/settings', () => ({useSettings: () => ({personality:'Zen'}), getPersonalityText: () => 'Empty list', DEFAULT_PERSONALITY:'Zen'}));
-vi.mock('@/lib/language', async (importOriginal) => ({...await importOriginal<typeof import("@/lib/language")>(),useTranslations: () => ({sharingAction:"Share"})}));
+vi.mock('@/lib/language', async (importOriginal) => ({...await importOriginal<typeof import("@/lib/language")>(),useTranslations: () => ({sharingAction:"Share",createNewList:"Create New List",rename:"Rename",delete:"Delete"})}));
 vi.mock('@/lib/shareLinks', () => ({shareListWithFallback: vi.fn()}));
 vi.mock('@/state/actions', () => ({getToastCallback: () => vi.fn()}));
 vi.mock('@/components/cards/TabCard', () => ({default: ({item}: {item:{title:string}}) => <article>{item.title}</article>}));
@@ -113,4 +113,26 @@ it('header shares the entire list through the privacy-safe helper without alteri
   expect(vi.mocked(shareListWithFallback).mock.calls[0][1]).toEqual([{title:'Only A',mediaType:'movie',voteAverage:8}]);
   expect(JSON.stringify(Library.getAll())).toBe(before);
   expect(JSON.stringify(customListManager.getUserLists())).toBe(listsBefore);
+});
+
+function phoneViewport() { vi.stubGlobal('matchMedia',vi.fn(()=>({matches:true,addEventListener:vi.fn(),removeEventListener:vi.fn()}))); }
+it('phone uses one selected-list/count toolbar and switches canonical membership',()=>{
+ phoneViewport();try{
+ const {container}=render(<MyListsPage onBack={vi.fn()}/>);expect(container.querySelector('.custom-list-phone-toolbar')).not.toBeNull();expect(screen.queryByRole('heading')).toBeNull();expect(screen.queryByRole('button',{name:/^List A/})).toBeNull();
+ const selector=screen.getByRole('combobox',{name:'Select a custom list'});expect(selector).toHaveValue('a');expect(screen.getByRole('option',{name:'List A (1)'})).toBeInTheDocument();fireEvent.change(selector,{target:{value:'b'}});expect(screen.getByRole('article')).toHaveTextContent('Only B');expect(customListManager.getSelectedList()?.id).toBe('b');
+ }finally{vi.unstubAllGlobals()}
+});
+it('phone create reuses manager and selects new list',()=>{
+ phoneViewport();try{vi.mocked(window.prompt).mockReturnValue('New list');render(<MyListsPage/>);fireEvent.click(screen.getByRole('button',{name:'Create New List'}));expect(customListManager.getSelectedList()?.name).toBe('New list');expect(screen.getByRole('combobox')).toHaveValue(customListManager.getSelectedList()!.id);}finally{vi.unstubAllGlobals()}
+});
+it.each(['Rename','Share','Delete'])('phone overflow retains %s action and existing confirmation',async action=>{
+ phoneViewport();try{
+ vi.mocked(shareListWithFallback).mockClear();vi.mocked(window.prompt).mockReturnValue('Renamed');render(<MyListsPage/>);fireEvent.click(screen.getByRole('button',{name:'List actions'}));fireEvent.click(screen.getByRole('button',{name:action,exact:true}));expect(screen.queryByRole('dialog')).toBeNull();
+ if(action==='Rename')expect(customListManager.getListById('a')?.name).toBe('Renamed');
+ if(action==='Share')expect(shareListWithFallback).toHaveBeenCalledOnce();
+ if(action==='Delete'){expect(window.confirm).toHaveBeenCalledWith('Delete “List A”? Titles will stay in your Library.');expect(customListManager.getListById('a')).toBeNull();expect(Library.getEntry('1','movie')).toBeDefined();}
+ }finally{vi.unstubAllGlobals()}
+});
+it('phone menu cancellation and Escape preserve list data',()=>{
+ phoneViewport();try{vi.mocked(window.confirm).mockReturnValue(false);render(<MyListsPage/>);screen.getByRole('button',{name:'List actions'}).focus();fireEvent.click(screen.getByRole('button',{name:'List actions'}));fireEvent.keyDown(document,{key:'Escape'});expect(screen.getByRole('button',{name:'List actions'})).toHaveFocus();fireEvent.click(screen.getByRole('button',{name:'List actions'}));fireEvent.click(screen.getByRole('button',{name:'Delete',exact:true}));expect(customListManager.getListById('a')).toBeDefined();}finally{vi.unstubAllGlobals()}
 });

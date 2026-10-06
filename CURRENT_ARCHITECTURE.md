@@ -332,4 +332,4 @@ Redirects: `/api/tmdb-proxy` → `tmdb-proxy`, etc. (`netlify.toml`).
 
 **Play Store internal testing** with a reproducible Node 20 Capacitor sync, signed release build, Google login, TMDB/search/posters, on-device For You persistence, and validated billing/feedback paths. **In flight:** Unified Library device QA. Core product build-out: **personality layer**, **confirmation/feedback UX**. **After testing:** Capgo native auth migration to drop Codetrix `patch-package` debt.
 
-Shows Like This reads existing `insights` Firestore observations through `apps/web/src/lib/insights/insightsStore.ts`; Extras requests TMDB videos through the existing TMDB proxy.
+Shows Like This uses TMDB Recommendations with Similar fallback through `apps/web/src/lib/relatedTitles.ts` and the existing TMDB proxy; Extras requests TMDB videos through that proxy.

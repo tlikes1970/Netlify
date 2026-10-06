@@ -1063,6 +1063,11 @@ export default function App() {
                 ? parseInt(showsLikeThisModalItem.id, 10)
                 : showsLikeThisModalItem.id
             }
+            mediaType={showsLikeThisModalItem.mediaType}
+            onSelect={(item) => {
+              setShowShowsLikeThisModal(false);
+              setSharedTitleQuery(new URLSearchParams({ view: 'title', tmdbId: String(item.id), mediaType: item.mediaType }).toString());
+            }}
             title={showsLikeThisModalItem.title}
           />
         )}

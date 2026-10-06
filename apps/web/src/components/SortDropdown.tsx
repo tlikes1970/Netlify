@@ -14,6 +14,7 @@ interface SortDropdownProps {
   value: SortMode;
   onChange: (mode: SortMode) => void;
   disabled?: boolean;
+  compact?: boolean;
 }
 
 const sortOptions = [
@@ -25,11 +26,11 @@ const sortOptions = [
   { value: 'custom', label: 'coreCustomOrder' },
 ] as const;
 
-export default function SortDropdown({ value, onChange, disabled = false }: SortDropdownProps) {
+export default function SortDropdown({ value, onChange, disabled = false, compact = false }: SortDropdownProps) {
   useLanguage();
   const id = useId();
   return (
-    <div className="library-sort-control flex items-center gap-2">
+    <div className={`library-sort-control flex items-center gap-2 min-w-0 ${compact ? 'border rounded px-2 min-h-[44px]' : ''}`}>
       <label htmlFor={id} className="text-sm" style={{ color: 'var(--muted)' }}>{coreText("coreSort")}</label>
       <>
         <style>{`
@@ -65,7 +66,7 @@ export default function SortDropdown({ value, onChange, disabled = false }: Sort
           value={value}
           onChange={(e) => onChange(e.target.value as SortMode)}
           disabled={disabled}
-          className="sort-dropdown-select library-filter-control px-3 py-1.5 rounded text-sm border transition font-medium"
+          className={`sort-dropdown-select library-filter-control rounded text-sm transition font-medium ${compact ? 'min-w-0 w-full min-h-[44px] border-0 px-1' : 'px-3 py-1.5 border'}`}
           style={{
             backgroundColor: 'var(--menu-bg)',
             borderColor: value === 'custom' ? 'var(--accent-primary)' : 'var(--menu-border)',
@@ -90,7 +91,7 @@ export default function SortDropdown({ value, onChange, disabled = false }: Sort
           ))}
         </select>
       </>
-      {value === 'custom' && (
+      {value === 'custom' && !compact && (
         <span
           className="px-2 py-1 rounded-full text-xs font-medium"
           style={{ backgroundColor: 'var(--accent-primary)', color: 'white' }}

@@ -1,3 +1,6 @@
+import { useIsMobileScreen } from '../hooks/useDeviceDetection';
+import { MobileControlDialog } from '../components/MobileControlDialog';
+import '../styles/mobileLibraryControls.css';
 import { t as coreText, useLanguage, tPlural } from "@/lib/language";
 import React, { useState } from 'react';
 import TabCard from '../components/cards/TabCard';
@@ -12,6 +15,11 @@ import { setPrimaryStatus, setNotInterested } from '../lib/statusTransitions';
 
 export default function MyListsPage({onBack, onNotesEdit}: {onBack?: () => void; onNotesEdit?: (item: import("../components/cards/card.types").MediaItem) => void} = {}) {
   useLanguage();
+  const phone = useIsMobileScreen();
+  const [listActionsOpen, setListActionsOpen] = useState(false);
+  React.useEffect(() => {
+    if (!phone) setListActionsOpen(false);
+  }, [phone]);
   const userLists = useCustomLists();
   const [selectedListId, setSelectedListId] = useState<string>(() => customListManager.getSelectedList?.()?.id || '');
   const translations = useTranslations();
@@ -187,6 +195,7 @@ export default function MyListsPage({onBack, onNotesEdit}: {onBack?: () => void;
 
   return (
     <section className="px-4 py-4 custom-lists-page">
+      {!phone && <>
       {onBack && <button type="button" onClick={onBack} className="mb-3 min-h-[44px]">{coreText("coreBackArrow")}</button>}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h1 className="text-xl font-semibold" style={{ color: 'var(--text)' }}>{coreText("coreCustomLists")}</h1>
@@ -256,10 +265,26 @@ export default function MyListsPage({onBack, onNotesEdit}: {onBack?: () => void;
         </div>
       )}
 
+      </>}
+      {phone && <div className="custom-list-phone-toolbar flex items-center gap-2 mb-3 min-w-0">
+        <select aria-label={coreText('mobileSelectList')} value={selectedListId} onChange={event => handleListChange(event.target.value)} className="min-w-0 flex-1 min-h-[44px] rounded border px-2" style={{background:'var(--btn)',color:'var(--text)'}} disabled={!userLists.customLists.length}>
+          {!userLists.customLists.length && <option value="">{coreText('coreCustomLists')}</option>}
+          {userLists.customLists.map(list => <option key={list.id} value={list.id}>{list.name} ({Library.getByList(`custom:${list.id}`).length})</option>)}
+        </select>
+        <button type="button" onClick={handleCreateList} disabled={userLists.customLists.length >= userLists.maxLists} className="min-h-[44px] min-w-[44px] border rounded shrink-0" aria-label={translations.createNewList}>+</button>
+        <button type="button" onClick={() => setListActionsOpen(true)} disabled={!selectedList} className="min-h-[44px] min-w-[44px] border rounded shrink-0" aria-label={coreText('mobileListActions')} aria-haspopup="dialog" aria-expanded={listActionsOpen}>⋮</button>
+        {listActionsOpen && selectedList && <MobileControlDialog title={coreText('mobileListActions')} onClose={() => setListActionsOpen(false)}>
+          <div className="flex flex-col gap-2">
+            <button type="button" className="min-h-[44px] text-left" onClick={() => {setListActionsOpen(false); handleRenameList(selectedListId);}}>{translations.rename}</button>
+            <button type="button" className="min-h-[44px] text-left" onClick={() => {setListActionsOpen(false); void handleShareList(selectedListId);}}>{translations.sharingAction}</button>
+            <button type="button" className="min-h-[44px] text-left" onClick={() => {setListActionsOpen(false); handleDeleteList(selectedListId);}}>{translations.delete}</button>
+          </div>
+        </MobileControlDialog>}
+      </div>}
       {/* Items Display */}
       {selectedList ? (
         <>
-          <div className="mb-4 flex items-center justify-between gap-3">
+          {!phone && <div className="mb-4 flex items-center justify-between gap-3">
             <div className="min-w-0 break-words flex-1">
               <h2 className="text-lg font-medium" style={{ color: 'var(--text)' }}>
                 {selectedList.name}
@@ -282,7 +307,7 @@ export default function MyListsPage({onBack, onNotesEdit}: {onBack?: () => void;
               <span>🔗</span>
               <span>{translations.sharingAction}</span>
             </button>
-          </div>
+          </div>}
 
           {items.length > 0 ? (
             <div className="custom-list-cards flex flex-col gap-3">

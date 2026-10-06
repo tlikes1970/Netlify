@@ -11,9 +11,10 @@ interface ListFiltersProps {
   onChange: (filters: ListFiltersState) => void;
   availableProviders: string[];
   disabled?: boolean;
+  inlineNetworks?: boolean;
 }
 
-export default function ListFilters({value,onChange,availableProviders,disabled=false}: ListFiltersProps) {
+export default function ListFilters({value,onChange,availableProviders,disabled=false,inlineNetworks=false}: ListFiltersProps) {
   useLanguage();
   const id=useId();
   const trigger=useRef<HTMLButtonElement>(null);
@@ -48,7 +49,8 @@ export default function ListFilters({value,onChange,availableProviders,disabled=
         <option value="all">{coreText("coreAll")}</option><option value="movie">{coreText("coreMovie")}</option><option value="tv">{coreText("coreTVShort")}</option>
       </select>
     </div>
-    {(availableProviders.length>0 || value.providers.length>0) && <button type="button" ref={trigger} disabled={disabled}
+    {inlineNetworks && options.length > 0 && <fieldset className="w-full min-w-0"><legend>{coreText('coreNetwork')}</legend>{options.map(name => <label key={name} className="flex items-center gap-2 min-h-[44px] min-w-0"><input type="checkbox" checked={selected(name)} disabled={disabled} onChange={() => onChange({...value,providers:selected(name)?value.providers.filter(p=>p.toLowerCase()!==name.toLowerCase()):[...value.providers,name]})}/><span className="min-w-0" style={{overflowWrap:'anywhere'}}>{name}</span></label>)}</fieldset>}
+    {!inlineNetworks && (availableProviders.length>0 || value.providers.length>0) && <button type="button" ref={trigger} disabled={disabled}
       aria-expanded={open} aria-haspopup="dialog" aria-controls={`${id}-networks`} onClick={()=>setOpen(!open)}
       className="library-network-control library-filter-control px-2 rounded text-sm border" style={{backgroundColor:value.providers.length?'var(--accent-primary)':'var(--menu-bg)',color:value.providers.length?'white':'var(--menu-text)'}}>{coreText("coreNetwork")}{value.providers.length ? ` (${value.providers.length})` : ''} <span aria-hidden="true">{open?'▲':'▼'}</span>
     </button>}

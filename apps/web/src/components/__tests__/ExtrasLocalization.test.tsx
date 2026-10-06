@@ -9,9 +9,6 @@ vi.mock('../../lib/extras/extrasProvider',()=>({extrasProvider:{fetchExtras:mock
 vi.mock('../../lib/proUpgrade',()=>({startProUpgrade:mocks.upgrade,isAndroidBillingAvailable:()=>true}));
 beforeEach(()=>{languageManager.setLanguage('en');mocks.fetch.mockReset();mocks.hasFullAccess=true;mocks.upgrade.mockReset()});
 afterEach(()=>{cleanup();languageManager.setLanguage('en')});
-it('Shows Like This displays observations, localized labels and stable title identity EN ES EN',async()=>{
- render(<ShowsLikeThisModal isOpen onClose={()=>{}} tmdbId={2316} title="User Title"/>);await screen.findByRole('dialog',{name:'User Title - Shows Like This'});await screen.findByText(/George Foreman/);act(()=>languageManager.setLanguage('es'));await screen.findByRole('dialog',{name:'User Title - Títulos similares'});await screen.findByText(/parrilla George Foreman/);expect(screen.getByRole('button',{name:'Cerrar ventana'})).toBeInTheDocument();act(()=>languageManager.setLanguage('en'));await screen.findByText(/George Foreman/);
-});
 it('Extras updates UI while preserving provider titles and rejecting old-language late responses',async()=>{
  let resolveOld:(value:any)=>void=()=>{};mocks.fetch.mockImplementationOnce(()=>new Promise(resolve=>{resolveOld=resolve})).mockResolvedValue({kind:'success',videos:[{id:'es',title:'Provider título original',thumbnailUrl:'',embedUrl:'',publishedAt:'2020-01-01',channelName:'Original channel'}]});render(<ExtrasModal isOpen onClose={()=>{}} showId={8} showTitle="User Title"/>);await waitFor(()=>expect(mocks.fetch).toHaveBeenCalledTimes(1));act(()=>languageManager.setLanguage('es'));await screen.findByText('Provider título original');expect(screen.getByRole('button',{name:'Cerrar ventana'})).toBeInTheDocument();await act(async()=>resolveOld({kind:'success',videos:[{id:'old',title:'Stale English video'}]}));expect(screen.queryByText('Stale English video')).not.toBeInTheDocument();act(()=>languageManager.setLanguage('en'));await screen.findByRole('button',{name:'Close modal'});expect(await screen.findByText('Provider título original')).toBeInTheDocument();
 });
@@ -38,6 +35,6 @@ it.each([
 });
 
 it('Shows Like This keeps its Full Access gate and never exposes observations when locked',async()=>{
- mocks.hasFullAccess=false;render(<ShowsLikeThisModal isOpen onClose={()=>{}} tmdbId={2316} title="User Title"/>);
+ mocks.hasFullAccess=false;render(<ShowsLikeThisModal isOpen onClose={()=>{}} tmdbId={2316} mediaType="tv" title="User Title"/>);
  expect(screen.getByRole('dialog',{name:'User Title - Shows Like This'})).toBeInTheDocument();expect(screen.queryByText(/George Foreman/)).not.toBeInTheDocument();
 });

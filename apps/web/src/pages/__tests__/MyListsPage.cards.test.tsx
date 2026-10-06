@@ -11,7 +11,7 @@ vi.mock('@/lib/customLists', async () => {
 });
 vi.mock('@/lib/settings', () => ({useSettings: () => ({layout:{episodeTracking:false}, personality:'Zen'}), getPersonalityText: () => 'Nothing here yet', DEFAULT_PERSONALITY:'Zen'}));
 vi.mock('@/lib/language', async (importOriginal) => ({...await importOriginal<typeof import("@/lib/language")>(),useTranslations: () => ({wantToWatchAction:'Want to Watch',currentlyWatchingAction:'Watching',notesAndTags:'Notes & Tags',watchedAction:'Watched',notInterestedAction:'Not Interested'})}));
-vi.mock('@/hooks/useDeviceDetection', () => ({useIsDesktop: () => ({isDesktop:false,ready:true})}));
+vi.mock('@/hooks/useDeviceDetection', () => ({useIsDesktop: () => ({isDesktop:false,ready:true}),useIsMobileScreen:()=>true}));
 vi.mock('@/hooks/useEntitlements', () => ({useEntitlements: () => ({hasFullAccess:true,isReadOnlyMode:false})}));
 vi.mock('@/components/Toast', () => ({useToast: () => ({addToast:mocks.toast})}));
 vi.mock('@/lib/tmdb', () => ({getTVShowDetails: vi.fn()}));
@@ -43,7 +43,7 @@ describe('mobile Custom List cards', async () => {
   it('omits redundant Not Interested while retaining legitimate restore destinations', async () => { setup('not'); await openMenu(); expect(screen.queryByRole('menuitem',{name:'Not Interested',exact:true})).toBeNull(); expect(screen.getByRole('menuitem',{name:'Watched',exact:true})).toBeInTheDocument(); expect(screen.getByRole('button',{name:'Watching',exact:true})).toBeInTheDocument(); expect(screen.getByRole('button',{name:'Want to Watch',exact:true})).toBeInTheDocument(); });
   it.each(['watching','wishlist','watched','not'] as const)('shows contextual destinations for %s without permanent legacy controls', status => {
     setup(status);
-    expect(screen.queryByRole('combobox')).toBeNull();
+    expect(screen.getByRole('combobox',{name:'Select a custom list'})).toBeInTheDocument();
     expect(screen.queryByRole('button',{name:'Custom Lists +'})).toBeNull();
     expect(screen.queryByRole('button',{name:'Watched',exact:true})).toBeNull();
     expect(screen.queryByRole('button',{name:'Not Interested',exact:true})).toBeNull();

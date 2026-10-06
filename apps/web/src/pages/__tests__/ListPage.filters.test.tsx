@@ -125,3 +125,32 @@ it.each(['watching','want','watched'] as const)('empty %s opens existing Discove
 it('filtered-empty reset restores cards',()=>{
  render(<ListPage title="Watching" items={entries}/>);fireEvent.change(screen.getByLabelText('Type:'),{target:{value:'movie'}});fireEvent.change(screen.getByLabelText('Filter by tag'),{target:{value:'drama'}});expect(screen.queryAllByTestId('filtered-title')).toHaveLength(0);fireEvent.click(screen.getAllByRole('button',{name:'Clear Filters'}).at(-1)!);expect(screen.getAllByTestId('filtered-title')).toHaveLength(4);
 });
+
+function phoneViewport() {
+  vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
+}
+it.each(['watching','want','watched'] as const)('phone %s moves filters into a persistent contextual panel', mode => {
+ phoneViewport();
+ try {
+  const {container}=render(<ListPage title={mode} mode={mode} items={entries}/>);
+  expect(container.querySelector('.library-phone-toolbar')).not.toBeNull();
+  expect(screen.queryByLabelText('Type:')).toBeNull();expect(screen.queryByLabelText('Filter by tag')).toBeNull();
+  fireEvent.change(screen.getByLabelText('Sort:'),{target:{value:'alphabetical-az'}});
+  screen.getByRole('button',{name:'Filters'}).focus(); fireEvent.click(screen.getByRole('button',{name:'Filters'}));
+  fireEvent.change(screen.getByLabelText('Type:'),{target:{value:'tv'}});
+  fireEvent.click(screen.getByRole('checkbox',{name:'Netflix',exact:true}));
+  fireEvent.change(screen.getByLabelText('Filter by tag'),{target:{value:'family'}});
+  fireEvent.click(screen.getByRole('checkbox',{name:'Sort by tag'}));
+  expect(titles()).toEqual(['Alpha']);
+  fireEvent.click(screen.getByRole('button',{name:'Close modal'}));
+  expect(screen.queryByRole('dialog')).toBeNull();expect(screen.getByRole('button',{name:'Filters (3)'})).toHaveFocus();
+  expect(screen.getByLabelText('Sort:')).toHaveValue('alphabetical-az');
+  screen.getByRole('button',{name:'Filters (3)'}).focus(); fireEvent.click(screen.getByRole('button',{name:'Filters (3)'}));
+  expect(screen.getByLabelText('Type:')).toHaveValue('tv');expect(screen.getByRole('checkbox',{name:'Netflix',exact:true})).toBeChecked();expect(screen.getByLabelText('Filter by tag')).toHaveValue('family');
+  fireEvent.click(screen.getByRole('button',{name:'Clear Filters'}));expect(titles()).toHaveLength(4);expect(screen.getByRole('checkbox',{name:'Sort by tag'})).toBeChecked();
+  fireEvent.keyDown(document,{key:'Escape'});expect(screen.queryByRole('dialog')).toBeNull();expect(screen.getByRole('button',{name:'Filters'})).toHaveFocus();
+ } finally { vi.unstubAllGlobals(); }
+});
+it('phone Filters consumes Android Back without navigation',()=>{
+ phoneViewport();try {render(<ListPage title="Watching" items={entries}/>);fireEvent.click(screen.getByRole('button',{name:'Filters'}));const event=new Event('flicklet:android-back',{cancelable:true});act(()=>window.dispatchEvent(event));expect(event.defaultPrevented).toBe(true);expect(screen.queryByRole('dialog')).toBeNull();}finally{vi.unstubAllGlobals()}
+});

@@ -1,3 +1,4 @@
+import { ResponsiveLibraryControls } from "@/components/ResponsiveLibraryControls";
 import { t as coreText, useLanguage } from "@/lib/language";
 import { libraryIdentity, processLibraryItems } from '@/lib/libraryView';
 import TabCard from "@/components/cards/TabCard";
@@ -20,7 +21,7 @@ import {
   useLayoutEffect,
 } from "react";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import SortDropdown, { type SortMode } from "@/components/SortDropdown";
+import { type SortMode } from "@/components/SortDropdown";
 import ListFilters, { type ListFiltersState } from "@/components/ListFilters";
 import {
   getTabKey,
@@ -663,28 +664,19 @@ export default function ListPage({
           )}
         </div>
 
-        <div className="library-filter-toolbar flex items-center gap-3 flex-wrap">
-          {/* Sort Dropdown - always shown for list tabs */}
-          <>
-            <SortDropdown
-              value={sortMode}
-              onChange={handleSortModeChange}
-              disabled={false}
-            />
-            {(sortMode !== 'date-newest' || sortByTag) && (
-              <button type="button" className="library-filter-control px-3 rounded text-xs border" onClick={() => handleSortModeChange('date-newest')}>{coreText("coreResetSort")}</button>
-            )}
-          </>
-
+        <ResponsiveLibraryControls sort={sortMode} onSort={handleSortModeChange} activeCount={(filters.type !== 'all' ? 1 : 0) + filters.providers.length + (selectedTag ? 1 : 0)}>
+          {phone => <>
+            {(sortMode !== 'date-newest' || sortByTag) && !phone && <button type="button" className="library-filter-control px-3 rounded text-xs border" onClick={() => handleSortModeChange('date-newest')}>{coreText('coreResetSort')}</button>}
           {/* Filters - always shown for list tabs */}
           <ListFilters
             value={filters}
             onChange={handleFilterChange}
             availableProviders={availableProviders}
+            inlineNetworks={phone}
             disabled={false}
           />
 
-          {processedItems.length > 0 && (filters.type !== 'all' || filters.providers.length > 0 || selectedTag) && (
+          {(phone || processedItems.length > 0) && (filters.type !== 'all' || filters.providers.length > 0 || selectedTag) && (
             <button type="button" className="library-filter-control px-3 rounded text-sm border" onClick={() => {
               setSelectedTag(null);
               handleFilterChange({type: 'all', providers: []});
@@ -744,7 +736,8 @@ export default function ListPage({
               </div>
             </div>
           )}
-        </div>
+          </>}
+        </ResponsiveLibraryControls>
       </div>
 
       {processedItems.length > 0 ? (

@@ -1,4 +1,4 @@
-> Historical Extras notes. Current Extras uses the shared TMDB proxy; Shows Like This uses insightsStore and existing Firestore observations.
+> Historical Extras notes. Current Extras uses the shared TMDB proxy; Shows Like This uses TMDB Recommendations and Similar through the shared proxy.
 
 # Extras Feature Improvements Summary
 
