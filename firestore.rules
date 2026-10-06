@@ -3,7 +3,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function isAuthenticated() {
-      return request.auth != null;
+      return request.auth != null
+        && (!exists(/databases/$(database)/documents/accountDeletions/$(request.auth.uid))
+          || get(/databases/$(database)/documents/accountDeletions/$(request.auth.uid)).data.expiresAt <= request.time);
     }
 
     function isOwner(userId) {
@@ -77,11 +79,11 @@ service cloud.firestore {
 
     // Admin access to remaining collections (e.g. titles, diagnostics)
     match /{collection}/{docId} {
-      allow read: if isAdmin() && collection != 'users';
-      allow write: if isAdmin();
+      allow read: if isAdmin() && collection != 'users' && collection != 'accountDeletions';
+      allow write: if isAdmin() && collection != 'accountDeletions';
     }
     match /{collection}/{docId}/{subcollection}/{document=**} {
-      allow read, write: if isAdmin();
+      allow read, write: if isAdmin() && collection != 'accountDeletions';
     }
 
     // Default deny

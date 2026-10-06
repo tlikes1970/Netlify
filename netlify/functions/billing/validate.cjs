@@ -72,14 +72,11 @@ function createPlayClient(env = process.env, fetcher = fetch) {
       ),
   };
 }
-function inspectPurchase(purchase, uid) {
+function inspectPurchase(purchase) {
   const item = purchase.productLineItem?.find((v) => v.productId === PRODUCT);
   if (!item) throw fault("wrong-product");
-  if (
-    purchase.obfuscatedExternalAccountId &&
-    purchase.obfuscatedExternalAccountId !== accountId(uid)
-  )
-    throw fault("purchase-account-mismatch", 409);
+  // Play's original account hint cannot prevent restoration after account deletion.
+  // A fresh verified purchase is bound by the server-side ownership transaction below.
   const state = purchase.purchaseStateContext?.purchaseState;
   if (state === "PENDING") throw fault("purchase-pending", 409);
   if (state !== "PURCHASED") throw fault("purchase-not-owned", 409);
@@ -151,6 +148,12 @@ function createHandler(getDependencies) {
         (body.packageName && body.packageName !== PACKAGE)
       )
         throw fault("wrong-product");
+      const deletionRef = db.doc(`accountDeletions/${uid}`);
+      const ensureActive = (marker) => {
+        if ((marker.data()?.expiresAt?.toMillis?.() || 0) > Date.now())
+          throw fault("account-deletion-in-progress", 409);
+      };
+      ensureActive(await deletionRef.get());
       const billing = db.doc(`users/${uid}/billing/status`);
       let token = body.purchaseToken;
       if (body.reconcileAccount === true) {
@@ -169,6 +172,7 @@ function createHandler(getDependencies) {
         ownerRef = db.doc(`playPurchases/${id}`);
       const revoke = () =>
         db.runTransaction(async (tx) => {
+          ensureActive(await tx.get(deletionRef));
           const owner = await tx.get(ownerRef),
             status = await tx.get(billing);
           if (owner.data()?.uid === uid && status.data()?.ownershipId === id) {
@@ -193,13 +197,15 @@ function createHandler(getDependencies) {
         });
       let purchase;
       try {
-        purchase = inspectPurchase(await play.get(token), uid);
+        purchase = inspectPurchase(await play.get(token));
       } catch (error) {
         if (error.code === "purchase-not-owned") await revoke();
         throw error;
       }
       // Real verification precedes account reservation. Interrupted acknowledgement retries cannot transfer ownership.
       await db.runTransaction(async (tx) => {
+        const marker = await tx.get(deletionRef);
+        ensureActive(marker);
         const owner = await tx.get(ownerRef),
           previous = await tx.get(billing);
         if (owner.exists && owner.data().uid !== uid)
@@ -224,6 +230,8 @@ function createHandler(getDependencies) {
       if (purchase.acknowledgementState === "ACKNOWLEDGEMENT_STATE_PENDING")
         await play.acknowledge(token);
       await db.runTransaction(async (tx) => {
+        const marker = await tx.get(deletionRef);
+        ensureActive(marker);
         const owner = await tx.get(ownerRef);
         if (owner.data()?.uid !== uid)
           throw fault("purchase-account-mismatch", 409);

@@ -8,6 +8,7 @@ import { formatDateTime } from "../lib/localeFormatters";
 import { t as coreText, tPlural } from "../lib/language";
 import SharingModal from "./modals/SharingModal";
 import StartOverControl from "./StartOverControl";
+import DeleteAccountControl from "./DeleteAccountControl";
 import { downloadBackup } from "../lib/downloadBackup";
 /**
  * Process: Settings Section Components
@@ -157,6 +158,7 @@ function AccountSection({ onShowNotInterestedModal }: SettingsSectionProps) {
       </div>
 
       <PreferredNameEditor />
+      <DeleteAccountControl />
 
       {/* My Statistics */}
       <div>

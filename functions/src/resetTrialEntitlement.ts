@@ -1,3 +1,4 @@
+import { assertNotDeleting, assertDeletionMarkerInactive } from './deletionProtection';
 /**
  * Admin-only callable to reset a user's trial entitlement for QA.
  * Does not modify billing, library, settings, or other user data.
@@ -32,6 +33,8 @@ export const resetTrialEntitlement = onCall({ cors: true }, async (req) => {
     throw new HttpsError('invalid-argument', 'trialStartMs must be a finite number when provided');
   }
 
+  await assertNotDeleting(req.auth.uid);
+  await assertNotDeleting(userId);
   const targetUser = await getAuth().getUser(userId);
   const startMs = typeof trialStartMs === 'number' ? trialStartMs : Date.now();
 
@@ -41,19 +44,22 @@ export const resetTrialEntitlement = onCall({ cors: true }, async (req) => {
     .collection('entitlements')
     .doc('trial');
 
-  const existing = await trialRef.get();
-
-  await trialRef.set(
+  await db.runTransaction(async transaction => {
+    assertDeletionMarkerInactive(await transaction.get(db.doc(`accountDeletions/${req.auth!.uid}`)));
+    assertDeletionMarkerInactive(await transaction.get(db.doc(`accountDeletions/${userId}`)));
+    const existing = await transaction.get(trialRef);
+    transaction.set(trialRef,
     {
       trialStartMs: startMs,
       version: TRIAL_RECORD_VERSION,
       updatedAt: FieldValue.serverTimestamp(),
       resetAt: FieldValue.serverTimestamp(),
-      resetBy: req.auth.uid,
+      resetBy: req.auth!.uid,
       ...(existing.exists ? {} : { createdAt: FieldValue.serverTimestamp() }),
     },
     { merge: true }
   );
+  });
 
   return {
     message: 'Trial entitlement reset',

@@ -16,6 +16,7 @@ import {
 import { logger } from '../lib/logger';
 import { authLogManager } from '../lib/authLog';
 import { runDeferredBootInit } from './deferredInit';
+import { requiresAccountDeletionPage } from '../lib/accountDeletionState';
 
 import '../styles/tokens.css';
 import '../styles/global.css';
@@ -66,7 +67,8 @@ async function finishFirebaseBoot(): Promise<void> {
 export async function renderApplication(): Promise<void> {
   initCapacitorNativeShell();
 
-  const { default: App } = await import('../App');
+  const deletionPage = requiresAccountDeletionPage(window.location.pathname);
+  const { default: App } = deletionPage ? await import('../pages/DeleteAccountPage') : await import('../App');
 
   const AppWrapper = (
     <QueryClientProvider client={queryClient}>
@@ -90,6 +92,6 @@ export async function renderApplication(): Promise<void> {
   void import('../lib/auth');
 
   queueMicrotask(() => {
-    runDeferredBootInit();
+    if (!deletionPage) runDeferredBootInit();
   });
 }

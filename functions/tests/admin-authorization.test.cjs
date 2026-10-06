@@ -1,4 +1,4 @@
-const { test, afterEach, mock } = require("node:test");
+const { test, beforeEach, afterEach, mock } = require("node:test");
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -7,6 +7,10 @@ const endpoints = require("../lib/src/index.js");
 const { auth, db } = require("../lib/src/admin.js");
 const admin = { uid: "administrator", token: { role: "admin" } };
 const ordinary = { uid: "ordinary", token: { role: "user" } };
+beforeEach(() => {
+  mock.method(db, 'doc', () => ({get: async () => ({data: () => undefined})}));
+  mock.method(db, 'runTransaction', async work => work({get: ref => ref.get(), set: (ref, ...args) => ref.set(...args)}));
+});
 afterEach(() => mock.restoreAll());
 function deny(code) {
   return (error) => error.code === code;
@@ -143,6 +147,7 @@ test("retired self-promotion endpoint has no source or production export", () =>
   assert.deepEqual(
     Object.keys(endpoints).sort(),
     [
+      "deleteAccount",
           "manageAdminRole",
       "manageProStatus",
       "resetTrialEntitlement",
@@ -228,3 +233,9 @@ for (const failure of ["auth/invalid-id-token", "auth/id-token-expired"]) {
     }
   });
 }
+for (const name of ['manageAdminRole','manageProStatus','resetTrialEntitlement']) test(`${name} rejects old administrator token protected by deletion marker`,async()=>{
+  mock.method(db,'doc',()=>({get:async()=>({data:()=>({expiresAt:{toMillis:()=>Date.now()+3900000}})})}));
+  const unchanged=noSideEffects();
+  await assert.rejects(endpoints[name].run({auth:admin,data:{userId:'target',target:'target',grant:true,isPro:true}}),deny('permission-denied'));
+  unchanged();
+});

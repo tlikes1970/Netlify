@@ -1,3 +1,4 @@
+import { assertNotDeleting } from './deletionProtection';
 /**
  * Process: Manage Admin Role
  * Purpose: Callable Cloud Function to grant/revoke admin role to other users (admin only)
@@ -48,6 +49,8 @@ export const manageAdminRole = onCall({ cors: true }, async (req) => {
     );
   }
 
+  await assertNotDeleting(req.auth.uid);
+  await assertNotDeleting(userId);
   // Get target user to verify they exist
   const targetUser = await getAuth().getUser(userId);
 

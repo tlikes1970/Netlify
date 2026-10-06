@@ -55,6 +55,13 @@ class AuthLogManager {
   private ringBuffer: AuthLogEntry[] = [];
   private currentTraceId: string | null = null;
 
+  resetAfterAccountDeletion(): void {
+    this.ringBuffer = [];
+    this.currentTraceId = null;
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(CURRENT_TRACE_KEY);
+  }
+
   constructor() {
     this.loadCurrentTraceId();
     this.pruneOldSessions();

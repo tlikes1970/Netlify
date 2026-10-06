@@ -8,3 +8,4 @@ export { manageProStatus } from "./manageProStatus";
 
 // Export resetTrialEntitlement from separate file
 export { resetTrialEntitlement } from "./resetTrialEntitlement";
+export { deleteAccount } from './accountDeletion';

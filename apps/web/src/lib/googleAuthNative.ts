@@ -7,7 +7,7 @@
  * (APIs & Services → Credentials → OAuth 2.0 Client IDs → Web client). Same GCP project as Firebase.
  */
 
-import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithCredential, reauthenticateWithCredential, type User } from 'firebase/auth';
 import {
   SocialLogin,
   type GoogleLoginResponseOnline,
@@ -64,4 +64,19 @@ export async function signInWithGoogleNative(): Promise<void> {
   const credential = GoogleAuthProvider.credential(idToken);
   await signInWithCredential(auth, credential);
   logger.log('[googleAuthNative] Firebase signInWithCredential complete');
+}
+
+/** Reuse the native provider initialization without signing into a different Firebase account. */
+export async function reauthenticateWithGoogleNative(user: User): Promise<void> {
+  await ensureGoogleAuthInitialized();
+  const response = await SocialLogin.login({provider:'google', options:{scopes:['profile','email','openid']}});
+  const token = (response.result as GoogleLoginResponseOnline).idToken;
+  if (!token) throw new Error('Google Sign-In did not return an ID token');
+  await reauthenticateWithCredential(user, GoogleAuthProvider.credential(token));
+}
+
+/** Clear Flicklet's native provider session without deleting the device's Google account. */
+export async function clearGoogleNativeSession(): Promise<void> {
+  await ensureGoogleAuthInitialized();
+  await SocialLogin.logout({provider:'google'});
 }

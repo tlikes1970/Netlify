@@ -5,19 +5,37 @@ const mocks = vi.hoisted(() => ({
   login: vi.fn(),
   credential: vi.fn(),
   signIn: vi.fn(),
+  reauth: vi.fn(),
+  logout: vi.fn(),
 }));
 vi.mock("@capgo/capacitor-social-login", () => ({
-  SocialLogin: { initialize: mocks.initialize, login: mocks.login },
+  SocialLogin: { initialize: mocks.initialize, login: mocks.login, logout: mocks.logout },
 }));
 vi.mock("firebase/auth", () => ({
   GoogleAuthProvider: { credential: mocks.credential },
   signInWithCredential: mocks.signIn,
+  reauthenticateWithCredential: mocks.reauth,
 }));
 vi.mock("@/lib/firebaseBootstrap", () => ({ auth: "existing-firebase-auth" }));
 vi.mock("@/lib/capacitorEnv", () => ({ isCapacitorNative: () => true }));
 vi.mock("@/lib/logger", () => ({ logger: { log: vi.fn() } }));
 
 describe("existing native Google authentication contract", () => {
+  it('account cleanup clears only the native Google provider session', async () => {
+    const {clearGoogleNativeSession} = await import('@/lib/googleAuthNative');
+    await clearGoogleNativeSession();
+    expect(mocks.logout).toHaveBeenCalledWith({provider:'google'});
+    expect(mocks.signIn).not.toHaveBeenCalled();
+  });
+  it('reauthenticates the current user through the existing native Google chooser', async () => {
+    mocks.login.mockResolvedValue({result:{idToken:'reauth-token'}});
+    mocks.credential.mockReturnValue('credential');
+    const {reauthenticateWithGoogleNative} = await import('@/lib/googleAuthNative');
+    const user = {uid:'owner'};
+    await reauthenticateWithGoogleNative(user as never);
+    expect(mocks.reauth).toHaveBeenCalledWith(user,'credential');
+    expect(mocks.signIn).not.toHaveBeenCalled();
+  });
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();

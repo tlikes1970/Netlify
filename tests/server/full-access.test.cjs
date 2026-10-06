@@ -202,13 +202,32 @@ test("purchase cannot transfer to another UID", async () => {
   assert.equal((await invoke()).error, "purchase-account-mismatch");
   assert.equal(store.has("users/other/billing/status"), false);
 });
-test("Play obfuscated account rejects wrong UID before reservation", async () => {
+test('deletion marker rejects verification before Play or any grant', async () => {
+  store.set('accountDeletions/owner',{expiresAt:{toMillis:()=>Date.now()+3900000}});
+  let queried=false;play.get=async()=>{queried=true;return purchased();};
+  assert.equal((await invoke()).error,'account-deletion-in-progress');
+  assert.equal(queried,false);assert.equal(store.has('users/owner/billing/status'),false);
+});
+test('expired marker does not block a verified purchase',async()=>{
+  store.set('accountDeletions/owner',{expiresAt:{toMillis:()=>0}});
+  assert.equal((await invoke()).status,200);
+});
+test('marker created during Play verification blocks final ownership writes',async()=>{
+  play.get=async()=>{store.set('accountDeletions/owner',{expiresAt:{toMillis:()=>Date.now()+3900000}});return purchased();};
+  assert.equal((await invoke()).error,'account-deletion-in-progress');
+  assert.equal(store.has('users/owner/billing/status'),false);assert.equal(store.has('playPurchases/'+ownershipId('real-token')),false);
+});
+test('deleted binding cannot regain access from an invalid token',async()=>{
+  play.get=async()=>({purchaseStateContext:{purchaseState:'CANCELLED'},productLineItem:[{productId:PRODUCT}]});
+  assert.equal((await invoke()).error,'purchase-not-owned');assert.equal(store.size,0);
+});
+test("fresh verified purchase can bind after prior account binding was deleted", async () => {
   play.get = async () => ({
     ...purchased(),
     obfuscatedExternalAccountId: accountId("other"),
   });
-  assert.equal((await invoke()).error, "purchase-account-mismatch");
-  assert.equal(store.size, 0);
+  assert.equal((await invoke()).status, 200);
+  assert.equal(store.get("playPurchases/" + ownershipId("real-token")).uid, "owner");
 });
 test("matching obfuscated account verifies", async () => {
   play.get = async () => ({

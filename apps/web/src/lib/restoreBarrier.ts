@@ -1,12 +1,13 @@
 /** Coordinates restore with writes already using the normal persistence paths. */
+import {pendingAccountDeletion} from './accountDeletionState';
 let restoring = false;
-export const isRestoring = (): boolean => restoring;
+export const isRestoring = (): boolean => restoring || !!pendingAccountDeletion();
 const pending = new Set<Promise<unknown>>();
 export function trackedWrite<T extends (...args: never[]) => Promise<unknown>>(
   write: T,
 ): T {
   return ((...args: Parameters<T>) => {
-    if (restoring)
+    if (isRestoring())
       return Promise.reject(new Error("Backup restore is in progress."));
     const operation = write as unknown as (
       ...args: Parameters<T>
@@ -17,8 +18,8 @@ export function trackedWrite<T extends (...args: never[]) => Promise<unknown>>(
     return promise;
   }) as T;
 }
-export async function beginRestore(): Promise<() => void> {
-  if (restoring) throw new Error("Another restore is already in progress.");
+export async function beginRestore(deletionRecovery = false): Promise<() => void> {
+  if (restoring || (!deletionRecovery && pendingAccountDeletion())) throw new Error("Another restore is already in progress.");
   restoring = true;
   await Promise.allSettled([...pending]);
   return () => {
@@ -28,5 +29,5 @@ export async function beginRestore(): Promise<() => void> {
 
 /** User-content writers share the replacement barrier, including mounted game effects. */
 export function persistLocalContent(key: string, value: string): void {
-  if (!restoring) localStorage.setItem(key, value);
+  if (!isRestoring()) localStorage.setItem(key, value);
 }
