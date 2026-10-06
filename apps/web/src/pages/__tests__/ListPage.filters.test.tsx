@@ -118,3 +118,10 @@ it('retains selected tag identity while adopting current stored casing after edi
   fireEvent.change(screen.getByLabelText('Type:'),{target:{value:'movie'}});expect(titles()).toEqual(['Beta']);
   fireEvent.click(screen.getByRole('button',{name:'Clear Filters'}));expect(titles()).toHaveLength(4);
  });
+
+it.each(['watching','want','watched'] as const)('empty %s opens existing Discovery destination',mode=>{
+ const navigate=vi.fn();window.addEventListener('navigate-to-tab',navigate);render(<ListPage title="Empty" mode={mode} items={[]}/>);fireEvent.click(screen.getByRole('button',{name:'Find something to watch'}));expect((navigate.mock.calls[0][0] as CustomEvent).detail).toEqual({tab:'discovery'});window.removeEventListener('navigate-to-tab',navigate);
+});
+it('filtered-empty reset restores cards',()=>{
+ render(<ListPage title="Watching" items={entries}/>);fireEvent.change(screen.getByLabelText('Type:'),{target:{value:'movie'}});fireEvent.change(screen.getByLabelText('Filter by tag'),{target:{value:'drama'}});expect(screen.queryAllByTestId('filtered-title')).toHaveLength(0);fireEvent.click(screen.getAllByRole('button',{name:'Clear Filters'}).at(-1)!);expect(screen.getAllByTestId('filtered-title')).toHaveLength(4);
+});

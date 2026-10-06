@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { PersonalityLevel } from '../lib/settings';
 
 interface ToastProps {
@@ -12,14 +12,27 @@ interface ToastProps {
 export default function Toast({ message, type, onClose, action }: ToastProps) {
   const [isVisible, setIsVisible] = useState(true);
 
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const remaining = useRef(action ? 8000 : 3000);
+  const closeTimer = useRef<ReturnType<typeof setTimeout>>();
+  const close = () => {
+    setIsVisible(false);
+    closeTimer.current = setTimeout(onClose, 300);
+  };
+  useEffect(() => () => clearTimeout(closeTimer.current), []);
   useEffect(() => {
+    if (!isVisible || hovered || focused) return;
+    const started = Date.now();
     const timer = setTimeout(() => {
       setIsVisible(false);
-      setTimeout(onClose, 300); // Wait for animation to complete
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [onClose]);
+      closeTimer.current = setTimeout(onClose, 300);
+    }, remaining.current);
+    return () => {
+      clearTimeout(timer);
+      remaining.current = Math.max(0, remaining.current - (Date.now() - started));
+    };
+  }, [onClose, isVisible, hovered, focused]);
 
   const getToastStyle = () => {
     switch (type) {
@@ -51,6 +64,10 @@ export default function Toast({ message, type, onClose, action }: ToastProps) {
 
   return (
     <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onFocusCapture={() => setFocused(true)}
+      onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setFocused(false); }}
       className={`fixed z-50 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 ${
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
       }`}
@@ -65,15 +82,14 @@ export default function Toast({ message, type, onClose, action }: ToastProps) {
         {action && (
           <button
             className="ml-3 text-sm font-semibold underline"
-            onClick={() => { action.onClick(); setIsVisible(false); setTimeout(onClose, 300); }}
+            onClick={() => { action.onClick(); close(); }}
           >
             {action.label}
           </button>
         )}
         <button
           onClick={() => {
-            setIsVisible(false);
-            setTimeout(onClose, 300);
+            close();
           }}
           className="ml-3 text-neutral-400 hover:text-neutral-200 transition-colors"
           aria-label="Close notification"

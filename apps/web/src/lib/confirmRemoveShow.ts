@@ -10,7 +10,7 @@ import { Library } from './storage';
 
 export const REMOVE_SHOW_CONFIRM = {
   title: 'Remove this title?',
-  body: 'This will remove it from your library. You can add it again later if you change your mind.',
+  body: 'This removes the title from your Library, including its saved notes, tags, personal rating, and custom-list memberships. Adding it again will not restore those details.',
   confirmLabel: 'Remove',
   cancelLabel: 'Cancel',
 } as const;

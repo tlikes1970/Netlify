@@ -684,7 +684,7 @@ export default function ListPage({
             disabled={false}
           />
 
-          {(filters.type !== 'all' || filters.providers.length > 0 || selectedTag) && (
+          {processedItems.length > 0 && (filters.type !== 'all' || filters.providers.length > 0 || selectedTag) && (
             <button type="button" className="library-filter-control px-3 rounded text-sm border" onClick={() => {
               setSelectedTag(null);
               handleFilterChange({type: 'all', providers: []});
@@ -944,6 +944,10 @@ export default function ListPage({
           <p className="text-xs mt-2">
             {items.length === 0 ? coreText('coreGetStarted') : coreText('coreFilterHelp')}
           </p>
+          <button type="button" className="mt-3 min-h-[44px] px-4 py-2 rounded border" style={{borderColor:'var(--line)',color:'var(--text)'}} onClick={() => {
+            if (items.length === 0) window.dispatchEvent(new CustomEvent('navigate-to-tab', {detail:{tab:'discovery'}}));
+            else { setSelectedTag(null); handleFilterChange({type:'all',providers:[]}); }
+          }}>{coreText(items.length === 0 ? 'coreFindSomething' : 'coreClearFilters')}</button>
         </div>
       )}
           </div>

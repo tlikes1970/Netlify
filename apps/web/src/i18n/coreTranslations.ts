@@ -194,7 +194,7 @@ export const CORE_TRANSLATIONS = {
     "coreLoadingNotes": "Loading notes...",
     "coreOfflineCached": "📱 You're offline - viewing cached content",
     "coreRemoveTitle": "Remove this title?",
-    "coreRemoveBody": "This will remove it from your library. You can add it again later if you change your mind.",
+    "coreRemoveBody": "This removes the title from your Library, including its saved notes, tags, personal rating, and custom-list memberships. Adding it again will not restore those details.",
     "coreAvailableProvider": "Available on {provider}",
     "coreOnProvider": "On {provider}",
     "coreFromProvider": "From {provider}",
@@ -303,6 +303,7 @@ export const CORE_TRANSLATIONS = {
     "coreNoTagMatches": "No titles have the tag “{tag}”.",
     "coreFilterHelp": "Adjust your filters or choose Clear Filters to see all items.",
     "coreGetStarted": "Add some shows to get started!",
+    "coreFindSomething": "Find something to watch",
     "coreSeasonComplete": "Season {season} complete",
     "coreUpNextProgress": "Up next: S{season} E{episode}",
     "coreSearchResultsCount": "Search results"
@@ -501,7 +502,7 @@ export const CORE_TRANSLATIONS = {
     "coreLoadingNotes": "Cargando notas...",
     "coreOfflineCached": "📱 Estás sin conexión: viendo contenido guardado",
     "coreRemoveTitle": "¿Quitar este título?",
-    "coreRemoveBody": "Se quitará de tu biblioteca. Puedes volver a añadirlo más adelante si cambias de opinión.",
+    "coreRemoveBody": "Se eliminará el título de tu biblioteca, incluidas sus notas, etiquetas, calificación personal y pertenencia a listas personalizadas. Volver a añadirlo no recuperará esos datos.",
     "coreAvailableProvider": "Disponible en {provider}",
     "coreOnProvider": "En {provider}",
     "coreFromProvider": "De {provider}",
@@ -610,6 +611,7 @@ export const CORE_TRANSLATIONS = {
     "coreNoTagMatches": "Ningún título tiene la etiqueta “{tag}”.",
     "coreFilterHelp": "Ajusta los filtros o elige Borrar filtros para ver todos los títulos.",
     "coreGetStarted": "¡Añade títulos para empezar!",
+    "coreFindSomething": "Encuentra algo para ver",
     "coreSeasonComplete": "Temporada {season} completada",
     "coreUpNextProgress": "Siguiente: T{season} E{episode}",
     "coreSearchResultsCount": "Resultados de búsqueda"
