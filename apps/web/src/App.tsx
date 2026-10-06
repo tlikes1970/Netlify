@@ -235,6 +235,20 @@ export default function App() {
     [librarySegment],
   );
 
+  // Home card actions use the same navigation path as the primary tabs.
+  useEffect(() => {
+    const handleNavigateToTab = (event: Event) => {
+      const target = (event as CustomEvent<{ tab?: unknown }>).detail?.tab;
+      if (typeof target !== "string" || ![
+        "home", "library", "discovery", "watching", "want", "watched",
+        "mylists", "returning", "up-next",
+      ].includes(target)) return;
+      navigateTo(target as NavTarget);
+    };
+    window.addEventListener("navigate-to-tab", handleNavigateToTab);
+    return () => window.removeEventListener("navigate-to-tab", handleNavigateToTab);
+  }, [navigateTo]);
+
   const handleLibrarySegmentChange = useCallback((segment: LibrarySegment) => {
     setLibrarySegment(segment);
     writeStoredLibrarySegment(segment);
