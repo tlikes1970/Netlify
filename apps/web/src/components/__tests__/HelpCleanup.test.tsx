@@ -27,3 +27,24 @@ it('Tab wraps after the last dialog control',()=>{
  vi.spyOn(HTMLElement.prototype,'offsetParent','get').mockReturnValue(document.body);
  render(<HelpModal isOpen onClose={()=>{}}/>);const done=screen.getByRole('button',{name:t('helpDone')});done.focus();fireEvent.keyDown(done,{key:'Tab'});expect(screen.getByRole('button',{name:t('helpClose')})).toHaveFocus();
 });
+
+it.each(['en','es'] as const)('help has current product contracts and no retired instructions in %s',language=>{
+ languageManager.setLanguage(language);
+ const all=HELP_TOPICS.flatMap(topic=>[t(topic.title),...topic.paragraphs.map(key=>t(key))]).join(' ');
+ expect(all).not.toMatch(/Goofs|FlickWord|Trivia|\bPro\b|Marquee Comments|Video Submissions|Submit Content|Easter eggs|observations|observaciones|Zen|condensed/i);
+ expect(t('help_full_access_2')).toContain('TMDB');
+ expect(t('help_full_access_2')).toContain('Extras');
+ expect(t('help_full_access_0')).toContain('21');
+ expect(t('help_managing_library_4')).toContain(language==='en'?'press and hold the card body':'mantén pulsado el cuerpo de la tarjeta');
+ expect(t('help_managing_library_4')).toContain(language==='en'?'Custom Lists do not support reordering':'Las listas personalizadas no permiten reordenar');
+ expect(t('help_custom_lists_0')).toContain('+');expect(t('help_custom_lists_0')).toContain('⋮');
+ expect(t('help_account_1')).toContain(language==='en'?'Settings → Account & Profile → Delete Account':'Ajustes → Account & Profile → Eliminar cuenta');
+ expect(t('help_data_sharing_2')).toContain(language==='en'?'does not delete your account':'No elimina tu cuenta');
+ expect(t('help_account_2')).toContain('Google Play');
+ expect(t('help_settings_customization_1')).toContain(language==='en'?'Minimal':'Mínimo');
+ expect(t('help_settings_customization_1')).toContain(language==='en'?'Standard':'Estándar');
+ expect(t('help_settings_customization_1')).toContain(language==='en'?'Maximum':'Máximo');
+ expect(t('help_support_0')).toContain(language==='en'?'Kudos':'Felicitaciones');
+ expect(t('help_support_1')).toContain(language==='en'?'2–3 business days':'2–3 días hábiles');
+ expect(t('help_notifications_1')).toContain(language==='en'?'Delivery depends':'La entrega depende');
+});

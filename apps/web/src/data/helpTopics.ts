@@ -102,5 +102,8 @@ export const HELP_TOPICS: {id:string;title:keyof LanguageStrings;paragraphs:(key
     "paragraphs": [
       "help_about_0"
     ]
-  }
+  },
+  {id:"custom-lists",title:"help_custom_lists_title",paragraphs:["help_custom_lists_0","help_custom_lists_1"]},
+  {id:"account",title:"help_account_title",paragraphs:["help_account_0","help_account_1","help_account_2"]},
+  {id:"support",title:"help_support_title",paragraphs:["help_support_0","help_support_1"]}
 ];

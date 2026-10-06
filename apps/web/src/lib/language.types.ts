@@ -20,6 +20,16 @@ export interface LanguageStrings extends CoreLanguageStrings, AccountLanguageStr
   adminTableName: string;
   adminTableStatus: string;
   adminTableActions: string;
+  help_custom_lists_title: string;
+  help_custom_lists_0: string;
+  help_custom_lists_1: string;
+  help_account_title: string;
+  help_account_0: string;
+  help_account_1: string;
+  help_account_2: string;
+  help_support_title: string;
+  help_support_0: string;
+  help_support_1: string;
   helpTitle: string;
   helpClose: string;
   helpSection: string;

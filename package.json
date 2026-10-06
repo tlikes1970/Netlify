@@ -1,6 +1,6 @@
 {
   "name": "flicklet-tv-tracker",
-  "version": "2.0.64",
+  "version": "2.0.65",
   "description": "Flicklet - TV & Movie Tracker",
   "private": true,
   "scripts": {
