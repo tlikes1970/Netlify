@@ -45,7 +45,7 @@ test.beforeAll(async () => {
   };
   const result = await build({
     stdin: {
-      contents: `import React from 'react';import {createRoot} from 'react-dom/client';import TabCard from './src/components/cards/TabCard';import MyListsPage from './src/pages/MyListsPage';import SearchResults, {SearchResultCard} from './src/search/SearchResults';const item={id:'31',mediaType:'tv',title:'A long saved title that needs two lines',year:'2025',showStatus:'Returning Series',networks:['Network'],synopsis:'Saved description',userRating:3,userNotes:'Note',tags:['Family']};const actions={onWant:()=>{},onWatched:()=>{},onNotInterested:()=>{},onDelete:()=>{},onRatingChange:()=>{},onNotesEdit:()=>{window.edited=true}};createRoot(document.getElementById('root')).render(<><section data-testid="correction"><SearchResults query="Braking Bad"/></section><section data-testid="library"><TabCard item={item} tabType={window.testTab || 'watching'} actions={actions}/></section><section data-testid="custom"><MyListsPage onNotesEdit={actions.onNotesEdit}/></section><section data-testid="search"><SearchResultCard item={{...item,id:'51',voteAverage:7.2}} index={0} onRemove={()=>{}} actions={actions}/><SearchResultCard item={{...item,id:'tracked',voteAverage:0}} index={1} onRemove={()=>{}} actions={actions}/></section></>);`,
+      contents: `import React from 'react';import {createRoot} from 'react-dom/client';import TabCard from './src/components/cards/TabCard';import MyListsPage from './src/pages/MyListsPage';import SearchResults, {SearchResultCard} from './src/search/SearchResults';const item={id:'31',mediaType:'tv',title:'A long saved title that needs two lines',posterUrl:'https://cards-test.local/poster.jpg',year:'2025',showStatus:'Returning Series',networks:['Network'],synopsis:'Saved description',userRating:3,userNotes:'Note',tags:['Family']};const actions={onWant:()=>{},onWatched:()=>{},onNotInterested:()=>{},onDelete:()=>{},onRatingChange:()=>{},onNotesEdit:()=>{window.edited=true}};createRoot(document.getElementById('root')).render(<><section data-testid="correction"><SearchResults query="Braking Bad"/></section><section data-testid="library"><TabCard item={item} tabType={window.testTab || 'watching'} actions={actions}/></section><section data-testid="custom"><MyListsPage onNotesEdit={actions.onNotesEdit}/></section><section data-testid="search"><SearchResultCard item={{...item,id:'51',voteAverage:7.2}} index={0} onRemove={()=>{}} actions={actions}/><SearchResultCard item={{...item,id:'tracked',voteAverage:0}} index={1} onRemove={()=>{}} actions={actions}/></section></>);`,
       resolveDir: appRoot,
       loader: "tsx",
     },
@@ -97,7 +97,8 @@ for (const width of [320,360,390,768,1023,1024,1280]) {
  for (const tab of ['watching','want','watched']) {
   test(`real saved/search surface paths ${width}px ${tab}`, async ({page}) => {
    await page.setViewportSize({width,height:1400});
-   await page.route('https://cards-test.local/**',route=>route.fulfill({contentType:'text/html',body:'<html><body><div id="root"></div></body></html>'}));
+   await page.route('https://cards-test.local/**',route=>route.fulfill(route.request().url().endsWith('/poster.jpg') ? {contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="112" height="168"><rect width="112" height="168" fill="#873e68"/><circle cx="56" cy="84" r="40" fill="#c28243"/></svg>'} : {contentType:'text/html',body:'<html><body><div id="root"></div></body></html>'}));
+   await page.route('https://image.tmdb.org/**',route=>route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="112" height="168"><rect width="112" height="168" fill="#873e68"/></svg>'}));
    await page.goto('https://cards-test.local/');
    await page.addStyleTag({content:css});
    await page.evaluate(tab=>{window.testTab=tab;window.open=(url)=>{window.opened=url;return null}},tab);
@@ -106,6 +107,21 @@ for (const width of [320,360,390,768,1023,1024,1280]) {
    await expect(correction).toHaveText("Showing results for “Breaking Bad”");
    expect(await correction.evaluate(el=>el.scrollWidth<=el.clientWidth)).toBe(true);
    const library=page.getByTestId('library'); const custom=page.getByTestId('custom');
+   const glow=library.locator('.card-poster-glow');
+   await expect(glow).toHaveCount(1);
+   await expect(glow).toHaveAttribute('aria-hidden','true');
+   expect(await glow.evaluate(el=>getComputedStyle(el).pointerEvents)).toBe('none');
+   expect(await glow.locator('span').evaluate(el=>getComputedStyle(el).backgroundImage)).toContain('/poster.jpg');
+   const card=library.locator('article');
+   const cardBox=await card.boundingBox(); const glowBox=await glow.boundingBox();
+   expect(glowBox!.width).toBeLessThanOrEqual(cardBox!.width);
+   expect(glowBox!.height).toBeLessThanOrEqual(cardBox!.height);
+   await card.hover();
+   expect(await glow.locator('span').evaluate(el=>getComputedStyle(el).backgroundImage)).toContain('/poster.jpg');
+   await expect(page.locator('.watching-list-backdrop')).toHaveCount(0);
+   await expect(custom.locator('.card-poster-glow')).toHaveCount(0);
+   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+
    if(width>=1024) {
     await expect(library.getByRole('button',{name:'📝 Notes & Tags',exact:true})).toBeVisible();
     await expect(library.getByRole('button',{name:'Shows Like This',exact:true})).toBeVisible();
@@ -139,7 +155,9 @@ for (const width of [320,360,390,768,1023,1024,1280]) {
    await expect(custom.locator('.swipeable')).toHaveCount(0);
    await expect(library.locator('.swipeable')).toHaveCount(width<1024?1:0);
    const link=library.getByRole('link',{name:/View .* on TMDB/});await link.click();expect(await page.evaluate(()=>window.opened)).toBe('https://www.themoviedb.org/tv/31');
-   await expect(link.locator('img')).toHaveAttribute('src',/placeholder|data:image/);
+   await expect(link.locator('img')).toHaveAttribute('src',/poster.jpg/);
+   await page.keyboard.press('Tab'); await link.focus(); await expect(link).toBeFocused();
+   expect(await link.evaluate(el=>getComputedStyle(el).outlineStyle)).not.toBe('none');
    const search=page.getByTestId('search');await expect(search.getByText('TMDB 7.2/10',{exact:true})).toBeVisible();
    await expect(search.getByText(/^0(?:\.0)?(?:\/10)?$/)).toHaveCount(0);
    await expect(search.getByRole('button',{name:/Note:|Tags:/})).toHaveCount(0);

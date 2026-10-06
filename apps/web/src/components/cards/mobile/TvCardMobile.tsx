@@ -1,4 +1,5 @@
 import { useLanguage } from "../../../lib/language";
+import { CardPosterGlow } from "../CardPosterGlow";
 import React from 'react';
 import type { MediaItem, CardActionHandlers } from '../card.types';
 import SwipeableCard from '../../SwipeableCard';
@@ -18,6 +19,7 @@ export interface TvCardMobileProps {
   actions?: CardActionHandlers;
   tabKey?: 'watching' | 'watched' | 'want';
   customListContext?: boolean;
+  posterGlow?: boolean;
   index?: number;
   onDragStart?: (e: React.DragEvent | React.TouchEvent, index: number) => void;
   onDragEnd?: () => void;
@@ -30,6 +32,7 @@ export function TvCardMobile({
   actions,
   tabKey = 'watching',
   customListContext = false,
+  posterGlow = false,
   index = 0,
   onDragStart,
   onDragEnd,
@@ -62,6 +65,7 @@ export function TvCardMobile({
         style={{ position: 'relative', overflow: 'visible' }}
         data-item-index={index}
       >
+        {posterGlow && <CardPosterGlow posterUrl={enrichedItem.posterUrl} />}
         {onDragStart && (
           <DragHandle
             itemId={String(enrichedItem.id)}

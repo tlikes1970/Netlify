@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import TabCard from "../cards/TabCard";
 import { ContextStatusActions } from "../cards/mobile/ContextStatusActions";
 import { SearchResultCard } from "../../search/SearchResults";
 import CardV2 from "../cards/CardV2";
@@ -50,7 +51,7 @@ vi.mock("@/lib/settings", () => ({
 vi.mock("@/hooks/useEntitlements", () => ({
   useEntitlements: () => ({ hasFullAccess: true, isReadOnlyMode: false }),
 }));
-vi.mock("@/hooks/useDeviceDetection", () => ({ useIsDesktop: () => true }));
+vi.mock("@/hooks/useDeviceDetection", () => ({ useIsDesktop: () => ({ready:true,isDesktop:false}) }));
 vi.mock("@/lib/isMobile", () => ({
   isMobileNow: () => true,
   onMobileChange: () => () => {},
@@ -283,4 +284,16 @@ it.each(["movie", "tv"] as const)("keeps the %s-only filter during correction", 
   expect(await screen.findByRole("status")).toBeVisible();
   expect(screen.getAllByLabelText("View Breaking Bad on TMDB")).toHaveLength(1);
   expect(screen.getByLabelText("View Breaking Bad on TMDB")).toHaveAttribute("href",`https://www.themoviedb.org/${mediaType}/7`);
+});
+
+describe('touch saved-card glow production path', () => {
+  it.each(['watching','want','watched'] as const)('retains %s glow and actions', tabType => {
+    const action=vi.fn();
+    const {container}=render(<TabCard item={{...item,posterUrl:'https://example.com/mobile.jpg'}} tabType={tabType} actions={{onWatched:action,onWant:action,onWatching:action}}/>);
+    expect(container.querySelector('.card-mobile > .card-poster-glow')).toHaveAttribute('aria-hidden','true');
+    expect((container.querySelector('.card-poster-glow > span') as HTMLElement).style.backgroundImage).toContain('mobile.jpg');
+    const button=screen.getByRole('button',{name:tabType==='watched'?'Watching':'Watched',exact:true});
+    fireEvent.click(button);
+    expect(mocks.move).toHaveBeenCalledOnce();
+  });
 });

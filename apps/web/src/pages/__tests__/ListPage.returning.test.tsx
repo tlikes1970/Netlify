@@ -56,11 +56,7 @@ vi.mock("@/components/modals/EpisodeTrackingModal", () => ({
   EpisodeTrackingModal: () => null,
 }));
 
-vi.mock("@/components/WatchingListWithBackdrop", () => ({
-  WatchingListWithBackdrop: ({ children }: { children: React.ReactNode }) => (
-    <div>{children}</div>
-  ),
-}));
+
 
 vi.mock("@/components/cards/TabCard", () => ({
   default: ({

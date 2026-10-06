@@ -1,0 +1,23 @@
+/* A bounded, static decorative layer. No geometry or interaction changes. */
+.card-mobile:has(> .card-poster-glow),
+.card-desktop:has(> .card-poster-glow) {
+  isolation: isolate;
+}
+.card-poster-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  contain: paint;
+  pointer-events: none;
+  z-index: -1;
+}
+.card-poster-glow > span {
+  position: absolute;
+  inset: -12px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(12px);
+  opacity: 0.08;
+  pointer-events: none;
+}

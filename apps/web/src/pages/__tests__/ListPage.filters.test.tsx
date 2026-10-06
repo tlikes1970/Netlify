@@ -13,7 +13,7 @@ vi.mock('@/lib/firebaseBootstrap',()=>({db:{}}));
 vi.mock('firebase/firestore',()=>({doc:vi.fn(),setDoc:vi.fn(),collection:vi.fn(),getDocs:async()=>({empty:false,forEach:(fn: (d:unknown)=>void)=>fn({id:'watching',data:()=>cloud.state})})}));
 vi.mock('@/utils/backfillSynopsis',()=>({backfillSynopsisForItems:vi.fn()}));
 vi.mock('@/lib/settings',()=>({useSettings:()=>({personalityLevel:2,layout:{}}),resolveFlickletLine:()=> 'This status is empty.'}));
-vi.mock('@/components/WatchingListWithBackdrop',()=>({WatchingListWithBackdrop:({children}: {children:React.ReactNode})=><div>{children}</div>}));
+
 vi.mock('@/components/modals/EpisodeTrackingModal',()=>({EpisodeTrackingModal:()=>null}));
 vi.mock('@/components/cards/TabCard',()=>({default:({item,onKeyboardReorder}: {item:LibraryEntry,onKeyboardReorder:(direction:'up'|'down')=>void})=><div data-testid="filtered-title">{item.title}<button onClick={()=>onKeyboardReorder('down')}>Reorder {item.title}</button></div>}));
 const entries:LibraryEntry[]=[

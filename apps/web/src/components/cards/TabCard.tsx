@@ -23,7 +23,7 @@ import { ProviderBadges } from "./ProviderBadge";
 import { startProUpgrade } from "../../lib/proUpgrade";
 import { useEntitlements } from "../../hooks/useEntitlements";
 import { notifyReadOnlyBlocked } from "../../lib/readOnlyGuard";
-import { useBackdropCallbacks } from "../WatchingListWithBackdrop";
+import { CardPosterGlow } from "./CardPosterGlow";
 import { isSeriesReminderEnabled } from "../../lib/seriesReminders";
 
 export type TabCardProps = {
@@ -73,7 +73,7 @@ export default function TabCard({
   useLanguage();
   const { hasFullAccess, isReadOnlyMode } = useEntitlements();
   const canUseProFeatures = hasFullAccess;
-  const backdropCallbacks = useBackdropCallbacks();
+  const showPosterGlow = !customListContext && ["watching", "want", "watched"].includes(tabType);
 
   dlog("🔔 TabCard render:", {
     title: item.title,
@@ -513,6 +513,7 @@ export default function TabCard({
           actions={actions}
           tabKey={getTabKey(tabType)}
           customListContext={customListContext}
+          posterGlow={showPosterGlow}
           index={index}
           onDragStart={customListContext ? undefined : (e, idx) => {
             // Convert TouchEvent to DragEvent-like for useDragAndDrop
@@ -543,6 +544,7 @@ export default function TabCard({
           actions={actions}
           tabKey={getTabKey(tabType)}
           customListContext={customListContext}
+          posterGlow={showPosterGlow}
           index={index}
           onDragStart={customListContext ? undefined : (e, idx) => {
             // Convert TouchEvent to DragEvent-like for useDragAndDrop
@@ -582,18 +584,6 @@ export default function TabCard({
         touchAction: "pan-y",
       }}
       draggable={false}
-      onMouseEnter={() => {
-        // Activate backdrop on hover (desktop only, all list tabs)
-        if (isDesktop && (tabType === "watching" || tabType === "want" || tabType === "watched") && backdropCallbacks && posterUrl) {
-          backdropCallbacks.onBackdropActivate(posterUrl);
-        }
-      }}
-      onFocus={() => {
-        // Activate backdrop on focus (desktop only, all list tabs)
-        if (isDesktop && (tabType === "watching" || tabType === "want" || tabType === "watched") && backdropCallbacks && posterUrl) {
-          backdropCallbacks.onBackdropActivate(posterUrl);
-        }
-      }}
       // Note: Drag handlers moved to wrapper div in ListPage for proper drop zone
       // Keeping these for backward compatibility but they may not fire if wrapper handles it first
       onDragOver={(e) => {
@@ -622,6 +612,7 @@ export default function TabCard({
       }}
       aria-grabbed={isBeingDragged}
     >
+      {showPosterGlow && <CardPosterGlow posterUrl={posterUrl} />}
       {/* Poster Column */}
       <div
         className="poster-col"

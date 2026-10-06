@@ -8,13 +8,12 @@ vi.mock('@/lib/proStatus', () => ({
   useProStatus: () => ({ isPro: false, source: null }),
 }));
 
-vi.mock('@/components/WatchingListWithBackdrop', () => ({
-  useBackdropCallbacks: () => ({}),
-}));
+
 
 vi.mock('@/lib/storage', () => ({
   Library: {
     getEntry: vi.fn(() => undefined),
+    getCurrentList: () => null,
     subscribe: vi.fn(() => () => {}),
     move: vi.fn(),
   },
@@ -168,5 +167,28 @@ describe('TabCard returning labels', () => {
     expect(
       screen.getByText('Legacy overview field from older stored data.')
     ).toBeInTheDocument();
+  });
+});
+
+describe('saved-card poster glow', () => {
+  it.each(['watching', 'want', 'watched'] as const)('%s owns its poster artwork', tabType => {
+    const {container, rerender} = render(<TabCard item={baseItem} tabType={tabType}/>);
+    const layer = container.querySelector('.card-poster-glow')!;
+    expect(layer).toHaveAttribute('aria-hidden', 'true');
+    expect((layer.firstElementChild as HTMLElement).style.backgroundImage).toContain(baseItem.posterUrl);
+    rerender(<TabCard item={{...baseItem, posterUrl:'https://example.com/other.jpg'}} tabType={tabType}/>);
+    expect((container.querySelector('.card-poster-glow > span') as HTMLElement).style.backgroundImage).toContain('other.jpg');
+  });
+  it('keeps independent artwork when cards reorder', () => {
+    const second={...baseItem,id:100,posterUrl:'https://example.com/second.jpg'};
+    const {container,rerender}=render(<><TabCard key="first" item={baseItem}/><TabCard key="second" item={second}/></>);
+    const before=Array.from(container.querySelectorAll('.card-poster-glow > span')).map(el=>(el as HTMLElement).style.backgroundImage);
+    rerender(<><TabCard key="second" item={second}/><TabCard key="first" item={baseItem}/></>);
+    expect(Array.from(container.querySelectorAll('.card-poster-glow > span')).map(el=>(el as HTMLElement).style.backgroundImage)).toEqual(before.reverse());
+    expect(container.querySelector('.watching-list-backdrop')).toBeNull();
+  });
+  it('leaves missing posters and other surfaces undecorated', () => {
+    const {container}=render(<><TabCard item={{...baseItem,posterUrl:undefined}}/><TabCard item={baseItem} customListContext/><TabCard item={baseItem} tabType="returning"/><TabCard item={baseItem} tabType="discovery"/></>);
+    expect(container.querySelector('.card-poster-glow')).toBeNull();
   });
 });

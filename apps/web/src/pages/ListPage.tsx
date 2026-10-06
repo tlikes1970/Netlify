@@ -37,7 +37,6 @@ import {
   trackReorderCompleted,
 } from "@/lib/analytics";
 import { flushPendingSaves } from "@/lib/storage";
-import { WatchingListWithBackdrop } from "@/components/WatchingListWithBackdrop";
 
 export default function ListPage({
   title,
@@ -647,14 +646,7 @@ export default function ListPage({
   return (
     <section className="px-4 py-4">
       {isListTab ? (
-        <WatchingListWithBackdrop
-          firstCardPosterUrl={
-            processedItems.length > 0 && processedItems[0].posterUrl
-              ? processedItems[0].posterUrl
-              : null
-          }
-        >
-          <div className="list-content-column">
+          <div className="list-content-column library-list-column">
           <div className="flex items-center justify-between mb-3 flex-wrap gap-3">
             <div className="flex items-center gap-3 flex-wrap">
           <h1
@@ -955,7 +947,7 @@ export default function ListPage({
         </div>
       )}
           </div>
-        </WatchingListWithBackdrop>
+
       ) : mode === "returning" ? (
         <div className="list-content-column">
           <div className="mb-3">
