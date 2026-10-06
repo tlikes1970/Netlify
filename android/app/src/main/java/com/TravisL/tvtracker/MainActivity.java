@@ -56,6 +56,7 @@ public class MainActivity extends BridgeActivity implements ModifiedMainActivity
     @Override
     protected void onCreate(android.os.Bundle savedInstanceState) {
         registerPlugin(BillingPlugin.class);
+        registerPlugin(BackupDocumentsPlugin.class);
         super.onCreate(savedInstanceState);
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         if (getBridge() != null) {

@@ -1001,7 +1001,10 @@ function DataSection({ onShowSharingModal }: SettingsSectionProps) {
     setBackupBusy(true);
     try {
       const backup = await createBackup();
-      downloadBackup(backup);
+      const delivery = await downloadBackup(backup);
+      if (delivery.status === "saved") alert(coreText("recoveryBackupSaved"));
+      else if (delivery.status === "download-started") alert(coreText("recoveryBackupDownloadStarted"));
+      else if (delivery.status === "failed") alert(coreText("recoveryBackupSaveError"));
     } catch (error) {
       console.error("Backup failed", error);
       alert(coreText(recoveryErrorKey(error, "backup")));
