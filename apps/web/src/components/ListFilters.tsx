@@ -40,8 +40,8 @@ export default function ListFilters({value,onChange,availableProviders,disabled=
   },[open]);
   const options=networkOptions([...availableProviders,...value.providers]);
   const selected=(name:string) => value.providers.some(p=>p.toLowerCase()===name.toLowerCase());
-  return <div className="flex items-center gap-2 flex-wrap">
-    <div className="flex items-center gap-2">
+  return <div className="library-type-network-controls flex items-center gap-2 flex-wrap">
+    <div className="library-type-control flex items-center gap-2">
       <label htmlFor={`${id}-type`} className="text-sm" style={{color:'var(--muted)'}}>{coreText("coreType")}</label>
       <select id={`${id}-type`} value={value.type} disabled={disabled} onChange={e=>onChange({...value,type:e.target.value as FilterType})}
         className="library-filter-control px-2 rounded text-sm border" style={{backgroundColor:'var(--menu-bg)',color:'var(--menu-text)',borderColor:'var(--menu-border)'}}>
@@ -50,7 +50,7 @@ export default function ListFilters({value,onChange,availableProviders,disabled=
     </div>
     {(availableProviders.length>0 || value.providers.length>0) && <button type="button" ref={trigger} disabled={disabled}
       aria-expanded={open} aria-haspopup="dialog" aria-controls={`${id}-networks`} onClick={()=>setOpen(!open)}
-      className="library-filter-control px-2 rounded text-sm border" style={{backgroundColor:value.providers.length?'var(--accent-primary)':'var(--menu-bg)',color:value.providers.length?'white':'var(--menu-text)'}}>{coreText("coreNetwork")}{value.providers.length ? ` (${value.providers.length})` : ''} <span aria-hidden="true">{open?'▲':'▼'}</span>
+      className="library-network-control library-filter-control px-2 rounded text-sm border" style={{backgroundColor:value.providers.length?'var(--accent-primary)':'var(--menu-bg)',color:value.providers.length?'white':'var(--menu-text)'}}>{coreText("coreNetwork")}{value.providers.length ? ` (${value.providers.length})` : ''} <span aria-hidden="true">{open?'▲':'▼'}</span>
     </button>}
     {open && !disabled && createPortal(<>
       <div className="fixed inset-0 z-40" aria-hidden="true" onClick={()=>close(true)}/>

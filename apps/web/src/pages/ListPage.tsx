@@ -693,9 +693,9 @@ export default function ListPage({
 
           {/* Tag Controls */}
           {(allTags.length > 0 || selectedTag || sortByTag) && (
-            <div className="flex items-center gap-3 flex-wrap max-w-full">
+            <div className="library-tag-controls flex items-center gap-3 flex-wrap max-w-full">
               {/* Sort by Tag Toggle */}
-              <label className="library-filter-control flex items-center gap-2 cursor-pointer">
+              <label className="library-tag-sort library-filter-control flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={sortByTag}
@@ -712,7 +712,7 @@ export default function ListPage({
               </label>
 
               {/* Tag Filter */}
-              <div className="flex items-center gap-2">
+              <div className="library-tag-filter flex items-center gap-2">
                 <span className="text-sm" style={{ color: "var(--muted)" }}>{coreText("coreFilterTag")}</span>
                 <select
                   aria-label={coreText("coreFilterTagAria")}

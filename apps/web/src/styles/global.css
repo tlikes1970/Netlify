@@ -649,3 +649,36 @@ input:focus-visible {
 .library-sort-control select { min-width: 0; flex: 1; }
 
 .library-filter-toolbar { max-width: 100%; min-width: 0; }
+
+/* Bound native selects by their group even when an option has a long tag. */
+.library-tag-controls { min-width: 0; }
+.library-tag-filter { min-width: 0; max-width: 100%; }
+.library-tag-filter > span { flex-shrink: 0; }
+.library-tag-filter select { min-width: 44px; flex: 1; }
+
+/* Keep Library controls in normal flow; only phone toolbars use the tighter grid. */
+@media (max-width: 767px) {
+  .library-filter-toolbar {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+  }
+  .library-filter-toolbar .library-type-network-controls,
+  .library-filter-toolbar .library-tag-controls { display: contents; }
+  .library-filter-toolbar .library-sort-control { grid-column: span 2; }
+  .library-filter-toolbar .library-sort-control,
+  .library-filter-toolbar .library-type-control { gap: 4px; min-width: 0; }
+  .library-filter-toolbar .library-type-control select { min-width: 44px; width: 100%; }
+  .library-filter-toolbar .library-network-control { width: 100%; overflow-wrap: anywhere; }
+  .library-filter-toolbar .library-tag-sort { gap: 4px; min-width: 0; }
+  .library-filter-toolbar .library-tag-sort input { flex-shrink: 0; }
+  .library-filter-toolbar .library-tag-sort span { min-width: 0; }
+  .library-filter-toolbar .library-tag-filter {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+  .library-filter-toolbar .library-tag-filter select { min-width: 44px; width: 100%; }
+}

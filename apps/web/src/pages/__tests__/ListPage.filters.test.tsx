@@ -107,3 +107,14 @@ it('keeps a removed active tag visible and clearable',()=>{
 });
 
 it('retains selected tag identity while adopting current stored casing after edits',()=>{seed();render(<Harness/>);const filter=screen.getByLabelText('Filter by tag');fireEvent.change(filter,{target:{value:'family'}});act(()=>{Library.updateNotesAndTags('1','tv','',['Family']);Library.updateNotesAndTags('2','movie','',['FAMILY']);Library.updateNotesAndTags('4','tv','',['Family']);});expect(titles()).toEqual(['Delta','Beta','Alpha']);expect(filter).toHaveValue('Family');expect(within(filter).queryByRole('option',{name:'FAMILY',exact:true})).toBeNull();});
+
+ it.each(['watching','want','watched'] as const)('%s retains all filter groups and reset actions',mode=>{
+  const {container}=render(<ListPage title={mode} mode={mode} items={entries}/>);
+  expect(screen.getByLabelText('Sort:')).toBeEnabled();expect(screen.getByLabelText('Type:')).toBeEnabled();
+  expect(screen.getByRole('button',{name:/^Network/})).toBeEnabled();expect(screen.getByLabelText('Filter by tag')).toBeEnabled();
+  expect(container.querySelector('.library-type-network-controls')).not.toBeNull();expect(container.querySelector('.library-tag-controls')).not.toBeNull();
+  fireEvent.change(screen.getByLabelText('Sort:'),{target:{value:'alphabetical-za'}});
+  fireEvent.click(screen.getByRole('button',{name:/Reset sort/i}));expect(screen.getByLabelText('Sort:')).toHaveValue('date-newest');
+  fireEvent.change(screen.getByLabelText('Type:'),{target:{value:'movie'}});expect(titles()).toEqual(['Beta']);
+  fireEvent.click(screen.getByRole('button',{name:'Clear Filters'}));expect(titles()).toHaveLength(4);
+ });
