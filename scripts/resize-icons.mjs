@@ -1,182 +1,54 @@
-#!/usr/bin/env node
-
-/**
- * Icon Resizing Script
- * 
- * Resizes PWA/iOS icons from the master icon-512.png to the correct dimensions.
- * Creates a maskable icon with proper safe zone for platform masking.
- */
-
-import sharp from 'sharp';
-import { readFileSync, writeFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const PUBLIC_DIR = join(__dirname, '..', 'apps', 'web', 'public');
-const SOURCE_ICON = join(PUBLIC_DIR, 'icon-512.png');
-
-// Icon sizes to generate
-const ICON_SIZES = [
-  { name: 'icon-120.png', size: 120 },
-  { name: 'icon-152.png', size: 152 },
-  { name: 'icon-180.png', size: 180 },
-  { name: 'icon-384.png', size: 384 },
-];
-
-/**
- * Verify an image file's actual dimensions
- */
-async function verifyImageSize(filePath, expectedSize) {
-  try {
-    const metadata = await sharp(filePath).metadata();
-    const actualWidth = metadata.width;
-    const actualHeight = metadata.height;
-    
-    if (actualWidth !== expectedSize || actualHeight !== expectedSize) {
-      throw new Error(
-        `Size mismatch: Expected ${expectedSize}x${expectedSize}, got ${actualWidth}x${actualHeight}`
-      );
-    }
-    
-    return { width: actualWidth, height: actualHeight };
-  } catch (error) {
-    throw new Error(`Failed to verify ${filePath}: ${error.message}`);
-  }
+import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { mkdir, writeFile as write, rename } from 'node:fs/promises';
+async function writeFile(path, data) {
+  await write(path + '.tmp', data);
+  await rename(path + '.tmp', path);
 }
-
-/**
- * Create a maskable icon with safe zone
- * 
- * Maskable icons need important content within the inner 80% safe zone
- * so that when platforms apply circular/squircle masks, content isn't chopped.
- */
-async function createMaskableIcon(sourcePath, outputPath) {
-  const source = sharp(sourcePath);
-  const metadata = await source.metadata();
-  
-  const size = 512;
-  const safeZone = size * 0.8; // 80% safe zone = 409.6px
-  const padding = (size - safeZone) / 2; // ~51.2px padding on each side
-  
-  // Create a new image with the source scaled down to fit the safe zone
-  // and centered on a 512x512 canvas
-  const resized = await source
-    .resize(Math.round(safeZone), Math.round(safeZone), {
-      fit: 'contain',
-      background: { r: 255, g: 255, b: 255, alpha: 1 } // White background
-    })
-    .toBuffer();
-  
-  // Composite the resized image onto a 512x512 canvas with padding
-  await sharp({
-    create: {
-      width: size,
-      height: size,
-      channels: 4,
-      background: { r: 255, g: 255, b: 255, alpha: 1 }
-    }
-  })
-    .composite([
-      {
-        input: resized,
-        left: Math.round(padding),
-        top: Math.round(padding)
-      }
-    ])
-    .png()
-    .toFile(outputPath);
+const sharp = createRequire(import.meta.url)('sharp');
+const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const source = join(root, 'assets/branding/flicklet-icon-master.png');
+const publicDir = join(root, 'apps/web/public');
+const res = join(root, 'android/app/src/main/res');
+const art = await sharp(source).trim().png().toBuffer();
+const { data, info } = await sharp(art).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+let radius = 0;
+for (let y = 0; y < info.height; y++) for (let x = 0; x < info.width; x++) {
+  if (data[(y * info.width + x) * 4 + 3]) radius = Math.max(radius, Math.hypot(x - info.width / 2, y - info.height / 2));
 }
-
-/**
- * Main execution
- */
-async function main() {
-  console.log('🎨 Icon Resizing Script\n');
-  
-  // Check if source icon exists
-  try {
-    await sharp(SOURCE_ICON).metadata();
-    console.log(`✓ Found source icon: ${SOURCE_ICON}\n`);
-  } catch (error) {
-    console.error(`✗ Source icon not found: ${SOURCE_ICON}`);
-    process.exit(1);
-  }
-  
-  const results = [];
-  
-  // Resize regular icons
-  console.log('Resizing regular icons...');
-  for (const { name, size } of ICON_SIZES) {
-    const outputPath = join(PUBLIC_DIR, name);
-    
-    try {
-      await sharp(SOURCE_ICON)
-        .resize(size, size, {
-          fit: 'cover',
-          position: 'center'
-        })
-        .png()
-        .toFile(outputPath);
-      
-      const verified = await verifyImageSize(outputPath, size);
-      results.push({ name, ...verified, status: '✓' });
-      console.log(`  ${results[results.length - 1].status} ${name} → ${size}x${size}`);
-    } catch (error) {
-      console.error(`  ✗ Failed to create ${name}: ${error.message}`);
-      results.push({ name, status: '✗', error: error.message });
-    }
-  }
-  
-  // Create maskable icon
-  console.log('\nCreating maskable icon...');
-  const maskablePath = join(PUBLIC_DIR, 'icon-maskable.png');
-  try {
-    await createMaskableIcon(SOURCE_ICON, maskablePath);
-    const verified = await verifyImageSize(maskablePath, 512);
-    results.push({ name: 'icon-maskable.png', ...verified, status: '✓' });
-    console.log(`  ${results[results.length - 1].status} icon-maskable.png → 512x512 (with safe zone)`);
-  } catch (error) {
-    console.error(`  ✗ Failed to create maskable icon: ${error.message}`);
-    results.push({ name: 'icon-maskable.png', status: '✗', error: error.message });
-  }
-  
-  // Summary
-  console.log('\n' + '='.repeat(50));
-  console.log('SUMMARY');
-  console.log('='.repeat(50));
-  console.log(`Source: icon-512.png`);
-  console.log(`\nFinal icon dimensions:`);
-  
-  results.forEach(({ name, width, height, status }) => {
-    if (status === '✓') {
-      console.log(`  ${status} ${name.padEnd(20)} → ${width}x${height} px`);
-    } else {
-      console.log(`  ${status} ${name.padEnd(20)} → FAILED`);
-    }
-  });
-  
-  const successCount = results.filter(r => r.status === '✓').length;
-  const totalCount = results.length;
-  
-  console.log(`\n${successCount}/${totalCount} icons generated successfully`);
-  
-  if (successCount === totalCount) {
-    console.log('\n✓ All icons resized correctly!');
-    console.log('✓ Manifest and HTML files were NOT modified (as requested)');
-    console.log('✓ Existing filenames and paths remain identical');
-  } else {
-    console.log('\n⚠ Some icons failed to generate. Please check errors above.');
-    process.exit(1);
-  }
+async function icon(size, { background = 'transparent', safeRadius, fraction = 0.88 } = {}) {
+  const scale = safeRadius ? size * safeRadius / radius : size * fraction / Math.max(info.width, info.height);
+  const width = Math.max(1, Math.floor(info.width * scale));
+  const height = Math.max(1, Math.floor(info.height * scale));
+  const input = await sharp(art).resize(width, height).png().toBuffer();
+  return sharp({ create: { width: size, height: size, channels: 4, background } })
+    .composite([{ input, left: Math.floor((size - width) / 2), top: Math.floor((size - height) / 2) }]).png().toBuffer();
 }
-
-main().catch(error => {
-  console.error('Fatal error:', error);
-  process.exit(1);
-});
-
-
+for (const size of [120, 152, 180, 192, 384, 512]) await writeFile(join(publicDir, `icon-${size}.png`), await icon(size));
+await writeFile(join(publicDir, 'favicon.png'), await icon(64));
+await writeFile(join(publicDir, 'icon-maskable.png'), await icon(512, { background: '#FFFFFF', safeRadius: 0.39 }));
+await writeFile(join(root, 'assets/branding/flicklet-play-icon-512.png'), await icon(512, { background: '#FFFFFF' }));
+await writeFile(join(root, 'ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png'), await icon(1024, { background: '#FFFFFF' }));
+for (const [density, factor] of Object.entries({ mdpi: 1, hdpi: 1.5, xhdpi: 2, xxhdpi: 3, xxxhdpi: 4 })) {
+  const dir = join(res, `mipmap-${density}`);
+  const foreground = await icon(108 * factor, { safeRadius: 31 / 108 });
+  await writeFile(join(dir, 'ic_launcher_foreground.webp'), await sharp(foreground).webp({ lossless: true }).toBuffer());
+  const launcher = await icon(48 * factor, { background: '#FFFFFF', safeRadius: 0.45 });
+  await writeFile(join(dir, 'ic_launcher.webp'), await sharp(launcher).webp({ lossless: true }).toBuffer());
+  const size = 48 * factor;
+  const circle = Buffer.from(`<svg width="${size}" height="${size}"><circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="white"/></svg>`);
+  await writeFile(join(dir, 'ic_launcher_round.webp'), await sharp(launcher).composite([{ input: circle, blend: 'dest-in' }]).webp({ lossless: true }).toBuffer());
+}
+// Optional previews stay outside release assets: node scripts/resize-icons.mjs <preview-directory>.
+if (process.argv[2]) {
+  const dir = process.argv[2]; await mkdir(dir, { recursive: true });
+  const fg = await icon(432, { safeRadius: 31 / 108 });
+  const viewport = await sharp(fg).extract({ left: 72, top: 72, width: 288, height: 288 }).flatten({ background: '#FFFFFF' }).png().toBuffer();
+  for (const [name, shape] of Object.entries({ circle: '<circle cx="144" cy="144" r="144" fill="white"/>', rounded: '<rect width="288" height="288" rx="58" fill="white"/>', squircle: '<path d="M144 0 C260 0 288 28 288 144 C288 260 260 288 144 288 C28 288 0 260 0 144 C0 28 28 0 144 0Z" fill="white"/>' })) {
+    await sharp(viewport).composite([{ input: Buffer.from(`<svg width="288" height="288">${shape}</svg>`), blend: 'dest-in' }]).png().toFile(join(dir, `${name}.png`));
+  }
+  for (const size of [48, 64]) await sharp(viewport).resize(size, size).png().toFile(join(dir, `launcher-${size}.png`));
+}
+console.log('Generated Android launcher/adaptive, web/PWA, favicon and Play icons from the TV-only master.');
 
