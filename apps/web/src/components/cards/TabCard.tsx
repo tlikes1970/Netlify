@@ -424,7 +424,7 @@ export default function TabCard({
   };
 
   // Determine if this card is being dragged or is a drop target
-  const isBeingDragged = dragState?.draggedItem?.id === item.id;
+  const isBeingDragged = dragState?.draggedItem?.id === `${item.id}:${item.mediaType}`;
   const isDropTarget = dragState?.draggedOverIndex === index && !isBeingDragged;
   const isDragging = dragState?.isDragging;
 
@@ -515,26 +515,7 @@ export default function TabCard({
           customListContext={customListContext}
           posterGlow={showPosterGlow}
           index={index}
-          onDragStart={customListContext ? undefined : (e, idx) => {
-            // Convert TouchEvent to DragEvent-like for useDragAndDrop
-            if ("touches" in e) {
-              // Touch event - create synthetic drag event
-              const syntheticEvent = {
-                ...e,
-                dataTransfer: {
-                  setData: () => {},
-                  effectAllowed: "move",
-                },
-                preventDefault: () => {},
-              } as any;
-              onDragStart?.(syntheticEvent, idx);
-            } else {
-              onDragStart?.(e, idx);
-            }
-          }}
-          onDragEnd={() => onDragEnd?.({} as React.DragEvent)}
-          onKeyboardReorder={onKeyboardReorder}
-          isDragging={isBeingDragged}
+          isDragging={isDragging}
         />
       );
     } else if (mediaType === "movie") {
@@ -546,26 +527,7 @@ export default function TabCard({
           customListContext={customListContext}
           posterGlow={showPosterGlow}
           index={index}
-          onDragStart={customListContext ? undefined : (e, idx) => {
-            // Convert TouchEvent to DragEvent-like for useDragAndDrop
-            if ("touches" in e) {
-              // Touch event - create synthetic drag event
-              const syntheticEvent = {
-                ...e,
-                dataTransfer: {
-                  setData: () => {},
-                  effectAllowed: "move",
-                },
-                preventDefault: () => {},
-              } as any;
-              onDragStart?.(syntheticEvent, idx);
-            } else {
-              onDragStart?.(e, idx);
-            }
-          }}
-          onDragEnd={() => onDragEnd?.({} as React.DragEvent)}
-          onKeyboardReorder={onKeyboardReorder}
-          isDragging={isBeingDragged}
+          isDragging={isDragging}
         />
       );
     }

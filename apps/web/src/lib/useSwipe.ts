@@ -53,6 +53,21 @@ export function useSwipe({
   const axisLock = useRef<'x' | 'y' | null>(null);
   const captured = useRef(false);
 
+  const swipeEndRef = useRef(onSwipeEnd);
+  swipeEndRef.current = onSwipeEnd;
+  useEffect(() => {
+    const reset = () => {
+      if (rafId.current !== null) cancelAnimationFrame(rafId.current);
+      rafId.current = null; pending.current = null;
+      axisLock.current = null; captured.current = false;
+      setSwipeState({ isSwipeActive: false, swipeDistance: 0, direction: null, actionTriggered: false });
+      swipeEndRef.current?.(0, null);
+    };
+    if (disabled) reset();
+    window.addEventListener('flicklet:reorder-start', reset);
+    return () => window.removeEventListener('flicklet:reorder-start', reset);
+  }, [disabled]);
+
   // rAF coalescing
   const rafId = useRef<number | null>(null);
   const pending = useRef<{ distance: number; direction: 'left' | 'right' | null } | null>(null);

@@ -170,6 +170,7 @@ export default function SwipeableCard({
     },
     onSwipeEnd: resetSwipeTransform,
     onSwipeAction: (direction) => {
+      if (document.querySelector('[data-drag-active="true"]')) return;
       if (direction === 'right' && swipeActions.length > 0) {
         swipeActions[0].action();
       } else if (direction === 'left' && swipeActions.length > 1) {

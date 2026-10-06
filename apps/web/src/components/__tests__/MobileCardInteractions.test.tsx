@@ -297,3 +297,8 @@ describe('touch saved-card glow production path', () => {
     expect(mocks.move).toHaveBeenCalledOnce();
   });
 });
+
+it('does not render a visible mobile reorder handle even when reorder callbacks are supplied',()=>{
+ const {container}=render(<TabCard item={{id:'77',mediaType:'movie',title:'Reorder title'}} onDragStart={vi.fn()} onKeyboardReorder={vi.fn()}/>);
+ expect(container.querySelector('.drag-handle, .handle')).toBeNull();
+});

@@ -1,11 +1,10 @@
 import { useLanguage } from "../../../lib/language";
 import { CardPosterGlow } from "../CardPosterGlow";
-import React from 'react';
+
 import type { MediaItem, CardActionHandlers } from '../card.types';
 import SwipeableCard from '../../SwipeableCard';
 import { TitlePoster } from '../TitlePoster';
 import { getShowStatusInfo } from '../../../utils/showStatus';
-import { DragHandle } from '../DragHandle';
 import { CardMobileInfoSection, CardMobileChipsRow } from './CardMobileInfoSection';
 import {
   useMobileCardEnrichedItem,
@@ -21,9 +20,6 @@ export interface TvCardMobileProps {
   customListContext?: boolean;
   posterGlow?: boolean;
   index?: number;
-  onDragStart?: (e: React.DragEvent | React.TouchEvent, index: number) => void;
-  onDragEnd?: () => void;
-  onKeyboardReorder?: (direction: 'up' | 'down') => void;
   isDragging?: boolean;
 }
 
@@ -34,9 +30,6 @@ export function TvCardMobile({
   customListContext = false,
   posterGlow = false,
   index = 0,
-  onDragStart,
-  onDragEnd,
-  onKeyboardReorder,
   isDragging,
 }: TvCardMobileProps) {
   useLanguage();
@@ -66,20 +59,6 @@ export function TvCardMobile({
         data-item-index={index}
       >
         {posterGlow && <CardPosterGlow posterUrl={enrichedItem.posterUrl} />}
-        {onDragStart && (
-          <DragHandle
-            itemId={String(enrichedItem.id)}
-            index={index}
-            onDragStart={(e, idx) => {
-              onDragStart(e as React.DragEvent | React.TouchEvent, idx);
-            }}
-            onDragEnd={onDragEnd}
-            onKeyboardReorder={onKeyboardReorder}
-            isDragging={isDragging}
-            itemTitle={enrichedItem.title}
-            onTouchDragMove={(_e, _idx) => {}}
-          />
-        )}
 
         <div className="poster-col" style={{ position: 'relative' }}>
           <TitlePoster item={enrichedItem} className="poster-image" />
@@ -98,5 +77,5 @@ export function TvCardMobile({
       </article>
 
   );
-  return customListContext ? content : <SwipeableCard item={enrichedItem} actions={actions} context={getMobileTabContext(tabKey)}>{content}</SwipeableCard>;
+  return customListContext ? content : <SwipeableCard item={enrichedItem} actions={actions} context={getMobileTabContext(tabKey)} disableSwipe={isDragging}>{content}</SwipeableCard>;
 }

@@ -9,6 +9,9 @@ import { removeMediaItemWithConfirmation } from "@/lib/confirmRemoveShow";
 import { Library, LibraryEntry } from "@/lib/storage";
 import { setPrimaryStatus, setNotInterested } from "@/lib/statusTransitions";
 import { useSettings, resolveFlickletLine } from "@/lib/settings";
+import { useLongPressReorder } from '@/hooks/useLongPressReorder';
+import { useIsDesktop } from '@/hooks/useDeviceDetection';
+import { guardMutation } from '@/lib/readOnlyGuard';
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { EpisodeTrackingModal } from "@/components/modals/EpisodeTrackingModal";
 import { getTVShowDetails } from "@/lib/tmdb";
@@ -66,6 +69,8 @@ export default function ListPage({
 }) {
   useLanguage();
   const settings = useSettings();
+  const { isDesktop } = useIsDesktop();
+  const reorderContainer = useRef<HTMLDivElement>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [sortByTag, setSortByTag] = useState<boolean>(false);
   const [episodeModalOpen, setEpisodeModalOpen] = useState(false);
@@ -217,6 +222,7 @@ export default function ListPage({
   // Drag and drop functionality
   const handleReorder = useCallback(
     (fromIndex: number, toIndex: number) => {
+      if (!guardMutation()) return;
       if (mode !== "discovery") {
         // Capture positions BEFORE reorder (critical for FLIP animation)
         const cardMap = cardRefs.current;
@@ -224,7 +230,7 @@ export default function ListPage({
         processedItems.forEach((item) => {
           const el = cardMap.get(libraryIdentity(item));
           if (el) {
-            currentRects.set(String(item.id), el.getBoundingClientRect());
+            currentRects.set(libraryIdentity(item), el.getBoundingClientRect());
           }
         });
         prevRects.current = currentRects;
@@ -291,19 +297,24 @@ export default function ListPage({
     fromIndex: number;
     toIndex: number;
   } | null>(null);
-  const getItemElement = useCallback(
-    (index: number) => {
-      const item = processedItems[index];
-      return item ? cardRefs.current.get(libraryIdentity(item)) || null : null;
-    },
-    [processedItems]
-  );
-
   const announceChange = useCallback((message: string) => {
     setAriaAnnouncement(message);
     // Clear after announcement is read
     setTimeout(() => setAriaAnnouncement(""), 1000);
   }, []);
+
+  const touchDrag = useLongPressReorder({
+    containerRef: reorderContainer,
+    enabled: !isDesktop && ['watching', 'want', 'watched'].includes(mode) && processedItems.length > 1,
+    identities: processedItems.map(libraryIdentity),
+    canStart: guardMutation,
+    onReorder: handleReorder,
+  });
+  const currentDragState = touchDrag ? {
+    isDragging: true,
+    draggedItem: { id: touchDrag.id, index: touchDrag.index },
+    draggedOverIndex: touchDrag.target,
+  } : dragState;
 
   const handleKeyboardReorder = useCallback(
     (fromIndex: number, toIndex: number) => {
@@ -317,23 +328,21 @@ export default function ListPage({
       // Maintain focus on handle after reorder
       // Use setTimeout to allow DOM to update first
       setTimeout(() => {
-        const newElement = getItemElement(toIndex);
+        const newElement = cardRefs.current.get(libraryIdentity(item));
         if (newElement) {
           const handle = newElement.querySelector(
-            ".handle, .drag-handle"
+            ".handle"
           ) as HTMLElement;
-          if (handle) {
-            handle.focus();
-          }
+          (handle || newElement).focus();
         }
       }, 50);
     },
-    [processedItems, handleReorder, announceChange, getItemElement]
+    [processedItems, handleReorder, announceChange]
   );
 
   // Stable item IDs array for FLIP dependency (prevents unnecessary re-runs)
   const itemIds = useMemo(
-    () => processedItems.map((i) => String(i.id)),
+    () => processedItems.map(libraryIdentity),
     [processedItems]
   );
 
@@ -354,10 +363,10 @@ export default function ListPage({
   }, []);
 
   useLayoutEffect(() => {
-    if (!processedItems.length || dragState.isDragging || isAnimationDisabled) {
+    if (!processedItems.length || currentDragState.isDragging || isAnimationDisabled) {
       console.log("[ListPage] FLIP skipped", {
         hasItems: !!processedItems.length,
-        isDragging: dragState.isDragging,
+        isDragging: currentDragState.isDragging,
         isDisabled: isAnimationDisabled,
       });
       return;
@@ -385,7 +394,7 @@ export default function ListPage({
       processedItems.forEach((item) => {
         const el = cardMap.get(libraryIdentity(item));
         if (el) {
-          nextRects.set(String(item.id), el.getBoundingClientRect());
+          nextRects.set(libraryIdentity(item), el.getBoundingClientRect());
         }
       });
 
@@ -420,7 +429,7 @@ export default function ListPage({
 
         // Find index of this item for stagger calculation
         const itemIndex = processedItems.findIndex(
-          (item) => String(item.id) === itemId
+          (item) => libraryIdentity(item) === itemId
         );
         animatedCards.push({
           el,
@@ -525,38 +534,7 @@ export default function ListPage({
       // 5. Store for next flip
       prevRects.current = nextRects;
     });
-  }, [itemIds.join(","), dragState.isDragging, isAnimationDisabled]); // re-run only when order changes or drag ends
-
-  // Listen for touch drag over events from DragHandle
-  useEffect(() => {
-    const handleTouchDragOver = (e: Event) => {
-      const customEvent = e as CustomEvent;
-      console.log("[ListPage] touchdragover", customEvent.detail);
-      if (customEvent.detail && dragState.isDragging) {
-        const targetIndex = customEvent.detail.targetIndex;
-        if (targetIndex >= 0 && targetIndex !== dragState.draggedItem?.index) {
-          const syntheticEvent = {
-            preventDefault: () => {},
-            stopPropagation: () => {},
-            dataTransfer: { dropEffect: "move" },
-            currentTarget: customEvent.target,
-          } as any;
-          handleDragOver(syntheticEvent, targetIndex);
-        }
-      }
-    };
-
-    document.addEventListener(
-      "touchdragover",
-      handleTouchDragOver as EventListener
-    );
-    return () => {
-      document.removeEventListener(
-        "touchdragover",
-        handleTouchDragOver as EventListener
-      );
-    };
-  }, [dragState, handleDragOver]);
+  }, [itemIds.join(","), currentDragState.isDragging, isAnimationDisabled]); // re-run only when order changes or drag ends
 
   // Get appropriate empty state text based on title
   const getEmptyText = () => {
@@ -766,7 +744,7 @@ export default function ListPage({
               {ariaAnnouncement}
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3" ref={reorderContainer} role="list">
               {processedItems.map((item, index) => {
                   // LibraryEntry already has all MediaItem properties
                   const mediaItem: MediaItem = {
@@ -788,7 +766,7 @@ export default function ListPage({
                   };
 
                   // Check if this item is being dragged (compare by id, not index, since index changes during reorder)
-                  const isBeingDragged = dragState.draggedItem?.id === item.id;
+                  const isBeingDragged = currentDragState.draggedItem?.id === libraryIdentity(item);
                   console.log("[ListPage] Rendering item", {
                     itemId: item.id,
                     index,
@@ -798,7 +776,7 @@ export default function ListPage({
 
                   // Check if this item is a drop target
                   const isDropTarget =
-                    dragState.draggedOverIndex === index && !isBeingDragged;
+                    currentDragState.draggedOverIndex === index && !isBeingDragged;
 
                   return (
                     <div
@@ -808,7 +786,17 @@ export default function ListPage({
                         else cardRefs.current.delete(libraryIdentity(item));
                       }}
                       data-item-index={index}
-                      className={`${isBeingDragged ? "is-dragging" : ""} ${isDropTarget ? "is-drop-target" : ""}`} // Add CSS classes for animations
+                      data-reorder-id={libraryIdentity(item)}
+                      tabIndex={!isDesktop ? 0 : undefined}
+                      title={!isDesktop ? coreText('coreReorderTitle') : undefined}
+                      onKeyDown={(event) => {
+                        if (event.target !== event.currentTarget || !['ArrowUp', 'ArrowDown'].includes(event.key)) return;
+                        event.preventDefault();
+                        if (currentDragState.isDragging) return;
+                        const target = event.key === 'ArrowUp' ? Math.max(0, index - 1) : Math.min(processedItems.length - 1, index + 1);
+                        if (target !== index) handleKeyboardReorder(index, target);
+                      }}
+                      className={`${isBeingDragged ? "is-dragging" : ""} ${touchDrag?.id === libraryIdentity(item) ? "is-touch-reordering" : ""} ${isDropTarget ? "is-drop-target" : ""}`} // Add CSS classes for animations
                       role="listitem"
                       aria-posinset={index + 1}
                       aria-setsize={processedItems.length}
@@ -857,20 +845,6 @@ export default function ListPage({
                         handleDrop(e);
                       }}
                       aria-dropeffect={isDropTarget ? "move" : undefined}
-                      onTouchEnd={(e) => {
-                        // Handle touch drag end
-                        if (
-                          dragState.isDragging &&
-                          dragState.draggedOverIndex !== null
-                        ) {
-                          const syntheticEvent = {
-                            preventDefault: () => {},
-                            stopPropagation: () => {},
-                            currentTarget: e.currentTarget,
-                          } as any;
-                          handleDragEnd(syntheticEvent);
-                        }
-                      }}
                       style={{
                         touchAction: "pan-y", // Allow vertical scroll but enable drag
                         position: "relative", // Ensure z-index works during drag
@@ -881,32 +855,8 @@ export default function ListPage({
                         actions={actions}
                         tabType={mode}
                         index={index}
-                        dragState={dragState}
-                        onDragStart={(e, idx) => {
-                          // Handle both drag and touch events
-                          if ("touches" in e) {
-                            // Touch event - manually set drag state
-                            const item = processedItems[idx];
-                            if (item) {
-                              // Set drag state manually
-                              handleDragStart(
-                                {
-                                  ...e,
-                                  dataTransfer: {
-                                    setData: () => {},
-                                    effectAllowed: "move",
-                                  } as any,
-                                  preventDefault: () => {},
-                                  stopPropagation: () => {},
-                                  currentTarget: e.currentTarget,
-                                } as any,
-                                idx
-                              );
-                            }
-                          } else {
-                            handleDragStart(e, idx);
-                          }
-                        }}
+                        dragState={currentDragState}
+                        onDragStart={handleDragStart}
                         onDragEnd={handleDragEnd}
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}

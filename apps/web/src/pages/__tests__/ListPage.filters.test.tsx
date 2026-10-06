@@ -16,6 +16,7 @@ vi.mock('@/lib/settings',()=>({useSettings:()=>({personalityLevel:2,layout:{}}),
 
 vi.mock('@/components/modals/EpisodeTrackingModal',()=>({EpisodeTrackingModal:()=>null}));
 vi.mock('@/components/cards/TabCard',()=>({default:({item,onKeyboardReorder}: {item:LibraryEntry,onKeyboardReorder:(direction:'up'|'down')=>void})=><div data-testid="filtered-title">{item.title}<button onClick={()=>onKeyboardReorder('down')}>Reorder {item.title}</button></div>}));
+vi.mock('@/hooks/useDeviceDetection',async original=>({...await original<typeof import('@/hooks/useDeviceDetection')>(),useIsDesktop:()=>({ready:true,isDesktop:false})}));
 const entries:LibraryEntry[]=[
  {id:'1',title:'Alpha',mediaType:'tv',list:'watching',addedAt:1,networks:['Netflix'],tags:['family']},
  {id:'2',title:'Beta',mediaType:'movie',list:'watching',addedAt:2,tags:['family']},
@@ -153,4 +154,22 @@ it.each(['watching','want','watched'] as const)('phone %s moves filters into a p
 });
 it('phone Filters consumes Android Back without navigation',()=>{
  phoneViewport();try {render(<ListPage title="Watching" items={entries}/>);fireEvent.click(screen.getByRole('button',{name:'Filters'}));const event=new Event('flicklet:android-back',{cancelable:true});act(()=>window.dispatchEvent(event));expect(event.defaultPrevented).toBe(true);expect(screen.queryByRole('dialog')).toBeNull();}finally{vi.unstubAllGlobals()}
+});
+describe('production ListPage long-press ordering',()=>{
+ it.each(['watching','want','watched'] as const)('%s persists the long-press drop through canonical tab state',mode=>{
+  vi.useFakeTimers();localStorage.setItem('flag:drag-animation-v1','false');
+  const list=mode==='want'?'wishlist':mode;entries.forEach(item=>Library.upsert(item,list));
+  const before=JSON.stringify(Library.getByList(list));
+  const view=render(<ListPage title={mode} mode={mode} items={entries}/>);
+  fireEvent.change(screen.getByLabelText('Sort:'),{target:{value:'date-oldest'}});
+  const rows=Array.from(view.container.querySelectorAll<HTMLElement>('[data-reorder-id]'));
+  rows.forEach((row,index)=>{row.getBoundingClientRect=()=>({top:index*200,height:180,bottom:index*200+180,left:0,right:300,width:300,x:0,y:index*200,toJSON:()=>({})});});
+  fireEvent.touchStart(rows[0],{touches:[{clientX:150,clientY:90}]});
+  act(()=>vi.advanceTimersByTime(200));expect(rows[0]).toHaveAttribute('data-drag-active','true');expect(rows[0]).toHaveClass('is-touch-reordering');
+  fireEvent.touchMove(document,{touches:[{clientX:150,clientY:490}]});fireEvent.touchEnd(document,{touches:[]});
+  expect(titles()).toEqual(['Beta','Charlie','Alpha','Delta']);
+  expect(restoreTabState(mode).order.ids).toEqual(['2:movie','3:tv','1:tv','4:tv']);
+  expect(JSON.stringify(Library.getByList(list))).toBe(before);
+  view.unmount();render(<ListPage title={mode} mode={mode} items={entries}/>);expect(titles()).toEqual(['Beta','Charlie','Alpha','Delta']);vi.useRealTimers();
+ });
 });

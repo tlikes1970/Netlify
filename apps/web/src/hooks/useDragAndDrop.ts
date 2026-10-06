@@ -1,11 +1,11 @@
 /**
  * DRAG PATHS:
  * - Desktop: Native HTML5 drag API → handleDragStart sets state + minimal visual feedback
- * - Mobile: Touch events handled in DragHandle.tsx → this hook only manages state
+ * - Mobile: useLongPressReorder owns touch gestures and calls the same reorder callback
  * 
  * VISUAL TRANSFORM TARGETS:
  * - Desktop: CSS animation on .tab-card.is-dragging handles visuals (this hook should NOT apply inline transforms)
- * - Mobile: DragHandle.tsx applies inline transform to [data-item-index] wrapper
+ * - Mobile: useLongPressReorder moves the outer [data-reorder-id] wrapper
  */
 
 import { useState, useCallback, useRef } from 'react';
