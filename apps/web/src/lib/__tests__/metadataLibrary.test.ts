@@ -154,3 +154,30 @@ it('a genuine numeric movie title remains valid when it is not the media ID',()=
  Library.updateMetadata(530915,'movie',{title:'1917'});
  expect(Library.getEntry(530915,'movie')?.title).toBe('1917');
 });
+
+it('reconciles an exact ID placeholder at startup without refreshing valid numeric titles',async()=>{
+ Library.upsert({id:7,mediaType:'tv',title:'7',userNotes:'Keep',userRating:4,tags:['Family'],isFavorite:true},'watching');
+ Library.upsert({id:8,mediaType:'movie',title:'1917'},'watched');
+ Library.addToCustomList({id:7,mediaType:'tv',title:'7'},'family');
+ const before={...Library.getEntry(7,'tv')!};
+ const fetch=vi.spyOn(metadataApi,'fetchFullMediaMetadata').mockResolvedValue({title:'Real title',synopsis:'Overview'});
+ stop=mountSavedMetadataLanguageRefresh();
+ await waitFor(()=>expect(Library.getEntry(7,'tv')?.title).toBe('Real title'));
+ expect(fetch).toHaveBeenCalledTimes(1);expect(Library.getEntry(7,'tv')).toMatchObject({id:before.id,mediaType:before.mediaType,list:before.list,addedAt:before.addedAt,userNotes:'Keep',userRating:4,tags:['Family'],isFavorite:true,customListIds:before.customListIds});
+ expect(Library.getEntry(8,'movie')?.title).toBe('1917');
+});
+it('startup provider failure preserves a suspected ID title and all user data',async()=>{
+ Library.upsert({id:7,mediaType:'tv',title:'7',userNotes:'Keep'},'watching');
+ vi.spyOn(metadataApi,'fetchFullMediaMetadata').mockRejectedValue(new Error('offline'));
+ stop=mountSavedMetadataLanguageRefresh();await waitFor(()=>expect(metadataApi.fetchFullMediaMetadata).toHaveBeenCalledTimes(1));
+ expect(Library.getEntry(7,'tv')).toMatchObject({title:'7',userNotes:'Keep'});
+});
+it('canonical updates reject ID and Untitled fallbacks without losing a human title',()=>{
+ Library.upsert({id:7,mediaType:'tv',title:'Real title'},'watching');
+ for(const title of ['7','Untitled'])Library.upsert({id:7,mediaType:'tv',title},'watching');
+ expect(Library.getEntry(7,'tv')?.title).toBe('Real title');
+});
+it('authoritative numeric titles are accepted, including a title identical to its provider ID',()=>{
+ expect(mapTMDBToMediaItem({id:13,media_type:'movie',title:'13',original_title:'13'}).title).toBe('13');
+ expect(mapTMDBToMediaItem({id:99,media_type:'movie',title:'1917'}).title).toBe('1917');
+});

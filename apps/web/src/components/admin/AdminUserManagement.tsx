@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { t, useLanguage } from '../../lib/language';
 import { collection, query, limit, onSnapshot, orderBy } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db, functions } from '../../lib/firebaseBootstrap';
@@ -21,6 +22,7 @@ interface User {
 }
 
 export default function AdminUserManagement() {
+  useLanguage();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<Set<string>>(new Set());
@@ -35,10 +37,6 @@ export default function AdminUserManagement() {
       async (snapshot) => {
         const usersData: User[] = [];
         
-        // Check admin status for each user by calling getIdTokenResult
-        // Since we can't directly check other users' claims, we'll need to call a function
-        // For now, we'll show users and allow toggling - the function will verify
-        
         snapshot.forEach((doc) => {
           const data = doc.data();
           usersData.push({
@@ -47,11 +45,11 @@ export default function AdminUserManagement() {
             displayName: data.displayName || data.profile?.displayName || '',
             photoURL: data.photoURL || data.profile?.photoURL,
             lastLoginAt: data.lastLoginAt,
-            isAdmin: false, // Will be updated when we check
+            isAdmin: undefined, // Other users' custom claims are not exposed by this query.
           });
         });
 
-        setUsers(usersData);
+        setUsers(previous => usersData.map(user => ({...user,isAdmin:previous.find(item=>item.uid===user.uid)?.isAdmin})));
         setLoading(false);
       },
       (error) => {
@@ -64,7 +62,7 @@ export default function AdminUserManagement() {
   }, []);
 
   const handleToggleAdmin = async (userId: string, currentEmail: string, grant: boolean) => {
-    if (!confirm(`Are you sure you want to ${grant ? 'grant' : 'revoke'} admin role for ${currentEmail}?`)) {
+    if (!confirm(t(grant ? 'adminRoleConfirmGrant' : 'adminRoleConfirmRevoke',{email:currentEmail}))) {
       return;
     }
 
@@ -84,10 +82,10 @@ export default function AdminUserManagement() {
         )
       );
 
-      alert(grant ? 'Admin role granted. User must sign out and back in for changes to take effect.' : 'Admin role revoked.');
+      alert(t(grant ? 'adminRoleSuccessGrant' : 'adminRoleSuccessRevoke'));
     } catch (error: any) {
       console.error('Error managing admin role:', error);
-      alert(`Failed to ${grant ? 'grant' : 'revoke'} admin role: ${error.message || 'Unknown error'}`);
+      alert(t('adminRoleFailure'));
     } finally {
       setUpdating(prev => {
         const next = new Set(prev);
@@ -118,12 +116,12 @@ export default function AdminUserManagement() {
 
   return (
     <div className="border rounded-lg p-6 mb-8" style={{ borderColor: 'var(--line)', backgroundColor: 'var(--card)' }}>
-      <h2 className="text-xl font-semibold mb-4">Manage Admin Roles</h2>
+      <h2 className="text-xl font-semibold mb-4">{t('adminRolesTitle')}</h2>
       
       <div className="mb-4">
         <input
           type="text"
-          placeholder="Search by email or name..."
+          aria-label={t('adminRoleSearch')} placeholder={t('adminRoleSearch')}
           value={searchEmail}
           onChange={(e) => setSearchEmail(e.target.value)}
           className="w-full px-4 py-2 rounded border"
@@ -135,11 +133,11 @@ export default function AdminUserManagement() {
         <table className="w-full">
           <thead>
             <tr className="border-b" style={{ borderColor: 'var(--line)' }}>
-              <th className="text-left p-2">Email</th>
-              <th className="text-left p-2">Name</th>
+              <th className="text-left p-2">{t('adminTableEmail')}</th>
+              <th className="text-left p-2">{t('adminTableName')}</th>
               <th className="text-left p-2">UID</th>
-              <th className="text-left p-2">Status</th>
-              <th className="text-left p-2">Actions</th>
+              <th className="text-left p-2">{t('adminTableStatus')}</th>
+              <th className="text-left p-2">{t('adminTableActions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -150,26 +148,13 @@ export default function AdminUserManagement() {
                 <td className="p-2 text-sm font-mono">{user.uid.substring(0, 8)}...</td>
                 <td className="p-2">
                   <span className={`px-2 py-1 rounded text-xs ${user.isAdmin ? 'bg-green-500/20 text-green-600' : 'bg-gray-500/20 text-gray-600'}`}>
-                    {user.isAdmin ? 'Admin' : 'User'}
+                    {t(user.isAdmin === undefined ? 'adminRoleUnknown' : user.isAdmin ? 'adminRoleAdmin' : 'adminRoleUser')}
                   </span>
                 </td>
                 <td className="p-2">
-                  <button
-                    onClick={() => handleToggleAdmin(user.uid, user.email, !user.isAdmin)}
-                    disabled={updating.has(user.uid)}
-                    className="px-3 py-1 rounded border text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80"
-                    style={{ 
-                      borderColor: 'var(--line)', 
-                      backgroundColor: user.isAdmin ? 'var(--btn)' : 'var(--accent)',
-                      color: user.isAdmin ? 'var(--text)' : 'white'
-                    }}
-                  >
-                    {updating.has(user.uid) 
-                      ? 'Updating...' 
-                      : user.isAdmin 
-                        ? 'Revoke Admin' 
-                        : 'Grant Admin'}
-                  </button>
+                  <div className="flex flex-wrap gap-2">
+                    {[true,false].map(grant=><button key={String(grant)} type="button" onClick={()=>handleToggleAdmin(user.uid,user.email,grant)} disabled={updating.has(user.uid)} className="min-h-[44px] px-3 py-2 rounded border text-sm disabled:opacity-50" style={{borderColor:'var(--line)',background:'var(--btn)',color:'var(--text)'}}>{t(updating.has(user.uid)?'adminRoleUpdating':grant?'adminRoleGrant':'adminRoleRevoke')}</button>)}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -177,13 +162,13 @@ export default function AdminUserManagement() {
         </table>
         {filteredUsers.length === 0 && (
           <p className="text-center py-8 text-sm" style={{ color: 'var(--muted)' }}>
-            {searchEmail ? 'No users found matching search' : 'No users found'}
+            {t('adminRoleEmpty')}
           </p>
         )}
       </div>
       
       <p className="mt-4 text-xs" style={{ color: 'var(--muted)' }}>
-        Note: Users must sign out and sign back in for admin role changes to take effect.
+        {t('adminRoleNote')}
       </p>
     </div>
   );

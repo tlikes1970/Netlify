@@ -1,3 +1,4 @@
+import {handleTabKeyboard} from '../lib/a11y/tabKeyboard';
 import { t as coreText, useLanguage, tPlural } from "@/lib/language";
 import type { LibrarySegment } from '@/lib/navigation';
 
@@ -48,6 +49,8 @@ export default function LibrarySegmentBar({
               key={item.id}
               type="button"
               role="tab"
+              tabIndex={active ? 0 : -1}
+              onKeyDown={handleTabKeyboard}
               aria-selected={active}
               aria-label={ariaLabel}
               title={ariaLabel}

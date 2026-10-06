@@ -217,7 +217,7 @@ export function mapTMDBToMediaItem(r: any): MediaItem {
 
   const rawTitle = metadataTitle(r);
   const safeTitle = (() => {
-    if (typeof rawTitle === 'string' && rawTitle.trim() && rawTitle !== String(r.id)) {
+    if (typeof rawTitle === 'string' && rawTitle.trim()) {
       return rawTitle.trim();
     }
     return 'Untitled';

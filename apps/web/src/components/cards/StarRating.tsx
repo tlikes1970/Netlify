@@ -109,11 +109,11 @@ export default function StarRating({
       ref={containerRef}
       className={`flex items-center gap-1.5 ${className}`}
       role="slider"
-      aria-valuemin={0.5}
+      aria-valuemin={0}
       aria-valuemax={5}
       aria-valuenow={value}
       aria-label={coreText('coreYourRating')}
-      aria-valuetext={coreText('coreStars', {rating:formatRating(value)})}
+      aria-valuetext={value === 0 ? coreText('ratingUnrated') : coreText('coreStars', {rating:formatRating(value)})}
       tabIndex={readOnly ? -1 : 0}
       onKeyDown={handleKeyDown}
     >

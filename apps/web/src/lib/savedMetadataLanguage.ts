@@ -12,7 +12,8 @@ export function mountSavedMetadataLanguageRefresh(): () => void {
   let stopped = false;
   let running = false;
   let pending = false;
-  let requested = false;
+  let requested = true;
+  let refreshAll = false;
   const attempted = new Set<string>();
 
   async function drain() {
@@ -26,7 +27,7 @@ export function mountSavedMetadataLanguageRefresh(): () => void {
         const uid = authManager.getCurrentUser()?.uid;
         const valid = () => !stopped && version === generation && target === getMetadataLanguage()
           && uid === authManager.getCurrentUser()?.uid && !isRestoring() && !isMutationBlocked();
-        const items = Library.getAll().filter(item => item.mediaType !== 'person'
+        const items = Library.getAll().filter(item => (refreshAll || item.title?.trim() === String(item.id)) && item.mediaType !== 'person'
           && /^\d+$/.test(String(item.id)) && Number(item.id) > 0
           && !attempted.has(`${item.mediaType}:${item.id}`));
         let cursor = 0;
@@ -55,11 +56,13 @@ export function mountSavedMetadataLanguageRefresh(): () => void {
     generation++;
     attempted.clear();
     requested = true;
+    refreshAll = true;
     schedule();
   });
   const unsubscribeLibrary = Library.subscribe(schedule);
   const clear = () => { generation++; requested = false; attempted.clear(); };
   window.addEventListener('library:cleared', clear);
+  schedule(); // Only exact ID placeholders are eligible before a language change.
   return () => {
     stopped = true;
     generation++;

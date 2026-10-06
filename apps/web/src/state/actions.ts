@@ -48,7 +48,7 @@ async function fetchMediaDataFromTMDB(id: string, mediaType: MediaType): Promise
 export function mountActionBridge() {
   const off1 = on('card:want', async ({ id, mediaType, title }: { id: string|number; mediaType: string; title?: string }) => {
     // Use provided title or fetch from TMDB
-    const mediaData = title ? { title } : await fetchMediaDataFromTMDB(String(id), mediaType as MediaType);
+    const mediaData = title?.trim() && title.trim() !== String(id) ? { title } : await fetchMediaDataFromTMDB(String(id), mediaType as MediaType);
     
     // Search "Want to Watch" goes to wishlist, not watching
     setPrimaryStatus({
@@ -70,7 +70,7 @@ export function mountActionBridge() {
 
   const off2 = on('card:watched', async ({ id, mediaType, title }: { id: string|number; mediaType: string; title?: string }) => {
     // Use provided title or fetch from TMDB
-    const mediaData = title ? { title } : await fetchMediaDataFromTMDB(String(id), mediaType as MediaType);
+    const mediaData = title?.trim() && title.trim() !== String(id) ? { title } : await fetchMediaDataFromTMDB(String(id), mediaType as MediaType);
     
     // Mark as watched and complete the currently available season for TV.
     setPrimaryStatus({
@@ -92,7 +92,7 @@ export function mountActionBridge() {
 
   const off3 = on('card:notInterested', async ({ id, mediaType, title }: { id: string|number; mediaType: string; title?: string }) => {
     // Use provided title or fetch from TMDB
-    const mediaData = title ? { title } : await fetchMediaDataFromTMDB(String(id), mediaType as MediaType);
+    const mediaData = title?.trim() && title.trim() !== String(id) ? { title } : await fetchMediaDataFromTMDB(String(id), mediaType as MediaType);
     
     // Mark as not interested
     const saved = await setNotInterested({
@@ -119,7 +119,7 @@ export function mountActionBridge() {
   // Optional: startWatching event from Wishlist tab or details view
   const off5 = on('card:startWatching', async ({ id, mediaType, title }: { id: number|string; mediaType: 'movie'|'tv'; title?: string }) => {
     // Use provided title or fetch from TMDB
-    const mediaData = title ? { title } : await fetchMediaDataFromTMDB(String(id), mediaType as MediaType);
+    const mediaData = title?.trim() && title.trim() !== String(id) ? { title } : await fetchMediaDataFromTMDB(String(id), mediaType as MediaType);
     
     let nextAirDate: string | null = null;
     if (mediaType === 'tv') {

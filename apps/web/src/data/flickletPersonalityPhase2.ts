@@ -8,7 +8,6 @@
 export type PersonalityTier = 'Minimal' | 'Standard' | 'Maximum';
 
 export type PersonalityContext =
-  | 'Empty States - Empty Custom List'
   | 'Empty States - Empty Up Next'
   | 'Empty States - Empty Want'
   | 'Empty States - Empty Watched'
@@ -37,58 +36,6 @@ export type FlickletLine = {
 };
 
 const POOLS: Record<PersonalityContext, Record<PersonalityTier, FlickletLine[]>> = {
-  'Empty States - Empty Custom List': {
-    Minimal: [
-      { id: 'p2-empty-states-empty-custom-list-min-01', text: 'This list has no shows yet.' },
-      { id: 'p2-empty-states-empty-custom-list-min-02', text: 'Custom list is empty.' },
-      { id: 'p2-empty-states-empty-custom-list-min-03', text: 'No content in this list.' },
-      { id: 'p2-empty-states-empty-custom-list-min-04', text: 'Add titles to this custom list.' },
-      { id: 'p2-empty-states-empty-custom-list-min-05', text: 'Populate this list with favorites.' },
-      { id: 'p2-empty-states-empty-custom-list-min-06', text: 'Custom list awaits your curation.' },
-      { id: 'p2-empty-states-empty-custom-list-min-07', text: 'No titles added yet.' },
-      { id: 'p2-empty-states-empty-custom-list-min-08', text: 'Build something unique here.' },
-      { id: 'p2-empty-states-empty-custom-list-min-09', text: 'Empty custom category.' },
-      { id: 'p2-empty-states-empty-custom-list-min-10', text: 'Time to fill this list.' },
-      { id: 'p2-empty-states-empty-custom-list-min-11', text: 'Your custom list is blank.' },
-      { id: 'p2-empty-states-empty-custom-list-min-12', text: 'Add shows to personalize.' },
-      { id: 'p2-empty-states-empty-custom-list-min-13', text: 'This list is ready for you.' },
-      { id: 'p2-empty-states-empty-custom-list-min-14', text: 'Custom organization starts now.' },
-      { id: 'p2-empty-states-empty-custom-list-min-15', text: 'No entries in this list yet.' },
-    ],
-    Standard: [
-      { id: 'p2-empty-states-empty-custom-list-std-01', text: 'This list exists but has no shows in it yet.' },
-      { id: 'p2-empty-states-empty-custom-list-std-02', text: 'Excellent structure. Now add some shows.' },
-      { id: 'p2-empty-states-empty-custom-list-std-03', text: 'The shelf is assembled. Books are missing.' },
-      { id: 'p2-empty-states-empty-custom-list-std-04', text: 'Ready for you to populate this list.' },
-      { id: 'p2-empty-states-empty-custom-list-std-05', text: 'Custom list ready for your vision.' },
-      { id: 'p2-empty-states-empty-custom-list-std-06', text: 'Great category. Fill it with gems.' },
-      { id: 'p2-empty-states-empty-custom-list-std-07', text: 'The list is set up beautifully.' },
-      { id: 'p2-empty-states-empty-custom-list-std-08', text: 'Time to bring this list to life.' },
-      { id: 'p2-empty-states-empty-custom-list-std-09', text: 'Empty but full of potential.' },
-      { id: 'p2-empty-states-empty-custom-list-std-10', text: 'Your custom touch is needed here.' },
-      { id: 'p2-empty-states-empty-custom-list-std-11', text: 'Structure is perfect. Content coming soon.' },
-      { id: 'p2-empty-states-empty-custom-list-std-12', text: 'This list is a blank canvas.' },
-      { id: 'p2-empty-states-empty-custom-list-std-13', text: 'Add your personal favorites.' },
-      { id: 'p2-empty-states-empty-custom-list-std-14', text: 'Custom lists shine with your choices.' },
-    ],
-    Maximum: [
-      { id: 'p2-empty-states-empty-custom-list-max-01', text: 'Custom list with zero shows. Beautiful structure. Zero fucking content.' },
-      { id: 'p2-empty-states-empty-custom-list-max-02', text: 'Pure administrative ambition with no execution.' },
-      { id: 'p2-empty-states-empty-custom-list-max-03', text: 'This category exists. The content remains theoretical.' },
-      { id: 'p2-empty-states-empty-custom-list-max-04', text: 'Excellent organization. Tragically empty.' },
-      { id: 'p2-empty-states-empty-custom-list-max-05', text: 'The list is all potential, zero reality.' },
-      { id: 'p2-empty-states-empty-custom-list-max-06', text: 'You organized nothing perfectly.' },
-      { id: 'p2-empty-states-empty-custom-list-max-07', text: 'Shelf looks great. Still no books, coward.' },
-      { id: 'p2-empty-states-empty-custom-list-max-08', text: 'Custom list: all form, no substance.' },
-      { id: 'p2-empty-states-empty-custom-list-max-09', text: 'This is the most organized void I\'ve seen.' },
-      { id: 'p2-empty-states-empty-custom-list-max-10', text: 'Ambition in structure. Execution on vacation.' },
-      { id: 'p2-empty-states-empty-custom-list-max-11', text: 'Beautiful list. Tragically lonely.' },
-      { id: 'p2-empty-states-empty-custom-list-max-12', text: 'The category is judging your lack of follow-through.' },
-      { id: 'p2-empty-states-empty-custom-list-max-13', text: 'Zero content. Peak minimalist kink.' },
-      { id: 'p2-empty-states-empty-custom-list-max-14', text: 'Your custom list is ghosting you.' },
-      { id: 'p2-empty-states-empty-custom-list-max-15', text: 'All setup, no payoff. Classic.' },
-    ],
-  },
   'Empty States - Empty Up Next': {
     Minimal: [
       { id: 'p2-empty-states-empty-up-next-min-01', text: 'No upcoming shows on the radar.' },
@@ -1176,15 +1123,10 @@ const POOLS: Record<PersonalityContext, Record<PersonalityTier, FlickletLine[]>>
 
 
 export const PERSONALITY_PHASE2_STATS = {
-  totalLines: 959,
-  contexts: 22,
-  byTier: {"Minimal":330,"Standard":306,"Maximum":323},
+  totalLines: 915,
+  contexts: 21,
+  byTier: {"Minimal":315,"Standard":292,"Maximum":308},
   byContext: {
-    "Empty States - Empty Custom List": {
-      "Minimal": 15,
-      "Standard": 14,
-      "Maximum": 15
-    },
     "Empty States - Empty Up Next": {
       "Minimal": 15,
       "Standard": 14,

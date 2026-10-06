@@ -10,8 +10,8 @@ import { extrasProvider } from '../extras/extrasProvider';
 import { videoQueryTerms, EXTRAS_KEYWORDS } from '../extras/config';
 beforeEach(()=>languageManager.setLanguage('en'));
 afterEach(()=>{languageManager.setLanguage('en');vi.restoreAllMocks()});
-it('all 959 stable message IDs have Spanish equivalents without editing English pools',()=>{
- expect(Object.keys(PERSONALITY_SPANISH)).toHaveLength(959);
+it('all 915 active stable message IDs have Spanish equivalents without editing English pools',()=>{
+ expect(Object.keys(PERSONALITY_SPANISH)).toHaveLength(915);
  for(const level of [1,2,3] as const){
  const pool=getLinesForContext('Home Marquee - Rotating',personalityTierFromLevel(level));const en=getFlickletMarqueeMessages(level);expect(en).toEqual(pool.map(line=>line.text));languageManager.setLanguage('es');expect(getFlickletMarqueeMessages(level)).toEqual(pool.map(line=>PERSONALITY_SPANISH[line.id]));expect(pool.map(line=>localizedPersonalityLine(line))).toEqual(getFlickletMarqueeMessages(level));languageManager.setLanguage('en');expect(getFlickletMarqueeMessages(level)).toEqual(en);
  }

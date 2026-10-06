@@ -10,7 +10,6 @@ export type FlickletSurface =
   | 'empty.want'
   | 'empty.watched'
   | 'empty.upnext'
-  | 'empty.customList'
   | 'discover.rowIntro';
 
 export type FlickletLine = {

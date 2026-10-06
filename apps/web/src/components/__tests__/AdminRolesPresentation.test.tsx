@@ -1,0 +1,15 @@
+import {act,fireEvent,render,screen,waitFor} from '@testing-library/react';
+import {beforeEach,it,expect,vi} from 'vitest';
+import {changeLanguage,t} from '../../lib/language';
+import AdminUserManagement from '../admin/AdminUserManagement';
+const api=vi.hoisted(()=>({call:vi.fn(),snapshot:undefined as any}));
+vi.mock('../../lib/firebaseBootstrap',()=>({db:{},functions:{}}));
+vi.mock('firebase/functions',()=>({httpsCallable:()=>api.call}));
+vi.mock('firebase/firestore',()=>({collection:vi.fn(),query:vi.fn(),limit:vi.fn(),orderBy:vi.fn(),onSnapshot:(_q:any,fn:any)=>{api.snapshot=fn;return ()=>{};}}));
+beforeEach(()=>{vi.clearAllMocks();act(()=>changeLanguage('en'));vi.spyOn(window,'confirm').mockReturnValue(true);vi.spyOn(window,'alert').mockImplementation(()=>{});api.call.mockResolvedValue({data:{success:true}});});
+function show(){render(<AdminUserManagement/>);act(()=>{api.snapshot({forEach:(fn:any)=>fn({id:'uid-12345678',data:()=>({email:'owner@example.test',displayName:'Owner'})})});});}
+it('unknown claims are honestly displayed and both explicit secure actions remain',()=>{show();expect(screen.getByText(t('adminRoleUnknown'))).toBeVisible();expect(screen.queryByText(t('adminRoleUser'))).toBeNull();expect(screen.getByRole('button',{name:t('adminRoleGrant')})).toBeEnabled();expect(screen.getByRole('button',{name:t('adminRoleRevoke')})).toBeEnabled();});
+it('grant and revoke use the callable and show only confirmed role state',async()=>{show();fireEvent.click(screen.getByRole('button',{name:t('adminRoleGrant')}));await waitFor(()=>expect(screen.getByText(t('adminRoleAdmin'))).toBeVisible());expect(api.call).toHaveBeenLastCalledWith({userId:'uid-12345678',grant:true});fireEvent.click(screen.getByRole('button',{name:t('adminRoleRevoke')}));await waitFor(()=>expect(screen.getByText(t('adminRoleUser'))).toBeVisible());expect(api.call).toHaveBeenLastCalledWith({userId:'uid-12345678',grant:false});});
+it('cancel does not send a role mutation',()=>{show();vi.mocked(window.confirm).mockReturnValue(false);fireEvent.click(screen.getByRole('button',{name:t('adminRoleGrant')}));expect(api.call).not.toHaveBeenCalled();});
+it('failed authorization does not falsely change the unknown role',async()=>{vi.spyOn(console,'error').mockImplementation(()=>{});api.call.mockRejectedValue(new Error('permission denied'));show();fireEvent.click(screen.getByRole('button',{name:t('adminRoleGrant')}));await waitFor(()=>expect(window.alert).toHaveBeenCalledWith(t('adminRoleFailure')));expect(screen.getByText(t('adminRoleUnknown'))).toBeVisible();});
+it('EN ES EN switches labels without changing the search value',async()=>{show();fireEvent.change(screen.getByRole('textbox'),{target:{value:'owner'}});for(const lang of ['es','en'] as const){act(()=>changeLanguage(lang));await waitFor(()=>expect(screen.getByRole('button',{name:t('adminRoleGrant')})).toBeVisible());expect(screen.getByRole('textbox',{name:t('adminRoleSearch')})).toHaveValue('owner');expect(screen.getByRole('button',{name:t('adminRoleGrant')})).toBeVisible();}});

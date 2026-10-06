@@ -299,6 +299,12 @@ export const Library = {
       Object.entries(item).filter(([_, value]) => value !== undefined)
     ) as Partial<MediaItem>;
 
+    // Never replace a saved human-readable title with a legacy missing-title placeholder.
+    if (oldEntry?.title?.trim() && oldEntry.title.trim() !== String(item.id)
+        && (filteredItem.title?.trim() === String(item.id) || filteredItem.title?.trim() === 'Untitled')) {
+      delete filteredItem.title;
+    }
+
     // User data fields that should always be preserved from oldEntry if they exist
     // These are user-generated content that shouldn't be overwritten by metadata refresh
     const userDataFields: (keyof MediaItem)[] = [

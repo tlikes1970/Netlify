@@ -99,7 +99,6 @@ describe('empty state context mapping', () => {
     expect(resolveEmptyStateContext('empty.want')).toBe('Empty States - Empty Want');
     expect(resolveEmptyStateContext('empty.watched')).toBe('Empty States - Empty Watched');
     expect(resolveEmptyStateContext('empty.upnext')).toBe('Empty States - Empty Up Next');
-    expect(resolveEmptyStateContext('empty.customList')).toBe('Empty States - Empty Custom List');
     expect(resolveEmptyStateContext('empty.watching')).toBe('Empty Watching - Behavior');
   });
 });

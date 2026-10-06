@@ -71,14 +71,12 @@ export function resolveEmptyStateContext(
     | 'empty.want'
     | 'empty.watched'
     | 'empty.upnext'
-    | 'empty.customList'
     | 'empty.watching'
 ): PersonalityContext {
   const map: Record<typeof surface, PersonalityContext> = {
     'empty.want': 'Empty States - Empty Want',
     'empty.watched': 'Empty States - Empty Watched',
     'empty.upnext': 'Empty States - Empty Up Next',
-    'empty.customList': 'Empty States - Empty Custom List',
     'empty.watching': 'Empty Watching - Behavior',
   };
   return map[surface];

@@ -181,7 +181,6 @@ export function resolveFlickletLine(
         | 'empty.want'
         | 'empty.watched'
         | 'empty.upnext'
-        | 'empty.customList'
         | 'empty.watching'
     );
     const pool = resolveContextPool(emptyContext, level);

@@ -24,3 +24,7 @@ it('Spanish feedback keeps Netlify payload and localized pending/success states'
 it('failed feedback reports localized error and preserves draft',async()=>{
  await language('es');vi.spyOn(console,'error').mockImplementation(()=>{});vi.stubGlobal('fetch',vi.fn().mockRejectedValue(new Error('offline')));render(<FeedbackPanel/>);const input=screen.getByRole('textbox',{name:t('feedbackInput')});fireEvent.change(input,{target:{value:'Keep this'}});fireEvent.submit(input.closest('form')!);await waitFor(()=>expect(toast).toHaveBeenCalledWith(t('feedbackFailure'),'error'));expect(input).toHaveValue('Keep this');
 });
+it('About authorship and app explanations are localized in EN ES EN',async()=>{
+ render(renderSettingsSection('about',{}));
+ for(const lang of ['en','es','en'] as const){await language(lang);for(const key of ['settingsAboutCreators','settingsAboutApp','settingsAboutIntro','settingsAboutHouse','settingsAboutBuilders','settingsAboutBackground','settingsAboutProblem','settingsAboutInstead','settingsAboutAudience','settingsAboutSimpleCopy','settingsAboutShareCopy'] as const)expect(screen.getByText((_text,el)=>Boolean(el && ['H4','P','LI'].includes(el.tagName) && el.textContent?.includes(t(key))))).toBeVisible();}
+});

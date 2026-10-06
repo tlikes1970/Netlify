@@ -61,8 +61,7 @@ const map = (r: Raw): CardData => {
   const safeTitle = (() => {
     if (
       typeof rawTitle === "string" &&
-      rawTitle.trim() &&
-      rawTitle !== String(r.id)
+      rawTitle.trim()
     ) {
       return rawTitle.trim();
     }

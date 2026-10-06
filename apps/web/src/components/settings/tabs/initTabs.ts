@@ -1,3 +1,4 @@
+import {handleTabKeyboard} from '../../../lib/a11y/tabKeyboard';
 // apps/web/src/components/settings/tabs/initTabs.ts
 type Cleanup = () => void;
 
@@ -100,6 +101,12 @@ export function initSettingsTabs(container?: HTMLElement): Cleanup {
     clickHandlers.push([onClick, t]);
   });
 
+  const onKeyboard = (event: KeyboardEvent) => {
+    if ((event.target as HTMLElement)?.getAttribute('role') !== 'tab') return;
+    handleTabKeyboard({key:event.key,currentTarget:event.target,preventDefault:()=>event.preventDefault()});
+  };
+  root.addEventListener('keydown',onKeyboard);
+
   // Hash navigation support (e.g., user changes hash or external link)
   const onHash = () => {
     const h = getHashTarget();
@@ -115,6 +122,7 @@ export function initSettingsTabs(container?: HTMLElement): Cleanup {
 
   // Cleanup
   return () => {
+    root.removeEventListener('keydown',onKeyboard);
     clickHandlers.forEach(([fn, el]) => el.removeEventListener('click', fn));
     window.removeEventListener('hashchange', onHash);
   };

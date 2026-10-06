@@ -11,12 +11,12 @@ const TIERS: PersonalityTier[] = ['Minimal', 'Standard', 'Maximum'];
 
 describe('flickletPersonalityPhase2 import', () => {
   it('imports expected line counts from approved CSV', () => {
-    expect(PERSONALITY_PHASE2_STATS.totalLines).toBe(959);
-    expect(PERSONALITY_PHASE2_STATS.contexts).toBe(22);
+    expect(PERSONALITY_PHASE2_STATS.totalLines).toBe(915);
+    expect(PERSONALITY_PHASE2_STATS.contexts).toBe(21);
     expect(PERSONALITY_PHASE2_STATS.byTier).toEqual({
-      Minimal: 330,
-      Standard: 306,
-      Maximum: 323,
+      Minimal: 315,
+      Standard: 292,
+      Maximum: 308,
     });
   });
 

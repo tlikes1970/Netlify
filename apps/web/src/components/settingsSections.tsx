@@ -352,8 +352,7 @@ function NotificationsSection({
         </h3>
 
         <p className="text-sm" style={{ color: "var(--muted)" }}>
-          Episode reminders are managed from each TV show card. Flicklet reminds
-          you on the day new episodes air.
+          {t('settingsRemindersCopy')}
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <button
@@ -382,7 +381,7 @@ function NotificationsSection({
 
       {/* Modals */}
       {showNotificationCenter && (
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<div>{t('settingsLoading')}</div>}>
           <NotificationCenter
             isOpen={showNotificationCenter}
             onClose={() => setShowNotificationCenter(false)}
@@ -1181,81 +1180,55 @@ function AboutSection(_props: SettingsSectionProps) {
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-semibold" style={{ color: "var(--text)" }}>
-        About
+        {translations.about}
       </h3>
 
       <div
         className="space-y-4 text-sm leading-relaxed"
         style={{ color: "var(--text)" }}
       >
-        <p>
-          We're not here to reinvent the wheel — we're here to make the wheel
-          less squeaky. At Unique4U, our rule is simple: keep it simple. The
-          world already has enough apps that feel like a second job to use. We'd
-          rather give you tools that just… work.
-        </p>
+        <p>{t('settingsAboutIntro')}</p>
 
-        <p>
-          Everything we build has its own personality, but they all live under
-          one roof: a people-first, all-inclusive, slightly offbeat house we
-          call Unique4U. If it's fun, useful, and a little different from the
-          pack — it belongs here.
-        </p>
+        <p>{t('settingsAboutHouse')}</p>
       </div>
 
       <div className="space-y-4">
         <h4 className="text-lg font-semibold" style={{ color: "var(--text)" }}>
-          👥 About the Creators
+          👥 {t('settingsAboutCreators')}
         </h4>
 
         <div
           className="space-y-3 text-sm leading-relaxed"
           style={{ color: "var(--text)" }}
         >
-          <p>
-            We're Pam and Travis. Think of us as casual builders with a shared
-            allergy to overcomplication. We make things because we need them,
-            and we figure you probably do too.
-          </p>
+          <p>{t('settingsAboutBuilders')}</p>
 
-          <p>
-            Pam once trained dolphins (true story) and also happens to be really
-            good with numbers. Travis studied English and Philosophy, which
-            means he can overthink and explain it in writing, then somehow turn
-            that into practical business know-how. Together, we're like a
-            mash-up of "creative meets operations" — and that combo lets us
-            build apps that are simple, useful, and not boring.
-          </p>
+          <p>{t('settingsAboutBackground')}</p>
         </div>
       </div>
 
       <div className="space-y-4">
         <h4 className="text-lg font-semibold" style={{ color: "var(--text)" }}>
-          📱 About the App
+          📱 {t('settingsAboutApp')}
         </h4>
 
         <div
           className="space-y-3 text-sm leading-relaxed"
           style={{ color: "var(--text)" }}
         >
-          <p>
-            Here's the deal: you want to remember what you're watching without
-            needing a PhD in App Navigation. We built this because we got tired
-            of two bad options — messy notes on our phones or bloated apps that
-            make you log your "episode 7 mid-season thoughts." (Hard pass.)
-          </p>
+          <p>{t('settingsAboutProblem')}</p>
 
           <p className="text-xs italic" style={{ color: "var(--muted)" }}>
             {translations.legalAttribution}
           </p>
 
-          <p>So we made this instead:</p>
+          <p>{t('settingsAboutInstead')}</p>
 
           <ul className="space-y-2 ml-4">
             <li className="flex items-start gap-2">
               <span className="mt-0.5">•</span>
               <span>
-                <strong>Stupidly easy.</strong> Open it, add your show, done.
+                <strong>{t('settingsAboutSimpleHeading')}</strong>{' '}{t('settingsAboutSimpleCopy')}
               </span>
             </li>
             <li className="flex items-start gap-2">
@@ -1268,16 +1241,12 @@ function AboutSection(_props: SettingsSectionProps) {
             <li className="flex items-start gap-2">
               <span className="mt-0.5">•</span>
               <span>
-                <strong>Friend-proof sharing.</strong> Copy your list and drop
-                it in a text when someone asks, "What should I watch?"
+                <strong>{t('settingsAboutShareHeading')}</strong>{' '}{t('settingsAboutShareCopy')}
               </span>
             </li>
           </ul>
 
-          <p>
-            If you watch TV or movies and don't want to make it a hobby just to
-            track them, this app's for you. Simple lists, zero drama.
-          </p>
+          <p>{t('settingsAboutAudience')}</p>
         </div>
       </div>
 

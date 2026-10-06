@@ -1,3 +1,4 @@
+import {handleTabKeyboard} from '../lib/a11y/tabKeyboard';
 import { t as coreText, useLanguage } from "@/lib/language";
 import { useTranslations } from '../lib/language';
 import type { AppView } from '@/lib/navigation';
@@ -33,6 +34,8 @@ export default function Tabs({ current, onChange }: TabsProps) {
                 key={id}
                 type="button"
                 role="tab"
+              tabIndex={current === id ? 0 : -1}
+              onKeyDown={handleTabKeyboard}
                 aria-selected={current === id}
                 aria-current={current === id ? 'page' : undefined}
                 onClick={() => onChange(id)}

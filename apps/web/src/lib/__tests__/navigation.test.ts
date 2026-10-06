@@ -113,6 +113,7 @@ vi.mock("@/lib/storage", () => ({
         ]
       : [],
   Library: {
+    getAll: () => [],
     subscribe: () => () => {},
     getCurrentList: () => "watching",
     getEntry: () => null,

@@ -22,7 +22,7 @@ import { changeLanguage } from './language';
 import type { UserSettings } from './auth.types';
 
 // Settings data model based on design document
-// Personality modes: 8 distinct personalities with unique commentary styles
+// Legacy named voices remain isolated from the active three-level selector.
 import { PersonalityName, DEFAULT_PERSONALITY, clearVariantCache } from '../data/personalities';
 import { clearFlickletPersonalitySession } from './flickletPersonality';
 export type { PersonalityName } from '../data/personalities';
@@ -46,8 +46,8 @@ export type PersonalityLevel = 1 | 2 | 3;
 export interface Settings {
   // General
   displayName: string;
-  personalityLevel: PersonalityLevel; // Legacy field (kept for migration)
-  personality: PersonalityName; // New personality system
+  personalityLevel: PersonalityLevel; // Active Minimal / Standard / Maximum selector
+  personality: PersonalityName; // Read-compatible legacy voice for greetings/loading/feedback
   
   // Notifications
   notifications: {
@@ -87,7 +87,7 @@ export interface Settings {
 export const DEFAULT_SETTINGS: Settings = {
   displayName: 'Guest',
   personalityLevel: 2, // 1=Minimal, 2=Standard (default), 3=Maximum
-  personality: DEFAULT_PERSONALITY, // New: defaults to 'Zen'
+  personality: DEFAULT_PERSONALITY, // Legacy compatibility default: Zen
   
   notifications: {
     upcomingEpisodes: true,
