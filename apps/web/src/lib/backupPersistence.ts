@@ -1,3 +1,4 @@
+import { cloneStoredData } from "./cloneStoredData";
 import {
   collection,
   deleteField,
@@ -32,7 +33,7 @@ import { normalizeRows } from "./forYouRowsStorage";
 export function normalizeExportMemberships(entries: LibraryEntry[], definitions: unknown[]): LibraryEntry[] {
   const ids = new Set(definitions.map(definition => object(definition, "custom list").id));
   return entries.map(source => {
-    const item = structuredClone(source);
+    const item = cloneStoredData(source);
     if (item.customListIds !== undefined) {
       item.customListIds = [...new Set(item.customListIds.filter(id => ids.has(id)))];
     }

@@ -1,3 +1,4 @@
+import { cloneStoredData } from "./cloneStoredData";
 import { normalizeWatchStatus } from "./watchStatus";
 import { RESTORE_JOURNAL_KEY, type RestoreJournal } from "./restoreRecovery";
 import type { LibraryEntry } from "./storage";
@@ -633,7 +634,7 @@ export function validateBackup(value: unknown): Backup {
     ])
       if (!(k in l)) fail(`missing layout preference ${k}.`);
   }
-  const result = structuredClone({
+  const result = cloneStoredData({
     type: BACKUP_FORMAT,
     schemaVersion: BACKUP_SCHEMA,
     createdAt,

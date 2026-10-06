@@ -1,3 +1,4 @@
+import { cloneStoredData } from "./cloneStoredData";
 import { recoverLocalRestore } from './restoreRecovery';
 import { isRestoring, trackedWrite } from './restoreBarrier';
 /**
@@ -128,7 +129,7 @@ export function stripLegacySettingsFields<T extends SettingsPayload>(raw: T): Om
 }
 
 export function mergeSettingsFromPayload(source: SettingsPayload): Settings {
-  const defaults = structuredClone(DEFAULT_SETTINGS);
+  const defaults = cloneStoredData(DEFAULT_SETTINGS);
   const cleaned = stripLegacySettingsFields(source);
   return {
     ...defaults,
@@ -154,7 +155,7 @@ export function mergeSettingsFromPayload(source: SettingsPayload): Settings {
 
 /** Only named preferences reset. New identity/unknown fields survive by default. */
 export function resetPreferences<T extends Settings>(current: T): T {
-  const defaults = structuredClone(DEFAULT_SETTINGS);
+  const defaults = cloneStoredData(DEFAULT_SETTINGS);
   return {
     ...current,
     personality: defaults.personality,
@@ -260,7 +261,7 @@ export class SettingsManager {
       return;
     }
     // Freeze each save so an active write cannot observe later in-memory mutations.
-    this.pendingSync = { uid: user.uid, settings: structuredClone(this.settings) };
+    this.pendingSync = { uid: user.uid, settings: cloneStoredData(this.settings) };
     if (this.syncInFlight) return; // The active drain will consume the latest save.
     this.syncTimeout = setTimeout(() => {
       this.syncTimeout = null;

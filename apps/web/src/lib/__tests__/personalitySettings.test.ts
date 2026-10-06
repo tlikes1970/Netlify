@@ -19,6 +19,17 @@ vi.mock("firebase/firestore", () => ({
 }));
 vi.mock("../readOnlyGuard", () => ({ guardMutation: () => m.allowed }));
 import { SettingsManager } from "../settings";
+it("starts, persists and reloads settings on WebViews without structuredClone", () => {
+  vi.stubGlobal("structuredClone", undefined);
+  try {
+    const manager = new SettingsManager();
+    expect(manager.getSettings().personalityLevel).toBe(2);
+    manager.updatePersonalityLevel(1);
+    expect(new SettingsManager().getSettings().personalityLevel).toBe(1);
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
 function deferred() {
   let resolve!: () => void;
   let reject!: (reason: Error) => void;
