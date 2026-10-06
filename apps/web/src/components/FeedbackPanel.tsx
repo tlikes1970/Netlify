@@ -114,31 +114,24 @@ export default function FeedbackPanel() {
         </form>
       </div>
       <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--card)', borderColor: 'var(--line)', border: '1px solid' }}>
-        <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--text)' }}>{translations.feedbackContent}</h3>
-        
-        {/* Marquee Comments */}
-        <div className="mb-4">
-          <h4 className="text-xs font-medium mb-2" style={{ color: 'var(--text)' }}>{translations.feedbackMarquee}</h4>
-          <div className="text-xs space-y-1" style={{ color: 'var(--muted)' }}>
-            <p>• {translations.feedbackCommentLimit}</p>
-            <p>• {translations.feedbackUseForm}</p>
-            <p>• {translations.feedbackCommentSubject}</p>
-            <p>• {translations.feedbackCommentBody}</p>
-          </div>
-        </div>
-
-        {/* Video Submissions */}
-        <div>
-          <h4 className="text-xs font-medium mb-2" style={{ color: 'var(--text)' }}>{translations.feedbackVideos}</h4>
-          <div className="text-xs space-y-1" style={{ color: 'var(--muted)' }}>
-            <p>• {translations.feedbackFileSize}</p>
-            <p>• {translations.feedbackFormats}</p>
-            <p>• {translations.feedbackResolution}</p>
-            <p>• {translations.feedbackDuration}</p>
-            <p>• {translations.feedbackEmail} <strong className="break-all">support@flickletapp.com</strong></p>
-            <p>• {translations.feedbackVideoSubject}</p>
-            <p>• {translations.feedbackVideoInclude}</p>
-          </div>
+        <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--text)' }}>{translations.feedbackSupportHeading}</h3>
+        <div className="text-sm space-y-2" style={{ color: 'var(--muted)' }}>
+          <p>{translations.feedbackSupportIntro}</p>
+          <ul className="list-disc pl-4 space-y-1">
+            {[
+              [translations.feedbackComments, translations.feedbackCommentsDescription],
+              [translations.feedbackSuggestions, translations.feedbackSuggestionsDescription],
+              [translations.feedbackKudos, translations.feedbackKudosDescription],
+              [translations.feedbackBugs, translations.feedbackBugsDescription],
+              [translations.feedbackTechnical, translations.feedbackTechnicalDescription],
+              [translations.feedbackHelp, translations.feedbackHelpDescription],
+            ].map(([label, description]) => (
+              <li key={label}><strong style={{ color: 'var(--text)' }}>{label}:</strong> {description}</li>
+            ))}
+          </ul>
+          <h4 className="font-semibold" style={{ color: 'var(--text)' }}>{translations.feedbackIncludeHeading}</h4>
+          <p>{translations.feedbackIncludeDetails}</p>
+          <p>{translations.feedbackResponseTime}</p>
         </div>
       </div>
     </div>
