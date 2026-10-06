@@ -128,13 +128,13 @@ Test on **Watching** tab card overflow / actions (desktop and mobile if applicab
 
 ---
 
-## 6. Goofs / Extras / games (trial vs expired)
+## 6. Shows Like This / Extras / games (trial vs expired)
 
 | # | Steps | Expected | P/F/B |
 |---|--------|----------|-------|
-| 6.1 | Active trial: **Goofs** / **Extras** | Opens content or modal (not hard paywall at first click) | |
-| 6.2 | Expired: **Goofs** / **Extras** | Upgrade or read-only path (consistent with entitlements) | |
-| 6.3 | Notifications vs extras | Reminders behave differently from Goofs (reminders = core during trial) | |
+| 6.1 | Active trial: **Shows Like This** / **Extras** | Opens content or modal (not hard paywall at first click) | |
+| 6.2 | Expired: **Shows Like This** / **Extras** | Upgrade or read-only path (consistent with entitlements) | |
+| 6.3 | Notifications vs extras | Reminders behave differently from Shows Like This (reminders = core during trial) | |
 
 ---
 

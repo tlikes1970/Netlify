@@ -10,10 +10,10 @@
 
 | File | Gate / copy | Feature | Was | Trial (active) | Expired (unpaid) | Risk |
 |------|-------------|---------|-----|----------------|------------------|------|
-| `TabCard.tsx` | Goofs / Extras / Advanced Notifications buttons | Card pro strip | Upgrade if not Pro | Open feature | Read-only toast / upgrade | High — fixed |
+| `TabCard.tsx` | Shows Like This / Extras / Advanced Notifications buttons | Card pro strip | Upgrade if not Pro | Open feature | Read-only toast / upgrade | High — fixed |
 | `LibraryActions.tsx` | Same pro strip (mobile menu) | Library actions | Upgrade | Open | Blocked | High — fixed |
 | `CompactOverflowMenu.tsx` | `proOnly` actions | Overflow menu | Upgrade | Execute | Blocked | High — fixed |
-| `GoofsModal.tsx` | `!isPro` panel | Insights | Upgrade CTA | Load + show | Upgrade CTA | High — fixed |
+| `ShowsLikeThisModal.tsx` | `!isPro` panel | Insights | Upgrade CTA | Load + show | Upgrade CTA | High — fixed |
 | `ExtrasModal.tsx` | `!isPro` | BTS videos | Upgrade | Load | Upgrade | High — fixed |
 | `BloopersModal.tsx` | `!isPro` | Bloopers | Upgrade | Load | Upgrade | Med — fixed |
 | `NotificationSettings.tsx` | Pro timing / email | Notifications | Disabled + CTA | Full options | Blocked save | High — fixed |

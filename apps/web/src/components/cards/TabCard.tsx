@@ -727,7 +727,7 @@ export default function TabCard({
               <button
                 onClick={() => {
                   if (canUseProFeatures) {
-                    actions?.onGoofsOpen?.(item);
+                    actions?.onShowsLikeThisOpen?.(item);
                   } else if (isReadOnlyMode) {
                     notifyReadOnlyBlocked();
                   } else {

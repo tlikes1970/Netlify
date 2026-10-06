@@ -274,7 +274,6 @@ Legacy subscription product IDs are not used by the current app build. **Guest u
 |----------|---------|
 | `tmdb-proxy.cjs` | TMDB API proxy |
 | `dict-proxy.cjs` | Dictionary / FlickWord |
-| `goofs-fetch.cjs` | Shows Like This / extras fetch |
 | `feedback.cjs` | User feedback → SendGrid |
 | `send-email.cjs` | Legacy/alternate email (audit duplicate) |
 | `billing/*` | Google Play products, purchase, validate |
@@ -332,3 +331,5 @@ Redirects: `/api/tmdb-proxy` → `tmdb-proxy`, etc. (`netlify.toml`).
 ## Near-term milestone
 
 **Play Store internal testing** with a reproducible Node 20 Capacitor sync, signed release build, Google login, TMDB/search/posters, on-device For You persistence, and validated billing/feedback paths. **In flight:** Unified Library device QA. Core product build-out: **personality layer**, **confirmation/feedback UX**. **After testing:** Capgo native auth migration to drop Codetrix `patch-package` debt.
+
+Shows Like This reads existing `insights` Firestore observations through `apps/web/src/lib/insights/insightsStore.ts`; Extras requests TMDB videos through the existing TMDB proxy.

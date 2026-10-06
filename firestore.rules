@@ -69,7 +69,7 @@ service cloud.firestore {
         && resource.data.uid == request.auth.uid;
     }
 
-    // Goofs / insights (client read for signed-in users; writes via admin/functions)
+    // Shows Like This observations (client read for signed-in users; writes via admin/functions)
     match /insights/{tmdbId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();

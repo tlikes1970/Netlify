@@ -22,7 +22,7 @@ export type LibraryPageProps = {
   onNotificationToggle?: (item: MediaItem) => void;
   onSimpleReminder?: (item: MediaItem) => void;
   onBloopersOpen?: (item: MediaItem) => void;
-  onGoofsOpen?: (item: MediaItem) => void;
+  onShowsLikeThisOpen?: (item: MediaItem) => void;
   onExtrasOpen?: (item: MediaItem) => void;
 };
 
@@ -39,7 +39,7 @@ export default function LibraryPage({
   onNotificationToggle,
   onSimpleReminder,
   onBloopersOpen,
-  onGoofsOpen,
+  onShowsLikeThisOpen,
   onExtrasOpen,
 }: LibraryPageProps) {
   useLanguage();
@@ -58,7 +58,7 @@ export default function LibraryPage({
     onNotificationToggle,
     onSimpleReminder,
     onBloopersOpen,
-    onGoofsOpen,
+    onShowsLikeThisOpen,
     onExtrasOpen,
   };
 

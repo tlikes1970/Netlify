@@ -17,10 +17,6 @@ export const PROVIDER_CONFIG = {
     maxResults: 10,
     allowlistChannels: ALLOWLISTED_CHANNELS,
   },
-  tmdb: {
-    apiKey: import.meta.env.VITE_TMDB_KEY || '',
-    baseUrl: 'https://api.themoviedb.org/3',
-  }
 } as const;
 
 export const SPANISH_VIDEO_TERMS: Readonly<Record<string, string>> = {

@@ -30,7 +30,7 @@ const NotesAndTagsModal = lazy(
 import { SeriesReminderModal } from "@/components/modals/SeriesReminderModal";
 import { BloopersModal } from "@/components/extras/BloopersModal";
 import { ExtrasModal } from "@/components/extras/ExtrasModal";
-import { GoofsModal } from "@/components/extras/GoofsModal";
+import { ShowsLikeThisModal } from "@/components/extras/ShowsLikeThisModal";
 import { HelpModal } from "@/components/HelpModal";
 const LibraryPage = lazy(() => import("@/pages/LibraryPage"));
 const DiscoveryPage = lazy(() => import("@/pages/DiscoveryPage"));
@@ -159,9 +159,9 @@ export default function App() {
   const [bloopersModalItem, setBloopersModalItem] = useState<any>(null);
   const [showBloopersModal, setShowBloopersModal] = useState(false);
 
-  // Goofs modal state
-  const [goofsModalItem, setGoofsModalItem] = useState<any>(null);
-  const [showGoofsModal, setShowGoofsModal] = useState(false);
+  // Insights modal state
+  const [showsLikeThisModalItem, setShowsLikeThisModalItem] = useState<any>(null);
+  const [showShowsLikeThisModal, setShowShowsLikeThisModal] = useState(false);
 
   // Extras modal state
   const [extrasModalItem, setExtrasModalItem] = useState<any>(null);
@@ -715,24 +715,24 @@ export default function App() {
     console.log("Bloopers modal state should now be set");
   };
 
-  // Goofs handler
-  const handleGoofsOpen = (item: any) => {
+  // Insights handler
+  const handleShowsLikeThisOpen = (item: any) => {
     console.log(
-      "App.tsx handleGoofsOpen called for:",
+      "App.tsx handleShowsLikeThisOpen called for:",
       item.title,
       item.mediaType,
     );
-    console.log("Setting goofs modal state:", {
-      showGoofsModal: true,
-      goofsModalItem: item,
+    console.log("Setting insights modal state:", {
+      showShowsLikeThisModal: true,
+      showsLikeThisModalItem: item,
     });
 
     flushSync(() => {
-      setGoofsModalItem(item);
-      setShowGoofsModal(true);
+      setShowsLikeThisModalItem(item);
+      setShowShowsLikeThisModal(true);
     });
 
-    console.log("Goofs modal state should now be set");
+    console.log("Insights modal state should now be set");
   };
 
   // Extras handler
@@ -836,7 +836,7 @@ export default function App() {
           />
         </div>
 
-        {sharedTitleQuery ? (<SharedTitleExperience queryString={sharedTitleQuery} onBackToHome={() => { setSharedTitleQuery(null); navigateTo("home"); }} onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onSimpleReminder={handleSimpleReminder} onNotificationToggle={handleSimpleReminder} onBloopersOpen={handleBloopersOpen} onGoofsOpen={handleGoofsOpen} onExtrasOpen={handleExtrasOpen} />) : searchActive ? (
+        {sharedTitleQuery ? (<SharedTitleExperience queryString={sharedTitleQuery} onBackToHome={() => { setSharedTitleQuery(null); navigateTo("home"); }} onNotesEdit={handleNotesEdit} onTagsEdit={handleTagsEdit} onSimpleReminder={handleSimpleReminder} onNotificationToggle={handleSimpleReminder} onBloopersOpen={handleBloopersOpen} onShowsLikeThisOpen={handleShowsLikeThisOpen} onExtrasOpen={handleExtrasOpen} />) : searchActive ? (
           <PullToRefreshWrapper onRefresh={handleRefresh}>
             <SearchResults
               query={search.q}
@@ -849,7 +849,7 @@ export default function App() {
               onNotificationToggle={handleSimpleReminder}
               onSimpleReminder={handleSimpleReminder}
               onBloopersOpen={handleBloopersOpen}
-              onGoofsOpen={handleGoofsOpen}
+              onShowsLikeThisOpen={handleShowsLikeThisOpen}
               onExtrasOpen={handleExtrasOpen}
             />
           </PullToRefreshWrapper>
@@ -950,7 +950,7 @@ export default function App() {
                       onNotificationToggle={handleSimpleReminder}
                       onSimpleReminder={handleSimpleReminder}
                       onBloopersOpen={handleBloopersOpen}
-                      onGoofsOpen={handleGoofsOpen}
+                      onShowsLikeThisOpen={handleShowsLikeThisOpen}
                       onExtrasOpen={handleExtrasOpen}
                     />
                   </Suspense>
@@ -1054,16 +1054,16 @@ export default function App() {
           />
         )}
 
-        {showGoofsModal && goofsModalItem && (
-          <GoofsModal
-            isOpen={showGoofsModal}
-            onClose={() => setShowGoofsModal(false)}
+        {showShowsLikeThisModal && showsLikeThisModalItem && (
+          <ShowsLikeThisModal
+            isOpen={showShowsLikeThisModal}
+            onClose={() => setShowShowsLikeThisModal(false)}
             tmdbId={
-              typeof goofsModalItem.id === "string"
-                ? parseInt(goofsModalItem.id, 10)
-                : goofsModalItem.id
+              typeof showsLikeThisModalItem.id === "string"
+                ? parseInt(showsLikeThisModalItem.id, 10)
+                : showsLikeThisModalItem.id
             }
-            title={goofsModalItem.title}
+            title={showsLikeThisModalItem.title}
           />
         )}
 

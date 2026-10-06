@@ -52,7 +52,7 @@ Express, Postgres/Prisma, Docker, and the community `/api/v1` backend are gone. 
 
 ### Optional: Firebase Functions
 
-Admin, Pro, and goofs ingestion functions live in `functions/`. Build locally with:
+Admin, Pro, and Full Access administration functions live in `functions/`. Build locally with:
 
 ```bash
 npm install --prefix functions

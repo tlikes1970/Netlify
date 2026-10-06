@@ -104,7 +104,7 @@ export const DEFAULT_SETTINGS: Settings = {
   },
   
   pro: {
-    isPro: false, // Default OFF - users must explicitly enable Pro (Alpha/testing) or purchase
+    isPro: false, // Inert legacy compatibility data; access comes from server entitlements.
     features: {
       advancedNotifications: false,
       themePacks: false,
@@ -419,20 +419,6 @@ export class SettingsManager {
   updateDiscoveryLimit(limit: 25 | 50 | 75 | 100): void {
     if (isRestoring() || !guardMutation()) return;
     this.settings.layout.discoveryLimit = limit;
-    this.saveSettings();
-  }
-
-  updateProStatus(isPro: boolean): void {
-    if (isRestoring() || !guardMutation()) return;
-    this.settings.pro.isPro = isPro;
-    // Update feature flags based on Pro status
-    this.settings.pro.features = {
-      advancedNotifications: isPro,
-      themePacks: isPro,
-      socialFeatures: isPro,
-      bloopersAccess: isPro,
-      extrasAccess: isPro,
-    };
     this.saveSettings();
   }
 

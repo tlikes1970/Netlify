@@ -1,6 +1,7 @@
+> Historical Extras notes. Current Extras uses the shared TMDB proxy; Shows Like This uses insightsStore and existing Firestore observations.
+
 # Extras Feature Improvements Summary
 
-**Branch:** `goofs-and-extras`  
 **Date:** 2024-12-19  
 **Status:** ✅ Complete - Robustness improvements without new legal risk
 
@@ -105,7 +106,6 @@ This implementation improves the robustness of the existing "Extras" feature (vi
 **No changes needed:**
 - ✅ Extras button still properly Pro-gated
 - ✅ Still calls `actions?.onExtrasOpen?.(item)`
-- ✅ Separate from Goofs button (no mixing)
 
 ---
 
@@ -125,12 +125,8 @@ This implementation improves the robustness of the existing "Extras" feature (vi
 
 ---
 
-## Confirmation: Goofs Remains Separate
 
-✅ **Confirmed:** Goofs feature remains completely independent:
-- ✅ Goofs uses local storage only (`goofsStore.ts`)
 - ✅ Extras uses TMDB/YouTube APIs (`extrasProvider.ts`)
-- ✅ No coupling between Goofs and Extras
 - ✅ Separate modals, separate buttons, separate data flows
 
 ---
@@ -198,11 +194,7 @@ This implementation improves the robustness of the existing "Extras" feature (vi
 4. **`apps/web/src/App.tsx`**
    - Passes `mediaType` prop to `ExtrasModal`
 
-### Files NOT Modified (Goofs remains untouched)
 
-- ✅ `apps/web/src/lib/goofs/goofsStore.ts` - Unchanged
-- ✅ `apps/web/src/components/extras/GoofsModal.tsx` - Unchanged
-- ✅ All Goofs-related code - Unchanged
 
 ---
 

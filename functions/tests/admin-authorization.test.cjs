@@ -30,7 +30,6 @@ for (const name of [
   "manageAdminRole",
   "manageProStatus",
   "resetTrialEntitlement",
-  "ingestGoofs",
 ]) {
   for (const [label, identity, code] of [
     ["signed out", undefined, "unauthenticated"],
@@ -144,8 +143,7 @@ test("retired self-promotion endpoint has no source or production export", () =>
   assert.deepEqual(
     Object.keys(endpoints).sort(),
     [
-      "ingestGoofs",
-      "manageAdminRole",
+          "manageAdminRole",
       "manageProStatus",
       "resetTrialEntitlement",
     ].sort(),

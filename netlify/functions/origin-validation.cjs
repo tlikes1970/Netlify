@@ -3,7 +3,7 @@
  * Purpose: Validates request origins for Netlify functions to prevent unauthorized access
  * Data Source: HTTP request headers (Origin, Referer, Host, User-Agent)
  * Update Path: Add new allowed origins to ALLOWED_ORIGINS array
- * Dependencies: Used by tmdb-proxy, goofs-fetch, and other Netlify functions
+ * Dependencies: Used by tmdb-proxy and other Netlify functions
  */
 
 const ALLOWED_ORIGINS = [

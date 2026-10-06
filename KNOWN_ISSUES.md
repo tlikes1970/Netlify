@@ -156,7 +156,7 @@ Tracked problems, uncertainties, and tech debt. **Do not modify app code from th
 
 ### Separate `functions/` tree
 
-- `functions/` (Firebase / admin / goofs ingestion) alongside `netlify/functions` (production Netlify).
+- `functions/` (Firebase / admin / Full Access administration) alongside `netlify/functions` (production Netlify).
 - **Status:** **Needs audit before deletion.**
 
 ---
@@ -228,9 +228,9 @@ Tracked problems, uncertainties, and tech debt. **Do not modify app code from th
 
 - **Status:** Open.
 
-### Goofs / Extras labeling
+### Shows Like This / Extras labeling
 
-- User-facing copy largely updated to **Shows Like This** / **Extras**; sweep any stale “bloopers” / “goofs” labels if still visible.
+- User-facing copy largely updated to **Shows Like This** / **Extras**; sweep any stale “bloopers” / “retired content” labels if still visible.
 
 ### Games / community (removed from product scope)
 

@@ -27,7 +27,6 @@ Common keys: `VITE_FIREBASE_*`, `VITE_TMDB_KEY`, `VITE_PUBLIC_BASE_URL`, `VITE_F
 
 - `TMDB_TOKEN` — TMDB proxy (do not duplicate in `apps/web/.env`).
 - `SENDGRID_*`, `FEEDBACK_EMAIL`, `FROM_EMAIL` — feedback / email.
-- `GOOFS_INGESTION_ADMIN_TOKEN`, `FIREBASE_SERVICE_ACCOUNT_JSON` — goofs ingest.
 - `FIREBASE_SERVICE_ACCOUNT` — billing validate.
 - `WORDNIK_API_KEY` — dictionary proxy (if used).
 

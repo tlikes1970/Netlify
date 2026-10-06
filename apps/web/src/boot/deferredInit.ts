@@ -150,10 +150,6 @@ function attachDebugHelpers(): void {
     });
   };
 
-  (window as any).debugEnv = () => ({
-    hasViteTmdbKey: Boolean(import.meta.env.VITE_TMDB_KEY),
-  });
-
   (window as any).debugQueries = () =>
     Array.from((queryClient as any).getQueryCache().getAll()).map((q: any) => ({
       key: q.queryKey?.join('/') ?? 'unknown',

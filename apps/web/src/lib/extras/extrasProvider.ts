@@ -1,3 +1,4 @@
+import { get } from "../tmdb";
 import { getMetadataLanguage } from "../language";
 import { ExtrasVideo, ProviderResult, ExtrasProvider } from "./types";
 import { PROVIDER_CONFIG, BLOOPERS_KEYWORDS, EXTRAS_KEYWORDS, videoQueryTerms } from "./config";
@@ -7,7 +8,7 @@ import { PROVIDER_CONFIG, BLOOPERS_KEYWORDS, EXTRAS_KEYWORDS, videoQueryTerms } 
  * Purpose: Fetches and manages bloopers/extras metadata from allowed sources
  * Data Source: TMDB videos API, YouTube search API
  * Update Path: Manual admin review, nightly reverification
- * Dependencies: Settings pro flags, YouTube API, TMDB API
+ * Dependencies: Full Access gate, existing TMDB proxy, optional YouTube API
  */
 
 class ExtrasProviderImpl implements ExtrasProvider {
@@ -17,26 +18,8 @@ class ExtrasProviderImpl implements ExtrasProvider {
    * Check if API keys are configured
    */
   private checkApiKeys(): { tmdb: boolean; youtube: boolean } {
-    const tmdbKey = PROVIDER_CONFIG.tmdb.apiKey;
-    const youtubeKey = PROVIDER_CONFIG.youtube.apiKey;
-
-    const tmdbValid = tmdbKey && tmdbKey.trim().length > 0;
-    const youtubeValid = youtubeKey && youtubeKey.trim().length > 0;
-
-    if (import.meta.env.DEV) {
-      if (!tmdbValid) {
-        console.warn(
-          "⚠️ VITE_TMDB_KEY is missing or empty. TMDB API calls will fail."
-        );
-      }
-      if (!youtubeValid) {
-        console.warn(
-          "⚠️ VITE_YOUTUBE_API_KEY is missing or empty. YouTube API calls will fail."
-        );
-      }
-    }
-
-    return { tmdb: tmdbValid, youtube: youtubeValid };
+    // TMDB uses Flicklet's existing server proxy; no client credential is required.
+    return { tmdb: true, youtube: Boolean(PROVIDER_CONFIG.youtube.apiKey.trim()) };
   }
 
   async fetchBloopers(
@@ -44,9 +27,7 @@ class ExtrasProviderImpl implements ExtrasProvider {
     _showTitle: string,
     _mediaType: "movie" | "tv" = "tv"
   ): Promise<ProviderResult> {
-    // Note: Bloopers functionality is deprecated in favor of Goofs
-    // This method is kept for backward compatibility
-    // For now, return empty result - bloopers should use Goofs feature instead
+    // Retained empty compatibility method for existing Admin video review.
     return {
       videos: [],
       hasMore: false,
@@ -61,20 +42,6 @@ class ExtrasProviderImpl implements ExtrasProvider {
   ): Promise<ProviderResult> {
     // Check API keys first
     const apiKeys = this.checkApiKeys();
-    if (!apiKeys.tmdb && !apiKeys.youtube) {
-      return {
-        videos: [],
-        hasMore: false,
-        kind: "config-error",
-        error: "API keys not configured",
-        errorDetails: {
-          source: "unknown",
-          message:
-            "TMDB and YouTube API keys are missing. Please configure VITE_TMDB_KEY and VITE_YOUTUBE_API_KEY.",
-        },
-      };
-    }
-
     const videos: ExtrasVideo[] = [];
     const errors: Array<{
       source: "tmdb" | "youtube" | "unknown";
@@ -111,12 +78,12 @@ class ExtrasProviderImpl implements ExtrasProvider {
             );
           }
         }
-      } catch (error) {
+      } catch {
         const errorMessage =
-          error instanceof Error ? error.message : "Unknown TMDB error";
+          "TMDB request failed";
         errors.push({ source: "tmdb", message: errorMessage });
         if (import.meta.env.DEV) {
-          console.error("❌ TMDB fetch failed:", error);
+          console.error("TMDB request failed");
         }
       }
     } else {
@@ -153,12 +120,12 @@ class ExtrasProviderImpl implements ExtrasProvider {
             );
           }
         }
-      } catch (error) {
+      } catch {
         const errorMessage =
-          error instanceof Error ? error.message : "Unknown YouTube error";
+          "YouTube request failed";
         errors.push({ source: "youtube", message: errorMessage });
         if (import.meta.env.DEV) {
-          console.error("❌ YouTube search failed:", error);
+          console.error("YouTube request failed");
         }
       }
     } else {
@@ -201,9 +168,9 @@ class ExtrasProviderImpl implements ExtrasProvider {
       if (fallbackVideos.length > 0) {
         return { videos: fallbackVideos, hasMore: false, kind: "success" };
       }
-    } catch (error) {
+    } catch {
       if (import.meta.env.DEV) {
-        console.error("Fallback extras failed:", error);
+        console.error("Fallback extras failed:");
       }
     }
 
@@ -232,41 +199,14 @@ class ExtrasProviderImpl implements ExtrasProvider {
     language = getMetadataLanguage()
   ): Promise<ProviderResult> {
     try {
-      const endpoint =
-        mediaType === "movie"
-          ? `${PROVIDER_CONFIG.tmdb.baseUrl}/movie/${showId}/videos?api_key=${PROVIDER_CONFIG.tmdb.apiKey}&language=${encodeURIComponent(language)}`
-          : `${PROVIDER_CONFIG.tmdb.baseUrl}/tv/${showId}/videos?api_key=${PROVIDER_CONFIG.tmdb.apiKey}&language=${encodeURIComponent(language)}`;
-
-      const response = await fetch(endpoint);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        return {
-          videos: [],
-          hasMore: false,
-          kind: "api-error",
-          error: `TMDB API error: ${response.status}`,
-          errorDetails: {
-            source: "tmdb",
-            message: `HTTP ${response.status}: ${errorText.substring(0, 100)}`,
-          },
-        };
+      const data = await get(`/${mediaType}/${showId}/videos`, { language });
+      if (!Array.isArray(data.results)) {
+        return { videos: [], hasMore: false, kind: "api-error", errorDetails: {
+          source: "tmdb", message: "Invalid TMDB videos response",
+        } };
       }
-
-      const data = await response.json();
       if (language === "es" && !(data.results || []).some((video: any) => this.isRelevantVideo(video, category))) {
         return this.fetchTMDBVideos(showId, category, mediaType, "en-US");
-      }
-
-      if (!data.results || !Array.isArray(data.results)) {
-        if (import.meta.env.DEV) {
-          console.log("ℹ️ TMDB response has no results array:", data);
-        }
-        return {
-          videos: [],
-          hasMore: false,
-          kind: "no-content",
-        };
       }
 
       if (import.meta.env.DEV) {
@@ -292,11 +232,11 @@ class ExtrasProviderImpl implements ExtrasProvider {
         hasMore: false,
         kind: filteredVideos.length > 0 ? "success" : "no-content",
       };
-    } catch (error) {
+    } catch {
       const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
+        "Provider request failed";
       if (import.meta.env.DEV) {
-        console.error("TMDB videos fetch error:", error);
+        console.error("TMDB videos request failed");
       }
       return {
         videos: [],
@@ -325,7 +265,7 @@ class ExtrasProviderImpl implements ExtrasProvider {
       );
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+
         return {
           videos: [],
           hasMore: false,
@@ -333,20 +273,17 @@ class ExtrasProviderImpl implements ExtrasProvider {
           error: `YouTube API error: ${response.status}`,
           errorDetails: {
             source: "youtube",
-            message: `HTTP ${response.status}: ${errorData.error?.message || "Unknown error"}`,
+            message: `YouTube request failed (HTTP ${response.status})`,
           },
         };
       }
 
       const data = await response.json();
 
-      if (!data.items || !Array.isArray(data.items)) {
-        if (language === "es") return this.searchYouTube(query, keywords, category, "en-US", authoredQuery);
-        return {
-          videos: [],
-          hasMore: false,
-          kind: "no-content",
-        };
+      if (!Array.isArray(data.items)) {
+        return { videos: [], hasMore: false, kind: "api-error", errorDetails: {
+          source: "youtube", message: "Invalid YouTube search response",
+        } };
       }
 
       const filteredVideos = data.items
@@ -359,11 +296,11 @@ class ExtrasProviderImpl implements ExtrasProvider {
         hasMore: false,
         kind: filteredVideos.length > 0 ? "success" : "no-content",
       };
-    } catch (error) {
+    } catch {
       const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
+        "Provider request failed";
       if (import.meta.env.DEV) {
-        console.error("YouTube search error:", error);
+        console.error("YouTube request failed");
       }
       return {
         videos: [],
@@ -567,7 +504,7 @@ class ExtrasProviderImpl implements ExtrasProvider {
     };
   }
 
-  // Fallback content hierarchy (deprecated - bloopers now use Goofs)
+  // Fallback content hierarchy (deprecated - bloopers now use Insights)
   // This method is kept for backward compatibility but is not currently used
   // @ts-expect-error - Method is deprecated and unused
   private async getFallbackBloopers(
@@ -630,9 +567,9 @@ class ExtrasProviderImpl implements ExtrasProvider {
           );
         }
       }
-    } catch (error) {
+    } catch {
       if (import.meta.env.DEV) {
-        console.error("Error fetching fallback bloopers:", error);
+        console.error("Error fetching fallback bloopers:");
       }
     }
 
@@ -644,6 +581,7 @@ class ExtrasProviderImpl implements ExtrasProvider {
     showTitle: string,
     mediaType: "movie" | "tv" = "tv"
   ): Promise<ExtrasVideo[]> {
+    if (!this.checkApiKeys().youtube) return [];
     const videos: ExtrasVideo[] = [];
 
     try {
@@ -684,9 +622,9 @@ class ExtrasProviderImpl implements ExtrasProvider {
           );
         }
       }
-    } catch (error) {
+    } catch {
       if (import.meta.env.DEV) {
-        console.error("Error fetching fallback extras:", error);
+        console.error("Error fetching fallback extras:");
       }
     }
 
@@ -698,23 +636,13 @@ class ExtrasProviderImpl implements ExtrasProvider {
     mediaType: "movie" | "tv" = "tv"
   ): Promise<{ name: string }[]> {
     try {
-      const endpoint =
-        mediaType === "movie"
-          ? `${PROVIDER_CONFIG.tmdb.baseUrl}/movie/${showId}/credits?api_key=${PROVIDER_CONFIG.tmdb.apiKey}`
-          : `${PROVIDER_CONFIG.tmdb.baseUrl}/tv/${showId}/credits?api_key=${PROVIDER_CONFIG.tmdb.apiKey}`;
-
-      const response = await fetch(endpoint);
-      if (!response.ok) {
-        return [];
-      }
-
-      const data = await response.json();
+      const data = await get(`/${mediaType}/${showId}/credits`);
       return (
         data.cast?.slice(0, 5).map((actor: any) => ({ name: actor.name })) || []
       );
-    } catch (error) {
+    } catch {
       if (import.meta.env.DEV) {
-        console.error("Error fetching cast:", error);
+        console.error("Error fetching cast:");
       }
       return [];
     }
@@ -744,9 +672,9 @@ class ExtrasProviderImpl implements ExtrasProvider {
           videos.push(...result.videos);
           if (videos.length >= 5) break;
         }
-      } catch (error) {
+      } catch {
         if (import.meta.env.DEV) {
-          console.error(`Error searching for ${query}:`, error);
+          console.error(`Error searching for ${query}:`);
         }
       }
     }
@@ -779,9 +707,9 @@ class ExtrasProviderImpl implements ExtrasProvider {
           videos.push(...result.videos);
           if (videos.length >= 3) break;
         }
-      } catch (error) {
+      } catch {
         if (import.meta.env.DEV) {
-          console.error(`Error searching for ${query}:`, error);
+          console.error(`Error searching for ${query}:`);
         }
       }
     }
@@ -814,9 +742,9 @@ class ExtrasProviderImpl implements ExtrasProvider {
           videos.push(...result.videos);
           if (videos.length >= 3) break;
         }
-      } catch (error) {
+      } catch {
         if (import.meta.env.DEV) {
-          console.error(`Error searching for ${query}:`, error);
+          console.error(`Error searching for ${query}:`);
         }
       }
     }

@@ -48,7 +48,7 @@ export default function SearchResults({
   onNotificationToggle,
   onSimpleReminder,
   onBloopersOpen,
-  onGoofsOpen,
+  onShowsLikeThisOpen,
   onExtrasOpen,
   onEpisodeTracking,
 }: {
@@ -63,7 +63,7 @@ export default function SearchResults({
   onNotificationToggle?: (item: MediaItem) => void;
   onSimpleReminder?: (item: MediaItem) => void;
   onBloopersOpen?: (item: MediaItem) => void;
-  onGoofsOpen?: (item: MediaItem) => void;
+  onShowsLikeThisOpen?: (item: MediaItem) => void;
   onExtrasOpen?: (item: MediaItem) => void;
   onEpisodeTracking?: (item: MediaItem) => void;
 }) {
@@ -125,7 +125,7 @@ export default function SearchResults({
     onNotificationToggle: onNotificationToggle,
     onSimpleReminder: onSimpleReminder,
     onBloopersOpen: onBloopersOpen,
-    onGoofsOpen: onGoofsOpen,
+    onShowsLikeThisOpen: onShowsLikeThisOpen,
     onExtrasOpen: onExtrasOpen,
   };
   const [items, setItems] = useState<MediaItem[]>([]);
@@ -985,8 +985,8 @@ export function SearchResultCard({
                             actions?.onNotificationToggle?.(item);
                             setShowManageSheet(false);
                           },
-                          onGoofsOpen: (item) => {
-                            actions?.onGoofsOpen?.(item);
+                          onShowsLikeThisOpen: (item) => {
+                            actions?.onShowsLikeThisOpen?.(item);
                             setShowManageSheet(false);
                           },
                           onExtrasOpen: (item) => {

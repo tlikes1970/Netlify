@@ -426,26 +426,13 @@ describe("preference-only reset", () => {
     expect(manager.getSettings().layout.theme).toBe("light");
     expect(mocks.transaction).not.toHaveBeenCalled();
   });
-  it("preserves a compatibility access change made while reset is pending", async () => {
-    vi.useFakeTimers();
+  it("has no manual Pro setter and preserves inert historical values during reset", async () => {
     mocks.user = { uid: "one", displayName: null, email: null, photoURL: null };
     const manager = createLocal();
-    manager.updateProStatus(false);
-    let release!: () => void;
-    mocks.transaction.mockImplementationOnce(
-      () =>
-        new Promise<void>((resolve) => {
-          release = resolve;
-        }),
-    );
-    const reset = manager.resetToDefaults();
-    await Promise.resolve();
-    manager.updateProStatus(true);
-    release();
-    await reset;
+    expect("updateProStatus" in manager).toBe(false);
+    await manager.resetToDefaults();
     expect(manager.getSettings().pro.isPro).toBe(true);
     expect(JSON.parse(localStorage.getItem(key)!).pro.isPro).toBe(true);
-    await vi.advanceTimersByTimeAsync(1000);
   });
   it("does not reset a different account after the sign-in changes", async () => {
     mocks.user = { uid: "one", displayName: null, email: null, photoURL: null };

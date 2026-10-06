@@ -6,9 +6,9 @@
 |-------|---------|
 | **Netlify CLI** (`npx netlify dev`) | Single local entry point — SPA + function proxies |
 | **Vite** (`apps/web`) | Frontend dev/build (proxied by Netlify on port 4173) |
-| **Netlify Functions** (`netlify/functions/` at repo root) | TMDB proxy, billing, feedback, goofs, dict, send-email |
+| **Netlify Functions** (`netlify/functions/` at repo root) | TMDB proxy, billing, feedback, dict, send-email |
 | **Firebase** (client SDK) | Auth, Firestore sync for signed-in users |
-| **Firebase Functions** (`functions/`) | Admin role, Pro status, goofs ingest (deployed separately) |
+| **Firebase Functions** (`functions/`) | Admin role, Pro status, trial reset (deployed separately) |
 | **localStorage** | Offline-first library and settings |
 
 ## Start the app
@@ -29,7 +29,7 @@ Use repo-root `.env` (from `.env.example`) for `npx netlify dev`. Optional `apps
 
 - `TMDB_TOKEN` — required for search/discovery/posters (TMDB proxy)
 - `VITE_FIREBASE_*` — required for auth/sync when testing signed-in flows
-- Billing/goofs/feedback function secrets — only when testing those features
+- Billing/feedback function secrets — only when testing those features
 
 Details: [ENV.md](ENV.md)
 

@@ -28,7 +28,7 @@
 - ✅ Not Interested
 - ✅ Episodes (TV only, if enabled)
 - ✅ Notes & Tags
-- ✅ Goofs
+- ✅ Shows Like This
 - ✅ Extras
 - ✅ Advanced Notifications
 - ✅ Delete
@@ -45,7 +45,7 @@
 - ✅ Not Interested
 - ✅ Episodes (TV only, if enabled)
 - ✅ Notes & Tags
-- ✅ Goofs
+- ✅ Shows Like This
 - ✅ Extras
 - ✅ Advanced Notifications
 - ✅ Delete
@@ -64,7 +64,7 @@
 - ✅ Not Interested
 - ✅ Notes & Tags
 - ✅ Remind Me (TV only, `onSimpleReminder`)
-- ✅ Shows Like This (Goofs, Pro-gated when applicable)
+- ✅ Shows Like This (Shows Like This, Pro-gated when applicable)
 - ✅ Extras (Pro-gated when applicable)
 - ✅ Watch Reminders (`onNotificationToggle`)
 - ✅ Delete
@@ -88,7 +88,7 @@
 - ❌ Rate
 - ❌ Tags
 - ❌ Episodes (for TV shows)
-- ❌ Goofs
+- ❌ Shows Like This
 - ❌ Extras
 - ❌ Advanced Notifications
 - ❌ Simple Reminder
@@ -112,7 +112,7 @@ All available handlers:
 - `onEpisodeTracking` ✅ Used (but missing in home/search/foryou)
 - `onNotificationToggle` ✅ Used (but missing in home/search/foryou)
 - `onSimpleReminder` ❌ **MISSING** - Simple Reminder
-- `onGoofsOpen` ✅ Used (but missing in home/search/foryou)
+- `onShowsLikeThisOpen` ✅ Used (but missing in home/search/foryou)
 - `onExtrasOpen` ✅ Used (but missing in home/search/foryou)
 
 ---
@@ -126,7 +126,7 @@ All available handlers:
 
 ### Priority 2: Add Context-Appropriate Actions
 4. **Episodes** - Add to `home`/`search`/`tab-foryou` for TV shows
-5. **Goofs** - Add to `home`/`search`/`tab-foryou` (if Pro or available)
+5. **Shows Like This** - Add to `home`/`search`/`tab-foryou` (if Pro or available)
 6. **Extras** - Add to `home`/`search`/`tab-foryou` (if Pro or available)
 7. **Advanced Notifications** - Add to `home`/`search`/`tab-foryou` (if Pro)
 8. **Simple Reminder** - Add to all tab contexts for TV shows
@@ -146,11 +146,11 @@ All available handlers:
 ## Phase 5: Pro Gating Check
 
 Actions that should be Pro-gated:
-- ✅ Goofs - Check if Pro
+- ✅ Shows Like This - Check if Pro
 - ✅ Extras - Check if Pro  
 - ✅ Advanced Notifications - Check if Pro
 
-Current implementation: Uses `handlers.onGoofsOpen` etc. - need to verify Pro checks are in handlers.
+Current implementation: Uses `handlers.onShowsLikeThisOpen` etc. - need to verify Pro checks are in handlers.
 
 ---
 

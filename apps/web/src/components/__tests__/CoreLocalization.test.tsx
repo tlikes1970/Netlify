@@ -67,7 +67,7 @@ it.each(['en','es'] as const)('%s filters and sorting keep canonical values and 
 });
 it.each(['en','es'] as const)('%s card actions, overflow, TV labels and rating accessibility preserve identity',async lang=>{
  await language(lang);render(<ContextStatusActions item={item} tabKey="want"/>);fireEvent.click(screen.getByRole('button',{name:t('coreWatching')}));expect(state.move).toHaveBeenCalledWith(item,'watching',{feedback:true});cleanup();
- render(<CompactOverflowMenu item={item} context="tab-watching" actions={{onOpen:()=>{},onNotInterested:()=>{},onEpisodeTracking:()=>{},onSimpleReminder:()=>{},onNotesEdit:()=>{},onGoofsOpen:()=>{},onExtrasOpen:()=>{},onDelete:()=>{}}}/>);
+ render(<CompactOverflowMenu item={item} context="tab-watching" actions={{onOpen:()=>{},onNotInterested:()=>{},onEpisodeTracking:()=>{},onSimpleReminder:()=>{},onNotesEdit:()=>{},onShowsLikeThisOpen:()=>{},onExtrasOpen:()=>{},onDelete:()=>{}}}/>);
  fireEvent.click(screen.getByRole('button',{name:t('coreMore')}));await screen.findByRole('menu');
  for(const key of ['coreOpenDetails','coreNot','coreRemind','notesAndTags','coreShowsLikeThis','coreExtras','coreCustomLists'] as const)expect(screen.getByRole('menuitem',{name:t(key)})).toBeInTheDocument();
  expect(formatMobileMetaLine(item,'tv')).toBe(`2022 • ${t('coreTV')}`);

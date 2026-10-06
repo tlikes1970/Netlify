@@ -1,5 +1,3 @@
-import { functions } from "../lib/firebaseBootstrap";
-import { httpsCallable } from "firebase/functions";
 import { useState, useEffect } from "react";
 import { ExtrasVideo } from "../lib/extras/types";
 import { extrasProvider } from "../lib/extras/extrasProvider";
@@ -40,35 +38,11 @@ export default function AdminExtrasPage({
   const [selectedShow, setSelectedShow] = useState<string>("");
   const [showId, setShowId] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<
-    "content" | "comments" | "videos" | "pro" | "admin" | "insights"
+    "content" | "comments" | "videos" | "pro" | "admin"
   >("content");
 
   // Use prop if provided, otherwise fall back to isMobileNow()
   const isMobile = isMobileProp ?? isMobileNow();
-
-  // Insights generation state
-  const [insightsTmdbId, setInsightsTmdbId] = useState<string>("");
-  const [insightsTitle, setInsightsTitle] = useState<string>("");
-  const [insightsMediaType, setInsightsMediaType] = useState<"movie" | "tv">(
-    "tv"
-  );
-  const [insightsGenres, setInsightsGenres] = useState<string>("");
-  const [insightsYear, setInsightsYear] = useState<string>("");
-  const [insightsRuntime, setInsightsRuntime] = useState<string>("");
-  const [insightsGenerating, setInsightsGenerating] = useState(false);
-  const [insightsResult, setInsightsResult] = useState<{
-    success: boolean;
-    itemsGenerated?: number;
-    error?: string;
-  } | null>(null);
-  const [bulkIngestionRunning, setBulkIngestionRunning] = useState(false);
-  const [bulkIngestionResult, setBulkIngestionResult] = useState<{
-    success: boolean;
-    total?: number;
-    succeeded?: number;
-    failed?: number;
-    error?: string;
-  } | null>(null);
 
   const handleFetchVideos = async () => {
     if (!showId) return;
@@ -174,117 +148,6 @@ export default function AdminExtrasPage({
   useEffect(() => {
     loadUGCSubmissions();
   }, []);
-
-  const handleGenerateInsights = async () => {
-    if (!insightsTmdbId) {
-      alert("Please enter a TMDB ID");
-      return;
-    }
-
-    setInsightsGenerating(true);
-    setInsightsResult(null);
-
-    try {
-      const genresArray = insightsGenres
-        .split(",")
-        .map((g) => g.trim())
-        .filter(Boolean);
-
-      const metadata = {
-        tmdbId: parseInt(insightsTmdbId),
-        id: parseInt(insightsTmdbId),
-        title: insightsTitle || "Unknown Title",
-        mediaType: insightsMediaType,
-        genres: genresArray,
-        year: insightsYear ? parseInt(insightsYear) : null,
-        runtimeMins: insightsRuntime ? parseInt(insightsRuntime) : null,
-      };
-
-      const ingestGoofs = httpsCallable(functions, "ingestGoofs");
-
-      const result = await ingestGoofs({
-        mode: "single",
-        tmdbId: insightsTmdbId,
-        metadata: metadata,
-      });
-
-      const data = result.data as {
-        success?: boolean;
-        itemsGenerated?: number;
-      };
-      setInsightsResult({
-        success: data.success || true,
-        itemsGenerated: data.itemsGenerated || 0,
-      });
-
-      setInsightsTmdbId("");
-      setInsightsTitle("");
-      setInsightsGenres("");
-      setInsightsYear("");
-      setInsightsRuntime("");
-    } catch (error: unknown) {
-      console.error("Failed to generate insights:", error);
-      const err = error as { message?: string };
-      setInsightsResult({
-        success: false,
-        error: err.message || String(error),
-      });
-    } finally {
-      setInsightsGenerating(false);
-    }
-  };
-
-  const handleBulkIngestion = async () => {
-    const confirmed = window.confirm(
-      "Run bulk goofs ingestion now? This will process all titles in Firestore and may take a while."
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    setBulkIngestionRunning(true);
-    setBulkIngestionResult(null);
-
-    try {
-      const ingestGoofs = httpsCallable(functions, "ingestGoofs");
-      const result = await ingestGoofs({ mode: "bulk" });
-
-      const data = result.data as {
-        success?: boolean;
-        total?: number;
-        succeeded?: number;
-        count?: number;
-        failed?: number;
-      };
-      setBulkIngestionResult({
-        success: data.success || true,
-        total: data.total || 0,
-        succeeded: data.succeeded || data.count || 0,
-        failed: data.failed || 0,
-      });
-    } catch (error: unknown) {
-      console.error("Failed to run bulk ingestion:", error);
-      let errorMessage = "Unknown error";
-      const err = error as { message?: string; code?: string };
-      if (err.message) {
-        errorMessage = err.message;
-      } else if (err.code) {
-        errorMessage = `Error code: ${err.code}`;
-      } else if (typeof error === "string") {
-        errorMessage = error;
-      } else {
-        errorMessage = JSON.stringify(error);
-      }
-
-      setBulkIngestionResult({
-        success: false,
-        error: errorMessage,
-      });
-    } finally {
-      setBulkIngestionRunning(false);
-    }
-  };
 
   const pendingCount = videos.filter((v) => v.status === "pending").length;
   const approvedCount = videos.filter((v) => v.status === "approved").length;
@@ -452,9 +315,7 @@ export default function AdminExtrasPage({
         <h3 className="text-xl font-semibold" style={{ color: "var(--text)" }}>
           {activeTab === "content"
             ? "Auto Content"
-            : activeTab === "insights"
-              ? "Insights & Easter Eggs"
-              : activeTab === "comments"
+            : activeTab === "comments"
                 ? "Marquee Comments"
                 : activeTab === "videos"
                   ? "Video Submissions"
@@ -489,7 +350,6 @@ export default function AdminExtrasPage({
             }}
           >
             <option value="content">Auto Content</option>
-            <option value="insights">Insights & Easter Eggs</option>
             <option value="comments">Marquee Comments ({pendingUGC})</option>
             <option value="videos">Video Submissions ({pendingUGC})</option>
             <option value="pro">{t("adminAccessTitle")}</option>
@@ -506,13 +366,6 @@ export default function AdminExtrasPage({
               title="Auto Content"
             >
               Auto Content
-            </button>
-            <button
-              onClick={() => setActiveTab("insights")}
-              className={`admin-extras-tab ${activeTab === "insights" ? "admin-extras-tab--active" : ""}`}
-              title="Insights & Easter Eggs"
-            >
-              Insights & Easter Eggs
             </button>
             <button
               onClick={() => setActiveTab("comments")}
@@ -548,291 +401,6 @@ export default function AdminExtrasPage({
         )}
 
         {/* Tab Content */}
-        {activeTab === "insights" && (
-          <div className="space-y-6">
-            <div
-              className="rounded-lg p-4"
-              style={{
-                backgroundColor: "var(--card)",
-                border: "1px solid var(--line)",
-              }}
-            >
-              <h4
-                className="text-lg font-medium mb-3"
-                style={{ color: "var(--text)" }}
-              >
-                Generate Insights & Easter Eggs
-              </h4>
-              <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
-                Generate original &quot;Insights &amp; Easter Eggs&quot; content
-                from title metadata. Content is generated using templates +
-                metadata, NOT from external copyrighted sources.
-                <br />
-                <br />
-                <strong>Data Flow:</strong> Admin triggers ingestion â†’ Netlify
-                function fetches/transforms data â†’ Writes to Firestore â†’ Clients
-                read from Firestore (no direct external API calls).
-              </p>
-
-              <div
-                className="space-y-3"
-                style={{ gap: isMobile ? "0.75rem" : "1rem" }}
-              >
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    TMDB ID (required)
-                  </label>
-                  <input
-                    type="text"
-                    value={insightsTmdbId}
-                    onChange={(e) => setInsightsTmdbId(e.target.value)}
-                    placeholder="e.g., 1399"
-                    className="w-full px-3 py-2 border border-gray-300 rounded"
-                    style={{
-                      borderColor: "var(--line)",
-                      backgroundColor: "var(--card)",
-                      color: "var(--text)",
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Title
-                  </label>
-                  <input
-                    type="text"
-                    value={insightsTitle}
-                    onChange={(e) => setInsightsTitle(e.target.value)}
-                    placeholder="e.g., Game of Thrones"
-                    className="w-full px-3 py-2 border border-gray-300 rounded"
-                    style={{
-                      borderColor: "var(--line)",
-                      backgroundColor: "var(--card)",
-                      color: "var(--text)",
-                    }}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Media Type
-                  </label>
-                  <select
-                    value={insightsMediaType}
-                    onChange={(e) =>
-                      setInsightsMediaType(e.target.value as "movie" | "tv")
-                    }
-                    className="w-full px-3 py-2 border border-gray-300 rounded"
-                    style={{
-                      borderColor: "var(--line)",
-                      backgroundColor: "var(--card)",
-                      color: "var(--text)",
-                    }}
-                  >
-                    <option value="tv">TV Show</option>
-                    <option value="movie">Movie</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    Genres (comma-separated)
-                  </label>
-                  <input
-                    type="text"
-                    value={insightsGenres}
-                    onChange={(e) => setInsightsGenres(e.target.value)}
-                    placeholder="e.g., drama, fantasy, action"
-                    className="w-full px-3 py-2 border border-gray-300 rounded"
-                    style={{
-                      borderColor: "var(--line)",
-                      backgroundColor: "var(--card)",
-                      color: "var(--text)",
-                    }}
-                  />
-                </div>
-
-                <div
-                  className={`${isMobile ? "flex flex-col gap-3" : "grid grid-cols-2 gap-4"}`}
-                >
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Year
-                    </label>
-                    <input
-                      type="text"
-                      value={insightsYear}
-                      onChange={(e) => setInsightsYear(e.target.value)}
-                      placeholder="e.g., 2011"
-                      className="w-full px-3 py-2 border border-gray-300 rounded"
-                      style={{
-                        borderColor: "var(--line)",
-                        backgroundColor: "var(--card)",
-                        color: "var(--text)",
-                      }}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Runtime (minutes)
-                    </label>
-                    <input
-                      type="text"
-                      value={insightsRuntime}
-                      onChange={(e) => setInsightsRuntime(e.target.value)}
-                      placeholder="e.g., 60"
-                      className="w-full px-3 py-2 border border-gray-300 rounded"
-                      style={{
-                        borderColor: "var(--line)",
-                        backgroundColor: "var(--card)",
-                        color: "var(--text)",
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <p className="text-xs mb-2" style={{ color: "var(--muted)" }}>
-                  Use this for one-off fixes or testing a specific TMDB ID.
-                </p>
-
-                <button
-                  onClick={handleGenerateInsights}
-                  disabled={
-                    insightsGenerating ||
-                    !insightsTmdbId ||
-                    bulkIngestionRunning
-                  }
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {insightsGenerating ? "Generating..." : "Generate Insights"}
-                </button>
-
-                {insightsResult && (
-                  <div
-                    className={`p-4 rounded ${
-                      insightsResult.success
-                        ? "bg-green-50 border border-green-200"
-                        : "bg-red-50 border border-red-200"
-                    }`}
-                    style={{
-                      backgroundColor: insightsResult.success
-                        ? "var(--card)"
-                        : "var(--card)",
-                      borderColor: "var(--line)",
-                    }}
-                  >
-                    {insightsResult.success ? (
-                      <p
-                        className="text-sm text-green-800"
-                        style={{ color: "var(--text)" }}
-                      >
-                        âœ… Successfully generated{" "}
-                        {insightsResult.itemsGenerated} insights and saved to
-                        Firestore. Users will see them the next time they open
-                        the Insights &amp; Easter Eggs modal.
-                      </p>
-                    ) : (
-                      <p
-                        className="text-sm text-red-800"
-                        style={{ color: "var(--text)" }}
-                      >
-                        âŒ Error: {insightsResult.error || "Unknown error"}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Bulk Ingestion Section */}
-              <div
-                className="mt-6 pt-6"
-                style={{
-                  borderTop: "1px solid var(--line)",
-                }}
-              >
-                <h5
-                  className="text-md font-medium mb-2"
-                  style={{ color: "var(--text)" }}
-                >
-                  Bulk Ingestion
-                </h5>
-                <p className="text-sm mb-4" style={{ color: "var(--muted)" }}>
-                  Use this to refresh goofs/insights for all configured shows.
-                  Fetches titles from Firestore (titles collection or user
-                  watchlists) and processes them automatically. No TMDB IDs
-                  required.
-                </p>
-
-                <button
-                  onClick={handleBulkIngestion}
-                  disabled={
-                    bulkIngestionRunning ||
-                    insightsGenerating ||
-                    bulkIngestionRunning
-                  }
-                  className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {bulkIngestionRunning
-                    ? "Running bulk ingestion..."
-                    : "Run bulk goofs ingestion"}
-                </button>
-
-                {bulkIngestionResult && (
-                  <div
-                    className={`mt-4 p-4 rounded ${
-                      bulkIngestionResult.success
-                        ? "bg-green-50 border border-green-200"
-                        : "bg-red-50 border border-red-200"
-                    }`}
-                    style={{
-                      backgroundColor: "var(--card)",
-                      borderColor: "var(--line)",
-                    }}
-                  >
-                    {bulkIngestionResult.success ? (
-                      <div className="text-sm" style={{ color: "var(--text)" }}>
-                        <p className="mb-2">âœ… Bulk ingestion complete!</p>
-                        <ul className="list-disc list-inside space-y-1">
-                          <li>
-                            Total titles processed:{" "}
-                            {bulkIngestionResult.total || 0}
-                          </li>
-                          <li>
-                            Successfully updated:{" "}
-                            {bulkIngestionResult.succeeded || 0}
-                          </li>
-                          {bulkIngestionResult.failed !== undefined &&
-                            bulkIngestionResult.failed > 0 && (
-                              <li style={{ color: "var(--muted)" }}>
-                                Failed: {bulkIngestionResult.failed}
-                              </li>
-                            )}
-                        </ul>
-                        <p
-                          className="mt-2 text-xs"
-                          style={{ color: "var(--muted)" }}
-                        >
-                          Users will see updated insights the next time they
-                          open the Insights &amp; Easter Eggs modal.
-                        </p>
-                      </div>
-                    ) : (
-                      <p
-                        className="text-sm text-red-800"
-                        style={{ color: "var(--text)" }}
-                      >
-                        âŒ Error: {bulkIngestionResult.error || "Unknown error"}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
         {activeTab === "content" && (
           <div className="space-y-6">
             {/* Controls */}

@@ -177,10 +177,6 @@ it.each([
     "Discovery limit",
     (manager: SettingsManager) => manager.updateDiscoveryLimit(100),
   ],
-  [
-    "legacy Pro mirror",
-    (manager: SettingsManager) => manager.updateProStatus(true),
-  ],
 ] as const)(
   "expired %s changes neither memory, appearance nor persistence",
   (_name, update) => {

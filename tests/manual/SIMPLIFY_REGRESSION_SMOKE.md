@@ -123,15 +123,15 @@ Mark each: **P** Pass · **F** Fail · **B** Blocked · **N/A**
 | # | Steps | Expected | P/F/B |
 |---|--------|----------|-------|
 | 14.1 | Free user: open Pro upgrade | CTA / paywall (no crash) | |
-| 14.2 | Pro user (if available): extras unlock | Goofs/games gates behave | |
+| 14.2 | Pro user (if available): extras unlock | Shows Like This/games gates behave | |
 
 ---
 
-## 15. Goofs / insights (if present)
+## 15. Shows Like This / insights (if present)
 
 | # | Steps | Expected | P/F/B |
 |---|--------|----------|-------|
-| 15.1 | Open Goofs on a title with data | Modal content loads from Firestore | |
+| 15.1 | Open Shows Like This on a title with data | Modal content loads from Firestore | |
 | 15.2 | Title without data | Graceful empty / upgrade message | |
 
 ---

@@ -215,7 +215,7 @@ vi.mock("@/components/extras/BloopersModal", () => ({
   BloopersModal: () => null,
 }));
 vi.mock("@/components/extras/ExtrasModal", () => ({ ExtrasModal: () => null }));
-vi.mock("@/components/extras/GoofsModal", () => ({ GoofsModal: () => null }));
+vi.mock("@/components/extras/ShowsLikeThisModal", () => ({ ShowsLikeThisModal: () => null }));
 vi.mock("@/components/HelpModal", () => ({ HelpModal: () => null }));
 vi.mock("@/components/ConfirmHost", () => ({ default: () => null }));
 vi.mock("@/components/AuthModal", () => ({ default: () => null }));

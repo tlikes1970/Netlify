@@ -296,11 +296,11 @@ export function CompactOverflowMenu({
             label: isSeriesReminderEnabled(_item.id) ? coreText("coreReminded") : coreText("coreRemind"),
             onClick: handlers.onSimpleReminder,
           });
-        if (handlers.onGoofsOpen)
+        if (handlers.onShowsLikeThisOpen)
           menuItems.push({
-            id: "goofs",
+            id: "insights",
             label: coreText("coreShowsLikeThis"),
-            onClick: handlers.onGoofsOpen,
+            onClick: handlers.onShowsLikeThisOpen,
             proOnly: !hasFullAccess,
           });
         if (handlers.onExtrasOpen)
@@ -363,11 +363,11 @@ export function CompactOverflowMenu({
             label: isSeriesReminderEnabled(_item.id) ? coreText("coreReminded") : coreText("coreRemind"),
             onClick: handlers.onSimpleReminder,
           });
-        if (handlers.onGoofsOpen)
+        if (handlers.onShowsLikeThisOpen)
           menuItems.push({
-            id: "goofs",
+            id: "insights",
             label: coreText("coreShowsLikeThis"),
-            onClick: handlers.onGoofsOpen,
+            onClick: handlers.onShowsLikeThisOpen,
             proOnly: !hasFullAccess,
           });
         if (handlers.onExtrasOpen)
@@ -430,11 +430,11 @@ export function CompactOverflowMenu({
             label: isSeriesReminderEnabled(_item.id) ? coreText("coreReminded") : coreText("coreRemind"),
             onClick: handlers.onSimpleReminder,
           });
-        if (handlers.onGoofsOpen)
+        if (handlers.onShowsLikeThisOpen)
           menuItems.push({
-            id: "goofs",
+            id: "insights",
             label: coreText("coreShowsLikeThis"),
-            onClick: handlers.onGoofsOpen,
+            onClick: handlers.onShowsLikeThisOpen,
             proOnly: !hasFullAccess,
           });
         if (handlers.onExtrasOpen)
@@ -506,11 +506,11 @@ export function CompactOverflowMenu({
             label: isSeriesReminderEnabled(_item.id) ? coreText("coreReminded") : coreText("coreRemind"),
             onClick: handlers.onSimpleReminder,
           });
-        if (handlers.onGoofsOpen)
+        if (handlers.onShowsLikeThisOpen)
           menuItems.push({
-            id: "goofs",
+            id: "insights",
             label: coreText("coreShowsLikeThis"),
-            onClick: handlers.onGoofsOpen,
+            onClick: handlers.onShowsLikeThisOpen,
             proOnly: !hasFullAccess,
           });
         if (handlers.onExtrasOpen)

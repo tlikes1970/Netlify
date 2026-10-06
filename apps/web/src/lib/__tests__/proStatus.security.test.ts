@@ -110,3 +110,16 @@ it("revoking a grant does not remove verified purchased access", async () => {
 it("failed grant read fails closed without losing verified purchase", async () => {
  m.grant.mockRejectedValue(new Error("offline"));expect((await getProStatus()).isPro).toBe(true);
 });
+
+it("legacy local Pro flags cannot grant Full Access", async () => {
+  m.billing.mockResolvedValue({ isPro: true, source: "manual" });
+  localStorage.setItem("flicklet.settings.v2", JSON.stringify({ pro: { isPro: true, features: { extrasAccess: true } } }));
+  localStorage.setItem("flicklet.pro", "true");
+  try {
+    expect((await getProStatus()).isPro).toBe(false);
+    expect(getProStatusSync().isPro).toBe(false);
+  } finally {
+    localStorage.removeItem("flicklet.settings.v2");
+    localStorage.removeItem("flicklet.pro");
+  }
+});

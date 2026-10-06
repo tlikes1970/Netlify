@@ -10,12 +10,10 @@
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "seed:titles": "ts-node --project tsconfig.json scripts/seedTitles.ts",
-    "test:netlify": "node scripts/test-netlify-goofs-fetch.js",
     "check:insights": "node scripts/check-insights.js",
     "clear:insights": "node scripts/clear-insights.js",
     "reset:trial": "ts-node --project tsconfig.json scripts/reset-trial.ts",
-    "test:security": "npm run build && node --test tests/admin-authorization.test.cjs ../netlify/functions/__tests__/goofs-authorization.test.cjs"
+    "test:security": "npm run build && node --test tests/admin-authorization.test.cjs"
   },
   "engines": {
     "node": "20"

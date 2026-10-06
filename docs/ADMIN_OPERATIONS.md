@@ -164,7 +164,6 @@ Default: `trialStartMs = Date.now()` → fresh 21-day window from reset time.
 | `manageAdminRole` | Callable | Grant/revoke admin on others |
 | `manageProStatus` | Callable | Admin billing/settings Pro flags |
 | `resetTrialEntitlement` | Callable (2nd gen) | Reset trial for QA test accounts |
-| `ingestGoofs` | Callable | Admin TMDB goofs → Firestore insights |
 
 See [functions/README.md](../functions/README.md) for build/deploy.
 

@@ -54,7 +54,7 @@ describe('overflow measurement lifecycle', () => {
   it('uses actual panel height rather than inflating a long menu into an upward flip', () => {
     anchorTop=400;
     const longerActions={...actions,onWant:vi.fn(),onWatched:vi.fn(),onNotInterested:vi.fn(),
-      onNotesEdit:vi.fn(),onGoofsOpen:vi.fn(),onExtrasOpen:vi.fn()};
+      onNotesEdit:vi.fn(),onShowsLikeThisOpen:vi.fn(),onExtrasOpen:vi.fn()};
     render(<CompactOverflowMenu item={item} context="home" actions={longerActions}/>);
     open();
     expect(screen.getAllByRole('menuitem').length).toBe(9);

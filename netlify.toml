@@ -36,11 +36,6 @@
   status = 200
 
 [[redirects]]
-  from = "/api/goofs-fetch"
-  to   = "/.netlify/functions/goofs-fetch"
-  status = 200
-
-[[redirects]]
   from = "/api/billing/products"
   to   = "/.netlify/functions/billing/products"
   status = 200

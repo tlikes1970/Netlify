@@ -8,6 +8,3 @@ export { manageProStatus } from "./manageProStatus";
 
 // Export resetTrialEntitlement from separate file
 export { resetTrialEntitlement } from "./resetTrialEntitlement";
-
-// Export ingestGoofs from separate file
-export { ingestGoofs } from "./ingestGoofs";

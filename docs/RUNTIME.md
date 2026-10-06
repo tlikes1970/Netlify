@@ -35,7 +35,6 @@ Config: `apps/web/vite.config.ts` (not repo-root `vite.config.js`).
 | Handlers | `netlify/functions/*.cjs`, `netlify/functions/billing/*.cjs` |
 | Redirects | `/api/*` → `/.netlify/functions/*` in `netlify.toml` |
 
-Active handlers: `tmdb-proxy`, `dict-proxy`, `goofs-fetch`, `feedback`, `send-email`, `billing/*`, `origin-validation`.
 
 `@sendgrid/mail` and `firebase-admin` resolve from `apps/web/node_modules` (Netlify build base).
 
@@ -46,8 +45,8 @@ Active handlers: `tmdb-proxy`, `dict-proxy`, `goofs-fetch`, `feedback`, `send-em
 | Item | Path |
 |------|------|
 | Source | `functions/src/` |
+| Exports | `manageAdminRole`, `manageProStatus`, `resetTrialEntitlement` |
 | Deploy | `firebase deploy --only functions` |
-| Exports | `setAdminRole`, `manageAdminRole`, `manageProStatus`, `ingestGoofs` |
 
 Firestore rules/indexes: `firestore.rules`, `firestore.indexes.json` (Firebase CLI, not Netlify).
 

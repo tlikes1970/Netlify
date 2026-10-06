@@ -36,8 +36,7 @@ const BLOOPERS_KEYWORDS = [
   'deleted scenes',
   'blooper reel',
   'funny moments',
-  'mistakes',
-  'goofs'
+  'mistakes'
 ];
 
 // Quality heuristics

@@ -16,8 +16,6 @@ The script preserves all existing custom claims and changes only `role` to `admi
 ## Required production security rollout (not performed by implementation)
 
 1. Delete the LIVE obsolete `setAdminRole` function in project `flicklet-71dff`, region `us-central1`. Removing its source/export alone does not delete the already deployed function. Verify it is absent and cannot grant claims.
-2. Deploy corrected `manageAdminRole` and current `manageProStatus`. Deploy/check the exported `resetTrialEntitlement` and `ingestGoofs` maintenance functions as appropriate; their administrator guards remain intact.
-3. Deploy the fail-closed Netlify `goofs-fetch` function. Configure matching `GOOFS_INGESTION_ADMIN_TOKEN` on the Firebase ingestion proxy and Netlify ingestion endpoint. Missing/blank configuration must deny writes, never enable access.
 4. Verify unauthenticated and ordinary-user denial, administrator grant/revoke, unrelated-claim preservation, Full Access grant by email/ID, and self-demotion denial in a controlled environment.
 5. Because the previous public endpoint was active, separately review administrator assignments and privileged operations for unexpected changes. This repair does not automatically revoke existing administrator accounts or rotate credentials.
 
